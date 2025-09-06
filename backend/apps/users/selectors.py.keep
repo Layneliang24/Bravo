@@ -1,0 +1,52 @@
+"""
+用户数据查询封装模板
+"""
+
+from django.db.models import Q, Count, Prefetch
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class UserSelector:
+    """用户查询选择器"""
+    
+    @staticmethod
+    def get_active_users():
+        """获取活跃用户"""
+        return User.objects.filter(is_active=True)
+    
+    @staticmethod
+    def get_user_by_email(email):
+        """根据邮箱获取用户"""
+        return User.objects.filter(email=email).first()
+    
+    @staticmethod
+    def get_user_with_profile(user_id):
+        """获取用户及其配置信息"""
+        return User.objects.select_related('profile').get(id=user_id)
+    
+    @staticmethod
+    def search_users(query):
+        """搜索用户"""
+        return User.objects.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        ).filter(is_active=True)
+    
+    @staticmethod
+    def get_users_with_activities():
+        """获取用户及其最近活动"""
+        return User.objects.prefetch_related(
+            Prefetch(
+                'activities',
+                queryset=UserActivity.objects.order_by('-created_at')[:5]
+            )
+        )
+    
+    @staticmethod
+    def get_verified_users():
+        """获取已验证用户"""
+        return User.objects.filter(is_verified=True, is_active=True)

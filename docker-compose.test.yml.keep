@@ -1,0 +1,67 @@
+# 测试环境 Docker 编排模板
+
+version: '3.8'
+
+services:
+  # 测试数据库
+  postgres-test:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: bravo_test
+      POSTGRES_USER: bravo_user
+      POSTGRES_PASSWORD: bravo_password
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  # 测试 Redis
+  redis-test:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    tmpfs:
+      - /data
+
+  # 后端测试
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DJANGO_SETTINGS_MODULE=bravo.settings.test
+      - DATABASE_URL=postgresql://bravo_user:bravo_password@postgres-test:5432/bravo_test
+      - REDIS_URL=redis://redis-test:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres-test
+      - redis-test
+    command: pytest
+
+  # 前端测试
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run test
+
+  # E2E 测试
+  e2e-test:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    environment:
+      - BASE_URL=http://frontend-test:3000
+      - API_URL=http://backend-test:8000
+    volumes:
+      - ./e2e:/app
+    depends_on:
+      - backend-test
+      - frontend-test
+    command: npm run test

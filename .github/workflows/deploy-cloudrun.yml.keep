@@ -1,0 +1,87 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: bravo-app
+  REGION: asia-east1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+    
+    - name: Build and push backend image
+      run: |
+        docker build -t gcr.io/$PROJECT_ID/bravo-backend:$GITHUB_SHA -f backend/Dockerfile .
+        docker push gcr.io/$PROJECT_ID/bravo-backend:$GITHUB_SHA
+    
+    - name: Build and push frontend image
+      run: |
+        docker build -t gcr.io/$PROJECT_ID/bravo-frontend:$GITHUB_SHA -f frontend/Dockerfile .
+        docker push gcr.io/$PROJECT_ID/bravo-frontend:$GITHUB_SHA
+    
+    - name: Deploy to Cloud Run
+      run: |
+        # Deploy backend
+        gcloud run deploy bravo-backend \
+          --image gcr.io/$PROJECT_ID/bravo-backend:$GITHUB_SHA \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --set-env-vars="DJANGO_SETTINGS_MODULE=bravo.settings.prod" \
+          --set-secrets="DATABASE_URL=bravo-db-url:latest" \
+          --set-secrets="SECRET_KEY=bravo-secret-key:latest"
+        
+        # Deploy frontend
+        gcloud run deploy bravo-frontend \
+          --image gcr.io/$PROJECT_ID/bravo-frontend:$GITHUB_SHA \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --set-env-vars="VITE_API_URL=https://bravo-backend-xxx-uc.a.run.app"
+    
+    - name: Update traffic
+      run: |
+        gcloud run services update-traffic bravo-backend \
+          --to-latest \
+          --region $REGION
+        
+        gcloud run services update-traffic bravo-frontend \
+          --to-latest \
+          --region $REGION
+    
+    - name: Run smoke tests
+      run: |
+        # 等待服务启动
+        sleep 30
+        
+        # 测试后端健康检查
+        curl -f https://bravo-backend-xxx-uc.a.run.app/health/ || exit 1
+        
+        # 测试前端页面
+        curl -f https://bravo-frontend-xxx-uc.a.run.app/ || exit 1
+    
+    - name: Notify deployment
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow

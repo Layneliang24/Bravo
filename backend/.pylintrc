@@ -1,0 +1,38 @@
+[MASTER]
+ignore=CVS
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+disable=C0114,C0116,R0903,W0613
+
+[REPORTS]
+output-format=text
+reports=no
+
+[VARIABLES]
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,id,db,qs
+
+[FORMAT]
+max-line-length=88
+indent-string='    '
+
+[DESIGN]
+max-args=10
+max-locals=15
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=7
+max-attributes=7
+max-public-methods=20
+max-bool-expr=5
+
+[IMPORTS]
+import-graph=
+ext-import-graph=
+int-import-graph=
+known-standard-library=
+known-third-party=django,rest_framework,pytest,celery,redis
