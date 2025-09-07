@@ -1,0 +1,27 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": true,
+    "strict": false,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["frontend/src/*"]
+    },
+    "types": ["vitest/globals", "@vue/test-utils", "node"]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.vue"
+  ],
+  "exclude": [
+    "../node_modules",
+    "../dist",
+    "../build"
+  ]
+}
