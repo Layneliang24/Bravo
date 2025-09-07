@@ -65,6 +65,59 @@ class UserRegressionTests(TestCase):
         self.assertTrue(user.id)
         self.assertEqual(user.username, 'newuser')
         self.assertEqual(user.email, 'newuser@example.com')
+
+    def test_user_profile_creation(self):
+        """测试用户资料创建"""
+        user = User.objects.create_user(
+            username='profileuser',
+            email='profile@example.com',
+            password='profilepass123'
+        )
+        # 这里可以添加用户资料相关的测试
+        self.assertTrue(user.is_active)
+
+    def test_user_authentication_failure(self):
+        """测试用户认证失败"""
+        login_success = self.client.login(username='wronguser', password='wrongpass')
+        self.assertFalse(login_success)
+
+    def test_user_logout(self):
+        """测试用户登出"""
+        # 先登录
+        User.objects.create_user(
+            username='logoutuser',
+            email='logout@example.com',
+            password='logoutpass123'
+        )
+        login_success = self.client.login(username='logoutuser', password='logoutpass123')
+        self.assertTrue(login_success)
+
+        # 然后登出
+        self.client.logout()
+        # 验证登出后无法访问需要认证的页面
+        response = self.client.get('/admin/')
+        self.assertEqual(response.status_code, 302)  # 重定向到登录页面
+
+    def test_user_password_change(self):
+        """测试用户密码修改"""
+        user = User.objects.create_user(
+            username='changeuser',
+            email='change@example.com',
+            password='oldpass123'
+        )
+
+        # 修改密码
+        user.set_password('newpass123')
+        user.save()
+
+        # 验证新密码可以登录
+        login_success = self.client.login(username='changeuser', password='newpass123')
+        self.assertTrue(login_success)
+
+        # 验证旧密码不能登录
+        self.client.logout()
+        login_fail = self.client.login(username='changeuser', password='oldpass123')
+        self.assertFalse(login_fail)
     
     def test_user_password_check(self):
         """测试用户密码验证"""

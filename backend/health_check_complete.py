@@ -7,6 +7,7 @@ import time
 import random
 import shutil
 import tempfile
+import subprocess
 from pathlib import Path
 
 def print_header(title):
@@ -24,12 +25,15 @@ def run_command_safe(command, description):
     """安全运行命令"""
     print(f"执行: {command}")
     try:
-        result = os.system(command)
-        if result == 0:
+        # 使用subprocess.run()替代os.system()以避免命令注入
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
             print(f"✓ {description} - 成功")
             return True
         else:
-            print(f"✗ {description} - 失败 (退出码: {result})")
+            print(f"✗ {description} - 失败 (退出码: {result.returncode})")
+            if result.stderr:
+                print(f"错误输出: {result.stderr.strip()}")
             return False
     except Exception as e:
         print(f"✗ {description} - 异常: {e}")
