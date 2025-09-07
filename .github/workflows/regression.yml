@@ -1,0 +1,308 @@
+name: Regression Gate
+
+# 回归测试门禁 - 确保新功能不会破坏已有功能
+# 任何PR都必须通过回归测试才能合并
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ main, develop ]
+  # 每天凌晨2点运行回归测试
+  schedule:
+    - cron: '0 2 * * *'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20.x'
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: bravo_test
+
+jobs:
+  # 后端回归测试 - 核心功能保护
+  backend-regression:
+    name: 🔒 Backend Regression Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bravo_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: 📦 Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: 🔧 Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: 🗄️ Setup database
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+        run: |
+          python manage.py migrate --settings=config.settings.test
+      
+      - name: 🔒 Run REGRESSION TESTS ONLY
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: |
+          echo "🚨 Running REGRESSION TESTS - Core functionality protection"
+          echo "📋 These tests MUST pass for PR to be merged"
+          
+          # 只运行回归测试文件
+          python -m pytest tests/test_regression.py -v \
+            --tb=short \
+            --strict-markers \
+            --disable-warnings \
+            --maxfail=1 \
+            --junit-xml=regression-results.xml
+          
+          echo "✅ All regression tests passed!"
+      
+      - name: 📊 Upload regression test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: backend-regression-results
+          path: backend/regression-results.xml
+  
+  # 前端回归测试
+  frontend-regression:
+    name: 🔒 Frontend Regression Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🟢 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: 🔒 Run Frontend Regression Tests
+        working-directory: ./frontend
+        run: |
+          echo "🚨 Running FRONTEND REGRESSION TESTS"
+          echo "📋 Testing core UI functionality"
+          
+          # 运行标记为回归测试的用例
+          npm run test -- --reporter=junit --outputFile=regression-results.xml --testNamePattern="regression|核心|core"
+          
+          echo "✅ Frontend regression tests passed!"
+      
+      - name: 📊 Upload frontend regression results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-regression-results
+          path: frontend/regression-results.xml
+  
+  # E2E回归测试
+  e2e-regression:
+    name: 🔒 E2E Regression Tests
+    runs-on: ubuntu-latest
+    needs: [backend-regression, frontend-regression]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bravo_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: 🟢 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+      
+      - name: 🔧 Install backend dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: 📦 Install E2E dependencies
+        working-directory: ./e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps
+      
+      - name: 🗄️ Setup test database
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+        run: |
+          python manage.py migrate --settings=config.settings.test
+      
+      - name: 🚀 Start backend server
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: |
+          python manage.py runserver 8000 &
+          sleep 10
+      
+      - name: 🔒 Run E2E Regression Tests
+        working-directory: ./e2e
+        run: |
+          echo "🚨 Running E2E REGRESSION TESTS"
+          echo "📋 Testing critical user journeys"
+          
+          # 只运行标记为回归测试的E2E用例
+          npx playwright test --grep="@regression|核心|critical" \
+            --reporter=junit \
+            --output-dir=test-results
+          
+          echo "✅ E2E regression tests passed!"
+      
+      - name: 📊 Upload E2E regression results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-regression-results
+          path: e2e/test-results/
+  
+  # 回归测试结果汇总
+  regression-summary:
+    name: 📋 Regression Test Summary
+    runs-on: ubuntu-latest
+    needs: [backend-regression, frontend-regression, e2e-regression]
+    if: always()
+    
+    steps:
+      - name: 📥 Download all regression results
+        uses: actions/download-artifact@v3
+      
+      - name: 📊 Generate regression summary
+        run: |
+          echo "# 🔒 回归测试门禁结果" > regression-summary.md
+          echo "" >> regression-summary.md
+          echo "## 测试结果概览" >> regression-summary.md
+          echo "" >> regression-summary.md
+          
+          # 检查各个测试结果
+          if [ -f "backend-regression-results/regression-results.xml" ]; then
+            echo "- ✅ 后端回归测试：通过" >> regression-summary.md
+          else
+            echo "- ❌ 后端回归测试：失败" >> regression-summary.md
+          fi
+          
+          if [ -f "frontend-regression-results/regression-results.xml" ]; then
+            echo "- ✅ 前端回归测试：通过" >> regression-summary.md
+          else
+            echo "- ❌ 前端回归测试：失败" >> regression-summary.md
+          fi
+          
+          if [ -d "e2e-regression-results" ]; then
+            echo "- ✅ E2E回归测试：通过" >> regression-summary.md
+          else
+            echo "- ❌ E2E回归测试：失败" >> regression-summary.md
+          fi
+          
+          echo "" >> regression-summary.md
+          echo "## 🚨 重要提醒" >> regression-summary.md
+          echo "" >> regression-summary.md
+          echo "- 回归测试失败意味着新代码可能破坏了现有功能" >> regression-summary.md
+          echo "- 请检查测试结果，修复问题后重新提交" >> regression-summary.md
+          echo "- 禁止修改回归测试文件来"通过"测试" >> regression-summary.md
+          
+          cat regression-summary.md
+      
+      - name: 💬 Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('regression-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+      
+      - name: ❌ Fail if any regression test failed
+        run: |
+          # 检查是否有任何回归测试失败
+          FAILED=0
+          
+          if [ ! -f "backend-regression-results/regression-results.xml" ]; then
+            echo "❌ Backend regression tests failed"
+            FAILED=1
+          fi
+          
+          if [ ! -f "frontend-regression-results/regression-results.xml" ]; then
+            echo "❌ Frontend regression tests failed"
+            FAILED=1
+          fi
+          
+          if [ ! -d "e2e-regression-results" ]; then
+            echo "❌ E2E regression tests failed"
+            FAILED=1
+          fi
+          
+          if [ $FAILED -eq 1 ]; then
+            echo "💥 回归测试失败 - PR不能合并！"
+            echo "请修复问题后重新提交，禁止修改回归测试文件"
+            exit 1
+          else
+            echo "🎉 所有回归测试通过 - PR可以合并！"
+          fi
