@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前后端分离回归测试报告</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .stat-card h3 { margin: 0 0 15px 0; color: #333; }
+        .stat-number { font-size: 2em; font-weight: bold; margin: 10px 0; }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .error { color: #fd7e14; }
+        .test-section { background: white; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-header { background: #f8f9fa; padding: 20px; border-radius: 8px 8px 0 0; border-bottom: 1px solid #dee2e6; }
+        .test-results { padding: 20px; }
+        .test-item { padding: 15px; border-left: 4px solid #dee2e6; margin-bottom: 10px; background: #f8f9fa; }
+        .test-item.pass { border-left-color: #28a745; background: #d4edda; }
+        .test-item.fail { border-left-color: #dc3545; background: #f8d7da; }
+        .test-item.error { border-left-color: #fd7e14; background: #ffeaa7; }
+        .test-meta { font-size: 0.9em; color: #666; margin-top: 5px; }
+        .icon { font-size: 1.2em; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 前后端分离回归测试报告</h1>
+            <p>展示前端UI、后端API、数据库的独立回归测试结果</p>
+            <p>生成时间: 2025/9/7 16:16:49</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>🖥️ 前端UI测试</h3>
+                <div class="stat-number pass">2</div>
+                <div>通过 / 4 总计</div>
+                <div class="stat-number fail">2</div>
+                <div>失败</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>🔧 后端API测试</h3>
+                <div class="stat-number pass">2</div>
+                <div>通过 / 4 总计</div>
+                <div class="stat-number fail">2</div>
+                <div>失败</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>🗄️ 数据库测试</h3>
+                <div class="stat-number pass">2</div>
+                <div>通过 / 4 总计</div>
+                <div class="stat-number fail">2</div>
+                <div>失败</div>
+            </div>
+        </div>
+        
+        
+        <div class="test-section">
+            <div class="test-header">
+                <h2>🖥️ 前端UI回归测试结果</h2>
+            </div>
+            <div class="test-results">
+                
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>博客列表页面视觉回归</strong></div>
+                    <div>组件渲染正常，与基线快照一致</div>
+                    <div class="test-meta">
+                        组件: BlogList | 类型: visual
+                        
+                        
+                        | 时间: 16:16:43
+                    </div>
+                </div>
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>用户登录表单布局</strong></div>
+                    <div>移动端布局异常，表单元素重叠</div>
+                    <div class="test-meta">
+                        组件: LoginForm | 类型: layout
+                        
+                        
+                        | 时间: 16:16:44
+                    </div>
+                </div>
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>响应式导航菜单</strong></div>
+                    <div>响应式断点正常工作</div>
+                    <div class="test-meta">
+                        组件: Navigation | 类型: responsive
+                        
+                        
+                        | 时间: 16:16:45
+                    </div>
+                </div>
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>文章编辑器组件</strong></div>
+                    <div>组件状态管理异常，数据未正确更新</div>
+                    <div class="test-meta">
+                        组件: ArticleEditor | 类型: component
+                        
+                        
+                        | 时间: 16:16:45
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-header">
+                <h2>🔧 后端API回归测试结果</h2>
+            </div>
+            <div class="test-results">
+                
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>博客列表API响应结构</strong></div>
+                    <div>响应数据类型变更：id从string改为number (127ms)</div>
+                    <div class="test-meta">
+                        
+                        端点: /api/blogs/ | 方法: GET
+                        
+                        | 时间: 16:16:46
+                    </div>
+                </div>
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>用户认证API性能</strong></div>
+                    <div>性能回归检测：响应时间926ms超过500ms阈值 (926ms)</div>
+                    <div class="test-meta">
+                        
+                        端点: /api/auth/login/ | 方法: POST
+                        
+                        | 时间: 16:16:46
+                    </div>
+                </div>
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>文章创建API验证</strong></div>
+                    <div>数据验证规则正常，错误处理一致 (190ms)</div>
+                    <div class="test-meta">
+                        
+                        端点: /api/articles/ | 方法: POST
+                        
+                        | 时间: 16:16:47
+                    </div>
+                </div>
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>用户权限检查API</strong></div>
+                    <div>权限检查正常，访问控制一致 (127ms)</div>
+                    <div class="test-meta">
+                        
+                        端点: /api/users/permissions/ | 方法: GET
+                        
+                        | 时间: 16:16:47
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-header">
+                <h2>🗄️ 数据库回归测试结果</h2>
+            </div>
+            <div class="test-results">
+                
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>用户表结构一致性</strong></div>
+                    <div>表结构变更：新增last_login_ip字段 (106ms)</div>
+                    <div class="test-meta">
+                        
+                        
+                        对象: users
+                        | 时间: 16:16:48
+                    </div>
+                </div>
+                <div class="test-item fail">
+                    <div><span class="icon">❌</span><strong>博客文章查询性能</strong></div>
+                    <div>性能回归：查询时间231ms超过200ms阈值 (231ms)</div>
+                    <div class="test-meta">
+                        
+                        
+                        对象: SELECT * FROM articles WHERE published = true
+                        | 时间: 16:16:48
+                    </div>
+                </div>
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>外键约束完整性</strong></div>
+                    <div>外键约束正常，数据完整性保持 (38ms)</div>
+                    <div class="test-meta">
+                        
+                        
+                        对象: article_author_fk
+                        | 时间: 16:16:49
+                    </div>
+                </div>
+                <div class="test-item pass">
+                    <div><span class="icon">✅</span><strong>索引优化效果</strong></div>
+                    <div>索引优化正常，查询计划未变更 (8ms)</div>
+                    <div class="test-meta">
+                        
+                        
+                        对象: idx_articles_created_at
+                        | 时间: 16:16:49
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-header">
+                <h2>📋 测试总结</h2>
+            </div>
+            <div class="test-results">
+                <h3>✅ 回归测试的有效性证明：</h3>
+                <ul>
+                    <li><strong>前端UI层面：</strong>检测视觉变更、布局异常、组件行为变化</li>
+                    <li><strong>后端API层面：</strong>监控响应结构、性能回归、业务逻辑变更</li>
+                    <li><strong>数据库层面：</strong>验证结构一致性、性能优化、约束完整性</li>
+                </ul>
+                
+                <h3>🎯 分离测试的优势：</h3>
+                <ul>
+                    <li><strong>独立运行：</strong>可以单独测试前端、后端或数据库</li>
+                    <li><strong>快速定位：</strong>问题出现时能快速定位到具体层面</li>
+                    <li><strong>并行执行：</strong>不同层面的测试可以并行运行，提高效率</li>
+                    <li><strong>专业化：</strong>每个层面使用最适合的测试工具和方法</li>
+                </ul>
+                
+                <h3>🚀 使用方法：</h3>
+                <pre><code># 运行所有回归测试
+make test-regression
+
+# 只运行前端回归测试
+make test-regression-ui
+
+# 只运行后端回归测试
+make test-regression-api
+
+# 只运行数据库回归测试
+make test-regression-db</code></pre>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

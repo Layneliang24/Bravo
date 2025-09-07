@@ -31,6 +31,26 @@ test: ## 运行所有测试
 	cd frontend && npm run test
 	cd e2e && npm run test
 
+test-regression: ## 运行回归测试
+	@echo "Running regression tests..."
+	node tests/regression/run-regression.js
+
+test-regression-api: ## 运行API回归测试
+	@echo "Running API regression tests..."
+	node tests/regression/run-regression.js --api-only
+
+test-regression-ui: ## 运行UI回归测试
+	@echo "Running UI regression tests..."
+	node tests/regression/run-regression.js --ui-only
+
+test-regression-db: ## 运行数据库回归测试
+	@echo "Running database regression tests..."
+	node tests/regression/run-regression.js --db-only
+
+test-regression-update: ## 更新回归测试基线
+	@echo "Updating regression test baselines..."
+	node tests/regression/run-regression.js --update-snapshots
+
 # 代码质量检查
 quality: ## 运行代码质量检查
 	cd backend && pylint apps/

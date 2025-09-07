@@ -1,0 +1,483 @@
+{
+  "api": {
+    "description": "API回归测试用例配置",
+    "testCases": [
+      {
+        "id": "auth-login",
+        "name": "用户登录接口",
+        "description": "测试用户登录功能的API响应",
+        "endpoint": "/api/auth/login",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "username": "testuser",
+          "password": "testpass123"
+        },
+        "expectedStatus": 200,
+        "responseStructure": {
+          "token": "string",
+          "user": {
+            "id": "number",
+            "username": "string",
+            "email": "string"
+          },
+          "expires_at": "string"
+        },
+        "performanceThreshold": 500,
+        "tags": ["auth", "critical"]
+      },
+      {
+        "id": "user-profile",
+        "name": "获取用户资料",
+        "description": "测试获取用户资料接口",
+        "endpoint": "/api/users/profile",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{token}}"
+        },
+        "expectedStatus": 200,
+        "responseStructure": {
+          "id": "number",
+          "username": "string",
+          "email": "string",
+          "profile": {
+            "firstName": "string",
+            "lastName": "string",
+            "avatar": "string"
+          },
+          "createdAt": "string",
+          "updatedAt": "string"
+        },
+        "performanceThreshold": 300,
+        "tags": ["user", "profile"]
+      },
+      {
+        "id": "blog-list",
+        "name": "获取博客列表",
+        "description": "测试博客列表接口的分页和排序",
+        "endpoint": "/api/blogs",
+        "method": "GET",
+        "query": {
+          "page": 1,
+          "limit": 10,
+          "sort": "createdAt",
+          "order": "desc"
+        },
+        "expectedStatus": 200,
+        "responseStructure": {
+          "data": [
+            {
+              "id": "number",
+              "title": "string",
+              "content": "string",
+              "author": {
+                "id": "number",
+                "username": "string"
+              },
+              "createdAt": "string",
+              "updatedAt": "string"
+            }
+          ],
+          "pagination": {
+            "page": "number",
+            "limit": "number",
+            "total": "number",
+            "totalPages": "number"
+          }
+        },
+        "performanceThreshold": 800,
+        "tags": ["blog", "list", "pagination"]
+      },
+      {
+        "id": "blog-create",
+        "name": "创建博客文章",
+        "description": "测试创建新博客文章的接口",
+        "endpoint": "/api/blogs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{token}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "title": "测试博客标题",
+          "content": "这是一篇测试博客的内容...",
+          "tags": ["测试", "回归测试"]
+        },
+        "expectedStatus": 201,
+        "responseStructure": {
+          "id": "number",
+          "title": "string",
+          "content": "string",
+          "author": {
+            "id": "number",
+            "username": "string"
+          },
+          "tags": ["string"],
+          "createdAt": "string",
+          "updatedAt": "string"
+        },
+        "performanceThreshold": 1000,
+        "tags": ["blog", "create", "critical"]
+      }
+    ]
+  },
+  "ui": {
+    "description": "UI回归测试用例配置",
+    "testCases": [
+      {
+        "id": "login-page",
+        "name": "登录页面",
+        "description": "测试登录页面的UI元素和交互",
+        "url": "/login",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "actions": [
+          {
+            "type": "screenshot",
+            "name": "initial-state"
+          },
+          {
+            "type": "fill",
+            "selector": "input[name='username']",
+            "value": "testuser"
+          },
+          {
+            "type": "fill",
+            "selector": "input[name='password']",
+            "value": "testpass123"
+          },
+          {
+            "type": "screenshot",
+            "name": "form-filled"
+          },
+          {
+            "type": "click",
+            "selector": "button[type='submit']"
+          },
+          {
+            "type": "waitForNavigation"
+          },
+          {
+            "type": "screenshot",
+            "name": "after-login"
+          }
+        ],
+        "visualRegression": {
+          "threshold": 0.2,
+          "ignoreElements": [".timestamp", ".dynamic-content"]
+        },
+        "tags": ["auth", "critical", "visual"]
+      },
+      {
+        "id": "blog-list-page",
+        "name": "博客列表页面",
+        "description": "测试博客列表页面的布局和功能",
+        "url": "/blogs",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "actions": [
+          {
+            "type": "screenshot",
+            "name": "blog-list-initial"
+          },
+          {
+            "type": "click",
+            "selector": ".pagination .next-page"
+          },
+          {
+            "type": "waitForSelector",
+            "selector": ".blog-item"
+          },
+          {
+            "type": "screenshot",
+            "name": "blog-list-page-2"
+          },
+          {
+            "type": "click",
+            "selector": ".blog-item:first-child .read-more"
+          },
+          {
+            "type": "waitForNavigation"
+          },
+          {
+            "type": "screenshot",
+            "name": "blog-detail"
+          }
+        ],
+        "visualRegression": {
+          "threshold": 0.3,
+          "ignoreElements": [".timestamp", ".view-count"]
+        },
+        "tags": ["blog", "list", "visual"]
+      },
+      {
+        "id": "responsive-mobile",
+        "name": "移动端响应式测试",
+        "description": "测试主要页面在移动设备上的显示",
+        "url": "/",
+        "viewport": {
+          "width": 375,
+          "height": 667
+        },
+        "actions": [
+          {
+            "type": "screenshot",
+            "name": "mobile-home"
+          },
+          {
+            "type": "click",
+            "selector": ".mobile-menu-toggle"
+          },
+          {
+            "type": "screenshot",
+            "name": "mobile-menu-open"
+          },
+          {
+            "type": "click",
+            "selector": ".mobile-menu a[href='/blogs']"
+          },
+          {
+            "type": "waitForNavigation"
+          },
+          {
+            "type": "screenshot",
+            "name": "mobile-blog-list"
+          }
+        ],
+        "visualRegression": {
+          "threshold": 0.2,
+          "ignoreElements": [".timestamp"]
+        },
+        "tags": ["responsive", "mobile", "visual"]
+      },
+      {
+        "id": "cross-browser",
+        "name": "跨浏览器兼容性",
+        "description": "测试关键页面在不同浏览器中的表现",
+        "url": "/login",
+        "browsers": ["chromium", "firefox", "webkit"],
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "actions": [
+          {
+            "type": "screenshot",
+            "name": "login-page"
+          },
+          {
+            "type": "fill",
+            "selector": "input[name='username']",
+            "value": "testuser"
+          },
+          {
+            "type": "fill",
+            "selector": "input[name='password']",
+            "value": "testpass123"
+          },
+          {
+            "type": "screenshot",
+            "name": "form-filled"
+          }
+        ],
+        "visualRegression": {
+          "threshold": 0.3,
+          "ignoreElements": []
+        },
+        "tags": ["cross-browser", "compatibility"]
+      }
+    ]
+  },
+  "database": {
+    "description": "数据库回归测试用例配置",
+    "testCases": [
+      {
+        "id": "user-data-integrity",
+        "name": "用户数据完整性",
+        "description": "验证用户表的数据结构和约束",
+        "type": "structure",
+        "table": "users",
+        "expectedColumns": [
+          {
+            "name": "id",
+            "type": "integer",
+            "nullable": false,
+            "primary": true
+          },
+          {
+            "name": "username",
+            "type": "varchar",
+            "nullable": false,
+            "unique": true
+          },
+          {
+            "name": "email",
+            "type": "varchar",
+            "nullable": false,
+            "unique": true
+          },
+          {
+            "name": "password_hash",
+            "type": "varchar",
+            "nullable": false
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp",
+            "nullable": false
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp",
+            "nullable": false
+          }
+        ],
+        "constraints": [
+          {
+            "type": "unique",
+            "columns": ["username"]
+          },
+          {
+            "type": "unique",
+            "columns": ["email"]
+          }
+        ],
+        "tags": ["structure", "users", "critical"]
+      },
+      {
+        "id": "blog-data-consistency",
+        "name": "博客数据一致性",
+        "description": "验证博客表的数据一致性和关联关系",
+        "type": "consistency",
+        "queries": [
+          {
+            "name": "orphaned-blogs",
+            "description": "检查是否存在没有作者的博客",
+            "sql": "SELECT COUNT(*) as count FROM blogs b LEFT JOIN users u ON b.author_id = u.id WHERE u.id IS NULL",
+            "expectedResult": {
+              "count": 0
+            }
+          },
+          {
+            "name": "blog-count-consistency",
+            "description": "验证用户的博客计数是否正确",
+            "sql": "SELECT u.id, u.username, COUNT(b.id) as blog_count FROM users u LEFT JOIN blogs b ON u.id = b.author_id GROUP BY u.id, u.username",
+            "validation": "custom"
+          }
+        ],
+        "tags": ["consistency", "blogs", "relationships"]
+      },
+      {
+        "id": "performance-indexes",
+        "name": "性能索引检查",
+        "description": "验证关键查询的索引是否存在且有效",
+        "type": "performance",
+        "indexes": [
+          {
+            "table": "users",
+            "columns": ["username"],
+            "type": "unique"
+          },
+          {
+            "table": "users",
+            "columns": ["email"],
+            "type": "unique"
+          },
+          {
+            "table": "blogs",
+            "columns": ["author_id"],
+            "type": "index"
+          },
+          {
+            "table": "blogs",
+            "columns": ["created_at"],
+            "type": "index"
+          }
+        ],
+        "performanceQueries": [
+          {
+            "name": "user-login-query",
+            "sql": "SELECT * FROM users WHERE username = ? AND password_hash = ?",
+            "maxExecutionTime": 50
+          },
+          {
+            "name": "blog-list-query",
+            "sql": "SELECT b.*, u.username FROM blogs b JOIN users u ON b.author_id = u.id ORDER BY b.created_at DESC LIMIT 10",
+            "maxExecutionTime": 100
+          }
+        ],
+        "tags": ["performance", "indexes", "optimization"]
+      },
+      {
+        "id": "data-migration-validation",
+        "name": "数据迁移验证",
+        "description": "验证数据迁移后的数据完整性",
+        "type": "migration",
+        "validations": [
+          {
+            "name": "total-record-count",
+            "description": "验证总记录数",
+            "queries": {
+              "users": "SELECT COUNT(*) as count FROM users",
+              "blogs": "SELECT COUNT(*) as count FROM blogs"
+            }
+          },
+          {
+            "name": "data-integrity-checks",
+            "description": "数据完整性检查",
+            "queries": {
+              "null-usernames": "SELECT COUNT(*) as count FROM users WHERE username IS NULL OR username = ''",
+              "null-emails": "SELECT COUNT(*) as count FROM users WHERE email IS NULL OR email = ''",
+              "invalid-blog-authors": "SELECT COUNT(*) as count FROM blogs WHERE author_id NOT IN (SELECT id FROM users)"
+            },
+            "expectedResults": {
+              "null-usernames": { "count": 0 },
+              "null-emails": { "count": 0 },
+              "invalid-blog-authors": { "count": 0 }
+            }
+          }
+        ],
+        "tags": ["migration", "integrity", "validation"]
+      }
+    ]
+  },
+  "global": {
+    "description": "全局测试配置",
+    "setup": {
+      "database": {
+        "seedData": true,
+        "cleanupAfter": true,
+        "backupBefore": true
+      },
+      "api": {
+        "baseUrl": "http://localhost:8000",
+        "timeout": 30000,
+        "retries": 2
+      },
+      "ui": {
+        "baseUrl": "http://localhost:3000",
+        "timeout": 30000,
+        "retries": 1
+      }
+    },
+    "teardown": {
+      "cleanupTempFiles": true,
+      "archiveReports": true,
+      "notifyOnFailure": true
+    },
+    "tags": {
+      "critical": "关键功能，必须通过",
+      "visual": "视觉回归测试",
+      "performance": "性能相关测试",
+      "auth": "认证相关测试",
+      "blog": "博客功能测试",
+      "user": "用户功能测试"
+    }
+  }
+}

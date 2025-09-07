@@ -1,0 +1,50 @@
+# CODEOWNERS - 代码审查规则
+# 详细信息: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 🔒 黄金测试保护区域 - 需要特殊审批
+# 这些文件和目录包含核心测试，修改需要严格审查
+
+# 黄金测试目录 - 需要至少2个管理员审批
+tests-golden/ @admin-team @qa-lead
+tests-golden/** @admin-team @qa-lead
+
+# 黄金测试保护配置文件
+.github/workflows/golden-test-protection.yml @admin-team @security-team
+.git/hooks/golden-test-guard @admin-team @security-team
+
+# 测试配置文件
+tests-golden/config/ @admin-team @qa-lead @tech-lead
+
+# 核心测试文件 - 需要技术负责人和QA负责人双重审批
+tests-golden/e2e/blog.spec.ts @tech-lead @qa-lead
+tests-golden/backend/test_user_core.py @tech-lead @qa-lead
+tests-golden/frontend/auth-components.test.tsx @tech-lead @qa-lead
+
+# 黄金测试文档
+tests-golden/README.md @admin-team @qa-lead @tech-lead
+
+# 默认代码审查规则
+# 所有其他文件需要至少1个审批
+* @dev-team
+
+# 安全相关文件
+.github/workflows/ @security-team @admin-team
+.github/CODEOWNERS @admin-team
+
+# 配置文件
+*.config.js @tech-lead
+*.config.ts @tech-lead
+package.json @tech-lead
+requirements.txt @tech-lead
+
+# 数据库迁移
+backend/migrations/ @tech-lead @dba-team
+
+# 部署配置
+docker-compose*.yml @devops-team @tech-lead
+Dockerfile* @devops-team @tech-lead
+
+# 注意事项:
+# 1. @admin-team, @qa-lead, @tech-lead 等需要在GitHub组织中创建对应的团队
+# 2. 黄金测试区域的修改需要特别谨慎，建议设置分支保护规则
+# 3. 可以根据实际团队结构调整审查人员配置

@@ -1,0 +1,157 @@
+{
+  "timestamp": "2025-09-07T08:14:03.891Z",
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "配置文件检查",
+      "method": "checkConfig",
+      "success": true,
+      "result": {
+        "configFile": "存在",
+        "apiEndpoints": 14,
+        "uiPages": 8,
+        "dbTables": 5
+      }
+    },
+    {
+      "name": "依赖检查",
+      "method": "checkDependencies",
+      "success": true,
+      "result": {
+        "installed": [
+          {
+            "dep": "axios",
+            "found": true,
+            "location": "前端",
+            "version": "^1.6.2",
+            "description": "HTTP请求库"
+          },
+          {
+            "dep": "playwright",
+            "found": true,
+            "location": "前端",
+            "version": "^1.40.0",
+            "description": "UI测试框架"
+          },
+          {
+            "dep": "vitest",
+            "found": true,
+            "location": "根目录",
+            "version": "^3.2.4",
+            "description": "测试框架"
+          }
+        ],
+        "missing": [],
+        "packageJsons": 3
+      }
+    },
+    {
+      "name": "测试文件检查",
+      "method": "checkTestFiles",
+      "success": true,
+      "result": [
+        {
+          "file": "api/api-regression.test.js",
+          "exists": true,
+          "size": 12183
+        },
+        {
+          "file": "ui/ui-regression.test.js",
+          "exists": true,
+          "size": 12821
+        },
+        {
+          "file": "data/db-regression.test.js",
+          "exists": true,
+          "size": 17398
+        },
+        {
+          "file": "utils/snapshot.js",
+          "exists": true,
+          "size": 8786
+        },
+        {
+          "file": "run-regression.js",
+          "exists": true,
+          "size": 15214
+        }
+      ]
+    },
+    {
+      "name": "快照目录检查",
+      "method": "checkSnapshotDirs",
+      "success": true,
+      "result": [
+        {
+          "dir": "snapshots/api",
+          "exists": true
+        },
+        {
+          "dir": "snapshots/ui",
+          "exists": true
+        },
+        {
+          "dir": "snapshots/db",
+          "exists": true
+        },
+        {
+          "dir": "reports",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "name": "基本功能测试",
+      "method": "runBasicTests",
+      "success": true,
+      "result": [
+        {
+          "name": "配置加载测试",
+          "success": true,
+          "result": {
+            "snapshots": {
+              "enabled": true,
+              "tables": [
+                "users",
+                "blog_posts",
+                "english_lessons",
+                "user_progress",
+                "auth_tokens"
+              ],
+              "excludeFields": [
+                "created_at",
+                "updated_at",
+                "last_login"
+              ]
+            },
+            "consistency": {
+              "enabled": true,
+              "checkForeignKeys": true,
+              "checkUniqueConstraints": true,
+              "checkNotNullConstraints": true
+            }
+          }
+        },
+        {
+          "name": "快照管理器测试",
+          "success": true,
+          "result": true
+        },
+        {
+          "name": "测试运行器测试",
+          "success": true,
+          "result": true
+        }
+      ]
+    }
+  ],
+  "recommendations": [
+    "✅ 回归测试框架已就绪，可以开始使用",
+    "📝 建议先运行一次完整的回归测试建立基线",
+    "🔄 定期更新回归测试用例以覆盖新功能"
+  ]
+}

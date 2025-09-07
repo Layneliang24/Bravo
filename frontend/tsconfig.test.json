@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "node"],
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "vitest": ["./node_modules/vitest"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts", 
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "../tests-golden/frontend/**/*.ts",
+    "tests/setup.ts"
+  ],
+  "exclude": [
+    "tests/coverage/**/*",
+    "tests/e2e/**/*",
+    "tests/unit/**/*",
+    "node_modules",
+    "dist"
+  ]
+}
