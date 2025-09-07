@@ -40,6 +40,12 @@ python -m isort --check-only --diff apps/
 echo "  🔍 检查代码风格 (flake8)..."
 python -m flake8 apps/
 
+echo "  📝 检查代码质量 (pylint)..."
+python -m pylint apps/ --rcfile=.pylintrc --output-format=json > ../reports/pylint-report.json || true
+
+echo "  📊 检查代码复杂度 (radon)..."
+python -m radon cc apps/ --config radon.cfg
+
 echo "  📝 检查类型注解 (mypy)..."
 python -m mypy apps/ --ignore-missing-imports
 
@@ -66,15 +72,19 @@ pre-commit run --all-files
 
 # 生成质量报告
 echo "📊 生成代码质量报告..."
+mkdir -p reports
 cd backend
-python -m radon cc apps/ -a -nb > ../reports/cyclomatic-complexity.txt
-python -m radon mi apps/ > ../reports/maintainability-index.txt
+python -m radon cc apps/ -a -nb --config radon.cfg > ../reports/cyclomatic-complexity.txt
+python -m radon mi apps/ --config radon.cfg > ../reports/maintainability-index.txt
 python -m radon hal apps/ > ../reports/halstead-metrics.txt
+python -m radon raw apps/ > ../reports/raw-metrics.txt
 cd ..
 
 echo -e "${GREEN}✅ 代码质量检查完成！${NC}"
 echo "📋 报告位置:"
+echo "  - Pylint报告: reports/pylint-report.json"
 echo "  - 安全报告: reports/security-report.json"
 echo "  - 复杂度报告: reports/cyclomatic-complexity.txt"
 echo "  - 可维护性报告: reports/maintainability-index.txt"
 echo "  - Halstead报告: reports/halstead-metrics.txt"
+echo "  - 原始指标报告: reports/raw-metrics.txt"

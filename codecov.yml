@@ -1,0 +1,113 @@
+# Codecov配置文件
+# 用于配置代码覆盖率报告和上传设置
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        if_not_found: success
+        if_ci_failed: error
+      backend:
+        target: 85%
+        threshold: 2%
+        flags:
+          - backend
+      frontend:
+        target: 75%
+        threshold: 2%
+        flags:
+          - frontend
+    
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+        if_not_found: success
+
+flags:
+  backend:
+    paths:
+      - backend/
+    carryforward: false
+  frontend:
+    paths:
+      - frontend/
+    carryforward: false
+
+ignore:
+  - "backend/manage.py"
+  - "backend/*/migrations/"
+  - "backend/*/settings/"
+  - "backend/*/wsgi.py"
+  - "backend/*/asgi.py"
+  - "backend/venv/"
+  - "backend/.venv/"
+  - "frontend/dist/"
+  - "frontend/node_modules/"
+  - "frontend/public/"
+  - "frontend/src/assets/"
+  - "e2e/"
+  - "scripts/"
+  - "docs/"
+  - "*.md"
+  - "*.txt"
+  - "*.yml"
+  - "*.yaml"
+  - "*.json"
+  - "Dockerfile*"
+  - "docker-compose*"
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes
+  branches:
+    - main
+    - develop
+
+notifications:
+  email:
+    default:
+      to:
+        - admin@example.com
+      threshold: 1%
+      only_pulls: false
+      layout: "reach, diff, flags, files, footer"
+  
+  slack:
+    default:
+      url: "secret:slack_webhook_url"
+      threshold: 1%
+      only_pulls: false
+      message: |
+        Coverage for {{ owner }}/{{ repo }} changed by {{ range }}% ({{ commit }})
+        
+        {{ diff.files|length }} files changed:
+        {% for file in diff.files %}
+        - {{ file.name }}: {{ file.coverage }}%
+        {% endfor %}
+
+fixes:
+  - "backend/apps/::"
+  - "frontend/src/::"
+
+validation:
+  max_report_age: 24  # 24小时
+  require_ci_to_pass: yes
+  notify_error: yes
+  
+ui:
+  hide_density:
+    - "frontend/src/assets/"
+    - "backend/static/"
+  hide_complexity:
+    - "frontend/src/types/"
+    - "backend/*/migrations/"

@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-09-07T05:11:56.878Z",
+  "total": 0,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 0,
+  "duration": 2866.727,
+  "environment": {
+    "nodeVersion": "v22.18.0",
+    "platform": "win32",
+    "arch": "x64",
+    "baseUrl": "http://localhost:3000",
+    "ci": false
+  },
+  "browsers": [
+    "chromium",
+    "firefox",
+    "webkit",
+    "Mobile Chrome",
+    "Mobile Safari",
+    "iPad",
+    "Microsoft Edge",
+    "Google Chrome",
+    "Desktop Chrome HiDPI",
+    "Desktop Chrome Dark"
+  ],
+  "failedTests": []
+}

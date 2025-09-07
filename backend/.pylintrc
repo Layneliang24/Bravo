@@ -3,7 +3,8 @@ ignore=CVS
 init-hook='import sys; sys.path.append(".")'
 
 [MESSAGES CONTROL]
-disable=C0114,C0116,R0903,W0613
+disable=C0114,C0116,R0903,W0613,R0801,C0103,R0913,W0212,C0415
+enable=W0611,W0612,C0411,C0412,W0622,W0621
 
 [REPORTS]
 output-format=text
@@ -20,15 +21,17 @@ max-line-length=88
 indent-string='    '
 
 [DESIGN]
-max-args=10
-max-locals=15
-max-returns=6
-max-branches=12
-max-statements=50
-max-parents=7
-max-attributes=7
-max-public-methods=20
-max-bool-expr=5
+max-args=8
+max-locals=12
+max-returns=5
+max-branches=10
+max-statements=40
+max-parents=5
+max-attributes=10
+max-public-methods=15
+max-bool-expr=4
+min-public-methods=1
+max-complexity=10
 
 [IMPORTS]
 import-graph=
