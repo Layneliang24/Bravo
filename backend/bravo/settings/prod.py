@@ -1,8 +1,9 @@
-"""
-生产环境设置模板
-"""
+"""生产环境设置模板"""
 
-from .base import *
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
+from decouple import config
 
 # 生产环境配置
 DEBUG = False
@@ -86,7 +87,10 @@ LOGGING = {
             "style": "{",
         },
         "json": {
-            "format": '{"level": "%(levelname)s", "time": "%(asctime)s", "module": "%(module)s", "message": "%(message)s"}',
+            "format": (
+                '{"level": "%(levelname)s", "time": "%(asctime)s", '
+                '"module": "%(module)s", "message": "%(message)s"}'
+            ),
         },
     },
     "handlers": {
@@ -130,11 +134,7 @@ LOGGING = {
     },
 }
 
-# Sentry 配置
-import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
-from sentry_sdk.integrations.django import DjangoIntegration
-
+# Sentry配置
 sentry_sdk.init(
     dsn=config("SENTRY_DSN"),
     integrations=[

@@ -2,7 +2,12 @@
 本地开发环境设置模板
 """
 
-from .base import *
+from .base import (
+    BASE_DIR,
+    INSTALLED_APPS,
+    MIDDLEWARE,
+    LOGGING,
+)
 
 # 调试模式
 DEBUG = True

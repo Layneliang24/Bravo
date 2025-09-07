@@ -1,0 +1,84 @@
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+disable = 
+    missing-docstring,
+    too-few-public-methods,
+    too-many-ancestors,
+    import-outside-toplevel,
+    duplicate-code,
+    fixme,
+    broad-except,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes
+
+[FORMAT]
+max-line-length = 88
+
+[BASIC]
+# 命名规范检查
+# 函数命名: 小写加下划线
+function-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# 变量命名: 小写加下划线
+variable-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# 常量命名: 全大写加下划线
+const-rgx = ([A-Z_][A-Z0-9_]*)|(__.*__)$
+
+# 属性命名: 小写加下划线
+attr-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# 参数命名: 小写加下划线
+argument-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# 类属性命名: 小写加下划线或双下划线
+class-attribute-rgx = ([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+
+# 内联变量命名: 驼峰或下划线
+inlinevar-rgx = [A-Za-z_][A-Za-z0-9_]*$
+
+# 类命名: 大驼峰
+class-rgx = [A-Z_][a-zA-Z0-9]+$
+
+# 模块命名: 小写加下划线
+module-rgx = ([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+)$
+
+# 方法命名: 小写加下划线
+method-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# 允许的前缀和后缀
+good-names = i,j,k,ex,Run,_,id
+
+# 允许的名称
+name-group = 
+    test_*,
+    *_test,
+    Test*,
+    setUp,
+    tearDown,
+    setUpClass,
+    tearDownClass
+
+[DESIGN]
+max-args = 10
+max-locals = 20
+max-returns = 10
+max-branches = 15
+max-statements = 50
+max-parents = 7
+max-attributes = 15
+min-public-methods = 1
+max-public-methods = 20
+
+[CLASSES]
+defining-attr-methods = __init__, __new__, setUp
+valid-classmethod-first-arg = cls
+valid-metaclass-classmethod-first-arg = mcs
+
+[EXCEPTIONS]
+overgeneral-exceptions = Exception

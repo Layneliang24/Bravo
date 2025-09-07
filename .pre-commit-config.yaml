@@ -82,6 +82,37 @@ repos:
       - id: commitizen
         stages: [commit-msg]
 
+  # 命名规则检查
+  - repo: local
+    hooks:
+      - id: python-naming-check
+        name: Python Naming Convention Check
+        entry: python -m flake8 --select=N --config=backend/.flake8 backend/
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
+      - id: python-pylint-naming
+        name: Python Pylint Naming Check
+        entry: python -m pylint --rcfile=backend/.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used backend/
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
+      - id: typescript-naming-check
+        name: TypeScript Naming Convention Check
+        entry: npx eslint --config frontend/.eslintrc.cjs
+        language: system
+        files: ^frontend/src/.*\.(js|ts|vue)$
+        pass_filenames: true
+
+      - id: vue-naming-check
+        name: Vue Naming Convention Check
+        entry: npx eslint --config frontend/.eslintrc.cjs
+        language: system
+        files: ^frontend/src/.*\.vue$
+        pass_filenames: true
+
   # 本地目录守卫钩子
   - repo: local
     hooks:
