@@ -62,6 +62,24 @@
           "description": "扫描目标"
         }
       }
+    },
+    "doc_writer": {
+      "description": "生成文档到指定目录",
+      "parameters": {
+        "doc_type": {
+          "type": "string",
+          "enum": ["product", "guideline", "test_report", "operate"],
+          "description": "文档类型，决定放置的子目录"
+        },
+        "title": {
+          "type": "string",
+          "description": "文档标题"
+        },
+        "content": {
+          "type": "string",
+          "description": "文档内容"
+        }
+      }
     }
   }
 }

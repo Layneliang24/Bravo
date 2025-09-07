@@ -99,3 +99,18 @@ createsuperuser: ## 创建超级用户
 # 收集静态文件
 collectstatic: ## 收集静态文件
 	cd backend && python manage.py collectstatic --noinput
+
+# 清理误放根目录的文件
+move-clutter: ## 将误放根目录的文件移动到正确位置
+	@echo "🔍 扫描根目录违规文件..."
+	@files=$$(find . -maxdepth 1 -type f \( -name "*.md" -o -name "*.txt" -o -name "test_*.py" -o -name "*_test.py" -o -name "*.keep" -o -name "*.example" \) -not -name "Makefile" -not -name "README.md" -not -name "LICENSE" -not -name ".gitignore"); \
+	if [ -n "$$files" ]; then \
+		echo "📁 发现违规文件，正在移动到 docs/00_product/"; \
+		mkdir -p docs/00_product; \
+		for file in $$files; do \
+			mv "$$file" docs/00_product/; \
+			echo "✅ 移动 $$file -> docs/00_product/"; \
+		done; \
+	else \
+		echo "✨ 未发现违规文件"; \
+	fi
