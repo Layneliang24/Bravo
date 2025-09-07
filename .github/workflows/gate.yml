@@ -2,21 +2,22 @@ name: Test Gate - Anti-Cheating Full Test Suite
 
 on:
   pull_request:
-    branches: [ main, dev ]
+    branches: [main, dev]
   push:
-    branches: [ main, dev ]
+    branches: [main, dev]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   full-test-suite:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
+
     strategy:
       matrix:
         node-version: [18.x]
         python-version: [3.11]
-    
+
     services:
       postgres:
         image: postgres:15
@@ -30,229 +31,229 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: |
-          frontend/package-lock.json
-          e2e/package-lock.json
-    
-    - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: backend/requirements/test.txt
-    
-    - name: Install Frontend Dependencies
-      working-directory: ./frontend
-      run: |
-        npm ci --no-audit --no-fund
-        echo "✅ Frontend dependencies installed"
-    
-    - name: Install E2E Dependencies
-      working-directory: ./e2e
-      run: |
-        npm ci --no-audit --no-fund
-        npx playwright install --with-deps
-        echo "✅ E2E dependencies installed"
-    
-    - name: Install Backend Dependencies
-      working-directory: ./backend
-      run: |
-        pip install -r requirements/test.txt
-        echo "✅ Backend dependencies installed"
-    
-    # === FRONTEND TESTS ===
-    - name: Run Frontend Unit Tests with Coverage
-      working-directory: ./frontend
-      run: |
-        echo "🧪 Running Frontend Unit Tests (FORCED FULL SUITE)"
-        npm run test:unit -- --ci --coverage --watchAll=false --reporters=default --reporters=jest-junit
-        echo "✅ Frontend unit tests completed"
-      env:
-        CI: true
-        JEST_JUNIT_OUTPUT_DIR: ./test-results
-        JEST_JUNIT_OUTPUT_NAME: frontend-unit-results.xml
-    
-    - name: Run Frontend Component Tests
-      working-directory: ./frontend
-      run: |
-        echo "🧪 Running Frontend Component Tests (FORCED FULL SUITE)"
-        npm run test:component -- --reporter=junit --outputFile=./test-results/frontend-component-results.xml
-        echo "✅ Frontend component tests completed"
-    
-    # === BACKEND TESTS ===
-    - name: Run Backend Unit Tests with Coverage
-      working-directory: ./backend
-      run: |
-        echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
-        python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
-        echo "✅ Backend unit tests completed"
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-        DJANGO_SETTINGS_MODULE: bravo.settings.test
-    
-    - name: Run Backend Integration Tests
-      working-directory: ./backend
-      run: |
-        echo "🧪 Running Backend Integration Tests (FORCED FULL SUITE)"
-        python -m pytest tests/integration/ --junit-xml=test-results/backend-integration-results.xml -v
-        echo "✅ Backend integration tests completed"
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-        DJANGO_SETTINGS_MODULE: bravo.settings.test
-    
-    # === E2E TESTS ===
-    - name: Build Frontend for E2E
-      working-directory: ./frontend
-      run: |
-        npm run build
-        echo "✅ Frontend built for E2E testing"
-    
-    - name: Start Backend Server for E2E
-      working-directory: ./backend
-      run: |
-        python manage.py migrate --settings=bravo.settings.test
-        python manage.py runserver 8000 --settings=bravo.settings.test &
-        sleep 10
-        echo "✅ Backend server started for E2E"
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-    
-    - name: Start Frontend Server for E2E
-      working-directory: ./frontend
-      run: |
-        npm run preview -- --port 3000 &
-        sleep 5
-        echo "✅ Frontend server started for E2E"
-    
-    - name: Run E2E Tests with Trace
-      working-directory: ./e2e
-      run: |
-        echo "🧪 Running E2E Tests (FORCED FULL SUITE WITH TRACE)"
-        npx playwright test --reporter=html --reporter=junit
-        echo "✅ E2E tests completed"
-      env:
-        PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
-    
-    # === COVERAGE ANALYSIS ===
-    - name: Generate Coverage Reports
-      run: |
-        echo "📊 Generating comprehensive coverage reports"
-        # Frontend coverage
-        cd frontend && npx nyc report --reporter=text-lcov > ../coverage-frontend.lcov
-        # Backend coverage already generated
-        cd ../backend && cp coverage.xml ../coverage-backend.xml
-        echo "✅ Coverage reports generated"
-    
-    - name: Check Coverage Thresholds
-      run: |
-        echo "🔍 Checking coverage thresholds (ANTI-CHEATING)"
-        # This will fail the build if thresholds are not met
-        cd frontend && npm run test:coverage-check
-        cd ../backend && python -m pytest --cov=apps --cov=bravo --cov-fail-under=90 --cov-report=term-missing
-        echo "✅ All coverage thresholds met"
-    
-    # === PERFORMANCE TESTS ===
-    - name: Run Lighthouse Performance Tests
-      run: |
-        echo "⚡ Running Lighthouse Performance Tests"
-        npm install -g @lhci/cli
-        lhci autorun --upload.target=temporary-public-storage
-        echo "✅ Performance tests completed"
-    
-    # === UPLOAD ARTIFACTS ===
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ github.run_number }}
-        path: |
-          frontend/test-results/
-          backend/test-results/
-          e2e/test-results/
-          e2e/playwright-report/
-          frontend/coverage/
-          backend/htmlcov/
-        retention-days: 30
-    
-    - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage-frontend.lcov,./coverage-backend.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
-    
-    # === ANTI-CHEATING VERIFICATION ===
-    - name: Verify Test Execution Integrity
-      run: |
-        echo "🔒 ANTI-CHEATING: Verifying test execution integrity"
-        
-        # Check that all expected test result files exist
-        test -f frontend/test-results/frontend-unit-results.xml || (echo "❌ Frontend unit test results missing" && exit 1)
-        test -f frontend/test-results/frontend-component-results.xml || (echo "❌ Frontend component test results missing" && exit 1)
-        test -f backend/test-results/backend-unit-results.xml || (echo "❌ Backend unit test results missing" && exit 1)
-        test -f backend/test-results/backend-integration-results.xml || (echo "❌ Backend integration test results missing" && exit 1)
-        test -f e2e/e2e-results.xml || (echo "❌ E2E test results missing" && exit 1)
-        
-        # Check that coverage files exist and have content
-        test -s coverage-frontend.lcov || (echo "❌ Frontend coverage file empty or missing" && exit 1)
-        test -s coverage-backend.xml || (echo "❌ Backend coverage file empty or missing" && exit 1)
-        
-        # Verify minimum test counts (prevent fake test runs)
-        frontend_tests=$(grep -c "<testcase" frontend/test-results/frontend-unit-results.xml || echo "0")
-        backend_tests=$(grep -c "<testcase" backend/test-results/backend-unit-results.xml || echo "0")
-        e2e_tests=$(grep -c "<testcase" e2e/e2e-results.xml || echo "0")
-        
-        echo "📊 Test execution summary:"
-        echo "   Frontend tests: $frontend_tests"
-        echo "   Backend tests: $backend_tests"
-        echo "   E2E tests: $e2e_tests"
-        
-        # Minimum test thresholds (adjust based on your project)
-        [ "$frontend_tests" -ge "10" ] || (echo "❌ Insufficient frontend tests executed ($frontend_tests < 10)" && exit 1)
-        [ "$backend_tests" -ge "20" ] || (echo "❌ Insufficient backend tests executed ($backend_tests < 20)" && exit 1)
-        [ "$e2e_tests" -ge "5" ] || (echo "❌ Insufficient E2E tests executed ($e2e_tests < 5)" && exit 1)
-        
-        echo "✅ Test execution integrity verified - NO CHEATING DETECTED"
-    
-    # === SUMMARY REPORT ===
-    - name: Generate Test Summary
-      if: always()
-      run: |
-        echo "📋 COMPREHENSIVE TEST SUMMARY" >> $GITHUB_STEP_SUMMARY
-        echo "================================" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "## 🧪 Test Execution Results" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "| Test Suite | Status | Coverage |" >> $GITHUB_STEP_SUMMARY
-        echo "|------------|--------|----------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Frontend Unit | ✅ | $(grep -o 'lines="[0-9.]*"' frontend/coverage/lcov-report/index.html | head -1 | cut -d'"' -f2 || echo 'N/A')% |" >> $GITHUB_STEP_SUMMARY
-        echo "| Frontend Component | ✅ | Included above |" >> $GITHUB_STEP_SUMMARY
-        echo "| Backend Unit | ✅ | $(grep -o 'pc_cov">[0-9]*%' backend/htmlcov/index.html | head -1 | cut -d'>' -f2 || echo 'N/A') |" >> $GITHUB_STEP_SUMMARY
-        echo "| Backend Integration | ✅ | Included above |" >> $GITHUB_STEP_SUMMARY
-        echo "| E2E Tests | ✅ | Full flow coverage |" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "## 🔒 Anti-Cheating Verification" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ All test suites executed completely" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Coverage thresholds enforced (≥90%)" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Test result artifacts uploaded" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Performance benchmarks completed" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "## 📊 Detailed Reports" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- [Playwright HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
-        echo "- [Coverage Report on Codecov](https://codecov.io/gh/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
-        echo "- [Test Artifacts Download](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements/test.txt
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci --no-audit --no-fund
+          echo "✅ Frontend dependencies installed"
+
+      - name: Install E2E Dependencies
+        working-directory: ./e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps
+          echo "✅ E2E dependencies installed"
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: |
+          pip install -r requirements/test.txt
+          echo "✅ Backend dependencies installed"
+
+      # === FRONTEND TESTS ===
+      - name: Run Frontend Unit Tests with Coverage
+        working-directory: ./frontend
+        run: |
+          echo "🧪 Running Frontend Unit Tests (FORCED FULL SUITE)"
+          npm run test:unit -- --ci --coverage --watchAll=false --reporters=default --reporters=jest-junit
+          echo "✅ Frontend unit tests completed"
+        env:
+          CI: true
+          JEST_JUNIT_OUTPUT_DIR: ./test-results
+          JEST_JUNIT_OUTPUT_NAME: frontend-unit-results.xml
+
+      - name: Run Frontend Component Tests
+        working-directory: ./frontend
+        run: |
+          echo "🧪 Running Frontend Component Tests (FORCED FULL SUITE)"
+          npm run test:component -- --reporter=junit --outputFile=./test-results/frontend-component-results.xml
+          echo "✅ Frontend component tests completed"
+
+      # === BACKEND TESTS ===
+      - name: Run Backend Unit Tests with Coverage
+        working-directory: ./backend
+        run: |
+          echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
+          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
+          echo "✅ Backend unit tests completed"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Run Backend Integration Tests
+        working-directory: ./backend
+        run: |
+          echo "🧪 Running Backend Integration Tests (FORCED FULL SUITE)"
+          python -m pytest tests/integration/ --junit-xml=test-results/backend-integration-results.xml -v
+          echo "✅ Backend integration tests completed"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      # === E2E TESTS ===
+      - name: Build Frontend for E2E
+        working-directory: ./frontend
+        run: |
+          npm run build
+          echo "✅ Frontend built for E2E testing"
+
+      - name: Start Backend Server for E2E
+        working-directory: ./backend
+        run: |
+          python manage.py migrate --settings=bravo.settings.test
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          sleep 10
+          echo "✅ Backend server started for E2E"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+
+      - name: Start Frontend Server for E2E
+        working-directory: ./frontend
+        run: |
+          npm run preview -- --port 3000 &
+          sleep 5
+          echo "✅ Frontend server started for E2E"
+
+      - name: Run E2E Tests with Trace
+        working-directory: ./e2e
+        run: |
+          echo "🧪 Running E2E Tests (FORCED FULL SUITE WITH TRACE)"
+          npx playwright test --reporter=html --reporter=junit
+          echo "✅ E2E tests completed"
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
+
+      # === COVERAGE ANALYSIS ===
+      - name: Generate Coverage Reports
+        run: |
+          echo "📊 Generating comprehensive coverage reports"
+          # Frontend coverage
+          cd frontend && npx nyc report --reporter=text-lcov > ../coverage-frontend.lcov
+          # Backend coverage already generated
+          cd ../backend && cp coverage.xml ../coverage-backend.xml
+          echo "✅ Coverage reports generated"
+
+      - name: Check Coverage Thresholds
+        run: |
+          echo "🔍 Checking coverage thresholds (ANTI-CHEATING)"
+          # This will fail the build if thresholds are not met
+          cd frontend && npm run test:coverage-check
+          cd ../backend && python -m pytest --cov=apps --cov=bravo --cov-fail-under=90 --cov-report=term-missing
+          echo "✅ All coverage thresholds met"
+
+      # === PERFORMANCE TESTS ===
+      - name: Run Lighthouse Performance Tests
+        run: |
+          echo "⚡ Running Lighthouse Performance Tests"
+          npm install -g @lhci/cli
+          lhci autorun --upload.target=temporary-public-storage
+          echo "✅ Performance tests completed"
+
+      # === UPLOAD ARTIFACTS ===
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: |
+            frontend/test-results/
+            backend/test-results/
+            e2e/test-results/
+            e2e/playwright-report/
+            frontend/coverage/
+            backend/htmlcov/
+          retention-days: 30
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage-frontend.lcov,./coverage-backend.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+
+      # === ANTI-CHEATING VERIFICATION ===
+      - name: Verify Test Execution Integrity
+        run: |
+          echo "🔒 ANTI-CHEATING: Verifying test execution integrity"
+
+          # Check that all expected test result files exist
+          test -f frontend/test-results/frontend-unit-results.xml || (echo "❌ Frontend unit test results missing" && exit 1)
+          test -f frontend/test-results/frontend-component-results.xml || (echo "❌ Frontend component test results missing" && exit 1)
+          test -f backend/test-results/backend-unit-results.xml || (echo "❌ Backend unit test results missing" && exit 1)
+          test -f backend/test-results/backend-integration-results.xml || (echo "❌ Backend integration test results missing" && exit 1)
+          test -f e2e/e2e-results.xml || (echo "❌ E2E test results missing" && exit 1)
+
+          # Check that coverage files exist and have content
+          test -s coverage-frontend.lcov || (echo "❌ Frontend coverage file empty or missing" && exit 1)
+          test -s coverage-backend.xml || (echo "❌ Backend coverage file empty or missing" && exit 1)
+
+          # Verify minimum test counts (prevent fake test runs)
+          frontend_tests=$(grep -c "<testcase" frontend/test-results/frontend-unit-results.xml || echo "0")
+          backend_tests=$(grep -c "<testcase" backend/test-results/backend-unit-results.xml || echo "0")
+          e2e_tests=$(grep -c "<testcase" e2e/e2e-results.xml || echo "0")
+
+          echo "📊 Test execution summary:"
+          echo "   Frontend tests: $frontend_tests"
+          echo "   Backend tests: $backend_tests"
+          echo "   E2E tests: $e2e_tests"
+
+          # Minimum test thresholds (adjust based on your project)
+          [ "$frontend_tests" -ge "10" ] || (echo "❌ Insufficient frontend tests executed ($frontend_tests < 10)" && exit 1)
+          [ "$backend_tests" -ge "20" ] || (echo "❌ Insufficient backend tests executed ($backend_tests < 20)" && exit 1)
+          [ "$e2e_tests" -ge "5" ] || (echo "❌ Insufficient E2E tests executed ($e2e_tests < 5)" && exit 1)
+
+          echo "✅ Test execution integrity verified - NO CHEATING DETECTED"
+
+      # === SUMMARY REPORT ===
+      - name: Generate Test Summary
+        if: always()
+        run: |
+          echo "📋 COMPREHENSIVE TEST SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "================================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Test Execution Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status | Coverage |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Unit | ✅ | $(grep -o 'lines="[0-9.]*"' frontend/coverage/lcov-report/index.html | head -1 | cut -d'"' -f2 || echo 'N/A')% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Component | ✅ | Included above |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Unit | ✅ | $(grep -o 'pc_cov">[0-9]*%' backend/htmlcov/index.html | head -1 | cut -d'>' -f2 || echo 'N/A') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Integration | ✅ | Included above |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ✅ | Full flow coverage |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Anti-Cheating Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ All test suites executed completely" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Coverage thresholds enforced (≥90%)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Test result artifacts uploaded" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance benchmarks completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Detailed Reports" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [Playwright HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Coverage Report on Codecov](https://codecov.io/gh/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Test Artifacts Download](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
