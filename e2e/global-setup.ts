@@ -214,7 +214,7 @@ async function setupAuthentication(config: FullConfig) {
       console.log('  ℹ️  未找到登录表单，跳过认证设置');
     }
   } catch (error) {
-    console.log('  ⚠️  认证设置失败，将使用匿名访问:', error.message);
+    console.log('  ⚠️  认证设置失败，将使用匿名访问:', (error as Error).message);
   } finally {
     await browser.close();
   }

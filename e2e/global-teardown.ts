@@ -177,7 +177,7 @@ async function cleanupTempFiles() {
         }
       }
     } catch (error) {
-      console.log(`  ⚠️  清理 ${pattern} 失败:`, error.message);
+      console.log(`  ⚠️  清理 ${pattern} 失败:`, (error as Error).message);
     }
   }
 }
@@ -235,7 +235,7 @@ async function compressTestResults() {
   try {
     // archiver已在顶部导入
     const output = fs.createWriteStream(path.join(__dirname, 'test-results.zip'));
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = archiver.create('zip', { zlib: { level: 9 } });
     
     output.on('close', () => {
       console.log(`  ✓ 测试结果已压缩 (${archive.pointer()} bytes)`);
@@ -273,7 +273,7 @@ async function compressTestResults() {
     
     await archive.finalize();
   } catch (error) {
-    console.log('  ⚠️  压缩测试结果失败:', error.message);
+      console.log('  ⚠️  压缩测试结果失败:', (error as Error).message);
   }
 }
 

@@ -40,7 +40,8 @@
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
     "postinstall": "npm run e2e:install",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
@@ -49,11 +50,8 @@
     "lint-staged": "^16.1.6"
   },
   "lint-staged": {
-    "frontend/**/*.{ts,tsx,vue}": [
-      "echo 'Checking frontend TypeScript files...'"
-    ],
-    "e2e/tests/**/*.{ts,js}": [
-      "echo 'Checking e2e test files...'"
+    "**/*.{ts,tsx,js,jsx,vue}": [
+      "npm run check:syntax"
     ]
   },
   "engines": {
