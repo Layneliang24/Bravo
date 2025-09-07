@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-回归测试套件 - 黄金测试
+"""回归测试套件 - 黄金测试
 
 这个文件包含核心功能的回归测试，用于确保新功能不会破坏已有功能。
 
@@ -10,9 +9,18 @@
 - 新功能测试请添加到其他测试文件中
 """
 
-from django.test import TestCase, Client
+import os
+
+import django
+from django.conf import settings
 from django.contrib.auth.models import User
-import json
+from django.test import Client, TestCase
+
+# 配置Django设置
+if not settings.configured:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
+    django.setup()
+
 
 
 class BlogRegressionTests(TestCase):
@@ -140,7 +148,7 @@ class DatabaseRegressionTests(TestCase):
         user_count_before = User.objects.count()
         updated_user.delete()
         user_count_after = User.objects.count()
-        
+
         # 验证删除
         self.assertEqual(user_count_after, user_count_before - 1)
     
@@ -153,7 +161,7 @@ class DatabaseRegressionTests(TestCase):
             password='test123'
         )
         self.assertTrue(user1.id)
-        
+
         # 测试用户名必须唯一
         from django.db import IntegrityError
         with self.assertRaises(IntegrityError):
