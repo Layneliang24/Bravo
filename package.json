@@ -50,6 +50,9 @@
     "lint-staged": "^16.1.6"
   },
   "lint-staged": {
+    "tests-golden/**/*": [
+      "bash -c 'echo \"❌ 错误：不允许修改黄金测试文件！\" && echo \"请联系项目维护者或在PR中添加 [GOLDEN-TEST] 标签说明修改原因\" && exit 1'"
+    ],
     "**/*.{ts,tsx,js,jsx,vue}": [
       "npm run check:syntax"
     ]
