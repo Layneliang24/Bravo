@@ -1,6 +1,6 @@
 """测试环境配置"""
 
-from .base import *
+from .base import *  # noqa: F403,F401
 
 # 测试环境特定设置
 DEBUG = True

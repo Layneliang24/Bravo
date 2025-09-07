@@ -22,10 +22,9 @@ if not settings.configured:
     django.setup()
 
 
-
 class BlogRegressionTests(TestCase):
     """博客功能回归测试 - 确保核心功能不被破坏"""
-    
+
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser',
@@ -33,18 +32,18 @@ class BlogRegressionTests(TestCase):
             password='testpass123'
         )
         self.client = Client()
-    
+
     def test_user_creation(self):
         """测试用户创建功能"""
         self.assertTrue(self.user.id)
         self.assertEqual(self.user.username, 'testuser')
         self.assertEqual(self.user.email, 'test@example.com')
-    
+
     def test_user_authentication(self):
         """测试用户认证功能"""
         login_success = self.client.login(username='testuser', password='testpass123')
         self.assertTrue(login_success)
-    
+
     def test_admin_access(self):
         """测试管理后台访问"""
         response = self.client.get('/admin/')
@@ -54,7 +53,7 @@ class BlogRegressionTests(TestCase):
 
 class UserRegressionTests(TestCase):
     """用户功能回归测试 - 确保用户管理功能稳定"""
-    
+
     def test_user_model_creation(self):
         """测试用户模型创建"""
         user = User.objects.create_user(
@@ -76,7 +75,7 @@ class UserRegressionTests(TestCase):
         # 这里可以添加用户资料相关的测试
         self.assertTrue(user.is_active)
 
-    def test_user_authentication_failure(self):
+    def test_user_auth_failure(self):
         """测试用户认证失败"""
         login_success = self.client.login(username='wronguser', password='wrongpass')
         self.assertFalse(login_success)
@@ -118,7 +117,7 @@ class UserRegressionTests(TestCase):
         self.client.logout()
         login_fail = self.client.login(username='changeuser', password='oldpass123')
         self.assertFalse(login_fail)
-    
+
     def test_user_password_check(self):
         """测试用户密码验证"""
         user = User.objects.create_user(
@@ -128,7 +127,7 @@ class UserRegressionTests(TestCase):
         )
         self.assertTrue(user.check_password('loginpass123'))
         self.assertFalse(user.check_password('wrongpassword'))
-    
+
     def test_user_string_representation(self):
         """测试用户字符串表示"""
         user = User.objects.create_user(
@@ -141,19 +140,19 @@ class UserRegressionTests(TestCase):
 
 class APIHealthRegressionTests(TestCase):
     """API健康检查回归测试 - 确保系统基础服务正常"""
-    
+
     def test_health_check_endpoint(self):
         """测试健康检查端点"""
         response = self.client.get('/health/')
         # 健康检查可能返回200、404或500（数据库问题）
         self.assertIn(response.status_code, [200, 404, 500])
-    
+
     def test_api_root_endpoint(self):
         """测试API根端点"""
         response = self.client.get('/api/')
         # 允许404，因为端点可能未实现
         self.assertIn(response.status_code, [200, 404])
-    
+
     def test_admin_endpoint(self):
         """测试管理后台端点"""
         response = self.client.get('/admin/')
@@ -163,7 +162,7 @@ class APIHealthRegressionTests(TestCase):
 
 class DatabaseRegressionTests(TestCase):
     """数据库功能回归测试 - 确保数据层稳定性"""
-    
+
     def test_database_connection(self):
         """测试数据库连接"""
         from django.db import connection
@@ -171,7 +170,7 @@ class DatabaseRegressionTests(TestCase):
             cursor.execute("SELECT 1")
             result = cursor.fetchone()
             self.assertEqual(result[0], 1)
-    
+
     def test_user_model_crud(self):
         """测试用户模型CRUD操作"""
         # 创建用户
@@ -180,23 +179,23 @@ class DatabaseRegressionTests(TestCase):
             email='dbtest@example.com',
             password='dbtest123'
         )
-        
+
         # 验证创建
         self.assertTrue(user.id)
         self.assertEqual(user.username, 'dbtest')
-        
+
         # 查询用户
         found_user = User.objects.get(username='dbtest')
         self.assertEqual(found_user.email, 'dbtest@example.com')
-        
+
         # 更新用户
         found_user.email = 'updated@example.com'
         found_user.save()
-        
+
         # 验证更新
         updated_user = User.objects.get(username='dbtest')
         self.assertEqual(updated_user.email, 'updated@example.com')
-        
+
         # 删除用户
         user_count_before = User.objects.count()
         updated_user.delete()
@@ -204,7 +203,7 @@ class DatabaseRegressionTests(TestCase):
 
         # 验证删除
         self.assertEqual(user_count_after, user_count_before - 1)
-    
+
     def test_user_model_constraints(self):
         """测试用户模型约束"""
         # 创建第一个用户

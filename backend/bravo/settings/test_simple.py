@@ -1,6 +1,5 @@
 """完全独立的测试环境配置 - 不依赖任何其他设置文件"""
 
-import os
 from pathlib import Path
 
 # 构建项目内的路径

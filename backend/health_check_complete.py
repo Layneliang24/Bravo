@@ -6,9 +6,7 @@ import sys
 import time
 import random
 import shutil
-import tempfile
 import subprocess
-from pathlib import Path
 
 def print_header(title):
     """打印标题"""
@@ -39,9 +37,9 @@ def run_command_safe(command, description):
         print(f"✗ {description} - 异常: {e}")
         return False
 
-def check_file_exists(filepath, description):
+def check_file_exists(file_path, description):
     """检查文件是否存在"""
-    if os.path.exists(filepath):
+    if os.path.exists(file_path):
         print(f"✓ {description} - 存在")
         return True
     else:
