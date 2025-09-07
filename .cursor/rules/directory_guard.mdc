@@ -1,0 +1,21 @@
+# 目录守卫规则
+
+## 根目录禁止新增文件类型
+- 禁止在根目录新增任何 *.md、*.txt、test_*.py、*_test.py、*.keep、*.example
+- 产品/指导/测试报告 → 必须放 docs/ 并按子目录分级
+- 新增业务测试 → 必须放 backend/apps/<域>/tests/ 或 frontend/src/同级 .spec.ts
+- 若违规，AI 必须拒绝并提示：「请放 docs/ 或同目录测试」
+
+## 允许路径
+- docs/ - 所有文档类文件
+- backend/apps/*/tests/ - 后端测试文件
+- frontend/src/**/*.spec.ts - 前端测试文件
+- scripts/ - 脚本文件
+- .github/workflows/ - CI配置文件
+
+## 禁止示例
+❌ README_new.md (根目录)
+❌ test_utils.py (根目录)
+❌ temp_report.txt (根目录)
+✅ docs/00_product/README_new.md
+✅ backend/apps/blog/tests/test_utils.py

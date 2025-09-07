@@ -81,3 +81,12 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+
+  # 本地目录守卫钩子
+  - repo: local
+    hooks:
+      - id: root-clutter
+        name: Root Clutter Guard
+        entry: bash -c 'git diff --cached --name-only | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$" && echo "请放 docs/ 或同目录测试" && exit 1 || exit 0'
+        language: system
+        always_run: true

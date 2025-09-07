@@ -1,0 +1,19 @@
+name: Directory Guard
+on: [pull_request]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block root clutter
+        run: |
+          # 禁止根新增指定类型
+          forbidden_files=$(git diff --name-only origin/main...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$forbidden_files" ]; then
+            echo "::error::检测到根目录新增文档/测试，请移至 docs/ 或同目录测试"
+            echo "违规文件:"
+            echo "$forbidden_files"
+            exit 1
+          fi
+          echo "✅ 目录检查通过"
