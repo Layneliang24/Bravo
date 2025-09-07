@@ -98,6 +98,10 @@ test-results.xml
 # Kubernetes
 *.kubeconfig
 
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
 # Temporary files
 *.tmp
 *.temp

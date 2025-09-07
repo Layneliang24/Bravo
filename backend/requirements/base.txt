@@ -32,6 +32,10 @@ marshmallow==3.20.1
 python-decouple==3.8
 requests==2.31.0
 Pillow==10.1.0
+whitenoise==6.6.0
+
+# 健康检查
+django-health-check==3.17.0
 
 # 日志
 structlog==23.2.0

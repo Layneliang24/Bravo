@@ -1,0 +1,71 @@
+# 安全扫描规则
+
+## 安全扫描策略
+
+### 1. 扫描频率
+- **每次提交**：基础安全检查
+- **每日扫描**：依赖漏洞检查
+- **每周扫描**：完整安全审计
+- **发布前**：深度安全扫描
+
+### 2. 扫描范围
+- **代码安全**：SQL 注入、XSS、CSRF 等
+- **依赖安全**：已知漏洞检查
+- **配置安全**：敏感信息泄露
+- **运行时安全**：权限检查
+
+## 安全工具
+
+### 1. 静态分析
+- **bandit**：Python 安全漏洞检查
+- **semgrep**：多语言安全扫描
+- **CodeQL**：GitHub 安全分析
+- **SonarQube**：代码质量与安全
+
+### 2. 依赖检查
+- **safety**：Python 依赖漏洞检查
+- **npm audit**：Node.js 依赖检查
+- **Dependabot**：自动依赖更新
+- **Snyk**：依赖漏洞监控
+
+### 3. 运行时检查
+- **OWASP ZAP**：Web 应用安全测试
+- **Burp Suite**：渗透测试
+- **Nessus**：漏洞扫描
+
+## 安全配置
+
+### 1. Django 安全设置
+```python
+# 生产环境安全配置
+DEBUG = False
+ALLOWED_HOSTS = ['yourdomain.com']
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+```
+
+### 2. 前端安全配置
+- 启用 CSP（内容安全策略）
+- 使用 HTTPS
+- 防止 XSS 攻击
+- 安全的 Cookie 设置
+
+### 3. 环境变量安全
+- 使用 `.env` 文件管理敏感信息
+- 不在代码中硬编码密钥
+- 定期轮换密钥
+- 使用密钥管理服务
+
+## 安全门禁
+
+### 1. 提交门禁
+- 无高危漏洞
+- 无敏感信息泄露
+- 通过基础安全检查
+
+### 2. 发布门禁
+- 无中高危漏洞
+- 通过完整安全扫描
+- 安全配置检查通过

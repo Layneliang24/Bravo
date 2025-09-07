@@ -4,16 +4,17 @@ version: '3.8'
 
 services:
   # 测试数据库
-  postgres-test:
-    image: postgres:13
+  mysql-test:
+    image: mysql:8.0
     environment:
-      POSTGRES_DB: bravo_test
-      POSTGRES_USER: bravo_user
-      POSTGRES_PASSWORD: bravo_password
+      MYSQL_DATABASE: bravo_test
+      MYSQL_USER: bravo_user
+      MYSQL_PASSWORD: bravo_password
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
-      - "5433:5432"
+      - "3307:3306"
     tmpfs:
-      - /var/lib/postgresql/data
+      - /var/lib/mysql
 
   # 测试 Redis
   redis-test:
@@ -30,12 +31,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.test
-      - DATABASE_URL=postgresql://bravo_user:bravo_password@postgres-test:5432/bravo_test
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql-test:3306/bravo_test
       - REDIS_URL=redis://redis-test:6379/0
     volumes:
       - ./backend:/app
     depends_on:
-      - postgres-test
+      - mysql-test
       - redis-test
     command: pytest
 

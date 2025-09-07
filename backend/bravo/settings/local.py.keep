@@ -13,12 +13,12 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 # 数据库配置
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bravo_local',
         'USER': 'bravo_user',
         'PASSWORD': 'bravo_password',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '3306',
     }
 }
 
@@ -29,18 +29,18 @@ if DEBUG:
         'django_extensions',
         'silk',
     ]
-    
+
     MIDDLEWARE += [
         'debug_toolbar.middleware.DebugToolbarMiddleware',
         'silk.middleware.SilkyMiddleware',
     ]
-    
+
     # 调试工具栏配置
     INTERNAL_IPS = [
         '127.0.0.1',
         'localhost',
     ]
-    
+
     # Silk 配置
     SILKY_PYTHON_PROFILER = True
     SILKY_PYTHON_PROFILER_BINARY = True
