@@ -13,13 +13,14 @@ import os
 
 import django
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.test import Client, TestCase
 
 # 配置Django设置
 if not settings.configured:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
     django.setup()
+
+from django.contrib.auth.models import User
+from django.test import Client, TestCase
 
 
 class BlogRegressionTests(TestCase):
