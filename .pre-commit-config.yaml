@@ -1,6 +1,15 @@
 # 预提交钩子配置模板
 
 repos:
+  # 本地快速检查脚本
+  - repo: local
+    hooks:
+      - id: fast-pre-commit-check
+        name: Fast pre-commit check
+        entry: python scripts/fast_pre_commit.py
+        language: system
+        pass_filenames: false
+        always_run: true
   # Python 代码格式化
   - repo: https://github.com/psf/black
     rev: 23.11.0
@@ -34,6 +43,8 @@ repos:
     hooks:
       - id: bandit
         args: ["-r", ".", "-f", "json", "-o", "bandit-report.json"]
+        additional_dependencies: ["pbr"]
+        pass_filenames: false
 
   # JavaScript/TypeScript 代码格式化
   - repo: https://github.com/pre-commit/mirrors-prettier

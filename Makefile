@@ -31,6 +31,11 @@ test: ## 运行所有测试
 	cd frontend && npm run test
 	cd e2e && npm run test
 
+# 统一测试入口 - 业内标准做法
+test-all: ## 一键运行全量测试（单元+回归+E2E+性能+质量）
+	@chmod +x test_all.sh
+	@./test_all.sh
+
 test-regression: ## 运行回归测试
 	@echo "Running regression tests..."
 	node tests/regression/run-regression.js

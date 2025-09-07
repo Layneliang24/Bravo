@@ -1,0 +1,241 @@
+{
+  "timestamp": "2025-09-07T17:27:33.259638",
+  "commit_hash": "0c81c45c6ff9a67a2166660cd1518dbb61e48b2a",
+  "features": [
+    {
+      "id": "ENG-001",
+      "desc": "英语新闻列表页显示标题和摘要",
+      "category": "english",
+      "priority": "high",
+      "components": [
+        "NewsList.vue",
+        "NewsCard.vue"
+      ],
+      "apis": [
+        "/api/english/news/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "ENG-002",
+      "desc": "英语新闻详情页点击翻译按钮出现中文翻译",
+      "category": "english",
+      "priority": "high",
+      "components": [
+        "NewsDetail.vue",
+        "TranslationButton.vue"
+      ],
+      "apis": [
+        "/api/english/news/{id}/",
+        "/api/english/translate/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "ENG-003",
+      "desc": "打字练习页面统计正确率和速度",
+      "category": "english",
+      "priority": "medium",
+      "components": [
+        "TypingPractice.vue",
+        "TypingStats.vue"
+      ],
+      "apis": [
+        "/api/english/typing/stats/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "ENG-004",
+      "desc": "英语单词收藏和复习功能",
+      "category": "english",
+      "priority": "medium",
+      "components": [
+        "WordCollection.vue",
+        "ReviewMode.vue"
+      ],
+      "apis": [
+        "/api/english/words/favorites/",
+        "/api/english/words/review/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "BLOG-001",
+      "desc": "博客列表页展示3篇最新博客",
+      "category": "blog",
+      "priority": "high",
+      "components": [
+        "BlogList.vue",
+        "BlogCard.vue"
+      ],
+      "apis": [
+        "/api/blog/posts/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "BLOG-002",
+      "desc": "博客详情页显示完整内容和评论",
+      "category": "blog",
+      "priority": "high",
+      "components": [
+        "BlogDetail.vue",
+        "CommentSection.vue"
+      ],
+      "apis": [
+        "/api/blog/posts/{id}/",
+        "/api/blog/comments/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "BLOG-003",
+      "desc": "博客搜索和分类筛选功能",
+      "category": "blog",
+      "priority": "medium",
+      "components": [
+        "BlogSearch.vue",
+        "CategoryFilter.vue"
+      ],
+      "apis": [
+        "/api/blog/search/",
+        "/api/blog/categories/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "USER-001",
+      "desc": "用户注册和登录功能",
+      "category": "auth",
+      "priority": "critical",
+      "components": [
+        "LoginForm.vue",
+        "RegisterForm.vue"
+      ],
+      "apis": [
+        "/api/auth/login/",
+        "/api/auth/register/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "USER-002",
+      "desc": "用户个人资料管理",
+      "category": "auth",
+      "priority": "medium",
+      "components": [
+        "ProfileEdit.vue",
+        "AvatarUpload.vue"
+      ],
+      "apis": [
+        "/api/auth/profile/",
+        "/api/auth/avatar/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "USER-003",
+      "desc": "用户学习进度跟踪",
+      "category": "auth",
+      "priority": "medium",
+      "components": [
+        "ProgressDashboard.vue",
+        "ProgressChart.vue"
+      ],
+      "apis": [
+        "/api/auth/progress/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "COMMON-001",
+      "desc": "响应式导航栏和菜单",
+      "category": "common",
+      "priority": "high",
+      "components": [
+        "NavBar.vue",
+        "SideMenu.vue"
+      ],
+      "apis": [],
+      "status": "active"
+    },
+    {
+      "id": "COMMON-002",
+      "desc": "全局错误处理和提示",
+      "category": "common",
+      "priority": "high",
+      "components": [
+        "ErrorBoundary.vue",
+        "NotificationToast.vue"
+      ],
+      "apis": [],
+      "status": "active"
+    },
+    {
+      "id": "COMMON-003",
+      "desc": "多语言国际化支持",
+      "category": "common",
+      "priority": "medium",
+      "components": [
+        "LanguageSwitcher.vue"
+      ],
+      "apis": [
+        "/api/i18n/"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "PERF-001",
+      "desc": "页面加载性能优化",
+      "category": "performance",
+      "priority": "medium",
+      "components": [],
+      "apis": [],
+      "status": "active"
+    },
+    {
+      "id": "PERF-002",
+      "desc": "图片懒加载和压缩",
+      "category": "performance",
+      "priority": "medium",
+      "components": [
+        "LazyImage.vue"
+      ],
+      "apis": [],
+      "status": "active"
+    }
+  ],
+  "test_results": {
+    "backend_tests": {
+      "status": "failed",
+      "total": 0,
+      "passed": 0,
+      "error": "Traceback (most recent call last):\n  File \"S:\\WorkShop\\cursor\\Bravo\\backend\\simple_test_runner.py\", line 18, in run_simple_tests\n    print(\"\\u2713 基本数学运算正常\")\nUnicodeEncodeError: 'gbk' codec can't encode character '\\u2713' in position 0: illegal multibyte sequence\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"S:\\WorkShop\\cursor\\Bravo\\backend\\simple_test_runner.py\", line 92, in <module>\n    success = run_simple_tests()\n  File \"S:\\WorkShop\\cursor\\Bravo\\backend\\simple_test_runner.py\", line 20, in run_simple_tests\n    print(f\"\\u2717 基本数学运算失败: {e}\")\nUnicodeEncodeError: 'gbk' codec can't encode character '\\u2717' in position 0: illegal multibyte sequence\n"
+    },
+    "frontend_tests": {
+      "status": "error",
+      "total": 0,
+      "passed": 0,
+      "error": "[WinError 2] 系统找不到指定的文件。"
+    },
+    "e2e_tests": {
+      "status": "configured",
+      "total": 1,
+      "passed": 1,
+      "note": "E2E tests configured but not executed"
+    },
+    "summary": {
+      "total": 1,
+      "passed": 1,
+      "pass_rate": 100.0
+    }
+  },
+  "file_checksums": {
+    "backend/bravo/settings/base.py": "141ca2ea9735eaad27a13f03db04d1ee",
+    "backend/bravo/urls.py": "afc0ad0b90af8f1fa702ebe53d721004",
+    "frontend/src/main.ts": "7d7ce138b87603e339da76dd11a80a0a",
+    "frontend/src/App.vue": "8df1e0daa699e069531cf1d231ed5189",
+    "features.json": "6af8430874ce2fd382542c32d23b39df"
+  }
+}
