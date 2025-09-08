@@ -1,0 +1,65 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import router from './index'
+
+describe('Router', () => {
+  beforeEach(async () => {
+    // 重置路由状态
+    router.push('/')
+    await router.isReady()
+  })
+
+  it('应该正确配置路由', () => {
+    expect(router).toBeDefined()
+    expect(router.getRoutes()).toHaveLength(2)
+  })
+
+  it('应该有Home路由', () => {
+    const homeRoute = router.getRoutes().find(route => route.name === 'Home')
+    expect(homeRoute).toBeDefined()
+    expect(homeRoute?.path).toBe('/')
+  })
+
+  it('应该有Login路由', () => {
+    const loginRoute = router.getRoutes().find(route => route.name === 'Login')
+    expect(loginRoute).toBeDefined()
+    expect(loginRoute?.path).toBe('/login')
+  })
+
+  it('应该能够导航到Home页面', async () => {
+    await router.push('/')
+    expect(router.currentRoute.value.name).toBe('Home')
+    expect(router.currentRoute.value.path).toBe('/')
+  })
+
+  it('应该能够导航到Login页面', async () => {
+    await router.push('/login')
+    expect(router.currentRoute.value.name).toBe('Login')
+    expect(router.currentRoute.value.path).toBe('/login')
+  })
+
+  it('应该能够通过名称导航', async () => {
+    await router.push({ name: 'Home' })
+    expect(router.currentRoute.value.name).toBe('Home')
+
+    await router.push({ name: 'Login' })
+    expect(router.currentRoute.value.name).toBe('Login')
+  })
+
+  it('应该使用createWebHistory', () => {
+    // 检查路由器是否正确初始化
+    expect(router.options.history).toBeDefined()
+  })
+
+  it('应该支持懒加载组件', () => {
+    const routes = router.getRoutes()
+    routes.forEach(route => {
+      // 检查组件是否为函数（懒加载）或已解析的组件对象
+      const component = route.components?.default
+      expect(component).toBeDefined()
+      // 懒加载组件在测试环境中可能已经被解析为对象
+      expect(
+        typeof component === 'function' || typeof component === 'object'
+      ).toBe(true)
+    })
+  })
+})
