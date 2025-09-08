@@ -4,9 +4,9 @@
 import os
 import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """运行管理任务。"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.local')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bravo.settings.local")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

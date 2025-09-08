@@ -11,8 +11,8 @@ from django.db.models import Q
 
 from .models import User, UserProfile, UserActivity
 from .serializers import (
-    UserSerializer, 
-    UserProfileSerializer, 
+    UserSerializer,
+    UserProfileSerializer,
     UserActivitySerializer,
     CustomTokenObtainPairSerializer
 )
@@ -33,7 +33,7 @@ class UserListCreateView(generics.ListCreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_class = UserFilter
-    
+
     def get_queryset(self):
         """根据权限过滤用户列表"""
         if self.request.user.is_staff:
@@ -52,7 +52,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     """用户配置视图"""
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_object(self):
         """获取当前用户的配置"""
         profile, created = UserProfile.objects.get_or_create(
@@ -65,7 +65,7 @@ class UserActivityListView(generics.ListAPIView):
     """用户活动列表视图"""
     serializer_class = UserActivitySerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         """获取当前用户的活动记录"""
         return UserActivity.objects.filter(user=self.request.user)
@@ -79,17 +79,17 @@ def follow_user(request, user_id):
         target_user = User.objects.get(id=user_id)
         if target_user == request.user:
             return Response(
-                {'error': '不能关注自己'}, 
+                {'error': '不能关注自己'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # 这里可以添加关注逻辑
         # request.user.following.add(target_user)
-        
+
         return Response({'message': '关注成功'})
     except User.DoesNotExist:
         return Response(
-            {'error': '用户不存在'}, 
+            {'error': '用户不存在'},
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -99,7 +99,7 @@ def follow_user(request, user_id):
 def user_stats(request):
     """获取用户统计信息"""
     user = request.user
-    
+
     stats = {
         'total_posts': 0,  # 这里需要根据实际业务逻辑计算
         'total_followers': 0,
@@ -108,5 +108,5 @@ def user_stats(request):
         'join_date': user.date_joined,
         'last_login': user.last_login,
     }
-    
+
     return Response(stats)

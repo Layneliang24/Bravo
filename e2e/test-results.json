@@ -40,10 +40,7 @@
           "outputFile": "test-results.xml"
         }
       ],
-      [
-        "line",
-        null
-      ]
+      ["line", null]
     ],
     "reportSlowTests": {
       "max": 5,
@@ -68,17 +65,8 @@
         "id": "chromium",
         "name": "chromium",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -98,17 +86,8 @@
         "id": "firefox",
         "name": "firefox",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -128,17 +107,8 @@
         "id": "webkit",
         "name": "webkit",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -158,17 +128,8 @@
         "id": "Mobile Chrome",
         "name": "Mobile Chrome",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -188,17 +149,8 @@
         "id": "Mobile Safari",
         "name": "Mobile Safari",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -218,17 +170,8 @@
         "id": "iPad",
         "name": "iPad",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -248,17 +191,8 @@
         "id": "Microsoft Edge",
         "name": "Microsoft Edge",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -278,17 +212,8 @@
         "id": "Google Chrome",
         "name": "Google Chrome",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -308,17 +233,8 @@
         "id": "Desktop Chrome HiDPI",
         "name": "Desktop Chrome HiDPI",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       },
       {
@@ -338,17 +254,8 @@
         "id": "Desktop Chrome Dark",
         "name": "Desktop Chrome Dark",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
-        "testIgnore": [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.git/**"
-        ],
-        "testMatch": [
-          "**/*.spec.ts",
-          "**/*.test.ts",
-          "**/*.e2e.ts"
-        ],
+        "testIgnore": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
+        "testMatch": ["**/*.spec.ts", "**/*.test.ts", "**/*.e2e.ts"],
         "timeout": 30000
       }
     ],

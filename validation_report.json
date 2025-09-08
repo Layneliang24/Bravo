@@ -18,7 +18,15 @@
         "expected_result": "检测到多种临时修改标记",
         "actual_result": {
           "detected_issues": 11,
-          "issue_types": ["TODO", "FIXME", "HACK", "XXX", "DEBUG", "TEMP", "NOTE"],
+          "issue_types": [
+            "TODO",
+            "FIXME",
+            "HACK",
+            "XXX",
+            "DEBUG",
+            "TEMP",
+            "NOTE"
+          ],
           "high_severity": 4,
           "medium_severity": 7,
           "scan_time": "0.00秒"
@@ -56,7 +64,12 @@
         "test_conditions": {
           "high_severity_issues": 16,
           "total_issues": 20,
-          "critical_problems": ["SQL注入漏洞", "硬编码密码", "命令注入", "权限绕过"]
+          "critical_problems": [
+            "SQL注入漏洞",
+            "硬编码密码",
+            "命令注入",
+            "权限绕过"
+          ]
         },
         "expected_result": "阻止提交",
         "actual_result": {
@@ -123,7 +136,11 @@
       },
       "manual_verification": {
         "test_files_created": ["test_validation.py", "test_critical_issues.py"],
-        "git_operations_tested": ["git add", "git commit", "git commit --no-verify"],
+        "git_operations_tested": [
+          "git add",
+          "git commit",
+          "git commit --no-verify"
+        ],
         "performance_measured": "实际执行时间记录"
       },
       "log_evidence": {

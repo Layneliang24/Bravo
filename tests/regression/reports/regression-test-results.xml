@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="7" failures="0" errors="0" time="0.946">
+  <testsuite name="Database Regression Tests" errors="0" failures="0" skipped="0" timestamp="2025-09-07T14:19:13" time="0.797" tests="6">
+    <testcase classname="Database Regression Tests DB Regression: users_user table consistency" name="Database Regression Tests DB Regression: users_user table consistency" time="0.078">
+    </testcase>
+    <testcase classname="Database Regression Tests DB Regression: users_profile table consistency" name="Database Regression Tests DB Regression: users_profile table consistency" time="0.016">
+    </testcase>
+    <testcase classname="Database Regression Tests DB Regression: auth_group table consistency" name="Database Regression Tests DB Regression: auth_group table consistency" time="0.015">
+    </testcase>
+    <testcase classname="Database Regression Tests DB Regression: django_content_type table consistency" name="Database Regression Tests DB Regression: django_content_type table consistency" time="0.017">
+    </testcase>
+    <testcase classname="Database Regression Tests DB Regression: django_session table consistency" name="Database Regression Tests DB Regression: django_session table consistency" time="0.016">
+    </testcase>
+    <testcase classname="Database Regression Tests Database Consistency Check" name="Database Regression Tests Database Consistency Check" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="API Regression Tests" errors="0" failures="0" skipped="0" timestamp="2025-09-07T14:19:14" time="0.087" tests="1">
+    <testcase classname="API Regression Tests API Performance Regression" name="API Regression Tests API Performance Regression" time="0.003">
+    </testcase>
+  </testsuite>
+</testsuites>

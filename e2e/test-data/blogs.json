@@ -5,10 +5,7 @@
     "content": "这是测试博客 1 的内容。包含一些测试文本用于验证功能。",
     "author": "testuser1",
     "category": "技术",
-    "tags": [
-      "标签1",
-      "tag1"
-    ],
+    "tags": ["标签1", "tag1"],
     "createdAt": "2025-09-07T08:45:30.530Z",
     "published": true
   },
@@ -18,10 +15,7 @@
     "content": "这是测试博客 2 的内容。包含一些测试文本用于验证功能。",
     "author": "admin",
     "category": "生活",
-    "tags": [
-      "标签2",
-      "tag2"
-    ],
+    "tags": ["标签2", "tag2"],
     "createdAt": "2025-09-06T08:45:30.531Z",
     "published": true
   },
@@ -31,10 +25,7 @@
     "content": "这是测试博客 3 的内容。包含一些测试文本用于验证功能。",
     "author": "testuser1",
     "category": "随笔",
-    "tags": [
-      "标签3",
-      "tag3"
-    ],
+    "tags": ["标签3", "tag3"],
     "createdAt": "2025-09-05T08:45:30.531Z",
     "published": true
   },
@@ -44,10 +35,7 @@
     "content": "这是测试博客 4 的内容。包含一些测试文本用于验证功能。",
     "author": "admin",
     "category": "技术",
-    "tags": [
-      "标签4",
-      "tag4"
-    ],
+    "tags": ["标签4", "tag4"],
     "createdAt": "2025-09-04T08:45:30.531Z",
     "published": true
   },
@@ -57,10 +45,7 @@
     "content": "这是测试博客 5 的内容。包含一些测试文本用于验证功能。",
     "author": "testuser1",
     "category": "生活",
-    "tags": [
-      "标签5",
-      "tag5"
-    ],
+    "tags": ["标签5", "tag5"],
     "createdAt": "2025-09-03T08:45:30.531Z",
     "published": true
   },
@@ -70,10 +55,7 @@
     "content": "这是测试博客 6 的内容。包含一些测试文本用于验证功能。",
     "author": "admin",
     "category": "随笔",
-    "tags": [
-      "标签6",
-      "tag6"
-    ],
+    "tags": ["标签6", "tag6"],
     "createdAt": "2025-09-02T08:45:30.531Z",
     "published": true
   },
@@ -83,10 +65,7 @@
     "content": "这是测试博客 7 的内容。包含一些测试文本用于验证功能。",
     "author": "testuser1",
     "category": "技术",
-    "tags": [
-      "标签7",
-      "tag7"
-    ],
+    "tags": ["标签7", "tag7"],
     "createdAt": "2025-09-01T08:45:30.531Z",
     "published": true
   },
@@ -96,10 +75,7 @@
     "content": "这是测试博客 8 的内容。包含一些测试文本用于验证功能。",
     "author": "admin",
     "category": "生活",
-    "tags": [
-      "标签8",
-      "tag8"
-    ],
+    "tags": ["标签8", "tag8"],
     "createdAt": "2025-08-31T08:45:30.531Z",
     "published": true
   },
@@ -109,10 +85,7 @@
     "content": "这是测试博客 9 的内容。包含一些测试文本用于验证功能。",
     "author": "testuser1",
     "category": "随笔",
-    "tags": [
-      "标签9",
-      "tag9"
-    ],
+    "tags": ["标签9", "tag9"],
     "createdAt": "2025-08-30T08:45:30.531Z",
     "published": true
   },
@@ -122,10 +95,7 @@
     "content": "这是测试博客 10 的内容。包含一些测试文本用于验证功能。",
     "author": "admin",
     "category": "技术",
-    "tags": [
-      "标签10",
-      "tag10"
-    ],
+    "tags": ["标签10", "tag10"],
     "createdAt": "2025-08-29T08:45:30.531Z",
     "published": true
   }

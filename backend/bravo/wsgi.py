@@ -1,5 +1,4 @@
-"""
-WSGI 配置模板
+"""WSGI 配置模板
 
 它暴露了可调用的 WSGI 作为模块级变量 ``application``。
 

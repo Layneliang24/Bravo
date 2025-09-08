@@ -4,7 +4,8 @@
 import os
 import sys
 
-if __name__ == "__main__":
+
+def main():
     """运行管理任务。"""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bravo.settings.local")
     try:
@@ -16,3 +17,7 @@ if __name__ == "__main__":
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
+
+
+if __name__ == "__main__":
+    main()

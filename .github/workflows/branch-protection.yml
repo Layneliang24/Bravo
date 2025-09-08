@@ -6,10 +6,10 @@ name: Branch Protection - Double Key System
 
 on:
   pull_request:
-    branches: [ main, dev ]
-    types: [ opened, synchronize, reopened ]
+    branches: [main, dev]
+    types: [opened, synchronize, reopened]
   push:
-    branches: [ main, dev ]
+    branches: [main, dev]
 
 jobs:
   # Job 1: Validate that changes come from dev branch
@@ -17,227 +17,233 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-    - name: Validate Source Branch
-      run: |
-        echo "🔑 DOUBLE KEY SYSTEM: Validating source branch"
-        
-        if [ "${{ github.head_ref }}" != "dev" ]; then
-          echo "❌ SECURITY VIOLATION: Direct push to main branch detected!"
-          echo "   Source branch: ${{ github.head_ref }}"
-          echo "   Only 'dev' branch is allowed to create PRs to main"
-          echo "   This enforces the Double Key System:"
-          echo "   - Key A: Cursor pushes to dev only"
-          echo "   - Key B: GitHub Actions validates dev -> main"
-          exit 1
-        fi
-        
-        echo "✅ Source branch validation passed: ${{ github.head_ref }} -> main"
-  
+      - name: Validate Source Branch
+        run: |
+          echo "🔑 DOUBLE KEY SYSTEM: Validating source branch"
+
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "❌ SECURITY VIOLATION: Direct push to main branch detected!"
+            echo "   Source branch: ${{ github.head_ref }}"
+            echo "   Only 'dev' branch is allowed to create PRs to main"
+            echo "   This enforces the Double Key System:"
+            echo "   - Key A: Cursor pushes to dev only"
+            echo "   - Key B: GitHub Actions validates dev -> main"
+            exit 1
+          fi
+
+          echo "✅ Source branch validation passed: ${{ github.head_ref }} -> main"
+
   # Job 2: Mandatory full test suite (cannot be bypassed)
   mandatory-full-tests:
     if: github.event_name == 'pull_request'
     needs: validate-source-branch
     uses: ./.github/workflows/gate.yml
     secrets: inherit
-  
+
   # Job 3: Additional security checks
   security-validation:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Check for Protected File Modifications
-      run: |
-        echo "🔒 Checking for modifications to protected files"
-        
-        # List of protected files that should not be modified by Cursor
-        PROTECTED_FILES=(
-          ".github/workflows/gate.yml"
-          ".github/workflows/branch-protection.yml"
-          "jest.config.coverage.js"
-          "pytest-coverage.ini"
-          "features.json"
-          "tests/verify-coverage.js"
-        )
-        
-        # Check if any protected files were modified
-        MODIFIED_PROTECTED_FILES=()
-        for file in "${PROTECTED_FILES[@]}"; do
-          if git diff --name-only origin/main...HEAD | grep -q "^$file$"; then
-            MODIFIED_PROTECTED_FILES+=("$file")
-          fi
-        done
-        
-        if [ ${#MODIFIED_PROTECTED_FILES[@]} -gt 0 ]; then
-          echo "⚠️  WARNING: Protected files modified:"
-          for file in "${MODIFIED_PROTECTED_FILES[@]}"; do
-            echo "   - $file"
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for Protected File Modifications
+        run: |
+          echo "🔒 Checking for modifications to protected files"
+
+          # List of protected files that should not be modified by Cursor
+          PROTECTED_FILES=(
+            ".github/workflows/gate.yml"
+            ".github/workflows/branch-protection.yml"
+            "jest.config.coverage.js"
+            "pytest-coverage.ini"
+            "features.json"
+            "tests/verify-coverage.js"
+          )
+
+          # Check if any protected files were modified
+          MODIFIED_PROTECTED_FILES=()
+          for file in "${PROTECTED_FILES[@]}"; do
+            if git diff --name-only origin/main...HEAD | grep -q "^$file$"; then
+              MODIFIED_PROTECTED_FILES+=("$file")
+            fi
           done
-          echo ""
-          echo "🔍 These files require manual review by a human maintainer."
-          echo "📋 Please ensure changes are legitimate and not an attempt to bypass security."
-          
-          # Create a comment on the PR
-          if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
-            echo "Adding security warning comment to PR..."
-          fi
-        else
-          echo "✅ No protected files modified"
-        fi
-    
-    - name: Validate Test File Integrity
-      run: |
-        echo "🧪 Validating test file integrity"
-        
-        # Check that critical test files exist and haven't been gutted
-        CRITICAL_TEST_FILES=(
-          "frontend/tests"
-          "backend/tests"
-          "e2e/tests"
-          "tests-golden"
-        )
-        
-        for test_dir in "${CRITICAL_TEST_FILES[@]}"; do
-          if [ -d "$test_dir" ]; then
-            file_count=$(find "$test_dir" -name "*.test.*" -o -name "*.spec.*" | wc -l)
-            echo "📁 $test_dir: $file_count test files"
-            
-            if [ "$file_count" -lt 3 ]; then
-              echo "⚠️  WARNING: Suspiciously few test files in $test_dir"
+
+          if [ ${#MODIFIED_PROTECTED_FILES[@]} -gt 0 ]; then
+            echo "⚠️  WARNING: Protected files modified:"
+            for file in "${MODIFIED_PROTECTED_FILES[@]}"; do
+              echo "   - $file"
+            done
+            echo ""
+            echo "🔍 These files require manual review by a human maintainer."
+            echo "📋 Please ensure changes are legitimate and not an attempt to bypass security."
+
+            # Create a comment on the PR
+            if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+              echo "Adding security warning comment to PR..."
             fi
           else
-            echo "❌ Critical test directory missing: $test_dir"
-            exit 1
+            echo "✅ No protected files modified"
           fi
-        done
-        
-        echo "✅ Test file integrity check passed"
-  
+
+      - name: Validate Test File Integrity
+        run: |
+          echo "🧪 Validating test file integrity"
+
+          # Check that critical test files exist and haven't been gutted
+          CRITICAL_TEST_FILES=(
+            "frontend/tests"
+            "backend/tests"
+            "e2e/tests"
+            "tests-golden"
+          )
+
+          for test_dir in "${CRITICAL_TEST_FILES[@]}"; do
+            if [ -d "$test_dir" ]; then
+              file_count=$(find "$test_dir" -name "*.test.*" -o -name "*.spec.*" | wc -l)
+              echo "📁 $test_dir: $file_count test files"
+
+              if [ "$file_count" -lt 3 ]; then
+                echo "⚠️  WARNING: Suspiciously few test files in $test_dir"
+              fi
+            else
+              echo "❌ Critical test directory missing: $test_dir"
+              exit 1
+            fi
+          done
+
+          echo "✅ Test file integrity check passed"
+
   # Job 4: Performance and quality gates
   quality-gates:
     if: github.event_name == 'pull_request'
     needs: [validate-source-branch, mandatory-full-tests]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    
-    - name: Install dependencies
-      working-directory: ./frontend
-      run: npm ci
-    
-    - name: Build for performance testing
-      working-directory: ./frontend
-      run: npm run build
-    
-    - name: Run frontend tests with coverage
-      run: |
-        cd frontend
-        npm run test:coverage
-        npm run test:coverage-check
-    
-    - name: Validate feature mapping
-      run: |
-        cd frontend
-        npm run feature:validate
-        npm run test:feature-mapping
-    
-    - name: Run Lighthouse CI
-      run: |
-        npm install -g @lhci/cli
-        echo "⚡ Running Lighthouse performance audit"
-        
-        # Create basic lighthouse config
-        cat > lighthouserc.json << EOF
-        {
-          "ci": {
-            "collect": {
-              "staticDistDir": "./frontend/dist",
-              "numberOfRuns": 3
-            },
-            "assert": {
-              "assertions": {
-                "categories:performance": ["error", {"minScore": 0.9}],
-                "categories:accessibility": ["error", {"minScore": 0.9}],
-                "categories:best-practices": ["error", {"minScore": 0.9}],
-                "categories:seo": ["error", {"minScore": 0.9}]
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build for performance testing
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Run frontend tests with coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+          npm run test:coverage-check
+
+      - name: Validate feature mapping
+        run: |
+          cd frontend
+          npm run feature:validate
+          npm run test:feature-mapping
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          echo "⚡ Running Lighthouse performance audit"
+
+          # Create basic lighthouse config
+          cat > lighthouserc.json << EOF
+          {
+            "ci": {
+              "collect": {
+                "staticDistDir": "./frontend/dist",
+                "numberOfRuns": 3
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": 0.9}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["error", {"minScore": 0.9}],
+                  "categories:seo": ["error", {"minScore": 0.9}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
               }
-            },
-            "upload": {
-              "target": "temporary-public-storage"
             }
           }
-        }
-        EOF
-        
-        lhci autorun
-        echo "✅ Performance audit completed"
-  
+          EOF
+
+          lhci autorun
+          echo "✅ Performance audit completed"
+
   # Job 5: Final approval gate
   approval-gate:
     if: github.event_name == 'pull_request'
-    needs: [validate-source-branch, mandatory-full-tests, security-validation, quality-gates]
+    needs:
+      [
+        validate-source-branch,
+        mandatory-full-tests,
+        security-validation,
+        quality-gates,
+      ]
     runs-on: ubuntu-latest
     steps:
-    - name: Generate Approval Summary
-      run: |
-        echo "🎯 DOUBLE KEY SYSTEM - APPROVAL GATE" >> $GITHUB_STEP_SUMMARY
-        echo "=====================================" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "## ✅ All Automated Checks Passed" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- 🔑 **Key A**: Changes originated from dev branch" >> $GITHUB_STEP_SUMMARY
-        echo "- 🔑 **Key B**: Full test suite executed and passed" >> $GITHUB_STEP_SUMMARY
-        echo "- 🔒 **Security**: Protected files validated" >> $GITHUB_STEP_SUMMARY
-        echo "- 🧪 **Tests**: All test suites passed with ≥90% coverage" >> $GITHUB_STEP_SUMMARY
-        echo "- ⚡ **Performance**: Lighthouse audit passed (≥90 score)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "## 👤 Human Approval Required" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "This PR is now ready for human review and approval." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**⚠️  IMPORTANT**: Even though all automated checks passed," >> $GITHUB_STEP_SUMMARY
-        echo "a human maintainer must still review and approve this PR" >> $GITHUB_STEP_SUMMARY
-        echo "before it can be merged to main." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🚫 Anti-Cheating Measures Active" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- Full test suite execution verified" >> $GITHUB_STEP_SUMMARY
-        echo "- Coverage thresholds enforced" >> $GITHUB_STEP_SUMMARY
-        echo "- Test result artifacts uploaded" >> $GITHUB_STEP_SUMMARY
-        echo "- Performance benchmarks validated" >> $GITHUB_STEP_SUMMARY
-        echo "- Protected file modifications flagged" >> $GITHUB_STEP_SUMMARY
-        
-        echo "✅ PR ready for human approval"
+      - name: Generate Approval Summary
+        run: |
+          echo "🎯 DOUBLE KEY SYSTEM - APPROVAL GATE" >> $GITHUB_STEP_SUMMARY
+          echo "=====================================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ All Automated Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔑 **Key A**: Changes originated from dev branch" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔑 **Key B**: Full test suite executed and passed" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔒 **Security**: Protected files validated" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 **Tests**: All test suites passed with ≥90% coverage" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚡ **Performance**: Lighthouse audit passed (≥90 score)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 👤 Human Approval Required" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This PR is now ready for human review and approval." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**⚠️  IMPORTANT**: Even though all automated checks passed," >> $GITHUB_STEP_SUMMARY
+          echo "a human maintainer must still review and approve this PR" >> $GITHUB_STEP_SUMMARY
+          echo "before it can be merged to main." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚫 Anti-Cheating Measures Active" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite execution verified" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage thresholds enforced" >> $GITHUB_STEP_SUMMARY
+          echo "- Test result artifacts uploaded" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance benchmarks validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Protected file modifications flagged" >> $GITHUB_STEP_SUMMARY
+
+          echo "✅ PR ready for human approval"
 
   # Job 6: Dev branch monitoring (when Cursor pushes to dev)
   dev-branch-monitor:
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-    - name: Monitor Dev Branch Activity
-      run: |
-        echo "👀 MONITORING: New push to dev branch detected"
-        echo "   Commit: ${{ github.sha }}"
-        echo "   Author: ${{ github.actor }}"
-        echo "   Message: ${{ github.event.head_commit.message }}"
-        echo ""
-        echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
-        echo "   ✅ Cursor successfully pushed to dev branch"
-        echo "   ⏳ Key B will activate when PR is created to main"
-        echo ""
-        echo "💡 Next steps:"
-        echo "   1. Create PR from dev to main"
-        echo "   2. Automated full test suite will run (Key B)"
-        echo "   3. Human approval required for merge"
+      - name: Monitor Dev Branch Activity
+        run: |
+          echo "👀 MONITORING: New push to dev branch detected"
+          echo "   Commit: ${{ github.sha }}"
+          echo "   Author: ${{ github.actor }}"
+          echo "   Message: ${{ github.event.head_commit.message }}"
+          echo ""
+          echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
+          echo "   ✅ Cursor successfully pushed to dev branch"
+          echo "   ⏳ Key B will activate when PR is created to main"
+          echo ""
+          echo "💡 Next steps:"
+          echo "   1. Create PR from dev to main"
+          echo "   2. Automated full test suite will run (Key B)"
+          echo "   3. Human approval required for merge"

@@ -15,7 +15,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: [
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+      'tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     exclude: [
       'node_modules',
@@ -23,7 +23,7 @@ export default defineConfig({
       '.idea',
       '.git',
       '.cache',
-      'tests/e2e/**'
+      'tests/e2e/**',
     ],
     coverage: {
       provider: 'v8',
@@ -42,11 +42,9 @@ export default defineConfig({
         'src/styles/**',
         'src/types/**',
         '**/*.stories.{js,ts}',
-        '**/*.story.{js,ts}'
+        '**/*.story.{js,ts}',
       ],
-      include: [
-        'src/**/*.{js,ts,vue}'
-      ],
+      include: ['src/**/*.{js,ts,vue}'],
       all: true,
       lines: 75,
       functions: 75,
@@ -57,12 +55,12 @@ export default defineConfig({
         lines: [70, 75],
         functions: [70, 75],
         branches: [65, 70],
-        statements: [70, 75]
-      }
+        statements: [70, 75],
+      },
     },
     reporters: ['verbose', 'junit'],
     outputFile: {
-      junit: './tests/reports/junit.xml'
+      junit: './tests/reports/junit.xml',
     },
     testTimeout: 10000,
     hookTimeout: 10000,
@@ -72,7 +70,7 @@ export default defineConfig({
     ui: false,
     open: false,
     api: {
-      port: 51204
-    }
-  }
+      port: 51204,
+    },
+  },
 })
