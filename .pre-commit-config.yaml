@@ -132,3 +132,13 @@ repos:
         entry: bash -c 'git diff --cached --name-only | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$" && echo "请放 docs/ 或同目录测试" && exit 1 || exit 0'
         language: system
         always_run: true
+
+  # 分支保护钩子
+  - repo: local
+    hooks:
+      - id: branch-protection
+        name: Branch Protection Check
+        entry: bash scripts/branch_protection.sh
+        language: system
+        stages: [pre-push]
+        always_run: true
