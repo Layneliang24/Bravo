@@ -5,5 +5,5 @@
 
 # 根据环境选择依赖
 # 开发环境: pip install -r requirements/local.txt
-# 测试环境: pip install -r requirements/test.txt  
+# 测试环境: pip install -r requirements/test.txt
 # 生产环境: pip install -r requirements/prod.txt

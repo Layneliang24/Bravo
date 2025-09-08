@@ -47,6 +47,9 @@ package-lock.json
 lerna-debug.log*
 .pnpm-debug.log*
 
+# Security reports
+bandit-report.json
+
 # Vue.js
 dist/
 dist-ssr/

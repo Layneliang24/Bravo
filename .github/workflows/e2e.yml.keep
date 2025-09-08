@@ -11,11 +11,11 @@ on:
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
-    
+
     services:
       postgres:
         image: postgres:13
@@ -30,12 +30,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -44,41 +44,41 @@ jobs:
         cache-dependency-path: |
           frontend/package-lock.json
           e2e/package-lock.json
-    
+
     - name: Install backend dependencies
       run: |
         cd backend
         pip install -r requirements/test.txt
-    
+
     - name: Install frontend dependencies
       run: |
         cd frontend
         npm ci
-    
+
     - name: Install E2E dependencies
       run: |
         cd e2e
         npm ci
-    
+
     - name: Install Playwright Browsers
       run: |
         cd e2e
         npx playwright install --with-deps ${{ matrix.browser }}
-    
+
     - name: Start backend server
       run: |
         cd backend
         python manage.py migrate
         python manage.py runserver 8000 &
         sleep 10
-    
+
     - name: Build and start frontend
       run: |
         cd frontend
         npm run build
         npm run preview -- --port 3000 &
         sleep 10
-    
+
     - name: Run E2E tests
       run: |
         cd e2e
@@ -86,7 +86,7 @@ jobs:
       env:
         BASE_URL: http://localhost:3000
         API_URL: http://localhost:8000
-    
+
     - name: Upload test results
       uses: actions/upload-artifact@v3
       if: always()
@@ -94,7 +94,7 @@ jobs:
         name: playwright-report-${{ matrix.browser }}
         path: e2e/playwright-report/
         retention-days: 30
-    
+
     - name: Upload test videos
       uses: actions/upload-artifact@v3
       if: failure()
@@ -106,27 +106,27 @@ jobs:
   lighthouse-audit:
     runs-on: ubuntu-latest
     needs: e2e-tests
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: e2e/package-lock.json
-    
+
     - name: Install dependencies
       run: |
         cd e2e
         npm ci
-    
+
     - name: Run Lighthouse audit
       run: |
         cd e2e
         npm run lighthouse
-    
+
     - name: Upload Lighthouse report
       uses: actions/upload-artifact@v3
       with:

@@ -16,7 +16,7 @@ if [ -d "backend" ]; then
         echo "❌ Python flake8 命名检查失败"
         exit 1
     }
-    
+
     echo "  运行 pylint 命名检查..."
     python -m pylint --rcfile=.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used . || {
         echo "❌ Python pylint 命名检查失败"
@@ -32,14 +32,14 @@ fi
 echo "📋 检查前端命名规范..."
 if [ -d "frontend" ]; then
     cd frontend
-    
+
     echo "  检查 TypeScript/JavaScript 命名规范..."
     if [ -f "package.json" ]; then
         npx eslint --config .eslintrc.js --rule '@typescript-eslint/naming-convention: error' src/ || {
             echo "❌ TypeScript 命名检查失败"
             exit 1
         }
-        
+
         echo "  检查 Vue 组件命名规范..."
         npx eslint --config .eslintrc.js --rule 'vue/component-name-in-template-casing: error' --rule 'vue/component-definition-name-casing: error' src/ || {
             echo "❌ Vue 组件命名检查失败"

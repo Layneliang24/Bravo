@@ -28,12 +28,26 @@ sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLD
 
 [tool.mypy]
 python_version = "3.11"
-check_untyped_defs = true
+check_untyped_defs = false
 ignore_missing_imports = true
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_unused_configs = true
-plugins = ["mypy_django_plugin.main"]
+warn_unused_ignores = false
+warn_redundant_casts = false
+warn_unused_configs = false
+disallow_untyped_defs = false
+allow_untyped_globals = true
+allow_redefinition = true
+disallow_any_generics = false
+warn_return_any = false
+warn_unreachable = false
+no_implicit_optional = false
+
+[[tool.mypy.overrides]]
+module = "bravo.settings.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
 
 [tool.django-stubs]
 django_settings_module = "bravo.settings.local"

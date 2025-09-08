@@ -18,18 +18,20 @@ testpaths = apps tests
 ```
 
 **自动收录规则**:
+
 - 文件名: `test_*.py`, `*_tests.py`, `tests.py`
 - 类名: `Test*`
 - 函数名: `test_*`
 - 目录: `apps/`, `tests/`
 
 **示例**:
+
 ```python
 # backend/tests/test_user.py
 class TestUser:
     def test_create_user(self):
         pass
-    
+
     def test_update_user(self):
         pass
 ```
@@ -39,14 +41,16 @@ class TestUser:
 **配置文件**: `frontend/vitest.config.ts`
 
 **自动收录规则**:
+
 - 文件名: `*.test.js`, `*.test.ts`, `*.spec.js`, `*.spec.ts`
 - 目录: `src/`, `tests/`
 
 **示例**:
+
 ```javascript
 // frontend/src/components/Button.test.js
-describe('Button Component', () => {
-  test('should render correctly', () => {
+describe("Button Component", () => {
+  test("should render correctly", () => {
     // 测试代码
   });
 });
@@ -58,26 +62,23 @@ describe('Button Component', () => {
 
 ```typescript
 export default defineConfig({
-  testDir: './tests',
-  testMatch: [
-    '**/*.spec.ts',
-    '**/*.spec.js',
-    '**/*.test.ts',
-    '**/*.test.js'
-  ]
+  testDir: "./tests",
+  testMatch: ["**/*.spec.ts", "**/*.spec.js", "**/*.test.ts", "**/*.test.js"],
 });
 ```
 
 **自动收录规则**:
+
 - 文件名: `*.spec.ts`, `*.spec.js`, `*.test.ts`, `*.test.js`
 - 目录: `e2e/tests/`
 
 **示例**:
+
 ```typescript
 // e2e/tests/login.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('用户登录', async ({ page }) => {
+test("用户登录", async ({ page }) => {
   // E2E测试代码
 });
 ```

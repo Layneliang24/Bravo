@@ -9,12 +9,12 @@ echo 📋 检查 Python 命名规范...
 if exist "backend" (
     cd backend
     echo   运行 flake8 命名检查...
-    python -m flake8 --select=N --config=.flake8 . 
+    python -m flake8 --select=N --config=.flake8 .
     if errorlevel 1 (
         echo ❌ Python flake8 命名检查失败
         exit /b 1
     )
-    
+
     echo   运行 pylint 命名检查...
     python -m pylint --rcfile=.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used .
     if errorlevel 1 (
@@ -31,7 +31,7 @@ REM 检查前端命名规范
 echo 📋 检查前端命名规范...
 if exist "frontend" (
     cd frontend
-    
+
     echo   检查 TypeScript/JavaScript 命名规范...
     if exist "package.json" (
         npx eslint --config .eslintrc.js --rule "@typescript-eslint/naming-convention: error" src/
@@ -39,7 +39,7 @@ if exist "frontend" (
             echo ❌ TypeScript 命名检查失败
             exit /b 1
         )
-        
+
         echo   检查 Vue 组件命名规范...
         npx eslint --config .eslintrc.js --rule "vue/component-name-in-template-casing: error" --rule "vue/component-definition-name-casing: error" src/
         if errorlevel 1 (

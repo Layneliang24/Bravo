@@ -1,1 +1,1 @@
-# Vitest 配置
+// Vitest 配置

@@ -1,1 +1,1 @@
-# Playwright 配置
+// Playwright 配置

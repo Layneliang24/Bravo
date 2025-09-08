@@ -17,18 +17,15 @@
     "paths": {
       "@/*": ["frontend/src/*"]
     },
-    "types": ["vitest/globals", "@vue/test-utils", "node"]
+    "types": ["@vue/test-utils", "node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
   "exclude": [
     "node_modules",
     "**/node_modules",
     "**/dist",
-    "**/build"
+    "**/build",
+    "tests-golden/**/*",
+    "e2e/**/*"
   ]
 }

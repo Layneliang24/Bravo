@@ -122,11 +122,7 @@
                 "user_progress",
                 "auth_tokens"
               ],
-              "excludeFields": [
-                "created_at",
-                "updated_at",
-                "last_login"
-              ]
+              "excludeFields": ["created_at", "updated_at", "last_login"]
             },
             "consistency": {
               "enabled": true,

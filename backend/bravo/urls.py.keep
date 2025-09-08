@@ -23,17 +23,17 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     # 管理后台
     path('admin/', admin.site.urls),
-    
+
     # API 文档
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    
+
     # API 路由
     path('api/v1/auth/', include('apps.users.urls')),
     path('api/v1/blog/', include('apps.blog.urls')),
     path('api/v1/english/', include('apps.english.urls')),
     path('api/v1/jobs/', include('apps.jobs.urls')),
-    
+
     # 健康检查
     path('health/', include('django_health_check.urls')),
 ]
@@ -42,7 +42,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    
+
     # 调试工具栏
     if 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar

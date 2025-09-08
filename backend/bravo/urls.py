@@ -1,5 +1,4 @@
-"""
-Bravo 项目 URL 配置模板
+"""Bravo 项目 URL 配置模板
 
 `urlpatterns` 列表将 URL 路由到视图。有关更多信息，请参阅：
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
@@ -20,11 +19,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
-from django.shortcuts import redirect
 from django.urls import include, path
 
 
-def home_view(request):
+def home_view(_request):
     """根路径视图，返回API信息"""
     return JsonResponse(
         {
