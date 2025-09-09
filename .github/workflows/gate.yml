@@ -74,7 +74,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🧪 Running Frontend Unit Tests (FORCED FULL SUITE)"
-          npm run test:unit -- --ci --coverage --watchAll=false --reporters=default --reporters=jest-junit
+          npm run test -- --reporter=verbose --coverage
           echo "✅ Frontend unit tests completed"
         env:
           CI: true
@@ -85,7 +85,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🧪 Running Frontend Component Tests (FORCED FULL SUITE)"
-          npm run test:component -- --reporter=junit --outputFile=./test-results/frontend-component-results.xml
+          npm run test:component -- --reporter=verbose
           echo "✅ Frontend component tests completed"
 
       # === BACKEND TESTS ===
