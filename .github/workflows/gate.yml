@@ -120,7 +120,7 @@ jobs:
       - name: Start Backend Server for E2E
         working-directory: ./backend
         run: |
-          python manage.py migrate --settings=bravo.settings.test
+          python manage.py migrate --settings=bravo.settings.test --run-syncdb
           python manage.py runserver 8000 --settings=bravo.settings.test &
           sleep 10
           echo "✅ Backend server started for E2E"
