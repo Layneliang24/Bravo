@@ -53,7 +53,10 @@ jobs:
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: |
+          echo "📦 Installing frontend dependencies..."
           npm install --no-audit --no-fund --ignore-scripts
+          echo "🔧 Installing jsdom explicitly for testing..."
+          npm install jsdom --no-save --ignore-scripts
           echo "✅ Frontend dependencies installed"
 
       - name: Install E2E Dependencies
