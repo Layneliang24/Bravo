@@ -53,9 +53,6 @@ jobs:
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: |
-          echo "🔍 Current directory: $(pwd)"
-          echo "🔍 Files in current directory: $(ls -la)"
-          echo "🔍 Checking for package-lock.json: $(ls -la package-lock.json || echo 'NOT FOUND')"
           npm ci --no-audit --no-fund
           echo "✅ Frontend dependencies installed"
 
