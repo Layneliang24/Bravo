@@ -43,7 +43,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
+# package-lock.json  # 注释掉，frontend需要这个文件
 lerna-debug.log*
 .pnpm-debug.log*
 
