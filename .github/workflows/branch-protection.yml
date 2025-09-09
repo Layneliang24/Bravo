@@ -17,13 +17,15 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Validate Source Branch
+      - name: Validate Target Branch
         run: |
-          echo "🔑 DOUBLE KEY SYSTEM: Validating source branch"
+          echo "🔑 DOUBLE KEY SYSTEM: Validating target branch"
 
-          if [ "${{ github.head_ref }}" != "dev" ]; then
+          # Check if PR is targeting main branch (which should only come from dev)
+          if [ "${{ github.base_ref }}" == "main" ] && [ "${{ github.head_ref }}" != "dev" ]; then
             echo "❌ SECURITY VIOLATION: Direct push to main branch detected!"
             echo "   Source branch: ${{ github.head_ref }}"
+            echo "   Target branch: ${{ github.base_ref }}"
             echo "   Only 'dev' branch is allowed to create PRs to main"
             echo "   This enforces the Double Key System:"
             echo "   - Key A: Cursor pushes to dev only"
@@ -31,7 +33,7 @@ jobs:
             exit 1
           fi
 
-          echo "✅ Source branch validation passed: ${{ github.head_ref }} -> main"
+          echo "✅ Target branch validation passed: ${{ github.head_ref }} -> ${{ github.base_ref }}"
 
   # Job 2: Mandatory full test suite (cannot be bypassed)
   mandatory-full-tests:
