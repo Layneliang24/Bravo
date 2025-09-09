@@ -85,9 +85,7 @@
       "severity": "high",
       "description": "high severity issue",
       "code_snippet": "# FIXME: high severity issue",
-      "context": [
-        "   1: # FIXME: high severity issue"
-      ],
+      "context": ["   1: # FIXME: high severity issue"],
       "detected_at": "2025-09-09T11:23:04.856901"
     },
     {
