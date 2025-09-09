@@ -141,7 +141,7 @@ export default defineConfig({
       command: 'npm run dev',
       cwd: '../frontend',
       port: 3001,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,  // 总是重用现有服务器
       timeout: 120 * 1000,
       env: {
         NODE_ENV: 'test',
@@ -151,7 +151,7 @@ export default defineConfig({
       command: 'python -m uvicorn main:app --host 0.0.0.0 --port 8000',
       cwd: '../backend',
       port: 8000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,  // 总是重用现有服务器
       timeout: 120 * 1000,
       env: {
         ENVIRONMENT: 'test',

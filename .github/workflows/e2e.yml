@@ -61,19 +61,17 @@ jobs:
           cd e2e
           npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Start backend server
+      - name: Prepare backend for E2E
         run: |
           cd backend
           python manage.py migrate
-          python manage.py runserver 8000 &
-          sleep 10
+          echo "✅ Backend prepared for E2E"
 
-      - name: Build and start frontend
+      - name: Build frontend for E2E
         run: |
           cd frontend
           npm run build:skip-check || npm run build
-          npm run preview -- --port 3001 &
-          sleep 10
+          echo "✅ Frontend built for E2E"
 
       - name: Run E2E tests
         run: |

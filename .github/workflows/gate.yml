@@ -117,22 +117,13 @@ jobs:
           npm run build:skip-check || npm run build
           echo "✅ Frontend built for E2E testing"
 
-      - name: Start Backend Server for E2E
+      - name: Prepare Backend for E2E
         working-directory: ./backend
         run: |
           python manage.py migrate --settings=bravo.settings.test --run-syncdb
-          python manage.py runserver 8000 --settings=bravo.settings.test &
-          sleep 10
-          echo "✅ Backend server started for E2E"
+          echo "✅ Backend prepared for E2E"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-
-      - name: Start Frontend Server for E2E
-        working-directory: ./frontend
-        run: |
-          npm run preview -- --port 3001 &
-          sleep 5
-          echo "✅ Frontend server started for E2E"
 
       - name: Run E2E Tests with Trace
         working-directory: ./e2e
