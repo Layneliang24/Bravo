@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-09T12:24:15.206Z",
+  "timestamp": "2025-09-09T15:37:57.185Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 37,
+    "totalTestFiles": 38,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -461,6 +461,11 @@
     },
     {
       "file": "backend\\test_auto_naming.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_urls.py",
       "features": [],
       "featureCount": 0
     },
