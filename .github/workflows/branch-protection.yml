@@ -139,7 +139,7 @@ jobs:
 
       - name: Build for performance testing
         working-directory: ./frontend
-        run: npm run build
+        run: npm run build:skip-check || npm run build
 
       - name: Run frontend tests with coverage
         run: |

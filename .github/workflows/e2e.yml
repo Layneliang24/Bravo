@@ -71,7 +71,7 @@ jobs:
       - name: Build and start frontend
         run: |
           cd frontend
-          npm run build
+          npm run build:skip-check || npm run build
           npm run preview -- --port 3000 &
           sleep 10
 

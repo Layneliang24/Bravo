@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-09T15:59:43.212Z",
+  "timestamp": "2025-09-09T16:15:26.682Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 38,
+    "totalTestFiles": 39,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -471,6 +471,11 @@
     },
     {
       "file": "backend\\tests\\test_regression.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\integration\\test_simple_integration.py",
       "features": [],
       "featureCount": 0
     },
