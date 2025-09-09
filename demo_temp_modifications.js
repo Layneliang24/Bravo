@@ -1,6 +1,7 @@
 // 这是一个演示文件，用于测试代码变更追踪系统
 
 function demoFunction() {
+  // eslint-disable-next-line no-console
   console.log("这是一个临时调试输出"); // 临时调试代码
 
   // TODO: 这里需要添加错误处理逻辑
@@ -24,6 +25,7 @@ function processData() {
 
 // DEBUG: 测试代码，生产环境需要删除
 if (process.env.NODE_ENV === "development") {
+  // eslint-disable-next-line no-console
   console.log("开发模式调试信息");
 }
 
