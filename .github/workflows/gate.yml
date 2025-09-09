@@ -94,7 +94,7 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
-          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
+          python -m pytest tests/ -m "not integration" --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
           echo "✅ Backend unit tests completed"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
@@ -104,7 +104,7 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Integration Tests (FORCED FULL SUITE)"
-          python -m pytest tests/integration/ --junit-xml=test-results/backend-integration-results.xml -v
+          python -m pytest tests/ -m integration --junit-xml=test-results/backend-integration-results.xml -v
           echo "✅ Backend integration tests completed"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
