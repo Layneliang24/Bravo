@@ -40,7 +40,7 @@
     "clean:backend": "cd backend && find . -name '*.pyc' -delete && find . -name '__pycache__' -delete",
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
-    "postinstall": "npm run e2e:install",
+    "postinstall:disabled": "npm run e2e:install",
     "prepare": "husky",
     "check:syntax": "node scripts/check-syntax.js"
   },
