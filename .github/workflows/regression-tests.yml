@@ -90,10 +90,10 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm install
+          npm install --ignore-scripts
           cd ../e2e
-          npm install
-          npm install -g playwright
+          npm install --ignore-scripts
+          npm install --ignore-scripts -g playwright
 
       - name: Install Playwright browsers
         run: |
