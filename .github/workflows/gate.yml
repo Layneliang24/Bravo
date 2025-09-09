@@ -53,22 +53,7 @@ jobs:
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: |
-          echo "🔍 DEBUG: Current directory: $(pwd)"
-          echo "🔍 DEBUG: All files in frontend directory:"
-          ls -la
-          echo "🔍 DEBUG: Checking package-lock.json specifically:"
-          if [ -f "package-lock.json" ]; then
-            echo "✅ package-lock.json exists"
-            echo "🔍 File size: $(wc -c < package-lock.json) bytes"
-            echo "🔍 First 5 lines:"
-            head -5 package-lock.json
-          else
-            echo "❌ package-lock.json NOT FOUND"
-            echo "🔍 Current commit: $(git rev-parse HEAD)"
-            echo "🔍 Files in git at this commit:"
-            git ls-tree HEAD frontend/
-          fi
-          npm ci --no-audit --no-fund
+          npm install --no-audit --no-fund
           echo "✅ Frontend dependencies installed"
 
       - name: Install E2E Dependencies

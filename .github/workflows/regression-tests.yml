@@ -90,7 +90,7 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm ci
+          npm install
           cd ../e2e
           npm install
           npm install -g playwright

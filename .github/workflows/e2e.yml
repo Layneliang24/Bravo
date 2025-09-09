@@ -49,7 +49,7 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm ci
+          npm install
 
       - name: Install E2E dependencies
         run: |
