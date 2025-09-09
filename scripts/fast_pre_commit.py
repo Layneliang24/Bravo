@@ -8,7 +8,7 @@
 
 import json
 import re
-import subprocess  # nosec
+import subprocess  # nosec B404
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -78,14 +78,14 @@ class FastPreCommitChecker:
         self.severity_thresholds = SEVERITY_THRESHOLDS
         self.message_templates = MESSAGE_TEMPLATES
 
-        # 临时修改检测规则
+        # 临时修改检测规则 - 支持多种注释风格
         self.temp_patterns = {
-            "TODO": {"pattern": r"#\s*TODO[:\s]", "severity": "medium"},
-            "FIXME": {"pattern": r"#\s*FIXME[:\s]", "severity": "high"},
-            "HACK": {"pattern": r"#\s*HACK[:\s]", "severity": "high"},
-            "XXX": {"pattern": r"#\s*XXX[:\s]", "severity": "high"},
-            "DEBUG": {"pattern": r"#\s*DEBUG[:\s]", "severity": "medium"},
-            "TEMP": {"pattern": r"#\s*TEMP[:\s]", "severity": "medium"},
+            "TODO": {"pattern": r"(#|//|/\*)\s*TODO[:\s]", "severity": "medium"},
+            "FIXME": {"pattern": r"(#|//|/\*)\s*FIXME[:\s]", "severity": "high"},
+            "HACK": {"pattern": r"(#|//|/\*)\s*HACK[:\s]", "severity": "high"},
+            "XXX": {"pattern": r"(#|//|/\*)\s*XXX[:\s]", "severity": "high"},
+            "DEBUG": {"pattern": r"(#|//|/\*)\s*DEBUG[:\s]", "severity": "medium"},
+            "TEMP": {"pattern": r"(#|//|/\*)\s*TEMP[:\s]", "severity": "medium"},
             "console_log": {"pattern": r"console\.log\s*\(", "severity": "medium"},
             "print_debug": {"pattern": r"print\s*\(.*DEBUG", "severity": "medium"},
         }
