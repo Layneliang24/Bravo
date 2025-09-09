@@ -14,14 +14,6 @@
     },
     "types": ["vitest/globals", "@vue/test-utils", "node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.vue"
-  ],
-  "exclude": [
-    "../node_modules",
-    "../dist",
-    "../build"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.vue"],
+  "exclude": ["../node_modules", "../dist", "../build"]
 }

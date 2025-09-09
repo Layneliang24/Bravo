@@ -1,29 +1,29 @@
-"""
-本地开发环境设置模板
-"""
+"""本地开发环境设置模板"""
 
-from .base import (
-    BASE_DIR,
-    INSTALLED_APPS,
-    MIDDLEWARE,
-    LOGGING,
-)
+from typing import Any
+
+from decouple import config
+
+from .base import *
+
+# 数据库配置优化
+# 确保使用TCP连接而不是socket连接
 
 # 调试模式
 DEBUG = True
 
-# 允许的主机
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+# 允许的主机 - 仅允许本地访问以提高安全性
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-# 数据库配置
+# 数据库配置 - 使用SQLite进行本地开发
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "bravo_local",
-        "USER": "bravo_user",
-        "PASSWORD": "bravo_password",
-        "HOST": "mysql",
-        "PORT": "3306",
+        "NAME": config("DB_NAME", default="bravo_local"),
+        "USER": config("DB_USER", default="bravo_user"),
+        "PASSWORD": config("DB_PASSWORD", default="bravo_password"),
+        "HOST": config("DB_HOST", default="mysql"),
+        "PORT": config("DB_PORT", default="3306"),
         "OPTIONS": {
             "charset": "utf8mb4",
         },
@@ -65,8 +65,10 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = BASE_DIR / "media"
 
 # 日志配置
-LOGGING["handlers"]["file"]["level"] = "DEBUG"
-LOGGING["root"]["level"] = "DEBUG"
+logging_config: dict[str, Any] = LOGGING
+logging_config["handlers"]["file"]["level"] = "DEBUG"
+logging_config["root"]["level"] = "DEBUG"
+LOGGING = logging_config
 
 # CORS 配置
 CORS_ALLOW_ALL_ORIGINS = True

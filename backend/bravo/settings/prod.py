@@ -1,9 +1,9 @@
 """生产环境设置模板"""
 
 import sentry_sdk
+from decouple import config
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
-from decouple import config
 
 # 生产环境配置
 DEBUG = False

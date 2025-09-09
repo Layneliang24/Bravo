@@ -1,6 +1,6 @@
 [run]
 source = .
-omit = 
+omit =
     */migrations/*
     */venv/*
     */env/*

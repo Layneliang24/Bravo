@@ -1,6 +1,10 @@
 {
   "errors": [],
+<<<<<<< HEAD
   "generated_at": "2025-09-08T05:52:49Z",
+=======
+  "generated_at": "2025-09-08T14:16:36Z",
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
   "metrics": {
     ".\\backend\\apps\\__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -37,7 +41,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4,
+      "loc": 3,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -89,7 +93,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4,
+      "loc": 3,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -115,7 +119,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4,
+      "loc": 3,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -154,7 +158,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4,
+      "loc": 3,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -193,20 +197,24 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 186,
+      "loc": 187,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\backend\\bravo\\settings\\local.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
+<<<<<<< HEAD
       "loc": 56,
+=======
+      "loc": 52,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -226,27 +234,31 @@
     ".\\backend\\bravo\\settings\\test.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 39,
-      "nosec": 0,
+      "loc": 86,
+      "nosec": 1,
       "skipped_tests": 0
     },
     ".\\backend\\bravo\\settings\\test_simple.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 95,
+<<<<<<< HEAD
       "nosec": 0,
+=======
+      "nosec": 1,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "skipped_tests": 0
     },
     ".\\backend\\bravo\\urls.py": {
@@ -258,7 +270,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 64,
+      "loc": 62,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -271,11 +283,12 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 10,
+      "loc": 9,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\backend\\health_check_complete.py": {
+<<<<<<< HEAD
       "CONFIDENCE.HIGH": 3,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
@@ -286,6 +299,18 @@
       "SEVERITY.UNDEFINED": 0,
       "loc": 170,
       "nosec": 0,
+=======
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 188,
+      "nosec": 2,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "skipped_tests": 0
     },
     ".\\backend\\manage.py": {
@@ -297,7 +322,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 15,
+      "loc": 17,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -310,20 +335,33 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 43,
+      "loc": 40,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\backend\\simple_test_runner.py": {
-      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 3,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 77,
+      "loc": 102,
+      "nosec": 3,
+      "skipped_tests": 0
+    },
+    ".\\backend\\test_auto_naming.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 10,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -349,7 +387,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 51,
+      "loc": 46,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -362,13 +400,27 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 13,
+      "loc": 14,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\backend\\tests\\__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\backend\\tests\\test_regression.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
+<<<<<<< HEAD
       "CONFIDENCE.MEDIUM": 15,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
@@ -377,6 +429,16 @@
       "SEVERITY.UNDEFINED": 0,
       "loc": 161,
       "nosec": 0,
+=======
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 111,
+      "nosec": 8,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "skipped_tests": 0
     },
     ".\\frontend\\tests\\coverage\\__init__.py": {
@@ -453,73 +515,154 @@
       "SEVERITY.LOW": 5,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
+<<<<<<< HEAD
       "loc": 144,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\scripts\\code_change_tracker.py": {
       "CONFIDENCE.HIGH": 1,
+=======
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\node_modules\\bravo-frontend\\tests\\e2e\\__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
+<<<<<<< HEAD
       "SEVERITY.LOW": 1,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 243,
+=======
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\node_modules\\bravo-frontend\\tests\\e2e\\factories\\__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\node_modules\\bravo-frontend\\tests\\e2e\\flows\\__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\node_modules\\bravo-frontend\\tests\\unit\\__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\node_modules\\flatted\\python\\flatted.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 103,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\scripts\\code_change_tracker.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 278,
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\scripts\\code_restoration_validator.py": {
-      "CONFIDENCE.HIGH": 8,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
-      "SEVERITY.LOW": 7,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 336,
-      "nosec": 0,
+      "loc": 345,
+      "nosec": 8,
       "skipped_tests": 0
     },
     ".\\scripts\\comprehensive_code_manager.py": {
-      "CONFIDENCE.HIGH": 6,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
-      "SEVERITY.LOW": 5,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 472,
-      "nosec": 0,
+      "loc": 540,
+      "nosec": 6,
       "skipped_tests": 0
     },
     ".\\scripts\\dev_init.py": {
-      "CONFIDENCE.HIGH": 9,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 9,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 214,
-      "nosec": 0,
+      "loc": 215,
+      "nosec": 9,
       "skipped_tests": 0
     },
     ".\\scripts\\fast_pre_commit.py": {
-      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 3,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 269,
-      "nosec": 0,
+      "loc": 320,
+      "nosec": 3,
       "skipped_tests": 0
     },
     ".\\scripts\\hook_compliance_monitor.py": {
@@ -544,21 +687,21 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 316,
+      "loc": 335,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\scripts\\pre_commit_monitor.py": {
-      "CONFIDENCE.HIGH": 16,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 16,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 419,
-      "nosec": 0,
+      "loc": 404,
+      "nosec": 16,
       "skipped_tests": 0
     },
     ".\\scripts\\production_config.py": {
@@ -583,7 +726,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 103,
+      "loc": 144,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -596,7 +739,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 330,
+      "loc": 360,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -614,19 +757,20 @@
       "skipped_tests": 0
     },
     ".\\tests-golden\\backend\\test_user_core.py": {
-      "CONFIDENCE.HIGH": 28,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 28,
+      "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 159,
-      "nosec": 0,
+      "loc": 157,
+      "nosec": 28,
       "skipped_tests": 0
     },
     "_totals": {
+<<<<<<< HEAD
       "CONFIDENCE.HIGH": 87,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 18,
@@ -2989,4 +3133,20 @@
       "test_name": "assert_used"
     }
   ]
+=======
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 4689,
+      "nosec": 85,
+      "skipped_tests": 0
+    }
+  },
+  "results": []
+>>>>>>> fcd0787bfa1e1785e4d793a27943bf008457ab20
 }

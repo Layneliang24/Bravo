@@ -12,8 +12,6 @@
 """
 
 import os
-# Removed: import re
-# Removed: from typing import Dict, List, Set, Tuple
 
 # ============================================================================
 # 核心检测规则配置
@@ -219,8 +217,8 @@ MESSAGE_TEMPLATES = {
     "scanning": "[INFO] Scanning {file_count} staged files",
     "completed": "[INFO] Scan completed in {duration:.3f} seconds",
     # Shorten to avoid E501
-    "issues_found": "[RESULT] Found {total} issues (H:{high}, M:{medium}, L:{low})",
-    "commit_blocked": "[FAILED] Commit blocked - Found {count} high-severity issues",
+    "issues_found": ("[RESULT] Found {total} issues (H:{high}, M:{medium}, L:{low})"),
+    "commit_blocked": ("[FAILED] Commit blocked - Found {count} high-severity issues"),
     "commit_allowed": "[SUCCESS] Commit check passed",
     "bypass_hint": "[TIP] Use --no-verify to bypass checks in emergency",
     "error": "[ERROR] {message}",

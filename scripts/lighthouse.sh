@@ -44,7 +44,7 @@ if [ -f "$OUTPUT_DIR/lighthouse-report.json" ]; then
     echo -e "${GREEN}✅ Lighthouse 审计完成！${NC}"
     echo -e "${GREEN}📄 HTML报告: $OUTPUT_DIR/lighthouse-report.html${NC}"
     echo -e "${GREEN}📊 JSON数据: $OUTPUT_DIR/lighthouse-report.json${NC}"
-    
+
     # 提取关键指标
     echo -e "${BLUE}📈 关键性能指标:${NC}"
     node -e "

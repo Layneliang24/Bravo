@@ -19,10 +19,10 @@ verify_step() {
     local step_name="$1"
     local command="$2"
     local expected_result="$3"
-    
+
     echo -e "\n${YELLOW}📋 验证: $step_name${NC}"
     echo "执行命令: $command"
-    
+
     if eval "$command"; then
         if [ "$expected_result" = "success" ]; then
             echo -e "${GREEN}✅ 通过: $step_name${NC}"

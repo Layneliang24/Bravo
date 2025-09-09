@@ -5,6 +5,7 @@
 代码变更追踪系统是一个基于Git钩子的自动化工具，用于检测和防止临时修改标记（如TODO、FIXME、HACK等）被意外提交到生产环境。
 
 ### 核心功能
+
 - **临时修改检测**: 自动识别代码中的临时标记
 - **快速扫描**: 仅检查暂存文件，平均扫描时间0.02-0.03秒
 - **智能拦截**: 根据严重性级别决定是否阻止提交
@@ -23,6 +24,7 @@ scripts/
 ## 安装部署
 
 ### 前置条件
+
 - Python 3.7+
 - Git 2.9+
 - Husky (已配置)
@@ -30,6 +32,7 @@ scripts/
 ### 部署步骤
 
 1. **确认文件完整性**
+
    ```bash
    # 检查关键文件是否存在
    ls -la .husky/pre-commit
@@ -37,6 +40,7 @@ scripts/
    ```
 
 2. **验证权限设置**
+
    ```bash
    # 确保钩子文件可执行
    chmod +x .husky/pre-commit
@@ -44,14 +48,15 @@ scripts/
    ```
 
 3. **测试系统功能**
+
    ```bash
    # 创建测试文件
    echo "# TODO: 测试标记" > test_temp.py
    git add test_temp.py
-   
+
    # 测试检查功能
    git commit -m "测试提交"
-   
+
    # 清理测试文件
    git reset HEAD test_temp.py
    rm test_temp.py
@@ -66,6 +71,7 @@ scripts/
 ### 检测规则
 
 #### 高严重性标记（会阻止提交）
+
 - `TODO`: 待办事项
 - `FIXME`: 需要修复的问题
 - `HACK`: 临时解决方案
@@ -76,6 +82,7 @@ scripts/
 - `REMOVE`: 需要删除的代码
 
 #### 中等严重性标记（会警告但不阻止）
+
 - `NOTE`: 注释说明
 - `REVIEW`: 需要审查
 - `OPTIMIZE`: 性能优化点
@@ -127,8 +134,10 @@ SUPPORTED_EXTENSIONS = {
 ### 常见问题
 
 #### 1. 编码错误
+
 **症状**: `UnicodeEncodeError`或乱码输出
 **解决方案**:
+
 ```bash
 # 设置环境变量
 export PYTHONIOENCODING=utf-8
@@ -136,16 +145,20 @@ export LANG=en_US.UTF-8
 ```
 
 #### 2. 权限错误
+
 **症状**: `Permission denied`
 **解决方案**:
+
 ```bash
 chmod +x .husky/pre-commit
 chmod +x scripts/fast_pre_commit.py
 ```
 
 #### 3. Python路径问题
+
 **症状**: `python: command not found`
 **解决方案**:
+
 ```bash
 # 检查Python安装
 which python3
@@ -153,8 +166,10 @@ which python3
 ```
 
 #### 4. 钩子未触发
+
 **症状**: 提交时没有检查输出
 **解决方案**:
+
 ```bash
 # 重新安装husky
 npx husky install
@@ -185,6 +200,7 @@ GIT_TRACE=1 git commit -m "测试"
 ```
 
 如果扫描时间过长，检查：
+
 1. 暂存文件数量是否过多
 2. 文件大小是否异常
 3. 正则表达式是否过于复杂
@@ -194,6 +210,7 @@ GIT_TRACE=1 git commit -m "测试"
 ### 使用统计
 
 系统会记录以下信息：
+
 - 检查次数
 - 发现问题数量
 - 阻止提交次数
@@ -202,6 +219,7 @@ GIT_TRACE=1 git commit -m "测试"
 ### 定期维护
 
 1. **每月检查**
+
    - 验证系统正常运行
    - 更新检测规则
    - 清理日志文件
@@ -237,11 +255,12 @@ GIT_TRACE=1 git commit -m "测试"
 ## 支持联系
 
 如遇到问题，请：
+
 1. 查阅本文档故障排除部分
 2. 检查系统日志和错误信息
 3. 联系开发团队获取支持
 
 ---
 
-*最后更新: 2024年1月*
-*文档版本: v1.0*
+_最后更新: 2024年1月_
+_文档版本: v1.0_

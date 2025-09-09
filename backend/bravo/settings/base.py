@@ -1,5 +1,4 @@
-"""
-Django 基础设置模板
+"""Django 基础设置模板
 
 由 'django-admin startproject' 使用 Django 4.2.7 生成。
 
@@ -10,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
@@ -114,7 +113,10 @@ DATABASES = {
 # 密码验证
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        ),
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -147,6 +149,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 # 默认主键字段类型
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# 自定义用户模型
+AUTH_USER_MODEL = "users.User"
+
 # REST Framework 配置
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -166,8 +171,6 @@ REST_FRAMEWORK = {
 }
 
 # JWT 配置
-from datetime import timedelta
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
