@@ -33,7 +33,7 @@ export default defineConfig({
   // 全局设置
   use: {
     // 基础URL
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3001',
 
     // 浏览器上下文选项
     trace: 'on-first-retry',
@@ -140,7 +140,7 @@ export default defineConfig({
     {
       command: 'npm run dev',
       cwd: '../frontend',
-      port: 3000,
+      port: 3001,
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
       env: {
@@ -188,7 +188,7 @@ export default defineConfig({
   // 元数据
   metadata: {
     'test-environment': process.env.NODE_ENV || 'development',
-    'base-url': process.env.TEST_BASE_URL || 'http://localhost:3000',
+    'base-url': process.env.TEST_BASE_URL || 'http://localhost:3001',
     'browser-versions': {
       chromium: '119.0.6045.105',
       firefox: '119.0',

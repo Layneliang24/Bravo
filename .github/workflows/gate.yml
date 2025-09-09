@@ -130,7 +130,7 @@ jobs:
       - name: Start Frontend Server for E2E
         working-directory: ./frontend
         run: |
-          npm run preview -- --port 3000 &
+          npm run preview -- --port 3001 &
           sleep 5
           echo "✅ Frontend server started for E2E"
 

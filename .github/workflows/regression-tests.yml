@@ -128,7 +128,7 @@ jobs:
       - name: Wait for servers to be ready
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:8000/api/health; do sleep 2; done'
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3001; do sleep 2; done'
 
       - name: Run regression tests (All)
         if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''

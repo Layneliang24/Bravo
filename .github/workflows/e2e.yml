@@ -72,7 +72,7 @@ jobs:
         run: |
           cd frontend
           npm run build:skip-check || npm run build
-          npm run preview -- --port 3000 &
+          npm run preview -- --port 3001 &
           sleep 10
 
       - name: Run E2E tests
@@ -80,7 +80,7 @@ jobs:
           cd e2e
           npx playwright test --project=${{ matrix.browser }}
         env:
-          BASE_URL: http://localhost:3000
+          BASE_URL: http://localhost:3001
           API_URL: http://localhost:8000
 
       - name: Upload test results
