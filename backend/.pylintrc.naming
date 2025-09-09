@@ -2,7 +2,7 @@
 init-hook='import sys; sys.path.append(".")'
 
 [MESSAGES CONTROL]
-disable = 
+disable =
     missing-docstring,
     too-few-public-methods,
     too-many-ancestors,
@@ -55,7 +55,7 @@ method-rgx = [a-z_][a-z0-9_]{2,30}$
 good-names = i,j,k,ex,Run,_,id
 
 # 允许的名称
-name-group = 
+name-group =
     test_*,
     *_test,
     Test*,
@@ -81,4 +81,4 @@ valid-classmethod-first-arg = cls
 valid-metaclass-classmethod-first-arg = mcs
 
 [EXCEPTIONS]
-overgeneral-exceptions = Exception
+overgeneral-exceptions = builtins.Exception

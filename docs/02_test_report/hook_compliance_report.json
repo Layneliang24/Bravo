@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-09-08T13:39:48.758542",
+  "commit_analysis": {
+    "error": "'NoneType' object has no attribute 'strip'"
+  },
+  "hook_files_status": {
+    "pre-commit": {
+      "exists": true,
+      "executable": true,
+      "size": 638
+    },
+    "commit-msg": {
+      "exists": true,
+      "executable": true,
+      "size": 638
+    },
+    "husky-pre-commit": {
+      "exists": true,
+      "executable": true,
+      "size": 440
+    },
+    "husky-commit-msg": {
+      "exists": true,
+      "executable": true,
+      "size": 1444
+    },
+    "pre-commit-config": {
+      "exists": true,
+      "executable": true,
+      "size": 4268
+    }
+  },
+  "git_config": {
+    "hooks_path": null,
+    "using_husky": false,
+    "using_pre_commit": true
+  }
+}

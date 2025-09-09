@@ -32,32 +32,32 @@ log_error() {
 # 检查依赖
 check_dependencies() {
     log_info "检查依赖..."
-    
+
     # 检查Node.js
     if ! command -v node &> /dev/null; then
         log_error "Node.js 未安装"
         exit 1
     fi
-    
+
     # 检查npm
     if ! command -v npm &> /dev/null; then
         log_error "npm 未安装"
         exit 1
     fi
-    
+
     # 检查Python
     if ! command -v python &> /dev/null && ! command -v python3 &> /dev/null; then
         log_error "Python 未安装"
         exit 1
     fi
-    
+
     log_success "依赖检查通过"
 }
 
 # 检查服务状态
 check_services() {
     log_info "检查服务状态..."
-    
+
     # 检查后端服务
     if curl -f http://localhost:8000/api/health &> /dev/null; then
         log_success "后端服务运行中 (http://localhost:8000)"
@@ -66,7 +66,7 @@ check_services() {
         log_warning "后端服务未运行"
         BACKEND_RUNNING=false
     fi
-    
+
     # 检查前端服务
     if curl -f http://localhost:3000 &> /dev/null; then
         log_success "前端服务运行中 (http://localhost:3000)"
@@ -80,7 +80,7 @@ check_services() {
 # 启动服务
 start_services() {
     log_info "启动必要的服务..."
-    
+
     # 启动后端服务
     if [ "$BACKEND_RUNNING" = false ]; then
         log_info "启动后端服务..."
@@ -96,7 +96,7 @@ start_services() {
         fi
         cd ../tests/regression
     fi
-    
+
     # 启动前端服务
     if [ "$FRONTEND_RUNNING" = false ]; then
         log_info "启动前端服务..."
@@ -112,7 +112,7 @@ start_services() {
         fi
         cd ../tests/regression
     fi
-    
+
     # 等待服务就绪
     log_info "等待服务就绪..."
     timeout 60 bash -c 'until curl -f http://localhost:8000/api/health &> /dev/null; do sleep 2; done' || {
@@ -120,25 +120,25 @@ start_services() {
         cleanup
         exit 1
     }
-    
+
     timeout 60 bash -c 'until curl -f http://localhost:3000 &> /dev/null; do sleep 2; done' || {
         log_error "前端服务启动超时"
         cleanup
         exit 1
     }
-    
+
     log_success "所有服务已就绪"
 }
 
 # 清理函数
 cleanup() {
     log_info "清理进程..."
-    
+
     if [ ! -z "$BACKEND_PID" ]; then
         kill $BACKEND_PID 2>/dev/null || true
         log_info "后端服务已停止"
     fi
-    
+
     if [ ! -z "$FRONTEND_PID" ]; then
         kill $FRONTEND_PID 2>/dev/null || true
         log_info "前端服务已停止"
@@ -149,11 +149,11 @@ cleanup() {
 run_regression_tests() {
     local test_type="$1"
     local update_snapshots="$2"
-    
+
     log_info "运行回归测试 (类型: $test_type)..."
-    
+
     local command="node run-regression.js"
-    
+
     case $test_type in
         "api")
             command="$command --api-only"
@@ -171,13 +171,13 @@ run_regression_tests() {
             log_warning "未知的测试类型: $test_type，运行所有测试"
             ;;
     esac
-    
+
     if [ "$update_snapshots" = "true" ]; then
         command="$command --update-snapshots"
     fi
-    
+
     log_info "执行命令: $command"
-    
+
     if eval $command; then
         log_success "回归测试完成"
         return 0
@@ -214,7 +214,7 @@ main() {
     local update_snapshots="false"
     local skip_services="false"
     local cleanup_only="false"
-    
+
     # 解析命令行参数
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -245,52 +245,52 @@ main() {
                 ;;
         esac
     done
-    
+
     # 设置信号处理
     trap cleanup EXIT INT TERM
-    
+
     # 仅清理模式
     if [ "$cleanup_only" = "true" ]; then
         cleanup
         exit 0
     fi
-    
+
     log_info "🚀 启动回归测试..."
     log_info "测试类型: $test_type"
     log_info "更新快照: $update_snapshots"
     log_info "跳过服务检查: $skip_services"
-    
+
     # 检查依赖
     check_dependencies
-    
+
     # 检查和启动服务
     if [ "$skip_services" = "false" ]; then
         check_services
         start_services
     fi
-    
+
     # 运行回归测试
     if run_regression_tests "$test_type" "$update_snapshots"; then
         log_success "🎉 回归测试成功完成！"
-        
+
         # 显示报告位置
         if [ -f "reports/regression-report.html" ]; then
             log_info "📊 HTML报告: $(pwd)/reports/regression-report.html"
         fi
-        
+
         if [ -f "reports/regression-report.json" ]; then
             log_info "📄 JSON报告: $(pwd)/reports/regression-report.json"
         fi
-        
+
         exit 0
     else
         log_error "❌ 回归测试失败"
-        
+
         # 显示失败报告
         if [ -f "reports/regression-report.json" ]; then
             log_info "查看详细报告: $(pwd)/reports/regression-report.json"
         fi
-        
+
         exit 1
     fi
 }

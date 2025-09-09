@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { Component } from 'vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -6,12 +7,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      component: () => import('../views/Home.vue'),
+      component: (): Promise<Component> => import('../views/Home.vue'),
     },
     {
       path: '/login',
       name: 'Login',
-      component: () => import('../views/Login.vue'),
+      component: (): Promise<Component> => import('../views/Login.vue'),
     },
   ],
 })

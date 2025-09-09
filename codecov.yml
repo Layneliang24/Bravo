@@ -5,7 +5,7 @@ coverage:
   precision: 2
   round: down
   range: "70...100"
-  
+
   status:
     project:
       default:
@@ -23,7 +23,7 @@ coverage:
         threshold: 2%
         flags:
           - frontend
-    
+
     patch:
       default:
         target: 70%
@@ -81,7 +81,7 @@ notifications:
       threshold: 1%
       only_pulls: false
       layout: "reach, diff, flags, files, footer"
-  
+
   slack:
     default:
       url: "secret:slack_webhook_url"
@@ -89,7 +89,7 @@ notifications:
       only_pulls: false
       message: |
         Coverage for {{ owner }}/{{ repo }} changed by {{ range }}% ({{ commit }})
-        
+
         {{ diff.files|length }} files changed:
         {% for file in diff.files %}
         - {{ file.name }}: {{ file.coverage }}%
@@ -100,10 +100,10 @@ fixes:
   - "frontend/src/::"
 
 validation:
-  max_report_age: 24  # 24小时
+  max_report_age: 24 # 24小时
   require_ci_to_pass: yes
   notify_error: yes
-  
+
 ui:
   hide_density:
     - "frontend/src/assets/"
