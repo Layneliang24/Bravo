@@ -109,7 +109,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd e2e
-          npm ci
+          npm install
 
       - name: Install Playwright Browsers
         run: |

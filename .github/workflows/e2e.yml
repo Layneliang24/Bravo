@@ -54,7 +54,7 @@ jobs:
       - name: Install E2E dependencies
         run: |
           cd e2e
-          npm ci
+          npm install
 
       - name: Install Playwright Browsers
         run: |
@@ -115,7 +115,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd e2e
-          npm ci
+          npm install
 
       - name: Run Lighthouse audit
         run: |
