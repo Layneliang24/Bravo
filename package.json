@@ -28,7 +28,7 @@
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && black . && isort .",
     "lighthouse": "cd e2e && npm run lighthouse",
-    "e2e:install": "cd e2e && npm ci && npx playwright install --with-deps",
+    "e2e:install": "cd e2e && npm install && npx playwright install --with-deps",
     "e2e:ui": "cd e2e && npx playwright test --ui",
     "e2e:headed": "cd e2e && npx playwright test --headed",
     "e2e:debug": "cd e2e && npx playwright test --debug",
