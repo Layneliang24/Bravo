@@ -10,7 +10,7 @@ describe('Router', () => {
 
   it('应该正确配置路由', () => {
     expect(router).toBeDefined()
-    expect(router.getRoutes()).toHaveLength(3) // Home, Login, Blog
+    expect(router.getRoutes()).toHaveLength(4) // Home, Login, Blog, BlogDetail
   })
 
   it('应该有Home路由', () => {
@@ -31,6 +31,12 @@ describe('Router', () => {
     expect(blogRoute?.path).toBe('/blog')
   })
 
+  it('应该有BlogDetail路由', () => {
+    const blogDetailRoute = router.getRoutes().find(route => route.name === 'BlogDetail')
+    expect(blogDetailRoute).toBeDefined()
+    expect(blogDetailRoute?.path).toBe('/blog/:id')
+  })
+
   it('应该能够导航到Home页面', async () => {
     await router.push('/')
     expect(router.currentRoute.value.name).toBe('Home')
@@ -49,6 +55,13 @@ describe('Router', () => {
     expect(router.currentRoute.value.path).toBe('/blog')
   })
 
+  it('应该能够导航到BlogDetail页面', async () => {
+    await router.push('/blog/123')
+    expect(router.currentRoute.value.name).toBe('BlogDetail')
+    expect(router.currentRoute.value.path).toBe('/blog/123')
+    expect(router.currentRoute.value.params.id).toBe('123')
+  })
+
   it('应该能够通过名称导航', async () => {
     await router.push({ name: 'Home' })
     expect(router.currentRoute.value.name).toBe('Home')
@@ -58,6 +71,10 @@ describe('Router', () => {
 
     await router.push({ name: 'Blog' })
     expect(router.currentRoute.value.name).toBe('Blog')
+
+    await router.push({ name: 'BlogDetail', params: { id: '456' } })
+    expect(router.currentRoute.value.name).toBe('BlogDetail')
+    expect(router.currentRoute.value.params.id).toBe('456')
   })
 
   it('应该使用createWebHistory', () => {
