@@ -104,7 +104,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
         run: |
           cd backend
           python manage.py migrate
@@ -112,7 +112,7 @@ jobs:
 
       - name: Prepare backend for regression tests
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           REDIS_URL: redis://localhost:6379/0
           DEBUG: true
         run: |
