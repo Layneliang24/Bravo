@@ -83,6 +83,18 @@ jobs:
             echo "MySQL not ready, waiting... (attempt $i/30)"
             sleep 2
           done
+
+      - name: Configure MySQL user permissions
+        run: |
+          echo "🔧 Configuring MySQL user permissions..."
+          # 确保bravo_user存在并设置密码
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ MySQL user permissions configured"
           
           echo "🔐 Granting database privileges to bravo_user..."
           # Grant necessary privileges for Django testing (requires full DB management)
