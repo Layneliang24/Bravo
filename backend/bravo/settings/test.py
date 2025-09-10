@@ -73,8 +73,16 @@ import os
 # 优先使用环境变量中的数据库配置（CI环境）
 if "DATABASE_URL" in os.environ:
     import dj_database_url
+    db_config = dj_database_url.parse(os.environ["DATABASE_URL"])
+    # 强制使用TCP连接，避免socket连接问题
+    db_config.update({
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+    })
     DATABASES = {
-        "default": dj_database_url.parse(os.environ["DATABASE_URL"])
+        "default": db_config
     }
 else:
     # 本地测试环境使用MySQL
