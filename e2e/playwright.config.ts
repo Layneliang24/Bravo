@@ -138,24 +138,26 @@ export default defineConfig({
   // 测试服务器配置
   webServer: [
     {
-      command: 'npm run dev',
+      command: 'npm run dev -- --port 3001 --host 0.0.0.0',
       cwd: '../frontend',
       port: 3001,
-      reuseExistingServer: true,  // 总是重用现有服务器
-      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI, // CI环境不重用服务器
+      timeout: 180 * 1000, // 增加到3分钟
       env: {
         NODE_ENV: 'test',
+        VITE_API_URL: 'http://localhost:8000',
       },
     },
     {
-      command: 'python -m uvicorn main:app --host 0.0.0.0 --port 8000',
+      command: 'python manage.py runserver 0.0.0.0:8000 --settings=bravo.settings.test',
       cwd: '../backend',
       port: 8000,
-      reuseExistingServer: true,  // 总是重用现有服务器
-      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI, // CI环境不重用服务器
+      timeout: 180 * 1000, // 增加到3分钟
       env: {
         ENVIRONMENT: 'test',
         DATABASE_URL: 'sqlite:///./test.db',
+        DJANGO_SETTINGS_MODULE: 'bravo.settings.test',
       },
     },
   ],

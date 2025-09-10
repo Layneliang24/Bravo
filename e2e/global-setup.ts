@@ -79,8 +79,8 @@ async function checkTestEnvironment() {
   }
 
   if (!process.env.TEST_BASE_URL) {
-    process.env.TEST_BASE_URL = 'http://localhost:3000';
-    console.log('  ✓ 设置 TEST_BASE_URL=http://localhost:3000');
+    process.env.TEST_BASE_URL = 'http://localhost:3001';
+    console.log('  ✓ 设置 TEST_BASE_URL=http://localhost:3001');
   }
 }
 
@@ -143,8 +143,8 @@ async function waitForServices() {
   console.log('⏳ 等待服务启动...');
 
   const services = [
-    { name: '前端服务', url: 'http://localhost:3000', timeout: 60000 },
-    { name: '后端API', url: 'http://localhost:8000/health', timeout: 60000 },
+    { name: '前端服务', url: 'http://localhost:3001', timeout: 120000 }, // 修正端口和超时
+    { name: '后端API', url: 'http://localhost:8000/health/', timeout: 120000 }, // 修正API路径和超时
   ];
 
   for (const service of services) {
@@ -157,22 +157,46 @@ async function waitForServices() {
  */
 async function waitForService(name: string, url: string, timeout: number) {
   const startTime = Date.now();
+  let lastError: string = '';
+
+  console.log(`  🔍 检查 ${name} (${url})...`);
 
   while (Date.now() - startTime < timeout) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/html, */*',
+          'User-Agent': 'Playwright-E2E-HealthCheck',
+        },
+        signal: AbortSignal.timeout(5000), // 5秒请求超时
+      });
+
       if (response.ok || response.status < 500) {
-        console.log(`  ✓ ${name} 已启动 (${url})`);
+        console.log(`  ✓ ${name} 已启动 (${url}) - 状态: ${response.status}`);
         return;
+      } else {
+        lastError = `HTTP ${response.status}: ${response.statusText}`;
       }
     } catch (error) {
+      lastError = (error as Error).message;
       // 服务还未启动，继续等待
+    }
+
+    // 每5秒输出一次进度
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    if (elapsed % 5 === 0 && elapsed > 0) {
+      console.log(
+        `  ⏳ ${name} 仍在启动中... (${elapsed}s/${Math.floor(
+          timeout / 1000
+        )}s) - 最后错误: ${lastError}`
+      );
     }
 
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  throw new Error(`${name} 启动超时 (${url})`);
+  throw new Error(`${name} 启动超时 (${url}) - 最后错误: ${lastError}`);
 }
 
 /**
