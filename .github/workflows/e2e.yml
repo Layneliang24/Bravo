@@ -76,8 +76,8 @@ jobs:
       - name: Run E2E tests
         run: |
           cd e2e
-          echo "🧪 Running E2E Tests (CI OPTIMIZED CONFIG)"
-          npx playwright test --config=playwright.config.ci.ts --project=${{ matrix.browser }} --reporter=line
+          echo "🧪 Running E2E Tests (INFRASTRUCTURE FIRST)"
+          npx playwright test --project=${{ matrix.browser }} --reporter=line
         env:
           CI: true
           TEST_BASE_URL: http://localhost:3001

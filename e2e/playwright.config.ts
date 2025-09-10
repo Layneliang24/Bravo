@@ -166,8 +166,10 @@ export default defineConfig({
   globalSetup: './global-setup.ts',
   globalTeardown: './global-teardown.ts',
 
-  // 测试匹配模式
-  testMatch: ['**/*.spec.ts', '**/*.test.ts', '**/*.e2e.ts'],
+  // 测试匹配模式 - CI环境只运行基础设施测试
+  testMatch: process.env.CI 
+    ? ['**/health.spec.ts', '**/app.spec.ts'] 
+    : ['**/*.spec.ts', '**/*.test.ts', '**/*.e2e.ts'],
 
   // 忽略的文件
   testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.git/**'],

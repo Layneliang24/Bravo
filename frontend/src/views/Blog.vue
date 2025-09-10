@@ -1,5 +1,11 @@
 <template>
   <div class="blog" role="main">
+    <nav class="main-navigation" role="navigation" aria-label="主导航">
+      <a href="/" aria-label="返回首页">首页</a>
+      <a href="/blog" aria-current="page" aria-label="当前页面：博客">博客</a>
+      <a href="/login" aria-label="登录">登录</a>
+    </nav>
+    
     <h1 data-testid="blog-title">博客</h1>
     <div data-testid="blog-list">
       <div
@@ -7,6 +13,12 @@
         :key="post.id"
         class="blog-item"
         data-testid="blog-item"
+        @click="goToBlogDetail(post.id)"
+        @keydown.enter="goToBlogDetail(post.id)"
+        @keydown.space="goToBlogDetail(post.id)"
+        role="button"
+        tabindex="0"
+        :aria-label="`查看博客：${post.title}`"
       >
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
@@ -107,11 +119,23 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // SEO meta 标签
 onMounted(() => {
   // 动态设置页面标题和 meta 标签
   document.title = '博客 - Bravo'
+  
+  // 添加meta描述标签
+  const metaDescription = document.querySelector('meta[name="description"]')
+  if (!metaDescription) {
+    const meta = document.createElement('meta')
+    meta.setAttribute('name', 'description')
+    meta.setAttribute('content', 'Bravo 项目博客页面，分享技术文章和生活感悟')
+    document.head.appendChild(meta)
+  }
   
   // 添加 Open Graph 标签
   const ogTitle = document.querySelector('meta[property="og:title"]')
@@ -126,7 +150,7 @@ onMounted(() => {
   if (!ogDescription) {
     const meta = document.createElement('meta')
     meta.setAttribute('property', 'og:description')
-    meta.setAttribute('content', 'Bravo 项目博客页面')
+    meta.setAttribute('content', 'Bravo 项目博客页面，分享技术文章和生活感悟')
     document.head.appendChild(meta)
   }
 })
@@ -180,6 +204,21 @@ const createPost = () => {
 
 const publishPost = () => {
   console.log('发布博客:', editForm.title, editForm.content)
+  
+  // 创建新博客
+  const newPost = {
+    id: Date.now(), // 简单的ID生成
+    title: editForm.title,
+    content: editForm.content,
+    category: '技术' // 默认分类
+  }
+  
+  // 添加到博客列表
+  mockPosts.value.push(newPost)
+  
+  // 跳转到新创建的博客详情页
+  router.push(`/blog/${newPost.id}`)
+  
   showEditForm.value = false
   editForm.title = ''
   editForm.content = ''
@@ -198,6 +237,10 @@ const deletePost = () => {
 const loadMore = () => {
   console.log('加载更多博客')
 }
+
+const goToBlogDetail = (postId: number) => {
+  router.push(`/blog/${postId}`)
+}
 </script>
 
 <style scoped>
@@ -207,11 +250,48 @@ const loadMore = () => {
   margin: 0 auto;
 }
 
+.main-navigation {
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.main-navigation a {
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: #409eff;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.main-navigation a:hover {
+  background-color: #f0f8ff;
+}
+
+.main-navigation a[aria-current="page"] {
+  background-color: #409eff;
+  color: white;
+}
+
 .blog-item {
   border: 1px solid #ddd;
   padding: 1rem;
   margin: 1rem 0;
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.blog-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.blog-item:focus {
+  outline: 2px solid #409eff;
+  outline-offset: 2px;
 }
 
 .search-section, .filter-section {
