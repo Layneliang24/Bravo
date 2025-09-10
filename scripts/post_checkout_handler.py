@@ -81,6 +81,15 @@ class PostCheckoutHandler:
         """检查依赖同步"""
         print("检查依赖同步...")
         
+        # 检查是否使用 Docker 开发
+        docker_compose_exists = (self.project_root / "docker-compose.yml").exists()
+        
+        if docker_compose_exists:
+            print("检测到 Docker 开发环境，跳过本地依赖检查")
+            print("如需启动服务，请运行: docker-compose up")
+            return True
+        
+        # 非 Docker 环境的依赖检查
         # 检查前端依赖
         if (self.project_root / "frontend" / "package.json").exists():
             if not (self.project_root / "frontend" / "node_modules").exists():
@@ -100,7 +109,15 @@ class PostCheckoutHandler:
         """检查环境配置"""
         print("检查环境配置...")
         
-        # 检查环境变量文件
+        # 检查是否使用 Docker 开发
+        docker_compose_exists = (self.project_root / "docker-compose.yml").exists()
+        
+        if docker_compose_exists:
+            print("检测到 Docker 开发环境，环境变量通过 docker-compose.yml 配置")
+            print("如需自定义环境变量，请修改 docker-compose.yml 中的 environment 部分")
+            return True
+        
+        # 非 Docker 环境的环境文件检查
         env_files = [".env", ".env.local", ".env.development"]
         missing_env = []
         
