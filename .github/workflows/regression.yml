@@ -109,7 +109,7 @@ jobs:
             --tb=short \
             --strict-markers \
             --disable-warnings \
-            --maxfail=1 \
+            --maxfail=0 \
             --junit-xml=regression-results.xml
 
           echo "✅ All regression tests passed!"

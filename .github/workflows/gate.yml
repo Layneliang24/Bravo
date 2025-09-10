@@ -172,7 +172,7 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
-          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
+          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v --maxfail=0
           echo "✅ Backend unit tests completed"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
@@ -182,7 +182,7 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Integration Tests (FORCED FULL SUITE)"
-          python -m pytest tests/ -m integration --junit-xml=test-results/backend-integration-results.xml -v
+          python -m pytest tests/ -m integration --junit-xml=test-results/backend-integration-results.xml -v --maxfail=0
           echo "✅ Backend integration tests completed"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
@@ -241,7 +241,7 @@ jobs:
           echo "🔍 Checking coverage thresholds (ANTI-CHEATING)"
           # This will fail the build if thresholds are not met
           cd frontend && npm run test:coverage-check
-          cd ../backend && python -m pytest --cov=apps --cov=bravo --cov-fail-under=10 --cov-report=term-missing
+          cd ../backend && python -m pytest --cov=apps --cov=bravo --cov-fail-under=10 --cov-report=term-missing --maxfail=0
           echo "✅ All coverage thresholds met"
 
       # === PERFORMANCE TESTS ===
