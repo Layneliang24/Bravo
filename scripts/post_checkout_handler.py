@@ -92,7 +92,7 @@ class PostCheckoutHandler:
 
     def check_environment(self):
         """检查环境配置"""
-        print("🔧 检查环境配置...")
+        print("检查环境配置...")
         
         # 检查环境变量文件
         env_files = [".env", ".env.local", ".env.development"]
@@ -141,7 +141,7 @@ class PostCheckoutHandler:
 
     def cleanup_temp_files(self):
         """清理临时文件"""
-        print("🧹 清理临时文件...")
+        print("清理临时文件...")
         
         temp_patterns = [
             "**/__pycache__",
