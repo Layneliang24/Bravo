@@ -170,7 +170,23 @@ jobs:
         run: |
           echo "⚡ Running Lighthouse Performance Tests"
           npm install -g @lhci/cli
-          lhci autorun --upload.target=temporary-public-storage
+          # 确保前端已构建
+          cd frontend
+          if [ ! -d "dist" ]; then
+            echo "构建前端文件..."
+            npm run build:skip-check || npm run build
+          fi
+          # 启动前端服务器
+          echo "启动前端服务器..."
+          npm run preview -- --port 3001 &
+          FRONTEND_PID=$!
+          # 等待服务器启动
+          sleep 10
+          cd ..
+          # 使用配置文件运行 Lighthouse CI
+          lhci autorun --config=lighthouserc.json
+          # 清理进程
+          kill $FRONTEND_PID 2>/dev/null || true
           echo "✅ Performance tests completed"
 
       # === UPLOAD ARTIFACTS ===
