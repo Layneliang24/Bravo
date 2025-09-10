@@ -184,6 +184,8 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
+          # 确保测试结果目录存在
+          mkdir -p test-results
           python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v --maxfail=0
           echo "✅ Backend unit tests completed"
         env:
@@ -194,6 +196,8 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 Running Backend Integration Tests (FORCED FULL SUITE)"
+          # 确保测试结果目录存在
+          mkdir -p test-results
           python -m pytest tests/ -m integration --junit-xml=test-results/backend-integration-results.xml -v --maxfail=0
           echo "✅ Backend integration tests completed"
         env:
