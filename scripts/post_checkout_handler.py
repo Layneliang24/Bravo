@@ -119,6 +119,9 @@ class PostCheckoutHandler:
         """检查分支特定配置"""
         print(f"检查分支 {branch_name} 特定配置...")
         
+        # 检查分支是否是最新版本
+        self.check_branch_up_to_date(branch_name)
+        
         # 检查是否是保护分支
         if branch_name in ["main", "dev"]:
             print("切换到保护分支，确保代码已通过审查")
@@ -144,6 +147,44 @@ class PostCheckoutHandler:
 
         print("分支配置检查通过")
         return True
+
+    def check_branch_up_to_date(self, branch_name):
+        """检查分支是否是最新版本"""
+        print(f"检查分支 {branch_name} 是否是最新版本...")
+        
+        try:
+            # 获取远程最新信息
+            print("获取远程最新信息...")
+            subprocess.run(
+                ["git", "fetch", "origin", branch_name],
+                capture_output=True,
+                cwd=self.project_root
+            )
+            
+            # 检查当前分支是否落后于远程
+            result = subprocess.run(
+                ["git", "rev-list", "--count", f"HEAD..origin/{branch_name}"],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root
+            )
+            
+            if result.returncode == 0:
+                behind_count = int(result.stdout.strip())
+                if behind_count > 0:
+                    print(f"警告: 当前分支落后于远程 {branch_name} {behind_count} 个提交")
+                    print(f"建议执行: git pull origin {branch_name}")
+                    return False
+                else:
+                    print(f"分支 {branch_name} 是最新版本")
+                    return True
+            else:
+                print(f"无法检查分支 {branch_name} 的远程状态")
+                return True
+                
+        except Exception as e:
+            print(f"检查分支版本时出错: {e}")
+            return True
 
     def cleanup_temp_files(self):
         """清理临时文件"""
