@@ -75,19 +75,43 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🧪 Running Frontend Unit Tests (FORCED FULL SUITE)"
-          npm run test -- --reporter=verbose --coverage --passWithNoTests
+          # 确保测试结果目录存在
+          mkdir -p test-results
+          mkdir -p tests/reports
+          # 运行测试并生成 JUnit 报告
+          npm run test -- --coverage --run --passWithNoTests
+          # 复制 JUnit 报告到期望的位置
+          if [ -f "tests/reports/junit.xml" ]; then
+            cp tests/reports/junit.xml test-results/frontend-unit-results.xml
+            echo "✅ Frontend unit test results copied"
+          else
+            echo "⚠️ JUnit report not found, creating empty file"
+            touch test-results/frontend-unit-results.xml
+          fi
           echo "✅ Frontend unit tests completed"
         env:
           CI: true
-          JEST_JUNIT_OUTPUT_DIR: ./test-results
-          JEST_JUNIT_OUTPUT_NAME: frontend-unit-results.xml
 
       - name: Run Frontend Component Tests
         working-directory: ./frontend
         run: |
           echo "🧪 Running Frontend Component Tests (FORCED FULL SUITE)"
-          npm run test:component -- --reporter=verbose --passWithNoTests
+          # 确保测试结果目录存在
+          mkdir -p test-results
+          mkdir -p tests/reports
+          # 运行组件测试并生成 JUnit 报告
+          npm run test:component -- --run --passWithNoTests
+          # 复制 JUnit 报告到期望的位置
+          if [ -f "tests/reports/junit.xml" ]; then
+            cp tests/reports/junit.xml test-results/frontend-component-results.xml
+            echo "✅ Frontend component test results copied"
+          else
+            echo "⚠️ JUnit report not found, creating empty file"
+            touch test-results/frontend-component-results.xml
+          fi
           echo "✅ Frontend component tests completed"
+        env:
+          CI: true
 
       # === BACKEND TESTS ===
       - name: Run Backend Unit Tests with Coverage
