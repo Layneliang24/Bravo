@@ -22,7 +22,7 @@ class PostCheckoutHandler:
 
     def run_post_checkout_checks(self):
         """运行 post-checkout 检查"""
-        print("🔄 Post-checkout 检查开始...")
+        print("Post-checkout 检查开始...")
         
         # 检查是否是分支切换（而不是文件检出）
         if self.branch_checkout != "1":
@@ -31,7 +31,7 @@ class PostCheckoutHandler:
 
         # 获取当前分支
         current_branch = self.get_current_branch()
-        print(f"🌿 切换到分支: {current_branch}")
+        print(f"切换到分支: {current_branch}")
 
         # 执行分支特定的检查
         success = True
@@ -52,9 +52,9 @@ class PostCheckoutHandler:
         self.cleanup_temp_files()
 
         if success:
-            print("✅ Post-checkout 检查完成")
+            print("Post-checkout 检查完成")
         else:
-            print("⚠️  Post-checkout 检查发现问题，请手动处理")
+            print("Post-checkout 检查发现问题，请手动处理")
 
         return success
 
@@ -73,21 +73,21 @@ class PostCheckoutHandler:
 
     def check_dependencies(self):
         """检查依赖同步"""
-        print("📦 检查依赖同步...")
+        print("检查依赖同步...")
         
         # 检查前端依赖
         if (self.project_root / "frontend" / "package.json").exists():
             if not (self.project_root / "frontend" / "node_modules").exists():
-                print("⚠️  前端依赖未安装，建议运行: cd frontend && npm install")
+                print("前端依赖未安装，建议运行: cd frontend && npm install")
                 return False
 
         # 检查后端依赖
         if (self.project_root / "backend" / "requirements").exists():
             if not (self.project_root / "backend" / ".venv").exists():
-                print("⚠️  后端虚拟环境未创建，建议运行: cd backend && python -m venv .venv")
+                print("后端虚拟环境未创建，建议运行: cd backend && python -m venv .venv")
                 return False
 
-        print("✅ 依赖检查通过")
+        print("依赖检查通过")
         return True
 
     def check_environment(self):
@@ -103,19 +103,19 @@ class PostCheckoutHandler:
                 missing_env.append(env_file)
 
         if missing_env:
-            print(f"⚠️  缺少环境配置文件: {', '.join(missing_env)}")
+            print(f"缺少环境配置文件: {', '.join(missing_env)}")
             return False
 
-        print("✅ 环境配置检查通过")
+        print("环境配置检查通过")
         return True
 
     def check_branch_config(self, branch_name):
         """检查分支特定配置"""
-        print(f"🌿 检查分支 {branch_name} 特定配置...")
+        print(f"检查分支 {branch_name} 特定配置...")
         
         # 检查是否是保护分支
         if branch_name in ["main", "dev"]:
-            print("🛡️  切换到保护分支，确保代码已通过审查")
+            print("切换到保护分支，确保代码已通过审查")
             
             # 检查是否有未提交的更改
             try:
@@ -126,7 +126,7 @@ class PostCheckoutHandler:
                     text=True
                 )
                 if result.stdout.strip():
-                    print("⚠️  工作区有未提交的更改")
+                    print("工作区有未提交的更改")
                     return False
             except Exception:
                 pass
@@ -136,7 +136,7 @@ class PostCheckoutHandler:
         if branch_config.exists():
             print(f"📋 发现分支特定配置: {branch_config.name}")
 
-        print("✅ 分支配置检查通过")
+        print("分支配置检查通过")
         return True
 
     def cleanup_temp_files(self):
@@ -171,7 +171,7 @@ class PostCheckoutHandler:
                         pass
 
         if cleaned_count > 0:
-            print(f"🗑️  清理了 {cleaned_count} 个临时文件/目录")
+            print(f"清理了 {cleaned_count} 个临时文件/目录")
         else:
             print("✨ 无需清理临时文件")
 
@@ -183,7 +183,7 @@ def main():
         success = handler.run_post_checkout_checks()
         return 0 if success else 1
     except Exception as e:
-        print(f"❌ Post-checkout 检查失败: {e}")
+        print(f"Post-checkout 检查失败: {e}")
         return 1
 
 
