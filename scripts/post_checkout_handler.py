@@ -10,6 +10,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+# 设置输出编码为 UTF-8
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
+
 
 class PostCheckoutHandler:
     """Post-checkout 处理器"""
