@@ -286,7 +286,7 @@ class CodeChangeTracker:
 
         # 禁用测试
         if data["disabled_tests"]:
-            report.append("\n## 🧪 禁用测试")
+            report.append("\n## 禁用测试")
             for test in data["disabled_tests"]:
                 report.append(f"- **{test['file']}:{test['line']}**")
                 report.append(f"  ```{test['content']}```")
@@ -339,8 +339,8 @@ def main():
         f.write(report)
 
     print(f"报告已生成: {report_file}")
-    print(f"\n📈 扫描结果: {current_data['summary']['total_issues']} 个问题")
-    print(f"🎯 风险评估: {current_data['summary']['risk_assessment']}")
+    print(f"\n扫描结果: {current_data['summary']['total_issues']} 个问题")
+    print(f"风险评估: {current_data['summary']['risk_assessment']}")
 
     # 如果有高风险问题，返回非零退出码
     if current_data["summary"]["risk_assessment"] == "HIGH":
