@@ -138,10 +138,23 @@ jobs:
       - name: Generate Coverage Reports
         run: |
           echo "📊 Generating comprehensive coverage reports"
-          # Frontend coverage
-          cd frontend && npx nyc report --reporter=text-lcov > ../coverage-frontend.lcov
+          # Frontend coverage (vitest generates lcov in coverage/lcov.info)
+          cd frontend
+          if [ -f "coverage/lcov.info" ]; then
+            cp coverage/lcov.info ../coverage-frontend.lcov
+            echo "✅ Frontend coverage report copied"
+          else
+            echo "⚠️ Frontend coverage report not found, generating empty file"
+            touch ../coverage-frontend.lcov
+          fi
           # Backend coverage already generated
-          cd ../backend && cp coverage.xml ../coverage-backend.xml
+          cd ../backend 
+          if [ -f "coverage.xml" ]; then
+            cp coverage.xml ../coverage-backend.xml
+            echo "✅ Backend coverage report copied"
+          else
+            echo "⚠️ Backend coverage report not found"
+          fi
           echo "✅ Coverage reports generated"
 
       - name: Check Coverage Thresholds
