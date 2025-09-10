@@ -83,9 +83,18 @@ jobs:
             echo "MySQL not ready, waiting... (attempt $i/30)"
             sleep 2
           done
+          
+          echo "🔐 Granting database privileges to bravo_user..."
+          # Grant necessary privileges for creating test databases
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            GRANT CREATE, DROP ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          
           # Test the connection with the application user
           mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "SELECT 1;" bravo_test
-          echo "✅ Database connection verified"
+          echo "✅ Database connection and privileges verified"
 
       - name: Run Database Migrations
         working-directory: ./backend

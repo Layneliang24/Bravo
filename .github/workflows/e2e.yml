@@ -65,6 +65,26 @@ jobs:
           cd e2e
           npx playwright install --with-deps ${{ matrix.browser }}
 
+      - name: ⏳ Wait for MySQL and setup permissions
+        run: |
+          echo "⏳ Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready, waiting... (attempt $i/30)"
+            sleep 2
+          done
+          
+          echo "🔐 Granting database privileges to bravo_user..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            GRANT CREATE, DROP ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ Database privileges configured"
+
       - name: Prepare backend for E2E
         run: |
           cd backend
