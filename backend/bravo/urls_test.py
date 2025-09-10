@@ -3,15 +3,15 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from apps.common.views import health_check_view, api_info_view
+from apps.common.views import health_check, api_info
 
 urlpatterns = [
     # 管理后台
     path("admin/", admin.site.urls),
     
     # 健康检查和API信息
-    path("health/", health_check_view, name="health_check"),
-    path("api-info/", api_info_view, name="api_info"),
+    path("health/", health_check, name="health_check"),
+    path("api-info/", api_info, name="api_info"),
     
     # 通用应用URL
     path("", include("apps.common.urls")),

@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # 测试环境特定设置
 DEBUG = True
 SECRET_KEY = "test-secret-key-for-testing-only"  # nosec
+ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1", "*"]
 
 # Django核心设置
 ROOT_URLCONF = "bravo.urls_test"
