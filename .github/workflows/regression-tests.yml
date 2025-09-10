@@ -35,18 +35,20 @@ jobs:
         node-version: [18.x, 20.x]
 
     services:
-      postgres:
-        image: postgres:13
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
       redis:
         image: redis:6
@@ -79,7 +81,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y mysql-client
 
       - name: Install Python dependencies
         run: |
@@ -102,7 +104,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
         run: |
           cd backend
           python manage.py migrate
@@ -110,7 +112,7 @@ jobs:
 
       - name: Prepare backend for regression tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
           REDIS_URL: redis://localhost:6379/0
           DEBUG: true
         run: |

@@ -16,8 +16,9 @@ on:
 env:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20.x"
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_DB: bravo_test
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
 
 jobs:
   # 后端回归测试 - 核心功能保护
@@ -26,18 +27,20 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - name: 📥 Checkout code
@@ -66,14 +69,14 @@ jobs:
       - name: 🗄️ Setup database
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
         run: |
           python manage.py migrate --settings=config.settings.test
 
       - name: 🔒 Run REGRESSION TESTS ONLY
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
           DJANGO_SETTINGS_MODULE: config.settings.test
         run: |
           echo "🚨 Running REGRESSION TESTS - Core functionality protection"
@@ -141,18 +144,20 @@ jobs:
     needs: [backend-regression, frontend-regression]
 
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - name: 📥 Checkout code
@@ -184,14 +189,14 @@ jobs:
       - name: 🗄️ Setup test database
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
         run: |
           python manage.py migrate --settings=config.settings.test
 
       - name: 🚀 Start backend server
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
           DJANGO_SETTINGS_MODULE: config.settings.test
         run: |
           python manage.py runserver 8000 &

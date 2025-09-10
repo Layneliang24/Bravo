@@ -17,16 +17,20 @@ jobs:
         browser: [chromium, firefox, webkit]
 
     services:
-      postgres:
-        image: postgres:13
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3306:3306
 
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +94,7 @@ jobs:
             echo "✅ Backend server started on port 8000"
         env:
             DJANGO_SETTINGS_MODULE: bravo.settings.test
-            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+            DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
             PYTHONPATH: ${{ github.workspace }}/backend
 
       - name: Start frontend server
