@@ -68,38 +68,23 @@ WSGI_APPLICATION = "bravo.wsgi.application"
 # 数据库 - 使用MySQL数据库（与开发环境保持一致）
 import os
 
-# CI环境：强制使用TCP连接，避免socket连接问题
-if "DATABASE_URL" in os.environ:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'bravo_test',
-            'USER': 'bravo_user',
-            'PASSWORD': 'bravo_password',
-            'HOST': '127.0.0.1',  # 必须IP，不能localhost，否则Django会去找unix socket
-            'PORT': '3306',
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
-        }
+# 强制覆盖数据库配置，避免继承base.py中的localhost配置
+print("🔧 强制设置数据库配置，避免socket连接问题")
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bravo_test',
+        'USER': 'bravo_user',
+        'PASSWORD': 'bravo_password',
+        'HOST': '127.0.0.1',  # 必须IP，不能localhost，否则Django会去找unix socket
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
-else:
-    # 本地测试环境使用MySQL
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "bravo_test",
-            "USER": "bravo_user", 
-            "PASSWORD": "bravo_password",
-            "HOST": "localhost",
-            "PORT": "3307",  # Docker MySQL端口
-            "OPTIONS": {
-                "charset": "utf8mb4",
-                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
-        }
-    }
+}
+print(f"🔧 数据库配置: HOST={DATABASES['default']['HOST']}, PORT={DATABASES['default']['PORT']}")
 
 # 密码验证 - 简化
 AUTH_PASSWORD_VALIDATORS: list = []

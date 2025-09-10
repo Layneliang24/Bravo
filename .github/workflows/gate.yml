@@ -96,6 +96,24 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "SELECT 1;" bravo_test
           echo "✅ Database connection and privileges verified"
 
+      - name: 打印最终 DATABASES 配置
+        working-directory: ./backend
+        run: |
+          python -c "
+          import os, django
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
+          django.setup()
+          from django.conf import settings
+          print('ENGINE :', settings.DATABASES['default']['ENGINE'])
+          print('HOST   :', repr(settings.DATABASES['default']['HOST']))
+          print('PORT   :', repr(settings.DATABASES['default']['PORT']))
+          print('NAME   :', repr(settings.DATABASES['default']['NAME']))
+          print('USER   :', repr(settings.DATABASES['default']['USER']))
+          "
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
       - name: Verify Django Configuration
         working-directory: ./backend
         run: |
