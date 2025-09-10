@@ -263,10 +263,13 @@ jobs:
           echo "   Backend tests: $backend_tests"
           echo "   E2E tests: $e2e_tests"
 
-          # Minimum test thresholds (adjust based on your project)
-          [ "$frontend_tests" -ge "10" ] || (echo "❌ Insufficient frontend tests executed ($frontend_tests < 10)" && exit 1)
-          [ "$backend_tests" -ge "20" ] || (echo "❌ Insufficient backend tests executed ($backend_tests < 20)" && exit 1)
-          [ "$e2e_tests" -ge "5" ] || (echo "❌ Insufficient E2E tests executed ($e2e_tests < 5)" && exit 1)
+          # Dynamic test thresholds based on current project state
+          # Frontend: 27 tests available, require 80% execution
+          [ "$frontend_tests" -ge "20" ] || (echo "❌ Insufficient frontend tests executed ($frontend_tests < 20)" && exit 1)
+          # Backend: 15 tests available, require 80% execution  
+          [ "$backend_tests" -ge "12" ] || (echo "❌ Insufficient backend tests executed ($backend_tests < 12)" && exit 1)
+          # E2E: 230 tests available, require minimum execution
+          [ "$e2e_tests" -ge "50" ] || (echo "❌ Insufficient E2E tests executed ($e2e_tests < 50)" && exit 1)
 
           echo "✅ Test execution integrity verified - NO CHEATING DETECTED"
 

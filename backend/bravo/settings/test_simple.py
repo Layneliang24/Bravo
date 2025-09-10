@@ -65,13 +65,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bravo.wsgi.application"
 
-# 数据库 - 使用SQLite内存数据库
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
+# 数据库 - 使用MySQL数据库（与开发环境保持一致）
+import os
+
+# 优先使用环境变量中的数据库配置（CI环境）
+if "DATABASE_URL" in os.environ:
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.parse(os.environ["DATABASE_URL"])
     }
-}
+else:
+    # 本地测试环境使用MySQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "bravo_test",
+            "USER": "bravo_user", 
+            "PASSWORD": "bravo_password",
+            "HOST": "localhost",
+            "PORT": "3307",  # Docker MySQL端口
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
 
 # 密码验证 - 简化
 AUTH_PASSWORD_VALIDATORS: list = []

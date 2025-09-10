@@ -109,3 +109,6 @@ celerybeat.pid
 # Temporary files
 *.tmp
 *.temp
+
+# Temporary files archive
+temp_files_archive/

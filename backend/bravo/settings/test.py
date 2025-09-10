@@ -67,13 +67,31 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 使用SQLite文件数据库进行测试
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "test_db.sqlite3",
+# 使用MySQL数据库进行测试（与开发环境保持一致）
+import os
+
+# 优先使用环境变量中的数据库配置（CI环境）
+if "DATABASE_URL" in os.environ:
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.parse(os.environ["DATABASE_URL"])
     }
-}
+else:
+    # 本地测试环境使用MySQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "bravo_test",
+            "USER": "bravo_user",
+            "PASSWORD": "bravo_password",
+            "HOST": "localhost",
+            "PORT": "3307",  # Docker MySQL端口
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
 
 # 禁用缓存
 CACHES = {
