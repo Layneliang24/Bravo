@@ -72,13 +72,14 @@ import os
 if "DATABASE_URL" in os.environ:
     import dj_database_url
     db_config = dj_database_url.parse(os.environ["DATABASE_URL"])
-    # 强制使用TCP连接，避免socket连接问题
-    db_config.update({
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
-    })
+    # 只对MySQL数据库添加MySQL特定选项
+    if db_config.get('ENGINE') == 'django.db.backends.mysql':
+        db_config.update({
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        })
     DATABASES = {
         "default": db_config
     }

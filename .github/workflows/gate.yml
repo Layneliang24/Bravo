@@ -100,7 +100,7 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🗄️ Running database migrations..."
-          python manage.py migrate --settings=bravo.settings.test --run-syncdb
+          python manage.py migrate --settings=bravo.settings.test
           echo "✅ Database migrations completed"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
@@ -180,7 +180,7 @@ jobs:
       - name: Prepare Backend for E2E
         working-directory: ./backend
         run: |
-          python manage.py migrate --settings=bravo.settings.test --run-syncdb
+          python manage.py migrate --settings=bravo.settings.test
           echo "✅ Backend prepared for E2E"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test

@@ -35,7 +35,7 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -92,13 +92,13 @@ jobs:
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
         run: |
-          python manage.py migrate --settings=config.settings.test
+          python manage.py migrate --settings=bravo.settings.test
 
       - name: 🔒 Run REGRESSION TESTS ONLY
         working-directory: ./backend
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
-          DJANGO_SETTINGS_MODULE: config.settings.test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         run: |
           echo "🚨 Running REGRESSION TESTS - Core functionality protection"
           echo "📋 These tests MUST pass for PR to be merged"
@@ -173,7 +173,7 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -212,13 +212,13 @@ jobs:
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
         run: |
-          python manage.py migrate --settings=config.settings.test
+          python manage.py migrate --settings=bravo.settings.test
 
       - name: 🚀 Start backend server
         working-directory: ./backend
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
-          DJANGO_SETTINGS_MODULE: config.settings.test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         run: |
           python manage.py runserver 8000 &
           sleep 10
