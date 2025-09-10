@@ -88,7 +88,7 @@ jobs:
         run: |
           cd backend
           export VALIDATE_FEATURE_COVERAGE=true
-          python -m pytest --cov=. --cov-report=json --cov-report=html
+          python -m pytest --cov=. --cov-report=json --cov-report=html --maxfail=0
         continue-on-error: true
 
       - name: Build feature-test mapping
