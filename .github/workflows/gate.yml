@@ -206,11 +206,12 @@ jobs:
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
+        continue-on-error: true  # 临时忽略 Codecov 上传错误
         with:
           files: ./coverage-frontend.lcov,./coverage-backend.xml
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true
+          fail_ci_if_error: false  # 改为 false，避免因速率限制导致 CI 失败
 
       # === ANTI-CHEATING VERIFICATION ===
       - name: Verify Test Execution Integrity
