@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-09-10T21:15:41.736863",
+  "temporary_markers": [
+    {
+      "file": "test_fixme.py",
+      "line": 1,
+      "type": "FIXME",
+      "content": "# FIXME: high severity issue",
+      "severity": "HIGH"
+    },
+    {
+      "file": "test_todo.py",
+      "line": 1,
+      "type": "TODO",
+      "content": "# TODO: 这是一个待办事项",
+      "severity": "MEDIUM"
+    },
+    {
+      "file": "scripts\\monitoring_dashboard.py",
+      "line": 252,
+      "type": "COMMENTED_CODE",
+      "content": "# stats = self.load_statistics()  # Unused variable",
+      "severity": "LOW"
+    }
+  ],
+  "high_risk_changes": [],
+  "commented_code": [
+    {
+      "file": "scripts\\monitoring_dashboard.py",
+      "line": 252,
+      "content": "# stats = self.load_statistics()  # Unused variable"
+    }
+  ],
+  "disabled_tests": [],
+  "summary": {
+    "total_issues": 3,
+    "high_severity_count": 1,
+    "commented_code_count": 1,
+    "disabled_tests_count": 0,
+    "files_affected": 3,
+    "risk_assessment": "LOW"
+  }
+}

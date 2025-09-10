@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-10T11:35:20.638Z",
+  "timestamp": "2025-09-10T13:15:41.392Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 39,
+    "totalTestFiles": 37,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -450,17 +450,7 @@
       "featureCount": 0
     },
     {
-      "file": "backend\\test_simple.py",
-      "features": [],
-      "featureCount": 0
-    },
-    {
       "file": "backend\\test_coverage.py",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "backend\\test_auto_naming.py",
       "features": [],
       "featureCount": 0
     },
