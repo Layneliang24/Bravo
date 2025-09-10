@@ -10,10 +10,10 @@ DEBUG = True
 SECRET_KEY = "test-secret-key-for-testing-only"  # nosec
 
 # Django核心设置
-ROOT_URLCONF = "bravo.urls"
+ROOT_URLCONF = "bravo.urls_test"
 WSGI_APPLICATION = "bravo.wsgi.application"
 
-# 应用设置
+# 应用设置 - 最简化版本，只包含Django核心应用
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -21,22 +21,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "corsheaders",
-    "health_check",
-    "health_check.db",
-    "health_check.cache",
-    "health_check.storage",
     "apps.users",
-    "apps.blog",
     "apps.common",
-    "apps.english",
-    "apps.jobs",
 ]
 
-# 中间件
+# 中间件 - 简化版本
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -97,27 +87,7 @@ AUTH_PASSWORD_VALIDATORS: list = []
 # 自定义用户模型
 AUTH_USER_MODEL = 'users.User'
 
-# CORS 配置 - 测试环境允许所有来源
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
+# 测试环境不需要CORS配置
 
 
 # 禁用迁移
