@@ -127,6 +127,7 @@ class DisableMigrations:
         return None
 
 
+# 禁用迁移 - CI环境使用测试数据库自动创建
 MIGRATION_MODULES = DisableMigrations()
 
 # 测试邮件后端
