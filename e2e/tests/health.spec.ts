@@ -63,7 +63,7 @@ test.describe('服务健康检查', () => {
         };
       } catch (error) {
         return {
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     }, API_URL);
@@ -111,7 +111,7 @@ test.describe('基础功能测试', () => {
     // 检查页面是否有基本内容
     const bodyText = await page.textContent('body');
     expect(bodyText).toBeTruthy();
-    expect(bodyText.length).toBeGreaterThan(0);
+    expect(bodyText?.length).toBeGreaterThan(0);
   });
 
   test('页面应该有正确的元数据', async ({ page }) => {
