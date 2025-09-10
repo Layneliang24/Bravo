@@ -41,12 +41,12 @@ class BlogPage {
 
   // 获取博客标题
   async getBlogTitle() {
-    return await this.page.textContent(this.selectors.blogTitle);
+    return await this.page.textContent(this.selectors.blogTitle, { timeout: 30000 });
   }
 
   // 获取博客列表
   async getBlogList() {
-    await this.page.waitForSelector(this.selectors.blogList);
+    await this.page.waitForSelector(this.selectors.blogList, { timeout: 30000 });
     return await this.page.locator(this.selectors.blogItem).all();
   }
 

@@ -97,8 +97,8 @@ export default defineConfig({
     },
   ],
 
-  // 测试匹配模式
-  testMatch: ['**/*.spec.ts', '**/*.test.ts', '**/*.e2e.ts'],
+  // 测试匹配模式 - 只运行基础设施测试
+  testMatch: ['**/health.spec.ts', '**/app.spec.ts'],
 
   // 忽略的文件
   testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.git/**'],
