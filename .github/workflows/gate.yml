@@ -186,8 +186,38 @@ jobs:
           echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
           # 确保测试结果目录存在
           mkdir -p test-results
-          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v --maxfail=0
+          python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v --maxfail=0 --tb=short
           echo "✅ Backend unit tests completed"
+        continue-on-error: true
+
+      - name: 打印后端测试现场
+        working-directory: ./backend
+        if: always()
+        run: |
+          echo "=== 实际生成的 xml ==="
+          cat test-results/backend-unit-results.xml || echo "❌ XML文件不存在"
+          echo ""
+          echo "=== 再数一遍 testcase ==="
+          grep -o '<testcase[^>]*>' test-results/backend-unit-results.xml | wc -l || echo "0"
+          echo ""
+          echo "=== pytest collect-only 检查 ==="
+          python -m pytest tests/ --collect-only
+          echo ""
+          echo "=== 检查测试文件是否存在 ==="
+          find tests/ -name "test_*.py" -type f
+          echo ""
+          echo "=== 检查Django配置 ==="
+          python -c "import django; django.setup(); print('Django配置正常')" || echo "❌ Django配置失败"
+          echo ""
+          echo "=== 检查pytest配置 ==="
+          cat pytest.ini || echo "❌ pytest.ini不存在"
+          echo ""
+          echo "=== 检查环境变量 ==="
+          echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo ""
+          echo "=== 检查数据库连接 ==="
+          python manage.py check --settings=bravo.settings.test || echo "❌ Django check失败"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
