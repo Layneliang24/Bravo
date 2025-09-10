@@ -19,18 +19,20 @@ jobs:
         python-version: [3.11]
 
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - name: Checkout code
@@ -121,7 +123,7 @@ jobs:
           python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v
           echo "✅ Backend unit tests completed"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Run Backend Integration Tests
@@ -131,7 +133,7 @@ jobs:
           python -m pytest tests/ -m integration --junit-xml=test-results/backend-integration-results.xml -v
           echo "✅ Backend integration tests completed"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       # === E2E TESTS ===
@@ -147,7 +149,7 @@ jobs:
           python manage.py migrate --settings=bravo.settings.test --run-syncdb
           echo "✅ Backend prepared for E2E"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@localhost:3306/bravo_test
 
       - name: Run E2E Tests with Trace
         working-directory: ./e2e
