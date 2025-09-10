@@ -21,18 +21,22 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "apps.users",  # 添加用户应用
-    # 暂时注释掉不存在的应用
-    # "rest_framework",
-    # "corsheaders",
-    # "apps.blog",
-    # "apps.common",
-    # "apps.english",
-    # "apps.jobs",
+    "rest_framework",
+    "corsheaders",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "apps.users",
+    "apps.blog",
+    "apps.common",
+    "apps.english",
+    "apps.jobs",
 ]
 
 # 中间件
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -92,6 +96,28 @@ AUTH_PASSWORD_VALIDATORS: list = []
 
 # 自定义用户模型
 AUTH_USER_MODEL = 'users.User'
+
+# CORS 配置 - 测试环境允许所有来源
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 
 # 禁用迁移

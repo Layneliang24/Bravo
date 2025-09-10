@@ -39,6 +39,10 @@ test.describe('服务健康检查', () => {
   });
 
   test('前端应该能够与后端API通信', async ({ page }) => {
+    // 首先检查后端API是否可用
+    const backendResponse = await page.request.get(`${API_URL}/health/`);
+    expect(backendResponse.status()).toBe(200);
+
     // 访问前端页面
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
@@ -46,7 +50,12 @@ test.describe('服务健康检查', () => {
     // 尝试通过前端调用后端API
     const apiResponse = await page.evaluate(async apiUrl => {
       try {
-        const response = await fetch(`${apiUrl}/health/`);
+        const response = await fetch(`${apiUrl}/health/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         return {
           status: response.status,
           ok: response.ok,
