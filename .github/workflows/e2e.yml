@@ -75,13 +75,23 @@ jobs:
 
       - name: Start backend server
         run: |
-          cd backend
-          python manage.py runserver 8000 &
-          sleep 10
-          echo "✅ Backend server started on port 8000"
+            cd backend
+            echo "🔍 检查Django配置..."
+            python manage.py check --settings=bravo.settings.test --verbosity=2 || echo "❌ Django check failed"
+            echo "📋 显示已安装的应用..."
+            python manage.py diffsettings --settings=bravo.settings.test | grep INSTALLED_APPS || echo "❌ Could not show installed apps"
+            echo "🚀 启动Django服务器..."
+            python manage.py runserver 8000 --settings=bravo.settings.test --verbosity=2 > django_server.log 2>&1 &
+            BACKEND_PID=$!
+            echo "Backend PID: $BACKEND_PID"
+            sleep 15
+            echo "📄 显示Django服务器日志..."
+            cat django_server.log || echo "❌ Could not read Django server log"
+            echo "✅ Backend server started on port 8000"
         env:
-          DJANGO_SETTINGS_MODULE: bravo.settings.test
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+            DJANGO_SETTINGS_MODULE: bravo.settings.test
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+            PYTHONPATH: ${{ github.workspace }}/backend
 
       - name: Start frontend server
         run: |
@@ -92,10 +102,29 @@ jobs:
 
       - name: Wait for services to be ready
         run: |
-          echo "⏳ Waiting for services to be ready..."
-          sleep 10
-          curl -f http://localhost:8000/health/ || echo "Backend health check failed"
-          curl -f http://localhost:3001/ || echo "Frontend health check failed"
+            echo "⏳ Waiting for services to be ready..."
+            sleep 10
+            
+            echo "🔍 检查后端服务状态..."
+            if ! curl -v http://localhost:8000/health/; then
+              echo "❌ Backend health check failed"
+              echo "📄 显示Django错误日志..."
+              cat backend/django_server.log || echo "❌ Could not read Django server log"
+              echo "🔍 尝试直接访问Django管理页面..."
+              curl -v http://localhost:8000/admin/ || echo "❌ Django admin also failed"
+            fi
+            
+            echo "🔍 检查后端根路径..."
+            curl -v http://localhost:8000/ || echo "❌ Backend root check failed"
+            
+            echo "🔍 检查前端服务状态..."
+            curl -v http://localhost:3001/ || echo "❌ Frontend health check failed"
+            
+            echo "📊 显示进程状态..."
+            ps aux | grep -E "(python|node)" | grep -v grep || echo "No relevant processes found"
+            
+            echo "🌐 显示网络连接..."
+            netstat -tlnp | grep -E "(8000|3001)" || echo "No services listening on expected ports"
 
       - name: Run E2E tests
         run: |
