@@ -52,6 +52,46 @@
       创建新博客
     </button>
 
+    <!-- 博客编辑表单（隐藏状态，用于测试） -->
+    <div v-if="showEditForm" class="edit-form" data-testid="edit-form">
+      <input
+        type="text"
+        placeholder="博客标题"
+        data-testid="post-title"
+        v-model="editForm.title"
+      />
+      <textarea
+        placeholder="博客内容"
+        data-testid="post-content"
+        v-model="editForm.content"
+      ></textarea>
+      <button
+        data-testid="publish-button"
+        @click="publishPost"
+        class="publish-button"
+      >
+        发布
+      </button>
+    </div>
+
+    <!-- 博客项目操作按钮（隐藏状态，用于测试） -->
+    <div v-if="showActions" class="blog-actions" data-testid="blog-actions">
+      <button
+        data-testid="edit-button"
+        @click="editPost"
+        class="edit-button"
+      >
+        编辑
+      </button>
+      <button
+        data-testid="delete-button"
+        @click="deletePost"
+        class="delete-button"
+      >
+        删除
+      </button>
+    </div>
+
     <!-- 加载更多按钮 -->
     <button
       data-testid="load-more"
@@ -90,6 +130,14 @@ const mockPosts = ref([
 
 const searchKeyword = ref('')
 const selectedCategory = ref('')
+const showEditForm = ref(false)
+const showActions = ref(false)
+
+// 编辑表单数据
+const editForm = reactive({
+  title: '',
+  content: ''
+})
 
 const searchBlog = () => {
   console.log('搜索博客:', searchKeyword.value)
@@ -101,6 +149,24 @@ const filterByCategory = () => {
 
 const createPost = () => {
   console.log('创建新博客')
+  showEditForm.value = true
+}
+
+const publishPost = () => {
+  console.log('发布博客:', editForm.title, editForm.content)
+  showEditForm.value = false
+  editForm.title = ''
+  editForm.content = ''
+}
+
+const editPost = () => {
+  console.log('编辑博客')
+  showActions.value = true
+}
+
+const deletePost = () => {
+  console.log('删除博客')
+  showActions.value = false
 }
 
 const loadMore = () => {
@@ -151,5 +217,72 @@ const loadMore = () => {
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.edit-form {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.edit-form input,
+.edit-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.edit-form textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.publish-button {
+  padding: 0.5rem 1rem;
+  background-color: #67c23a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.publish-button:hover {
+  background-color: #529b2e;
+}
+
+.blog-actions {
+  margin: 1rem 0;
+}
+
+.edit-button {
+  padding: 0.5rem 1rem;
+  background-color: #e6a23c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.edit-button:hover {
+  background-color: #b88230;
+}
+
+.delete-button {
+  padding: 0.5rem 1rem;
+  background-color: #f56c6c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background-color: #c45656;
 }
 </style>
