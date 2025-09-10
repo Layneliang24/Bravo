@@ -33,7 +33,7 @@ export default defineConfig({
   // 全局设置
   use: {
     // 基础URL
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3001',
 
     // 浏览器上下文选项
     trace: 'on-first-retry',
@@ -140,8 +140,8 @@ export default defineConfig({
     {
       command: 'npm run dev',
       cwd: '../frontend',
-      port: 3000,
-      reuseExistingServer: !process.env.CI,
+      port: 3001,
+      reuseExistingServer: true,  // 总是重用现有服务器
       timeout: 120 * 1000,
       env: {
         NODE_ENV: 'test',
@@ -151,7 +151,7 @@ export default defineConfig({
       command: 'python -m uvicorn main:app --host 0.0.0.0 --port 8000',
       cwd: '../backend',
       port: 8000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,  // 总是重用现有服务器
       timeout: 120 * 1000,
       env: {
         ENVIRONMENT: 'test',
@@ -188,7 +188,7 @@ export default defineConfig({
   // 元数据
   metadata: {
     'test-environment': process.env.NODE_ENV || 'development',
-    'base-url': process.env.TEST_BASE_URL || 'http://localhost:3000',
+    'base-url': process.env.TEST_BASE_URL || 'http://localhost:3001',
     'browser-versions': {
       chromium: '119.0.6045.105',
       firefox: '119.0',

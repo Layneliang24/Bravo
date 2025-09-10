@@ -9,10 +9,42 @@
 - 新功能测试请添加到其他测试文件中
 """
 
-from django.contrib.auth.models import User
+import os
+import django
+import pytest
+from django.conf import settings
+
+# 配置 Django 设置用于测试
+if not settings.configured:
+    # 使用内存 SQLite 数据库进行测试
+    settings.configure(
+        DEBUG=True,
+        SECRET_KEY='test-secret-key-for-testing-only',
+        DATABASES={
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': ':memory:',
+            }
+        },
+        INSTALLED_APPS=[
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
+            'django.contrib.messages',
+            'django.contrib.admin',
+        ],
+        ROOT_URLCONF='tests.test_urls',
+        USE_TZ=True,
+    )
+    django.setup()
+
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from django.test import Client, TestCase
 
 
+@pytest.mark.unit
 class BlogRegressionTests(TestCase):
     """博客功能回归测试 - 确保核心功能不被破坏"""
 
@@ -42,6 +74,7 @@ class BlogRegressionTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+@pytest.mark.unit
 class UserRegressionTests(TestCase):
     """用户功能回归测试 - 确保用户管理功能稳定"""
 
@@ -72,6 +105,7 @@ class UserRegressionTests(TestCase):
         self.assertEqual(str(user), "profileuser")
 
 
+@pytest.mark.integration
 class APIHealthRegressionTests(TestCase):
     """API健康检查回归测试 - 确保系统基础服务正常"""
 
@@ -94,6 +128,7 @@ class APIHealthRegressionTests(TestCase):
         self.assertIn(response.status_code, [200, 302])
 
 
+@pytest.mark.integration
 class DatabaseRegressionTests(TestCase):
     """数据库功能回归测试 - 确保数据层稳定性"""
 

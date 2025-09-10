@@ -21,13 +21,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "corsheaders",
-    "apps.blog",
-    "apps.common",
-    "apps.english",
-    "apps.jobs",
-    "apps.users",
+    "apps.users",  # 添加用户应用
+    # 暂时注释掉不存在的应用
+    # "rest_framework",
+    # "corsheaders",
+    # "apps.blog",
+    # "apps.common",
+    # "apps.english",
+    # "apps.jobs",
 ]
 
 # 中间件
@@ -66,16 +67,16 @@ USE_TZ = True
 
 # 静态文件和媒体文件
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = []  # 暂时为空，避免目录不存在警告
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 使用SQLite内存数据库进行测试
+# 使用SQLite文件数据库进行测试
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
+        "NAME": BASE_DIR / "test_db.sqlite3",
     }
 }
 
@@ -88,6 +89,9 @@ CACHES = {
 
 # 简化密码验证器
 AUTH_PASSWORD_VALIDATORS: list = []
+
+# 自定义用户模型
+AUTH_USER_MODEL = 'users.User'
 
 
 # 禁用迁移

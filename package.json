@@ -28,7 +28,7 @@
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && black . && isort .",
     "lighthouse": "cd e2e && npm run lighthouse",
-    "e2e:install": "cd e2e && npm ci && npx playwright install --with-deps",
+    "e2e:install": "cd e2e && npm install && npx playwright install --with-deps",
     "e2e:ui": "cd e2e && npx playwright test --ui",
     "e2e:headed": "cd e2e && npx playwright test --headed",
     "e2e:debug": "cd e2e && npx playwright test --debug",
@@ -40,7 +40,7 @@
     "clean:backend": "cd backend && find . -name '*.pyc' -delete && find . -name '__pycache__' -delete",
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
-    "postinstall": "npm run e2e:install",
+    "postinstall:disabled": "npm run e2e:install",
     "prepare": "husky",
     "check:syntax": "node scripts/check-syntax.js"
   },
@@ -66,7 +66,7 @@
       "python -m pylint --rcfile=backend/.pylintrc.naming --disable=all --enable=invalid-name"
     ],
     "frontend/src/**/*.{ts,tsx,js,jsx,vue}": [
-      "npx eslint --config frontend/.eslintrc.cjs --fix"
+      "npx eslint --config frontend/eslint.config.js --fix"
     ],
     "**/*.{ts,tsx,js,jsx,vue}": [
       "npm run check:syntax"

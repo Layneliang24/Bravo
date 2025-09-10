@@ -61,6 +61,14 @@ repos:
     hooks:
       - id: prettier
         files: \.(js|jsx|ts|tsx|json|css|scss|md|yml|yaml)$
+        exclude: |
+          (?x)^(
+            docs/02_test_report/.*\.json$|
+            docs/02_test_report/.*_report\.md$|
+            .*temp_modifications.*\.json$|
+            .*\.log$|
+            .*\.report$
+          )$
 
   # ESLint检查 - temporarily disabled
   # - repo: https://github.com/pre-commit/mirrors-eslint

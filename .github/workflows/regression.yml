@@ -114,7 +114,7 @@ jobs:
 
       - name: 📦 Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install --ignore-scripts
 
       - name: 🔒 Run Frontend Regression Tests
         working-directory: ./frontend
@@ -168,7 +168,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
-          cache-dependency-path: e2e/package-lock.json
 
       - name: 🔧 Install backend dependencies
         working-directory: ./backend
@@ -179,7 +178,7 @@ jobs:
       - name: 📦 Install E2E dependencies
         working-directory: ./e2e
         run: |
-          npm ci
+          npm install
           npx playwright install --with-deps
 
       - name: 🗄️ Setup test database

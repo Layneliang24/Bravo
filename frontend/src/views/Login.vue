@@ -7,7 +7,11 @@
           <el-input v-model="loginForm.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" />
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            placeholder="请输入密码"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleLogin">登录</el-button>
@@ -25,7 +29,7 @@ const router = useRouter()
 
 const loginForm = reactive({
   username: '',
-  password: ''
+  password: '',
 })
 
 const handleLogin = () => {
