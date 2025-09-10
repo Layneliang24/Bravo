@@ -78,8 +78,9 @@ jobs:
           done
           
           echo "🔐 Granting database privileges to bravo_user..."
+          # Grant necessary privileges for Django testing (requires full DB management)
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
-            GRANT CREATE, DROP ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
             GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
             FLUSH PRIVILEGES;
           "
