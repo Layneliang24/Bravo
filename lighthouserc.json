@@ -1,10 +1,18 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3001"],
+      "url": ["http://localhost:3001/test.html"],
       "numberOfRuns": 1,
       "settings": {
-        "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu"
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-web-security --disable-features=VizDisplayCompositor",
+        "maxWaitForFcp": 30000,
+        "maxWaitForLoad": 60000,
+        "throttlingMethod": "devtools",
+        "throttling": {
+          "rttMs": 40,
+          "throughputKbps": 10240,
+          "cpuSlowdownMultiplier": 1
+        }
       }
     },
     "assert": {

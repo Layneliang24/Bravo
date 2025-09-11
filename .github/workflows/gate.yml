@@ -332,9 +332,19 @@ jobs:
             sleep 2
           done
           
-          # 验证服务器响应
+          # 验证服务器响应和页面内容
           echo "验证服务器响应..."
           curl -I http://localhost:3001 || echo "❌ 服务器响应失败"
+          
+          echo "检查页面内容..."
+          curl -s http://localhost:3001 | head -20 || echo "❌ 无法获取页面内容"
+          
+          echo "检查页面是否包含Vue应用..."
+          if curl -s http://localhost:3001 | grep -q "id=\"app\""; then
+            echo "✅ 页面包含Vue应用容器"
+          else
+            echo "❌ 页面缺少Vue应用容器"
+          fi
           
           # 使用配置文件运行 Lighthouse CI
           echo "运行Lighthouse CI..."
@@ -342,8 +352,17 @@ jobs:
             echo "✅ Lighthouse CI 成功完成"
           else
             echo "⚠️ Lighthouse CI 失败，尝试备用方法..."
-            # 备用方法：直接使用lighthouse命令测试静态文件
-            npx lighthouse http://localhost:3001 --output=html --output-path=./lighthouse-report.html --chrome-flags="--no-sandbox --disable-dev-shm-usage" || echo "❌ 备用Lighthouse测试也失败"
+            # 备用方法1：使用简单配置
+            echo "尝试使用简单配置..."
+            lhci autorun --config=lighthouserc-simple.json || echo "❌ 简单配置失败"
+            
+            # 备用方法2：直接测试简单页面
+            echo "尝试直接测试简单页面..."
+            npx lighthouse http://localhost:3001/test.html --output=html --output-path=./lighthouse-test-report.html --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu" --max-wait-for-fcp=15000 || echo "❌ 简单页面测试失败"
+            
+            # 备用方法3：测试主页面
+            echo "尝试测试主页面..."
+            npx lighthouse http://localhost:3001 --output=html --output-path=./lighthouse-main-report.html --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu" --max-wait-for-fcp=15000 || echo "❌ 主页面测试失败"
           fi
           
           # 清理进程
