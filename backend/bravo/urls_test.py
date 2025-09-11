@@ -16,3 +16,4 @@ urlpatterns = [
     # 通用应用URL
     path("", include("apps.common.urls")),
 ]
+

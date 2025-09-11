@@ -184,8 +184,22 @@ jobs:
           echo "🧪 Running Backend Unit Tests (FORCED FULL SUITE)"
           # 确保测试结果目录存在
           mkdir -p test-results
+          # 运行测试并生成JUnit XML报告
           python -m pytest tests/ --cov=apps --cov=bravo --cov-report=xml --cov-report=html --cov-report=term --junit-xml=test-results/backend-unit-results.xml -v --maxfail=0 --tb=short
           echo "✅ Backend unit tests completed"
+          
+          # 验证XML文件是否正确生成
+          echo "🔍 Verifying test results XML file..."
+          if [ -f "test-results/backend-unit-results.xml" ]; then
+            echo "✅ XML file exists"
+            echo "📊 XML file size: $(wc -c < test-results/backend-unit-results.xml) bytes"
+            echo "📊 Test case count: $(grep -c '<testcase' test-results/backend-unit-results.xml)"
+            echo "📊 First few lines of XML:"
+            head -10 test-results/backend-unit-results.xml
+          else
+            echo "❌ XML file not found!"
+            exit 1
+          fi
         continue-on-error: true
 
       - name: 打印后端测试现场
@@ -353,9 +367,21 @@ jobs:
           test -s coverage-backend.xml || (echo "❌ Backend coverage file empty or missing" && exit 1)
 
           # Verify minimum test counts (prevent fake test runs)
-          frontend_tests=$(grep -c "<testcase" frontend/test-results/frontend-unit-results.xml || echo "0")
-          backend_tests=$(grep -c "<testcase" backend/test-results/backend-unit-results.xml || echo "0")
-          e2e_tests=$(grep -c "<testcase" e2e/e2e-results.xml || echo "0")
+          echo "🔍 Checking test result files..."
+          echo "Frontend unit results: $(ls -la frontend/test-results/frontend-unit-results.xml 2>/dev/null || echo 'NOT FOUND')"
+          echo "Backend unit results: $(ls -la backend/test-results/backend-unit-results.xml 2>/dev/null || echo 'NOT FOUND')"
+          echo "E2E results: $(ls -la e2e/e2e-results.xml 2>/dev/null || echo 'NOT FOUND')"
+          
+          # Count test cases with better error handling
+          # Use grep -o to count all occurrences, not just lines
+          frontend_tests=$(grep -o "<testcase" frontend/test-results/frontend-unit-results.xml 2>/dev/null | wc -l || echo "0")
+          backend_tests=$(grep -o "<testcase" backend/test-results/backend-unit-results.xml 2>/dev/null | wc -l || echo "0")
+          e2e_tests=$(grep -o "<testcase" e2e/e2e-results.xml 2>/dev/null | wc -l || echo "0")
+          
+          echo "🔍 Test case counts:"
+          echo "  Frontend: $frontend_tests"
+          echo "  Backend: $backend_tests" 
+          echo "  E2E: $e2e_tests"
 
           echo "📊 Test execution summary:"
           echo "   Frontend tests: $frontend_tests"
@@ -365,7 +391,7 @@ jobs:
           # Dynamic test thresholds based on current project state
           # Frontend: 27 tests available, require 80% execution
           [ "$frontend_tests" -ge "20" ] || (echo "❌ Insufficient frontend tests executed ($frontend_tests < 20)" && exit 1)
-          # Backend: 15 tests available, require 80% execution  
+          # Backend: 15 tests available, require 80% execution (12 out of 15)
           [ "$backend_tests" -ge "12" ] || (echo "❌ Insufficient backend tests executed ($backend_tests < 12)" && exit 1)
           # E2E: 230 tests available, require minimum execution
           [ "$e2e_tests" -ge "50" ] || (echo "❌ Insufficient E2E tests executed ($e2e_tests < 50)" && exit 1)
