@@ -4,6 +4,13 @@ FROM node:18-alpine
 # 设置工作目录
 WORKDIR /app
 
+# 配置npm国内源
+RUN echo "📦 配置npm国内源..." && \
+    npm config set registry https://registry.npmmirror.com && \
+    npm config set disturl https://npmmirror.com/mirrors/node && \
+    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
+    npm config set playwright_download_host https://npmmirror.com/mirrors/playwright/
+
 # 复制 package 文件
 COPY package*.json ./
 
