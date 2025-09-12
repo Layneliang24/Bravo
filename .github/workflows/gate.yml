@@ -385,6 +385,8 @@ jobs:
           for i in {1..30}; do
             if curl -f -s http://localhost:3001 > /dev/null 2>&1; then
               echo "✅ 前端服务器启动成功"
+              # 额外等待确保页面完全加载
+              sleep 3
               break
             fi
             echo "等待服务器启动... (attempt $i/30)"
@@ -417,11 +419,23 @@ jobs:
             
             # 备用方法2：直接测试简单页面
             echo "尝试直接测试简单页面..."
-            npx lighthouse http://localhost:3001/test.html --output=html --output-path=./lighthouse-test-report.html --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu" --max-wait-for-fcp=15000 || echo "❌ 简单页面测试失败"
+            npx lighthouse http://localhost:3001/test.html \
+              --output=html --output-path=./lighthouse-test-report.html \
+              --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-web-security --headless --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows" \
+              --max-wait-for-fcp=45000 \
+              --max-wait-for-load=90000 \
+              --emulated-form-factor=desktop \
+              --throttling-method=simulate || echo "❌ 简单页面测试失败"
             
             # 备用方法3：测试主页面
             echo "尝试测试主页面..."
-            npx lighthouse http://localhost:3001 --output=html --output-path=./lighthouse-main-report.html --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu" --max-wait-for-fcp=15000 || echo "❌ 主页面测试失败"
+            npx lighthouse http://localhost:3001 \
+              --output=html --output-path=./lighthouse-main-report.html \
+              --chrome-flags="--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-web-security --headless --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows" \
+              --max-wait-for-fcp=45000 \
+              --max-wait-for-load=90000 \
+              --emulated-form-factor=desktop \
+              --throttling-method=simulate || echo "❌ 主页面测试失败"
           fi
           
           # 清理进程

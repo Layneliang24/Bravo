@@ -20,7 +20,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
 
   // 并行执行的worker数量
-  workers: process.env.CI ? 1 : undefined,
+  // CI环境使用2个worker，本地环境自动检测CPU核心数
+  workers: process.env.CI ? 2 : undefined,
 
   // 测试报告配置
   reporter: [
