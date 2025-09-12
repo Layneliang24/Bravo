@@ -68,6 +68,8 @@ jobs:
           pip install -r requirements/base.txt
           pip install -r requirements/test.txt
           echo "✅ 后端依赖安装完成"
+          echo "🔍 验证pytest安装..."
+          python -c "import pytest; print(f'pytest版本: {pytest.__version__}')"
 
       # 缓存前端node_modules
       - name: Cache Frontend Dependencies
@@ -192,6 +194,8 @@ jobs:
           echo "🐍 安装后端依赖..."
           pip install --upgrade pip
           pip install -r requirements/base.txt
+          pip install -r requirements/test.txt
+          echo "🔍 验证pytest安装..."
           python -c "import pytest; print(f'✅ pytest {pytest.__version__} 已安装')"
 
       - name: Wait for MySQL to be ready
@@ -348,6 +352,7 @@ jobs:
           echo "🐍 安装后端依赖..."
           pip install --upgrade pip
           pip install -r requirements/base.txt
+          pip install -r requirements/test.txt
 
       - name: Install Playwright Browsers
         working-directory: ./e2e
