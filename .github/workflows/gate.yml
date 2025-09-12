@@ -239,7 +239,39 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🗄️ Setting up test database..."
-          python manage.py migrate --settings=bravo.settings.test
+          # 使用Django的syncdb机制创建表结构（适用于禁用迁移的测试环境）
+          python -c "
+          import os, django
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
+          django.setup()
+          from django.core.management import execute_from_command_line
+          from django.db import connection
+          from django.core.management.color import no_style
+          from django.db import models
+          
+          print('📋 Creating database tables...')
+          # 获取所有应用的模型
+          style = no_style()
+          sql_statements = []
+          
+          # 创建Django内置表
+          from django.contrib.contenttypes.models import ContentType
+          from django.contrib.auth.models import Permission
+          from django.contrib.sessions.models import Session
+          from django.contrib.admin.models import LogEntry
+          
+          # 创建用户模型表
+          from apps.users.models import User
+          
+          # 使用Django的SQL生成器创建表
+          with connection.schema_editor() as schema_editor:
+              for model in [ContentType, Permission, Session, LogEntry, User]:
+                  if not model._meta.db_table in connection.introspection.table_names():
+                      schema_editor.create_model(model)
+                      print(f'✅ Created table: {model._meta.db_table}')
+          
+          print('✅ Database tables created successfully')
+          "
           echo "✅ Test database setup completed"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test

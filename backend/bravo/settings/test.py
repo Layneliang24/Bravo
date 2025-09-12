@@ -104,7 +104,7 @@ AUTH_USER_MODEL = 'users.User'
 # 测试环境不需要CORS配置
 
 
-# 禁用迁移
+# 禁用迁移 - 使用Django的自动表创建机制
 class DisableMigrations:
     def __contains__(self, item):
         return True
@@ -112,8 +112,6 @@ class DisableMigrations:
     def __getitem__(self, item):
         return None
 
-
-# 禁用迁移 - CI环境使用测试数据库自动创建
 MIGRATION_MODULES = DisableMigrations()
 
 # 测试邮件后端
