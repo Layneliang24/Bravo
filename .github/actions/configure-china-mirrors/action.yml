@@ -1,0 +1,60 @@
+name: 'Configure China Mirrors'
+description: '配置国内镜像源加速，包括npm、pip、apt、Docker等'
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure npm China Mirrors
+      shell: bash
+      run: |
+        echo "📦 配置npm国内源..."
+        npm config set registry https://registry.npmmirror.com
+        # 设置各种工具镜像源（使用环境变量替代废弃的npm config选项）
+        echo "NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node" >> $GITHUB_ENV
+        echo "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/" >> $GITHUB_ENV
+        echo "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/" >> $GITHUB_ENV
+        echo "SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/" >> $GITHUB_ENV
+        echo "PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/" >> $GITHUB_ENV
+        echo "PUPPETEER_DOWNLOAD_HOST=https://npmmirror.com/mirrors" >> $GITHUB_ENV
+        echo "PUPPETEER_CHROMIUM_REVISION=119.0.6045.105" >> $GITHUB_ENV
+        echo "CHROME_BIN=/usr/bin/google-chrome-stable" >> $GITHUB_ENV
+        echo "FIREFOX_BIN=/usr/bin/firefox" >> $GITHUB_ENV
+
+    - name: Configure pip China Mirrors
+      shell: bash
+      run: |
+        echo "🐍 配置pip国内源..."
+        pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
+        pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
+
+    - name: Configure apt China Mirrors
+      shell: bash
+      run: |
+        echo "📦 配置apt国内源..."
+        sudo sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+        sudo sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+        sudo apt-get update
+
+    - name: Configure Docker China Mirrors
+      shell: bash
+      run: |
+        echo "🐳 配置Docker国内镜像加速器..."
+        sudo mkdir -p /etc/docker
+        echo '{
+          "registry-mirrors": [
+            "https://registry.docker-cn.com",
+            "https://docker.mirrors.ustc.edu.cn",
+            "https://hub-mirror.c.163.com"
+          ]
+        }' | sudo tee /etc/docker/daemon.json > /dev/null
+        sudo systemctl restart docker || true
+
+    - name: Complete Configuration
+      shell: bash
+      run: |
+        echo "✅ 国内镜像源配置完成"
+        echo "📊 配置摘要:"
+        echo "  - npm registry: $(npm config get registry)"
+        echo "  - pip index: $(pip config get global.index-url)"
+        echo "  - Node.js mirror: $NODEJS_ORG_MIRROR"
+        echo "  - Electron mirror: $ELECTRON_MIRROR"
+        echo "  - Playwright mirror: $PLAYWRIGHT_DOWNLOAD_HOST"

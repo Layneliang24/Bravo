@@ -45,6 +45,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: Install backend dependencies
         run: |
           cd backend
@@ -191,6 +194,9 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: Install dependencies
         run: |

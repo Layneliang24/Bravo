@@ -133,6 +133,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: Install dependencies
         working-directory: ./frontend
         run: npm install --ignore-scripts

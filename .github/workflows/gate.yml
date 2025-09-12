@@ -44,43 +44,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Configure China Mirrors
-        run: |
-          echo "🔧 配置国内镜像源加速..."
-
-          # 配置npm国内源
-          echo "📦 配置npm国内源..."
-          npm config set registry https://registry.npmmirror.com
-          # 设置各种工具镜像源（使用环境变量替代废弃的npm config选项）
-          echo "NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node" >> $GITHUB_ENV
-          echo "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/" >> $GITHUB_ENV
-          echo "SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/" >> $GITHUB_ENV
-          echo "PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/" >> $GITHUB_ENV
-
-          # 配置pip国内源
-          echo "🐍 配置pip国内源..."
-          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
-          pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
-
-          # 配置apt国内源
-          echo "📦 配置apt国内源..."
-          sudo sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-          sudo sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-          sudo apt-get update
-
-          # 配置Docker国内源（如果需要的话）
-          echo "🐳 配置Docker国内镜像加速器..."
-          sudo mkdir -p /etc/docker
-          echo '{
-            "registry-mirrors": [
-              "https://registry.docker-cn.com",
-              "https://docker.mirrors.ustc.edu.cn",
-              "https://hub-mirror.c.163.com"
-            ]
-          }' | sudo tee /etc/docker/daemon.json > /dev/null
-          sudo systemctl restart docker || true
-
-          echo "✅ 国内镜像源配置完成"
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4

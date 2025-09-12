@@ -6,6 +6,17 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
 
 ## 🚀 快速配置
 
+### 方法1：使用复合Action（推荐）
+
+在所有工作流中使用预配置的复合Action：
+
+```yaml
+- name: Configure China Mirrors
+  uses: ./.github/actions/configure-china-mirrors
+```
+
+### 方法2：手动配置
+
 在 `.github/workflows/gate.yml` 中添加以下配置步骤：
 
 ```yaml
@@ -22,6 +33,10 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
     echo "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/" >> $GITHUB_ENV
     echo "SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/" >> $GITHUB_ENV
     echo "PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/" >> $GITHUB_ENV
+    echo "PUPPETEER_DOWNLOAD_HOST=https://npmmirror.com/mirrors" >> $GITHUB_ENV
+    echo "PUPPETEER_CHROMIUM_REVISION=119.0.6045.105" >> $GITHUB_ENV
+    echo "CHROME_BIN=/usr/bin/google-chrome-stable" >> $GITHUB_ENV
+    echo "FIREFOX_BIN=/usr/bin/firefox" >> $GITHUB_ENV
 
     # 配置pip国内源
     echo "🐍 配置pip国内源..."
@@ -64,9 +79,10 @@ export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
 export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/
 export SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/
 export PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/
-
-# 可选：Chromium/Puppeteer镜像
-npm config set puppeteer_download_host https://npmmirror.com/mirrors
+export PUPPETEER_DOWNLOAD_HOST=https://npmmirror.com/mirrors
+export PUPPETEER_CHROMIUM_REVISION=119.0.6045.105
+export CHROME_BIN=/usr/bin/google-chrome-stable
+export FIREFOX_BIN=/usr/bin/firefox
 ```
 
 ### 2. Pip 国内源配置

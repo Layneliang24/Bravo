@@ -78,6 +78,9 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: Install system dependencies
         run: |
           sudo apt-get update

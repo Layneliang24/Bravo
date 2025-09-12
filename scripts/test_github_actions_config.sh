@@ -25,6 +25,10 @@ if command -v npm &> /dev/null; then
     export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/
     export SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/
     export PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/
+    export PUPPETEER_DOWNLOAD_HOST=https://npmmirror.com/mirrors
+    export PUPPETEER_CHROMIUM_REVISION=119.0.6045.105
+    export CHROME_BIN=/usr/bin/google-chrome-stable
+    export FIREFOX_BIN=/usr/bin/firefox
 
     # 验证配置
     CURRENT_REGISTRY=$(npm config get registry)
@@ -48,10 +52,16 @@ if command -v npm &> /dev/null; then
     else
         echo "❌ Electron镜像环境变量配置失败"
     fi
+    
+    if [[ "$PUPPETEER_DOWNLOAD_HOST" == "https://npmmirror.com/mirrors" ]]; then
+        echo "✅ Puppeteer镜像环境变量配置成功"
+    else
+        echo "❌ Puppeteer镜像环境变量配置失败"
+    fi
 
     # 恢复原始配置
     npm config set registry "$ORIGINAL_REGISTRY"
-    unset NODEJS_ORG_MIRROR ELECTRON_MIRROR PLAYWRIGHT_DOWNLOAD_HOST SASS_BINARY_SITE PHANTOMJS_CDNURL
+    unset NODEJS_ORG_MIRROR ELECTRON_MIRROR PLAYWRIGHT_DOWNLOAD_HOST SASS_BINARY_SITE PHANTOMJS_CDNURL PUPPETEER_DOWNLOAD_HOST PUPPETEER_CHROMIUM_REVISION CHROME_BIN FIREFOX_BIN
 else
     echo "⚠️ npm未安装，跳过npm配置测试"
 fi

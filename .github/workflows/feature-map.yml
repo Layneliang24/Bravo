@@ -34,6 +34,9 @@ jobs:
           cache: "pip"
           cache-dependency-path: "backend/requirements.txt"
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: Install Node.js dependencies
         run: |
           cd frontend

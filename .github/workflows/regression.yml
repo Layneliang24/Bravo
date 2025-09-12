@@ -51,6 +51,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: 📦 Cache Python dependencies
         uses: actions/cache@v3
         with:
@@ -137,6 +140,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: 📦 Install dependencies
         working-directory: ./frontend
         run: npm install --ignore-scripts
@@ -195,6 +201,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: 🔧 Install backend dependencies
         working-directory: ./backend
