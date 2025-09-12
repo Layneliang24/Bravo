@@ -305,6 +305,11 @@ jobs:
           echo "✅ 测试数据库设置完成"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DB_HOST: mysql
+          DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Run Backend Tests
