@@ -5,6 +5,10 @@ on:
     branches: [main, dev, "feature/*", "hotfix/*", "release/*"]
   pull_request:
     branches: [main, dev]
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   # ==========================================
