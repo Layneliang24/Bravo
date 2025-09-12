@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="27" failures="0" errors="0" time="3.713">
-    <testsuite name="src/components/HelloWorld.test.ts" timestamp="2025-09-12T17:48:57.019Z" hostname="43a50b0fd280" tests="3" failures="0" errors="0" skipped="0" time="0.052">
-        <testcase classname="src/components/HelloWorld.test.ts" name="HelloWorld &gt; renders properly" time="0.039">
+<testsuites name="vitest tests" tests="27" failures="0" errors="0" time="1.969">
+    <testsuite name="src/components/HelloWorld.test.ts" timestamp="2025-09-12T18:24:07.394Z" hostname="43a50b0fd280" tests="3" failures="0" errors="0" skipped="0" time="0.027">
+        <testcase classname="src/components/HelloWorld.test.ts" name="HelloWorld &gt; renders properly" time="0.014">
         </testcase>
         <testcase classname="src/components/HelloWorld.test.ts" name="HelloWorld &gt; should be a Vue component" time="0">
         </testcase>
-        <testcase classname="src/components/HelloWorld.test.ts" name="HelloWorld &gt; should have msg prop" time="0.001">
+        <testcase classname="src/components/HelloWorld.test.ts" name="HelloWorld &gt; should have msg prop" time="0">
         </testcase>
     </testsuite>
-    <testsuite name="src/router/index.spec.ts" timestamp="2025-09-12T17:48:57.026Z" hostname="43a50b0fd280" tests="12" failures="0" errors="0" skipped="0" time="0.398">
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该正确配置路由" time="0.079">
+    <testsuite name="src/router/index.spec.ts" timestamp="2025-09-12T18:24:07.397Z" hostname="43a50b0fd280" tests="12" failures="0" errors="0" skipped="0" time="0.364">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该正确配置路由" time="0.047">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有Home路由" time="0.005">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有Home路由" time="0.004">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有Login路由" time="0.002">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有Login路由" time="0">
         </testcase>
         <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有Blog路由" time="0.001">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有BlogDetail路由" time="0.001">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该有BlogDetail路由" time="0">
         </testcase>
         <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到Home页面" time="0.001">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到Login页面" time="0.033">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到Login页面" time="0.074">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到Blog页面" time="0.163">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到Blog页面" time="0.152">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到BlogDetail页面" time="0.099">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够导航到BlogDetail页面" time="0.073">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够通过名称导航" time="0.003">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该能够通过名称导航" time="0.002">
         </testcase>
-        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该使用createWebHistory" time="0.001">
+        <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该使用createWebHistory" time="0">
         </testcase>
         <testcase classname="src/router/index.spec.ts" name="Router &gt; 应该支持懒加载组件" time="0">
         </testcase>
     </testsuite>
-    <testsuite name="src/views/Home.spec.ts" timestamp="2025-09-12T17:48:57.056Z" hostname="43a50b0fd280" tests="5" failures="0" errors="0" skipped="0" time="0.074">
-        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该正确渲染欢迎信息" time="0.048">
+    <testsuite name="src/views/Home.spec.ts" timestamp="2025-09-12T18:24:07.411Z" hostname="43a50b0fd280" tests="5" failures="0" errors="0" skipped="0" time="0.099">
+        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该正确渲染欢迎信息" time="0.057">
         </testcase>
-        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该有正确的CSS样式类" time="0.005">
+        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该有正确的CSS样式类" time="0.006">
         </testcase>
-        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该正确应用scoped样式" time="0.003">
+        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该正确应用scoped样式" time="0.009">
         </testcase>
-        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该是一个简单的静态组件" time="0.003">
+        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该是一个简单的静态组件" time="0.009">
         </testcase>
-        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该包含正确的文本内容" time="0.004">
+        <testcase classname="src/views/Home.spec.ts" name="Home.vue &gt; 应该包含正确的文本内容" time="0.011">
         </testcase>
     </testsuite>
-    <testsuite name="src/views/Login.spec.ts" timestamp="2025-09-12T17:48:57.065Z" hostname="43a50b0fd280" tests="7" failures="0" errors="0" skipped="0" time="0.255">
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该正确渲染登录表单" time="0.202">
+    <testsuite name="src/views/Login.spec.ts" timestamp="2025-09-12T18:24:07.414Z" hostname="43a50b0fd280" tests="7" failures="0" errors="0" skipped="0" time="0.141">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该正确渲染登录表单" time="0.096">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该能够输入用户名和密码" time="0.011">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该能够输入用户名和密码" time="0.007">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名和密码都填写时，点击登录应该跳转到首页" time="0.01">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名和密码都填写时，点击登录应该跳转到首页" time="0.015">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名为空时，点击登录不应该跳转" time="0.005">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名为空时，点击登录不应该跳转" time="0.007">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当密码为空时，点击登录不应该跳转" time="0.006">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当密码为空时，点击登录不应该跳转" time="0.003">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名和密码都为空时，点击登录不应该跳转" time="0.007">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 当用户名和密码都为空时，点击登录不应该跳转" time="0.002">
         </testcase>
-        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该有正确的CSS样式类" time="0.005">
+        <testcase classname="src/views/Login.spec.ts" name="Login.vue &gt; 应该有正确的CSS样式类" time="0.002">
         </testcase>
     </testsuite>
 </testsuites>

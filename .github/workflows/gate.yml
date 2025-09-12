@@ -320,6 +320,11 @@ jobs:
           echo "✅ 后端测试完成"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DB_HOST: mysql
+          DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Generate Backend Coverage
@@ -440,6 +445,11 @@ jobs:
           echo "✅ 后端服务器已启动"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DB_HOST: mysql
+          DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Start Frontend Server
