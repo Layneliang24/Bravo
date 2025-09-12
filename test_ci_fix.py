@@ -16,10 +16,17 @@ sys.path.insert(0, str(backend_dir))
 # 设置Django环境
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
 
-# 模拟CI环境变量
-os.environ['CI'] = 'true'
-# 在Docker环境中使用服务名，在CI环境中使用127.0.0.1
-os.environ['DB_HOST'] = os.environ.get('DB_HOST', 'mysql-test')
+# 检测运行环境并设置相应的数据库配置
+if 'GITHUB_ACTIONS' in os.environ:
+    # GitHub Actions CI环境
+    os.environ['DB_HOST'] = os.environ.get('DB_HOST', '127.0.0.1')
+    print("🔧 检测到GitHub Actions CI环境")
+else:
+    # Docker或本地环境
+    os.environ['CI'] = 'true'
+    os.environ['DB_HOST'] = os.environ.get('DB_HOST', 'mysql-test')
+    print("🔧 使用Docker/本地环境配置")
+
 os.environ['DB_PORT'] = os.environ.get('DB_PORT', '3306')
 os.environ['DB_NAME'] = os.environ.get('DB_NAME', 'bravo_test')
 os.environ['DB_USER'] = os.environ.get('DB_USER', 'bravo_user')
@@ -40,7 +47,7 @@ try:
     print("🔧 确保测试数据库存在...")
     try:
         conn = MySQLdb.connect(
-            host=os.environ.get('DB_HOST', 'mysql-test'),
+            host=os.environ.get('DB_HOST'),
             port=int(os.environ.get('DB_PORT', '3306')),
             user=os.environ.get('DB_USER', 'bravo_user'),
             passwd=os.environ.get('DB_PASSWORD', 'bravo_password')
