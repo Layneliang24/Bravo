@@ -27,7 +27,7 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -80,7 +80,7 @@ jobs:
         run: |
           echo "⏳ 等待MySQL启动..."
           for i in {1..30}; do
-            if mysqladmin ping -h localhost -u root -proot_password --silent; then
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
               echo "✅ MySQL已就绪"
               break
             fi
@@ -92,7 +92,7 @@ jobs:
       - name: Configure MySQL user permissions
         run: |
           echo "🔧 配置MySQL用户权限..."
-          mysql -h localhost -u root -proot_password -e "
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
             CREATE DATABASE IF NOT EXISTS bravo_test;
             CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
@@ -208,7 +208,7 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -243,7 +243,7 @@ jobs:
         run: |
           echo "⏳ 等待MySQL启动..."
           for i in {1..30}; do
-            if mysqladmin ping -h localhost -u root -proot_password --silent; then
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
               echo "✅ MySQL已就绪"
               break
             fi
@@ -254,7 +254,7 @@ jobs:
       - name: Configure MySQL user permissions
         run: |
           echo "🔧 配置MySQL用户权限..."
-          mysql -h localhost -u root -proot_password -e "
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
             CREATE DATABASE IF NOT EXISTS bravo_test;
             CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
@@ -345,7 +345,7 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
