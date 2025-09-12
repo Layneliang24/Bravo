@@ -72,21 +72,30 @@ import os
 
 # 强制覆盖数据库配置，避免继承base.py中的localhost配置
 print("🔧 强制设置数据库配置，避免socket连接问题")
+
+# 根据环境自动选择数据库主机
+# CI环境中使用127.0.0.1，本地Docker环境使用mysql服务名
+db_host = os.environ.get('DB_HOST', '127.0.0.1' if os.environ.get('CI') else 'mysql')
+db_user = os.environ.get('DB_USER', 'bravo_user')
+db_password = os.environ.get('DB_PASSWORD', 'bravo_password')
+db_name = os.environ.get('DB_NAME', 'bravo_test')
+db_port = os.environ.get('DB_PORT', '3306')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bravo_test',
-        'USER': 'bravo_user',
-        'PASSWORD': 'bravo_password',
-        'HOST': 'mysql',  # 使用Docker服务名
-        'PORT': '3306',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES', foreign_key_checks=0",
         },
     }
 }
-print(f"🔧 数据库配置: HOST={DATABASES['default']['HOST']}, PORT={DATABASES['default']['PORT']}")
+print(f"🔧 数据库配置: HOST={DATABASES['default']['HOST']}, PORT={DATABASES['default']['PORT']}, CI={os.environ.get('CI', 'False')}")
 
 # 禁用缓存
 CACHES = {
