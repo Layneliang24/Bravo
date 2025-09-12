@@ -254,21 +254,33 @@ jobs:
           style = no_style()
           sql_statements = []
           
-          # 创建Django内置表
+          # 创建Django内置表（按依赖顺序）
           from django.contrib.contenttypes.models import ContentType
-          from django.contrib.auth.models import Permission
+          from django.contrib.auth.models import Group, Permission
           from django.contrib.sessions.models import Session
           from django.contrib.admin.models import LogEntry
           
           # 创建用户模型表
           from apps.users.models import User
           
+          # 按依赖关系顺序创建表
+          models_to_create = [
+              ContentType,  # 必须首先创建，其他表依赖它
+              Group,        # Permission表依赖Group表
+              Permission,   # 依赖ContentType和Group
+              User,         # 用户表
+              Session,      # 会话表
+              LogEntry,     # 管理日志表，依赖User和ContentType
+          ]
+          
           # 使用Django的SQL生成器创建表
           with connection.schema_editor() as schema_editor:
-              for model in [ContentType, Permission, Session, LogEntry, User]:
+              for model in models_to_create:
                   if not model._meta.db_table in connection.introspection.table_names():
                       schema_editor.create_model(model)
                       print(f'✅ Created table: {model._meta.db_table}')
+                  else:
+                      print(f'⏭️  Table already exists: {model._meta.db_table}')
           
           print('✅ Database tables created successfully')
           "
