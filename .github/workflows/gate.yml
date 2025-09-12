@@ -25,10 +25,10 @@ jobs:
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot_password"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10
+          --health-retries=15
         ports:
           - 3306:3306
 
@@ -80,14 +80,40 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
-          for i in {1..30}; do
+          echo "🔍 Checking MySQL service status..."
+          
+          # 检查MySQL进程
+          echo "📋 MySQL processes:"
+          ps aux | grep mysql || echo "No MySQL processes found"
+          
+          # 检查端口监听
+          echo "📋 Port 3306 status:"
+          netstat -tlnp | grep 3306 || echo "Port 3306 not listening"
+          
+          # 等待MySQL就绪
+          for i in {1..60}; do
             if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
               echo "✅ MySQL is ready!"
-              break
+              # 验证数据库连接
+              if mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT 1;" 2>/dev/null; then
+                echo "✅ MySQL connection verified"
+                break
+              else
+                echo "❌ MySQL ping OK but connection failed"
+              fi
             fi
-            echo "MySQL not ready, waiting... (attempt $i/30)"
+            echo "MySQL not ready, waiting... (attempt $i/60)"
             sleep 2
           done
+          
+          # 最终检查
+          if ! mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
+            echo "❌ MySQL failed to start after 2 minutes"
+            echo "📋 Final system status:"
+            ps aux | grep mysql
+            netstat -tlnp | grep 3306
+            exit 1
+          fi
 
       - name: Update apt packages (after MySQL is ready)
         run: |
@@ -98,49 +124,46 @@ jobs:
       - name: Configure MySQL user permissions
         run: |
           echo "🔧 Configuring MySQL user permissions..."
-          # 重试机制，确保MySQL完全就绪
-          for i in {1..5}; do
-            if mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
-              CREATE DATABASE IF NOT EXISTS bravo_test;
-              CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
-              GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-              GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
-              FLUSH PRIVILEGES;
-            " 2>/dev/null; then
-              echo "✅ MySQL user permissions configured"
-              break
-            else
-              echo "❌ MySQL connection failed (attempt $i/5), retrying..."
-              sleep 3
-            fi
-          done
           
-          echo "🔐 Granting database privileges to bravo_user..."
-          # Grant necessary privileges for Django testing (requires full DB management)
-          for i in {1..3}; do
-            if mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
-              GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-              GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
-              FLUSH PRIVILEGES;
-            " 2>/dev/null; then
-              echo "✅ Database privileges granted"
-              break
-            else
-              echo "❌ Failed to grant privileges (attempt $i/3), retrying..."
-              sleep 2
-            fi
-          done
+          # 首先验证MySQL连接
+          echo "🔍 Verifying MySQL root connection..."
+          if ! mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT 1;" 2>/dev/null; then
+            echo "❌ Cannot connect to MySQL as root"
+            echo "📋 MySQL status:"
+            ps aux | grep mysql
+            netstat -tlnp | grep 3306
+            exit 1
+          fi
           
-          # Test the connection with the application user
-          for i in {1..3}; do
-            if mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "SELECT 1;" bravo_test 2>/dev/null; then
-              echo "✅ Database connection and privileges verified"
-              break
-            else
-              echo "❌ Application user connection failed (attempt $i/3), retrying..."
-              sleep 2
-            fi
-          done
+          # 创建数据库和用户
+          echo "🗄️ Creating database and user..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            CREATE USER IF NOT EXISTS 'bravo_user'@'localhost' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'localhost';
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'localhost';
+            FLUSH PRIVILEGES;
+          " || {
+            echo "❌ Failed to create database and user"
+            exit 1
+          }
+          
+          echo "✅ Database and user created successfully"
+          
+          # 验证用户权限
+          echo "🔐 Verifying user permissions..."
+          if mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "SELECT 1;" bravo_test 2>/dev/null; then
+            echo "✅ User permissions verified"
+          else
+            echo "❌ User permission verification failed"
+            echo "📋 Checking user privileges..."
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW GRANTS FOR 'bravo_user'@'%';" 2>/dev/null || echo "No grants for bravo_user@%"
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW GRANTS FOR 'bravo_user'@'localhost';" 2>/dev/null || echo "No grants for bravo_user@localhost"
+            exit 1
+          fi
 
       - name: 打印最终 DATABASES 配置
         working-directory: ./backend
