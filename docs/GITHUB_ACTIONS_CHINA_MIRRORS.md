@@ -16,12 +16,12 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
     # 配置npm国内源
     echo "📦 配置npm国内源..."
     npm config set registry https://registry.npmmirror.com
-    # 设置Node.js二进制文件下载镜像（使用环境变量替代废弃的disturl）
+    # 设置各种工具镜像源（使用环境变量替代废弃的npm config选项）
     echo "NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node" >> $GITHUB_ENV
-    npm config set electron_mirror https://npmmirror.com/mirrors/electron/
-    npm config set playwright_download_host https://npmmirror.com/mirrors/playwright/
-    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/
-    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs/
+    echo "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/" >> $GITHUB_ENV
+    echo "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/" >> $GITHUB_ENV
+    echo "SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/" >> $GITHUB_ENV
+    echo "PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/" >> $GITHUB_ENV
 
     # 配置pip国内源
     echo "🐍 配置pip国内源..."
@@ -58,12 +58,12 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
 npm config set registry https://registry.npmmirror.com
 
 # 相关工具镜像
-# 注意：disturl在npm 7+版本中已废弃，使用环境变量替代
+# 注意：以下npm config选项在npm 7+版本中已废弃，使用环境变量替代
 export NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node
-npm config set electron_mirror https://npmmirror.com/mirrors/electron/
-npm config set playwright_download_host https://npmmirror.com/mirrors/playwright/
-npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/
-npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs/
+export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/
+export SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/
+export PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/
 
 # 可选：Chromium/Puppeteer镜像
 npm config set puppeteer_download_host https://npmmirror.com/mirrors

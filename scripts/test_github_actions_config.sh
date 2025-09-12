@@ -19,8 +19,12 @@ if command -v npm &> /dev/null; then
     # 配置国内源
     npm config set registry https://registry.npmmirror.com
     
-    # 设置Node.js镜像环境变量（替代废弃的disturl）
+    # 设置各种工具镜像环境变量（替代废弃的npm config选项）
     export NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node
+    export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+    export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/
+    export SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/
+    export PHANTOMJS_CDNURL=https://npmmirror.com/mirrors/phantomjs/
 
     # 验证配置
     CURRENT_REGISTRY=$(npm config get registry)
@@ -38,10 +42,16 @@ if command -v npm &> /dev/null; then
     else
         echo "❌ Node.js镜像环境变量配置失败"
     fi
+    
+    if [[ "$ELECTRON_MIRROR" == "https://npmmirror.com/mirrors/electron/" ]]; then
+        echo "✅ Electron镜像环境变量配置成功"
+    else
+        echo "❌ Electron镜像环境变量配置失败"
+    fi
 
     # 恢复原始配置
     npm config set registry "$ORIGINAL_REGISTRY"
-    unset NODEJS_ORG_MIRROR
+    unset NODEJS_ORG_MIRROR ELECTRON_MIRROR PLAYWRIGHT_DOWNLOAD_HOST SASS_BINARY_SITE PHANTOMJS_CDNURL
 else
     echo "⚠️ npm未安装，跳过npm配置测试"
 fi
