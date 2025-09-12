@@ -26,13 +26,14 @@ runs:
         pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
         pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
 
-    - name: Configure apt China Mirrors
+    - name: Configure apt China Mirrors (safe mode)
       shell: bash
       run: |
-        echo "📦 配置apt国内源..."
+        echo "📦 配置apt国内源（安全模式）..."
+        # 只配置源，不立即更新，避免干扰MySQL服务启动
         sudo sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
         sudo sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-        sudo apt-get update
+        echo "✅ apt源已配置，将在MySQL启动后更新"
 
     - name: Configure Docker China Mirrors
       shell: bash
