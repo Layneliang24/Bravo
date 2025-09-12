@@ -66,6 +66,8 @@ jobs:
           echo "📦 安装前端依赖..."
           npm ci --prefer-offline --no-audit --ignore-scripts
           echo "✅ 前端依赖安装完成"
+          echo "🔍 验证vitest安装..."
+          npx vitest --version
 
       # 安装E2E依赖
       - name: Install E2E Dependencies
@@ -166,6 +168,14 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🧪 运行前端单元测试..."
+          echo "🔍 检查node_modules是否存在..."
+          ls -la node_modules/ | head -10
+          echo "🔍 检查vitest是否存在..."
+          ls -la node_modules/.bin/vitest || echo "vitest不存在，重新安装依赖..."
+          if [ ! -f node_modules/.bin/vitest ]; then
+            echo "📦 重新安装前端依赖..."
+            npm ci --prefer-offline --no-audit --ignore-scripts
+          fi
           npm run test:coverage
           echo "✅ 前端测试完成"
 
