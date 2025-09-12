@@ -69,7 +69,7 @@ services:
       - VITE_API_URL=http://localhost:8000
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules  # 使用命名volume避免覆盖依赖
     command: npm run dev -- --host 0.0.0.0
 
   # Celery Worker
@@ -108,7 +108,29 @@ services:
         condition: service_healthy
     command: celery -A bravo beat -l info
 
+  # E2E测试服务（模拟GitHub Actions环境）
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: ../frontend/Dockerfile.dev
+    working_dir: /app
+    environment:
+      - CI=true
+      - GITHUB_ACTIONS=true
+      - NODE_ENV=test
+    volumes:
+      - ./e2e:/app
+      - e2e_node_modules:/app/node_modules
+    ports:
+      - "9323:9323"  # Playwright UI端口
+    command: npm run test
+    depends_on:
+      - frontend
+      - backend
+
 volumes:
   mysql_data:
   redis_data:
   backend_logs:
+  frontend_node_modules:
+  e2e_node_modules:

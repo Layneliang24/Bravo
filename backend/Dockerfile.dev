@@ -1,5 +1,4 @@
-# Django 开发环境 Dockerfile
-
+# Django 开发环境 Dockerfile - 修复版
 FROM python:3.11-slim
 
 # 设置工作目录
@@ -10,30 +9,32 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=bravo.settings.local
 
-# 配置国内源加速
+# 修复apt源配置（处理sources.list可能不存在的情况）
 RUN echo "🔧 配置国内镜像源..." && \
-    echo "deb http://mirrors.aliyun.com/debian/ bullseye main" > /etc/apt/sources.list && \
+    [ -f /etc/apt/sources.list ] && cp /etc/apt/sources.list /etc/apt/sources.list.backup || true && \
+    echo "deb http://mirrors.aliyun.com/debian/ bullseye main non-free contrib" > /etc/apt/sources.list && \
     echo "deb http://mirrors.aliyun.com/debian-security bullseye-security main" >> /etc/apt/sources.list && \
-    echo "deb http://mirrors.aliyun.com/debian/ bullseye-updates main" >> /etc/apt/sources.list && \
-    echo "deb http://mirrors.aliyun.com/debian/ bullseye-backports main" >> /etc/apt/sources.list
+    echo "deb http://mirrors.aliyun.com/debian/ bullseye-updates main non-free contrib" >> /etc/apt/sources.list
 
-# 安装系统依赖
-RUN apt-get update \
+# 安装系统依赖（添加重试机制）
+RUN apt-get update --fix-missing || apt-get update --fix-missing || apt-get update \
     && apt-get install -y --no-install-recommends \
         default-libmysqlclient-dev \
         build-essential \
         pkg-config \
         curl \
+        wget \
     && rm -rf /var/lib/apt/lists/*
 
 # 配置pip国内源
 RUN echo "🐍 配置pip国内源..." && \
     pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ && \
-    pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
+    pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn && \
+    pip config set global.timeout 60
 
 # 安装 Python 依赖（开发环境）
 COPY requirements/ requirements/
-RUN pip install --no-cache-dir -r requirements/local.txt
+RUN pip install --no-cache-dir --retries 3 --timeout 60 -r requirements/local.txt
 
 # 复制项目代码
 COPY . .
