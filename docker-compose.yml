@@ -46,7 +46,12 @@ services:
       - "8000:8000"
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.local
-      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_local
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+      - DB_NAME=bravo_test
+      - DB_USER=bravo_user
+      - DB_PASSWORD=bravo_password
+      - DB_HOST=mysql
+      - DB_PORT=3306
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./backend:/app
@@ -79,7 +84,7 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.local
-      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_local
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./backend:/app
@@ -97,7 +102,7 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.local
-      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_local
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./backend:/app

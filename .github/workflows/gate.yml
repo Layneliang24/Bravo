@@ -304,7 +304,7 @@ jobs:
           "
           echo "✅ 测试数据库设置完成"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Run Backend Tests
@@ -314,7 +314,7 @@ jobs:
           python -m pytest tests/ -v --maxfail=0 --tb=short --junit-xml=test-results/backend-unit-results.xml --cov=. --cov-report=xml:coverage.xml --cov-report=html:htmlcov
           echo "✅ 后端测试完成"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Generate Backend Coverage
@@ -418,6 +418,11 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🏗️ 构建前端用于E2E测试..."
+          echo "🔍 检查前端依赖..."
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/vite" ]; then
+            echo "📦 重新安装前端依赖..."
+            npm ci --prefer-offline --no-audit --ignore-scripts
+          fi
           npm run build:skip-check || npm run build
           echo "✅ 前端构建完成"
 
@@ -429,7 +434,7 @@ jobs:
           echo $! > backend.pid
           echo "✅ 后端服务器已启动"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Start Frontend Server
@@ -506,6 +511,11 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "🏗️ 构建前端用于性能测试..."
+          echo "🔍 检查前端依赖..."
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/vite" ]; then
+            echo "📦 重新安装前端依赖..."
+            npm ci --prefer-offline --no-audit --ignore-scripts
+          fi
           npm run build:skip-check || npm run build
           echo "✅ 前端构建完成"
 
