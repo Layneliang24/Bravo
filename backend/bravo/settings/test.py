@@ -74,8 +74,8 @@ import os
 print("🔧 强制设置数据库配置，避免socket连接问题")
 
 # 根据环境自动选择数据库主机
-# CI环境中使用127.0.0.1，本地Docker环境使用mysql服务名
-db_host = os.environ.get('DB_HOST', '127.0.0.1' if os.environ.get('CI') else 'mysql')
+# GitHub Actions CI环境使用127.0.0.1，其他环境使用配置值
+db_host = os.environ.get('DB_HOST', '127.0.0.1' if 'GITHUB_ACTIONS' in os.environ else 'mysql')
 db_user = os.environ.get('DB_USER', 'bravo_user')
 db_password = os.environ.get('DB_PASSWORD', 'bravo_password')
 db_name = os.environ.get('DB_NAME', 'bravo_test')
