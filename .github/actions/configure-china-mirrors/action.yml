@@ -3,11 +3,13 @@ description: '配置国内镜像源加速，包括npm、pip、apt、Docker等'
 runs:
   using: 'composite'
   steps:
-    - name: Configure npm China Mirrors
+    - name: Configure npm China Mirrors and Performance
       shell: bash
       run: |
-        echo "📦 配置npm国内源..."
+        echo "📦 配置npm国内源和性能优化..."
         npm config set registry https://registry.npmmirror.com
+        npm config set maxsockets 10
+        npm config set network-concurrency 8
         # 设置各种工具镜像源（使用环境变量替代废弃的npm config选项）
         echo "NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node" >> $GITHUB_ENV
         echo "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/" >> $GITHUB_ENV
