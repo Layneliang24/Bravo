@@ -183,9 +183,9 @@ async function waitForService(name: string, url: string, timeout: number) {
       // 服务还未启动，继续等待
     }
 
-    // 每5秒输出一次进度
+    // 每10秒输出一次进度，减少日志噪音
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    if (elapsed % 5 === 0 && elapsed > 0) {
+    if (elapsed % 10 === 0 && elapsed > 0) {
       console.log(
         `  ⏳ ${name} 仍在启动中... (${elapsed}s/${Math.floor(
           timeout / 1000
@@ -193,7 +193,8 @@ async function waitForService(name: string, url: string, timeout: number) {
       );
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 增加等待间隔到2秒，减少请求频率
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   throw new Error(`${name} 启动超时 (${url}) - 最后错误: ${lastError}`);

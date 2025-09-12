@@ -317,11 +317,15 @@ jobs:
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
 
-      - name: Run E2E Tests with Trace
+      - name: Run E2E Tests with Optimization
         working-directory: ./e2e
         run: |
-          echo "🧪 Running E2E Tests (FORCED FULL SUITE WITH TRACE)"
-          npx playwright test --reporter=html --reporter=junit
+          echo "🧪 Running E2E Tests (OPTIMIZED)"
+          # 优化配置：
+          # --workers=2: 使用2个并行worker加速执行
+          # --max-failures=5: 最多5个失败就停止，避免浪费时间
+          # --trace=retain-on-failure: 只在失败时保留trace，减少开销
+          npx playwright test --workers=2 --max-failures=5 --trace=retain-on-failure --reporter=html --reporter=junit
           echo "✅ E2E tests completed"
         env:
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
