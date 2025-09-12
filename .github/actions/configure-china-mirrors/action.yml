@@ -39,6 +39,7 @@ runs:
       shell: bash
       run: |
         echo "🐳 配置Docker国内镜像加速器..."
+        echo "⚠️  跳过Docker重启以避免杀死MySQL容器"
         sudo mkdir -p /etc/docker
         echo '{
           "registry-mirrors": [
@@ -47,7 +48,7 @@ runs:
             "https://hub-mirror.c.163.com"
           ]
         }' | sudo tee /etc/docker/daemon.json > /dev/null
-        sudo systemctl restart docker || true
+        echo "✅ Docker镜像配置已保存（无需重启）"
 
     - name: Complete Configuration
       shell: bash
