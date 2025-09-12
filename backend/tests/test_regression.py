@@ -16,26 +16,8 @@ from django.conf import settings
 
 # 配置 Django 设置用于测试
 if not settings.configured:
-    # 使用内存 SQLite 数据库进行测试
-    settings.configure(
-        DEBUG=True,
-        SECRET_KEY='test-secret-key-for-testing-only',
-        DATABASES={
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': ':memory:',
-            }
-        },
-        INSTALLED_APPS=[
-            'django.contrib.auth',
-            'django.contrib.contenttypes',
-            'django.contrib.sessions',
-            'django.contrib.messages',
-            'django.contrib.admin',
-        ],
-        ROOT_URLCONF='tests.test_urls',
-        USE_TZ=True,
-    )
+    # 使用pytest.ini中配置的测试设置
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
     django.setup()
 
 from django.contrib.auth import get_user_model
