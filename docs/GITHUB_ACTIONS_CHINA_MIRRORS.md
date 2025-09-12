@@ -16,7 +16,8 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
     # 配置npm国内源
     echo "📦 配置npm国内源..."
     npm config set registry https://registry.npmmirror.com
-    npm config set disturl https://npmmirror.com/mirrors/node
+    # 设置Node.js二进制文件下载镜像（使用环境变量替代废弃的disturl）
+    echo "NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node" >> $GITHUB_ENV
     npm config set electron_mirror https://npmmirror.com/mirrors/electron/
     npm config set playwright_download_host https://npmmirror.com/mirrors/playwright/
     npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/
@@ -57,7 +58,8 @@ GitHub Actions 默认使用海外镜像源，在国内环境下会导致依赖�
 npm config set registry https://registry.npmmirror.com
 
 # 相关工具镜像
-npm config set disturl https://npmmirror.com/mirrors/node
+# 注意：disturl在npm 7+版本中已废弃，使用环境变量替代
+export NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node
 npm config set electron_mirror https://npmmirror.com/mirrors/electron/
 npm config set playwright_download_host https://npmmirror.com/mirrors/playwright/
 npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/

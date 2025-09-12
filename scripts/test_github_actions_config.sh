@@ -18,19 +18,30 @@ if command -v npm &> /dev/null; then
 
     # 配置国内源
     npm config set registry https://registry.npmmirror.com
+    
+    # 设置Node.js镜像环境变量（替代废弃的disturl）
+    export NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node
 
     # 验证配置
     CURRENT_REGISTRY=$(npm config get registry)
-    if [[ "$CURRENT_REGISTRY" == "https://registry.npmmirror.com/" ]]; then
+    if [[ "$CURRENT_REGISTRY" == "https://registry.npmmirror.com" ]] || [[ "$CURRENT_REGISTRY" == "https://registry.npmmirror.com/" ]]; then
         echo "✅ npm国内源配置成功"
     else
         echo "❌ npm国内源配置失败"
-        echo "  期望: https://registry.npmmirror.com/"
+        echo "  期望: https://registry.npmmirror.com"
         echo "  实际: $CURRENT_REGISTRY"
+    fi
+    
+    # 验证环境变量设置
+    if [[ "$NODEJS_ORG_MIRROR" == "https://npmmirror.com/mirrors/node" ]]; then
+        echo "✅ Node.js镜像环境变量配置成功"
+    else
+        echo "❌ Node.js镜像环境变量配置失败"
     fi
 
     # 恢复原始配置
     npm config set registry "$ORIGINAL_REGISTRY"
+    unset NODEJS_ORG_MIRROR
 else
     echo "⚠️ npm未安装，跳过npm配置测试"
 fi
