@@ -33,8 +33,8 @@ export default defineConfig({
 
   // 全局设置
   use: {
-    // 基础URL
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3001',
+    // 基础URL - Docker环境使用服务名
+    baseURL: process.env.TEST_BASE_URL || (process.env.DOCKER_ENV ? 'http://frontend:3000' : 'http://localhost:3001'),
 
     // 浏览器上下文选项
     trace: 'on-first-retry',
@@ -136,8 +136,8 @@ export default defineConfig({
     },
   ],
 
-  // 测试服务器配置
-  webServer: [
+  // 测试服务器配置 - Docker环境中不启动webServer
+  webServer: process.env.DOCKER_ENV ? undefined : [
     {
       command: 'npm run dev -- --port 3001 --host 0.0.0.0',
       cwd: '../frontend',

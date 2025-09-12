@@ -123,6 +123,8 @@ services:
       - CI=true
       - GITHUB_ACTIONS=true
       - NODE_ENV=test
+      - DOCKER_ENV=true
+      - TEST_BASE_URL=http://frontend:3000
     volumes:
       - ./e2e:/app
       - e2e_node_modules:/app/node_modules
