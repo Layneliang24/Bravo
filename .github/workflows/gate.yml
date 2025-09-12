@@ -48,7 +48,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "📦 安装前端依赖..."
-          npm ci --prefer-offline --no-audit
+          npm ci --prefer-offline --no-audit --ignore-scripts
           echo "✅ 前端依赖安装完成"
 
       # 安装E2E依赖
@@ -56,7 +56,7 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "🧪 安装E2E测试依赖..."
-          npm ci --prefer-offline --no-audit
+          npm ci --prefer-offline --no-audit --ignore-scripts
           echo "✅ E2E依赖安装完成"
 
       # 安装后端依赖
