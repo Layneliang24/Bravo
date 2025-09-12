@@ -18,6 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,6 +72,31 @@ jobs:
           echo "🧪 安装E2E测试依赖..."
           npm ci --prefer-offline --no-audit --ignore-scripts
           echo "✅ E2E依赖安装完成"
+
+      # 等待MySQL启动
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "⏳ 等待MySQL启动..."
+          for i in {1..30}; do
+            if mysqladmin ping -h localhost -u root -proot_password --silent; then
+              echo "✅ MySQL已就绪"
+              break
+            fi
+            echo "等待MySQL启动... ($i/30)"
+            sleep 2
+          done
+
+      # 配置MySQL用户权限
+      - name: Configure MySQL user permissions
+        run: |
+          echo "🔧 配置MySQL用户权限..."
+          mysql -h localhost -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ MySQL用户权限配置完成"
 
       # 安装后端依赖
       - name: Install Backend Dependencies
