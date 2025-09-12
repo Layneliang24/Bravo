@@ -112,7 +112,7 @@ services:
   e2e:
     build:
       context: ./e2e
-      dockerfile: ../frontend/Dockerfile.dev
+      dockerfile: Dockerfile.dev
     working_dir: /app
     environment:
       - CI=true

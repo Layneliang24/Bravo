@@ -1,0 +1,28 @@
+# E2E测试环境 Dockerfile
+FROM node:18-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 配置npm国内源
+RUN echo "📦 配置npm国内源..." && \
+    npm config set registry https://registry.npmmirror.com && \
+    npm config set maxsockets 20 && \
+    npm config set fetch-retries 3 && \
+    npm config set fetch-retry-mintimeout 10000 && \
+    npm config set fetch-retry-maxtimeout 60000
+
+# 复制 package 文件
+COPY package*.json ./
+
+# 安装依赖（使用npm install因为e2e没有package-lock.json）
+RUN npm install --prefer-offline --no-audit
+
+# 复制源代码
+COPY . .
+
+# 暴露端口
+EXPOSE 9323
+
+# 启动测试
+CMD ["npm", "run", "test"]

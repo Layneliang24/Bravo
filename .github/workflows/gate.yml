@@ -72,7 +72,7 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "🧪 安装E2E测试依赖..."
-          npm ci --prefer-offline --no-audit --ignore-scripts
+          npm install --prefer-offline --no-audit --ignore-scripts
           echo "✅ E2E依赖安装完成"
 
       # 等待MySQL启动

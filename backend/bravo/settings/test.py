@@ -14,7 +14,7 @@ ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1", "*"]
 ROOT_URLCONF = "bravo.urls_test"
 WSGI_APPLICATION = "bravo.wsgi.application"
 
-# 应用设置 - 最简化版本，只包含Django核心应用
+# 应用设置 - 确保Django核心应用在自定义应用之前
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -78,7 +78,7 @@ DATABASES = {
         'NAME': 'bravo_test',
         'USER': 'bravo_user',
         'PASSWORD': 'bravo_password',
-        'HOST': '127.0.0.1',  # 必须IP，不能localhost，否则Django会去找unix socket
+        'HOST': 'mysql',  # 使用Docker服务名
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
@@ -104,15 +104,21 @@ AUTH_USER_MODEL = 'users.User'
 # 测试环境不需要CORS配置
 
 
-# 禁用迁移 - 使用Django的自动表创建机制
-class DisableMigrations:
-    def __contains__(self, item):
-        return True
+# 测试数据库配置 - 使用事务回滚，避免外键约束问题
+DATABASES['default'].update({
+    'TEST': {
+        'NAME': 'bravo_test',
+        'CHARSET': 'utf8mb4',
+        'COLLATION': 'utf8mb4_unicode_ci',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+})
 
-    def __getitem__(self, item):
-        return None
-
-MIGRATION_MODULES = DisableMigrations()
+# 使用事务回滚进行测试，避免外键约束问题
+DATABASES['default']['TEST']['OPTIONS']['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES', foreign_key_checks=0"
 
 # 测试邮件后端
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
