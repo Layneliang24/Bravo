@@ -398,6 +398,7 @@ jobs:
         env:
           CI: true
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
+          TEST_BASE_URL: http://localhost:3001
 
       - name: Upload E2E Results
         uses: actions/upload-artifact@v4
