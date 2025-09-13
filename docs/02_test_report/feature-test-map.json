@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-13T01:53:55.534Z",
+  "timestamp": "2025-09-13T02:08:38.921Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 16,
+    "totalTestFiles": 17,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -361,6 +361,11 @@
     },
     {
       "file": "backend\\tests\\integration\\test_simple_integration.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\bravo\\settings\\test_sqlite.py",
       "features": [],
       "featureCount": 0
     },
