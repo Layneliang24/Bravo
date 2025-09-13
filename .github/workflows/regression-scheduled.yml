@@ -21,7 +21,7 @@ on:
 jobs:
   # 后端回归测试
   backend-regression:
-    name: 🔒 Backend Regression
+    name: Backend Regression
     if: inputs.test-scope == 'all' || inputs.test-scope == 'backend' || github.event_name == 'schedule'
     uses: ./.github/workflows/test-backend.yml
     with:
@@ -29,7 +29,7 @@ jobs:
 
   # 前端回归测试
   frontend-regression:
-    name: 🔒 Frontend Regression
+    name: Frontend Regression
     if: inputs.test-scope == 'all' || inputs.test-scope == 'frontend' || github.event_name == 'schedule'
     uses: ./.github/workflows/test-frontend.yml
     with:
@@ -37,7 +37,7 @@ jobs:
 
   # E2E回归测试
   e2e-regression:
-    name: 🔒 E2E Regression
+    name: E2E Regression
     if: inputs.test-scope == 'all' || inputs.test-scope == 'e2e' || github.event_name == 'schedule'
     needs: [backend-regression, frontend-regression]
     uses: ./.github/workflows/test-e2e.yml
@@ -47,14 +47,14 @@ jobs:
 
   # 回归测试报告
   regression-summary:
-    name: 📋 Regression Summary
+    name: Regression Summary
     runs-on: ubuntu-latest
     needs: [backend-regression, frontend-regression, e2e-regression]
     if: always()
     steps:
       - name: Generate regression report
         run: |
-          echo "🔍 Regression Test Results:"
+          echo "Regression Test Results:"
           echo "Backend: ${{ needs.backend-regression.result }}"
           echo "Frontend: ${{ needs.frontend-regression.result }}"
           echo "E2E: ${{ needs.e2e-regression.result }}"
@@ -62,10 +62,10 @@ jobs:
           if [[ "${{ needs.backend-regression.result }}" == "success" && \
                 "${{ needs.frontend-regression.result }}" == "success" && \
                 "${{ needs.e2e-regression.result }}" == "success" ]]; then
-            echo "✅ All regression tests passed!"
+            echo "All regression tests passed!"
           else
-            echo "❌ Some regression tests failed!"
-            echo "🚨 Critical: Core functionality may be compromised!"
+            echo "Some regression tests failed!"
+            echo "Critical: Core functionality may be compromised!"
             exit 1
           fi
 

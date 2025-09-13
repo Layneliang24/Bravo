@@ -144,10 +144,17 @@ repos:
 
       - id: typescript-syntax-check
         name: TypeScript Syntax Check
-        entry: bash -c 'echo "🔍 检查E2E TypeScript..." && cd e2e && npm run type-check && echo "✅ E2E TypeScript语法检查通过"'
+        entry: bash -c 'echo "检查E2E TypeScript..." && cd e2e && npm run type-check && echo "E2E TypeScript语法检查通过"'
         language: system
         files: \.(ts|tsx|vue|json)$
         exclude: node_modules
+        pass_filenames: false
+
+      - id: github-actions-syntax-check
+        name: GitHub Actions Workflow Syntax Check
+        entry: bash -c 'echo "检查workflow语法..." && find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs -I {} python -c "import yaml; yaml.safe_load(open(\"{}\", \"r\", encoding=\"utf-8\"))" && echo "语法检查通过"'
+        language: system
+        files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
 
       - id: typescript-naming-check

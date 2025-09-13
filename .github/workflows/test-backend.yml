@@ -28,11 +28,11 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
-          MYSQL_USER: ${{ env.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}" --health-interval=10s --health-timeout=5s --health-retries=10
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
         ports:
           - 3306:3306
 
@@ -61,7 +61,7 @@ jobs:
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} --silent; then
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
               echo "✅ MySQL is ready!"
               break
             fi
@@ -71,9 +71,9 @@ jobs:
 
       - name: Setup test database
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} -e "
-            CREATE DATABASE IF NOT EXISTS ${{ env.MYSQL_DATABASE }};
-            GRANT ALL PRIVILEGES ON ${{ env.MYSQL_DATABASE }}.* TO '${{ env.MYSQL_USER }}'@'%';
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
             FLUSH PRIVILEGES;
           "
 
