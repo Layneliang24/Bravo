@@ -140,7 +140,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install --ignore-scripts
+        run: npm install
 
       - name: Build for performance testing
         working-directory: ./frontend

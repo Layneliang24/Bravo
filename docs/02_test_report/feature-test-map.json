@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-13T01:09:43.007Z",
+  "timestamp": "2025-09-13T01:37:37.031Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 37,
+    "totalTestFiles": 16,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -315,102 +315,12 @@
       "featureCount": 0
     },
     {
-      "file": "frontend\\node_modules\\fast-uri\\test\\util.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\uri-js.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\uri-js-compatibility.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\serialize.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\rfc-3986.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\resolve.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\parse.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\equal.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\fast-uri\\test\\ajv.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
       "file": "frontend\\node_modules\\cssstyle\\lib\\parsers.test.js",
       "features": [],
       "featureCount": 0
     },
     {
       "file": "frontend\\node_modules\\cssstyle\\lib\\CSSStyleDeclaration.test.js",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\vitest\\vitest-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\vitest\\vitest-custom-expect-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\jest-globals\\jest-globals-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\jest-globals\\jest-globals-custom-expect-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\jest\\jest-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\jest\\jest-custom-expect-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\bun\\bun-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@testing-library\\jest-dom\\types\\__tests__\\bun\\bun-custom-expect-types.test.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\@storybook\\cli\\test\\default\\cli.test.js",
       "features": [],
       "featureCount": 0
     },
@@ -426,21 +336,6 @@
     },
     {
       "file": "frontend\\src\\router\\index.spec.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\ts-dedent\\src\\__tests__\\issue-21.spec.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\ts-dedent\\src\\__tests__\\index.spec.ts",
-      "features": [],
-      "featureCount": 0
-    },
-    {
-      "file": "frontend\\node_modules\\table\\node_modules\\json-schema-traverse\\spec\\index.spec.js",
       "features": [],
       "featureCount": 0
     },

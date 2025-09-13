@@ -60,12 +60,12 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm install --ignore-scripts
+          npm install
 
       - name: Install E2E dependencies
         run: |
           cd e2e
-          npm install --ignore-scripts
+          npm install
 
       - name: Install Playwright Browsers
         run: |
@@ -205,7 +205,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd e2e
-          npm install --ignore-scripts
+          npm install
 
       - name: Run Lighthouse audit
         run: |

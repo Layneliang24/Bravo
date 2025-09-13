@@ -40,7 +40,7 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm install --ignore-scripts
+          npm install
 
       - name: Install Python dependencies
         run: |
@@ -49,7 +49,7 @@ jobs:
 
       - name: Install mapping script dependencies
         run: |
-          npm install --ignore-scripts -g glob
+          npm install -g glob
 
       - name: Validate features.json
         run: |

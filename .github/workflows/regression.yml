@@ -145,7 +145,7 @@ jobs:
 
       - name: 📦 Install dependencies
         working-directory: ./frontend
-        run: npm install --ignore-scripts
+        run: npm install
 
       - name: 🔒 Run Frontend Regression Tests
         working-directory: ./frontend
