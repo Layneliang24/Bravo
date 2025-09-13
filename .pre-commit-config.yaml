@@ -61,6 +61,14 @@ repos:
     hooks:
       - id: prettier
         files: \.(js|jsx|ts|tsx|json|css|scss|md|yml|yaml)$
+        exclude: |
+          (?x)^(
+            docs/02_test_report/.*\.json$|
+            docs/02_test_report/.*_report\.md$|
+            .*temp_modifications.*\.json$|
+            .*\.log$|
+            .*\.report$
+          )$
 
   # ESLint检查 - temporarily disabled
   # - repo: https://github.com/pre-commit/mirrors-eslint
@@ -140,6 +148,16 @@ repos:
     hooks:
       - id: root-clutter
         name: Root Clutter Guard
-        entry: bash -c 'git diff --cached --name-only | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$" && echo "请放 docs/ 或同目录测试" && exit 1 || exit 0'
+        entry: bash -c 'git diff --cached --name-only | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "请放 docs/ 或同目录测试" && exit 1 || exit 0'
         language: system
+        always_run: true
+
+  # 分支保护钩子
+  - repo: local
+    hooks:
+      - id: branch-protection
+        name: Branch Protection Check
+        entry: bash scripts/branch_protection.sh
+        language: system
+        stages: [pre-push]
         always_run: true

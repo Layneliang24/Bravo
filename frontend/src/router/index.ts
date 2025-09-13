@@ -14,6 +14,16 @@ const router = createRouter({
       name: 'Login',
       component: (): Promise<Component> => import('../views/Login.vue'),
     },
+    {
+      path: '/blog',
+      name: 'Blog',
+      component: (): Promise<Component> => import('../views/Blog.vue'),
+    },
+    {
+      path: '/blog/:id',
+      name: 'BlogDetail',
+      component: (): Promise<Component> => import('../views/BlogDetail.vue'),
+    },
   ],
 })
 

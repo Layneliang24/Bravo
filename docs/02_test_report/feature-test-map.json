@@ -1,0 +1,467 @@
+{
+  "timestamp": "2025-09-13T04:01:53.365Z",
+  "summary": {
+    "totalFeatures": 15,
+    "totalTestFiles": 17,
+    "coveredFeatures": 3,
+    "coveragePercentage": 20
+  },
+  "features": [
+    {
+      "id": "ENG-001",
+      "desc": "英语新闻列表页显示标题和摘要",
+      "category": "english",
+      "priority": "high",
+      "components": [
+        "NewsList.vue",
+        "NewsCard.vue"
+      ],
+      "apis": [
+        "/api/english/news/"
+      ],
+      "status": "active",
+      "tests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "staticTests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "runtimeTests": [],
+      "covered": true,
+      "testCount": 1
+    },
+    {
+      "id": "ENG-002",
+      "desc": "英语新闻详情页点击翻译按钮出现中文翻译",
+      "category": "english",
+      "priority": "high",
+      "components": [
+        "NewsDetail.vue",
+        "TranslationButton.vue"
+      ],
+      "apis": [
+        "/api/english/news/{id}/",
+        "/api/english/translate/"
+      ],
+      "status": "active",
+      "tests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "staticTests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "runtimeTests": [],
+      "covered": true,
+      "testCount": 1
+    },
+    {
+      "id": "ENG-003",
+      "desc": "打字练习页面统计正确率和速度",
+      "category": "english",
+      "priority": "medium",
+      "components": [
+        "TypingPractice.vue",
+        "TypingStats.vue"
+      ],
+      "apis": [
+        "/api/english/typing/stats/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "ENG-004",
+      "desc": "英语单词收藏和复习功能",
+      "category": "english",
+      "priority": "medium",
+      "components": [
+        "WordCollection.vue",
+        "ReviewMode.vue"
+      ],
+      "apis": [
+        "/api/english/words/favorites/",
+        "/api/english/words/review/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "BLOG-001",
+      "desc": "博客列表页展示3篇最新博客",
+      "category": "blog",
+      "priority": "high",
+      "components": [
+        "BlogList.vue",
+        "BlogCard.vue"
+      ],
+      "apis": [
+        "/api/blog/posts/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "BLOG-002",
+      "desc": "博客详情页显示完整内容和评论",
+      "category": "blog",
+      "priority": "high",
+      "components": [
+        "BlogDetail.vue",
+        "CommentSection.vue"
+      ],
+      "apis": [
+        "/api/blog/posts/{id}/",
+        "/api/blog/comments/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "BLOG-003",
+      "desc": "博客搜索和分类筛选功能",
+      "category": "blog",
+      "priority": "medium",
+      "components": [
+        "BlogSearch.vue",
+        "CategoryFilter.vue"
+      ],
+      "apis": [
+        "/api/blog/search/",
+        "/api/blog/categories/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "USER-001",
+      "desc": "用户注册和登录功能",
+      "category": "auth",
+      "priority": "critical",
+      "components": [
+        "LoginForm.vue",
+        "RegisterForm.vue"
+      ],
+      "apis": [
+        "/api/auth/login/",
+        "/api/auth/register/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "USER-002",
+      "desc": "用户个人资料管理",
+      "category": "auth",
+      "priority": "medium",
+      "components": [
+        "ProfileEdit.vue",
+        "AvatarUpload.vue"
+      ],
+      "apis": [
+        "/api/auth/profile/",
+        "/api/auth/avatar/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "USER-003",
+      "desc": "用户学习进度跟踪",
+      "category": "auth",
+      "priority": "medium",
+      "components": [
+        "ProgressDashboard.vue",
+        "ProgressChart.vue"
+      ],
+      "apis": [
+        "/api/auth/progress/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "COMMON-001",
+      "desc": "响应式导航栏和菜单",
+      "category": "common",
+      "priority": "high",
+      "components": [
+        "NavBar.vue",
+        "SideMenu.vue"
+      ],
+      "apis": [],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "COMMON-002",
+      "desc": "全局错误处理和提示",
+      "category": "common",
+      "priority": "high",
+      "components": [
+        "ErrorBoundary.vue",
+        "NotificationToast.vue"
+      ],
+      "apis": [],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "COMMON-003",
+      "desc": "多语言国际化支持",
+      "category": "common",
+      "priority": "medium",
+      "components": [
+        "LanguageSwitcher.vue"
+      ],
+      "apis": [
+        "/api/i18n/"
+      ],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    },
+    {
+      "id": "PERF-001",
+      "desc": "页面加载性能优化",
+      "category": "performance",
+      "priority": "medium",
+      "components": [],
+      "apis": [],
+      "status": "active",
+      "tests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "staticTests": [
+        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+      ],
+      "runtimeTests": [],
+      "covered": true,
+      "testCount": 1
+    },
+    {
+      "id": "PERF-002",
+      "desc": "图片懒加载和压缩",
+      "category": "performance",
+      "priority": "medium",
+      "components": [
+        "LazyImage.vue"
+      ],
+      "apis": [],
+      "status": "active",
+      "tests": [],
+      "staticTests": [],
+      "runtimeTests": [],
+      "covered": false,
+      "testCount": 0
+    }
+  ],
+  "testFiles": [
+    {
+      "file": "frontend\\tests\\examples\\feature-mapping-demo.test.js",
+      "features": [
+        "ENG-001",
+        "INVALID-ID",
+        "PERF-001",
+        "ENG-002"
+      ],
+      "featureCount": 4
+    },
+    {
+      "file": "frontend\\src\\components\\HelloWorld.test.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\node_modules\\cssstyle\\lib\\parsers.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\node_modules\\cssstyle\\lib\\CSSStyleDeclaration.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\src\\views\\Login.spec.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\src\\views\\Home.spec.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\src\\router\\index.spec.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend\\node_modules\\@bcoe\\v8-coverage\\src\\test\\merge.spec.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\test_coverage.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_urls.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_regression.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\integration\\test_simple_integration.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\bravo\\settings\\test_sqlite.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\bravo\\settings\\test_simple.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "tests\\regression\\ui\\ui-regression.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "tests\\regression\\data\\db-regression.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "tests\\regression\\api\\api-regression.test.js",
+      "features": [],
+      "featureCount": 0
+    }
+  ],
+  "uncovered": [
+    {
+      "id": "ENG-003",
+      "desc": "打字练习页面统计正确率和速度",
+      "category": "english",
+      "priority": "medium"
+    },
+    {
+      "id": "ENG-004",
+      "desc": "英语单词收藏和复习功能",
+      "category": "english",
+      "priority": "medium"
+    },
+    {
+      "id": "BLOG-001",
+      "desc": "博客列表页展示3篇最新博客",
+      "category": "blog",
+      "priority": "high"
+    },
+    {
+      "id": "BLOG-002",
+      "desc": "博客详情页显示完整内容和评论",
+      "category": "blog",
+      "priority": "high"
+    },
+    {
+      "id": "BLOG-003",
+      "desc": "博客搜索和分类筛选功能",
+      "category": "blog",
+      "priority": "medium"
+    },
+    {
+      "id": "USER-001",
+      "desc": "用户注册和登录功能",
+      "category": "auth",
+      "priority": "critical"
+    },
+    {
+      "id": "USER-002",
+      "desc": "用户个人资料管理",
+      "category": "auth",
+      "priority": "medium"
+    },
+    {
+      "id": "USER-003",
+      "desc": "用户学习进度跟踪",
+      "category": "auth",
+      "priority": "medium"
+    },
+    {
+      "id": "COMMON-001",
+      "desc": "响应式导航栏和菜单",
+      "category": "common",
+      "priority": "high"
+    },
+    {
+      "id": "COMMON-002",
+      "desc": "全局错误处理和提示",
+      "category": "common",
+      "priority": "high"
+    },
+    {
+      "id": "COMMON-003",
+      "desc": "多语言国际化支持",
+      "category": "common",
+      "priority": "medium"
+    },
+    {
+      "id": "PERF-002",
+      "desc": "图片懒加载和压缩",
+      "category": "performance",
+      "priority": "medium"
+    }
+  ]
+}

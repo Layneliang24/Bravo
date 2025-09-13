@@ -31,6 +31,7 @@ class RealWorldDemo {
       warning: "⚠️",
     };
 
+    // eslint-disable-next-line no-console
     console.log(
       `${colors[type]}${prefix[type] || ""} ${message}${colors.reset}`,
     );

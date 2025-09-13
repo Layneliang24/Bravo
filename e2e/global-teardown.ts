@@ -65,7 +65,7 @@ async function generateTestSummary() {
           nodeVersion: process.version,
           platform: process.platform,
           arch: process.arch,
-          baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3000',
+          baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3001',
           ci: !!process.env.CI,
         },
         browsers: testResults.config?.projects?.map((p: any) => p.name) || [],

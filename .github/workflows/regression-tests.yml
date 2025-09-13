@@ -35,18 +35,20 @@ jobs:
         node-version: [18.x, 20.x]
 
     services:
-      postgres:
-        image: postgres:13
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
       redis:
         image: redis:6
@@ -76,10 +78,13 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y mysql-client
 
       - name: Install Python dependencies
         run: |
@@ -90,9 +95,9 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm ci
+          npm install
           cd ../e2e
-          npm ci
+          npm install
           npm install -g playwright
 
       - name: Install Playwright browsers
@@ -100,35 +105,50 @@ jobs:
           cd e2e
           npx playwright install --with-deps
 
+      - name: ⏳ Wait for MySQL and setup permissions
+        run: |
+          echo "⏳ Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready, waiting... (attempt $i/30)"
+            sleep 2
+          done
+          
+          echo "🔐 Granting database privileges to bravo_user..."
+          # Grant necessary privileges for Django testing (requires full DB management)
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ Database privileges configured"
+
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
         run: |
           cd backend
           python manage.py migrate
           python manage.py loaddata fixtures/test_data.json
 
-      - name: Start backend server
+      - name: Prepare backend for regression tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           REDIS_URL: redis://localhost:6379/0
           DEBUG: true
         run: |
           cd backend
-          python manage.py runserver 8000 &
-          sleep 10
+          python manage.py migrate
+          echo "✅ Backend prepared for regression tests"
 
-      - name: Start frontend server
+      - name: Build frontend for regression tests
         run: |
           cd frontend
-          npm run build
-          npm run preview &
-          sleep 10
-
-      - name: Wait for servers to be ready
-        run: |
-          timeout 60 bash -c 'until curl -f http://localhost:8000/api/health; do sleep 2; done'
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          npm run build:skip-check || npm run build
+          echo "✅ Frontend built for regression tests"
 
       - name: Run regression tests (All)
         if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''

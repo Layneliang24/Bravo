@@ -1,0 +1,355 @@
+
+name: 🚀 Gate - Comprehensive Test Suite (Optimized)
+
+# 优化触发条件，避免与branch-protection重复
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+env:
+  # 全局环境变量
+  NODE_VERSION: "20.x"
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  # ==========================================
+  # Job 1: 智能依赖管理 (Smart Dependencies)
+  # ==========================================
+  smart-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    
+    outputs:
+      frontend-cache-hit: ${{ steps.frontend-cache.outputs.cache-hit }}
+      backend-cache-hit: ${{ steps.backend-cache.outputs.cache-hit }}
+      e2e-cache-hit: ${{ steps.e2e-cache.outputs.cache-hit }}
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+        options: >
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        ports:
+          - 3306:3306
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
+      # 智能前端依赖缓存
+      - name: Cache Frontend Dependencies
+        id: frontend-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            frontend-deps-${{ runner.os }}-
+
+      - name: Install Frontend Dependencies (if cache miss)
+        if: steps.frontend-cache.outputs.cache-hit != 'true'
+        working-directory: ./frontend
+        run: |
+          echo "📦 安装前端依赖 (缓存未命中)..."
+          npm ci --prefer-offline --no-audit --ignore-scripts
+          echo "✅ 前端依赖安装完成"
+
+      # 智能E2E依赖缓存
+      - name: Cache E2E Dependencies
+        id: e2e-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            e2e/node_modules
+            ~/.npm
+          key: e2e-deps-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            e2e-deps-${{ runner.os }}-
+
+      - name: Install E2E Dependencies (if cache miss)
+        if: steps.e2e-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "🧪 安装E2E测试依赖 (缓存未命中)..."
+          npm install --prefer-offline --no-audit --ignore-scripts
+          echo "✅ E2E依赖安装完成"
+
+      # 智能后端依赖缓存
+      - name: Cache Backend Dependencies
+        id: backend-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/test.txt') }}
+          restore-keys: |
+            backend-deps-${{ runner.os }}-
+
+      - name: Install Backend Dependencies (if cache miss)
+        if: steps.backend-cache.outputs.cache-hit != 'true'
+        working-directory: ./backend
+        run: |
+          echo "🐍 安装后端依赖 (缓存未命中)..."
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/test.txt
+          echo "✅ 后端依赖安装完成"
+
+      # MySQL配置
+      - name: Configure MySQL
+        run: |
+          echo "🔧 配置MySQL..."
+          mysql -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} -e "
+            CREATE DATABASE IF NOT EXISTS ${{ env.MYSQL_DATABASE }};
+            CREATE USER IF NOT EXISTS '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}';
+            GRANT ALL PRIVILEGES ON ${{ env.MYSQL_DATABASE }}.* TO '${{ env.MYSQL_USER }}'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ MySQL配置完成"
+
+  # ==========================================
+  # Job 2: 前端测试 (Frontend Tests)
+  # ==========================================
+  frontend-tests:
+    needs: smart-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore Frontend Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: |
+          echo "🧪 运行前端测试..."
+          npm run test:coverage
+          echo "✅ 前端测试完成"
+
+      - name: Upload Frontend Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 7
+
+  # ==========================================
+  # Job 3: 后端测试 (Backend Tests)
+  # ==========================================
+  backend-tests:
+    needs: smart-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+        options: >
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore Backend Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/test.txt') }}
+          fail-on-cache-miss: true
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: |
+          echo "🧪 运行后端测试..."
+          source .venv/bin/activate
+          python manage.py test
+          echo "✅ 后端测试完成"
+        env:
+          DATABASE_URL: mysql://${{ env.MYSQL_USER }}:${{ env.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ env.MYSQL_DATABASE }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: ${{ env.MYSQL_DATABASE }}
+          DB_USER: ${{ env.MYSQL_USER }}
+          DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+
+  # ==========================================
+  # Job 4: E2E测试 (E2E Tests) - 优化版
+  # ==========================================
+  e2e-tests:
+    needs: smart-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+        options: >
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore All Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            frontend/node_modules
+            e2e/node_modules
+            ~/.cache/pip
+            backend/.venv
+            ~/.npm
+          key: all-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'e2e/package-lock.json', 'backend/requirements/base.txt') }}
+          restore-keys: |
+            frontend-deps-${{ runner.os }}-
+            e2e-deps-${{ runner.os }}-
+            backend-deps-${{ runner.os }}-
+
+      - name: Install Playwright Browsers
+        working-directory: ./e2e
+        run: |
+          echo "🎭 安装Playwright浏览器..."
+          npx playwright install --with-deps chromium
+          echo "✅ Playwright浏览器安装完成"
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          echo "🏗️ 构建前端..."
+          npm run build
+          echo "✅ 前端构建完成"
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          echo "🚀 启动后端服务器..."
+          source .venv/bin/activate
+          python manage.py runserver 8000 &
+          echo $! > backend.pid
+          echo "✅ 后端服务器已启动"
+        env:
+          DATABASE_URL: mysql://${{ env.MYSQL_USER }}:${{ env.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ env.MYSQL_DATABASE }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: ${{ env.MYSQL_DATABASE }}
+          DB_USER: ${{ env.MYSQL_USER }}
+          DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      # 不手动启动前端服务器，让Playwright自己管理
+      - name: Run E2E Tests (Playwright manages server)
+        working-directory: ./e2e
+        run: |
+          echo "🧪 运行E2E测试 (Playwright管理服务器)..."
+          npx playwright test --project=chromium --workers=1 --max-failures=3
+          echo "✅ E2E测试完成"
+        env:
+          CI: true
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
+
+      - name: Upload E2E Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 清理进程..."
+          [ -f backend/backend.pid ] && kill $(cat backend/backend.pid) 2>/dev/null || true
+          echo "✅ 清理完成"

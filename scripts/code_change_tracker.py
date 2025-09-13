@@ -274,7 +274,7 @@ class CodeChangeTracker:
 
         # 临时标记详情
         if data["temporary_markers"]:
-            report.append("\n## ⚠️ 临时标记")
+            report.append("\n## 临时标记")
             high_severity = [
                 x for x in data["temporary_markers"] if x["severity"] == "HIGH"
             ]
@@ -286,20 +286,20 @@ class CodeChangeTracker:
 
         # 禁用测试
         if data["disabled_tests"]:
-            report.append("\n## 🧪 禁用测试")
+            report.append("\n## 禁用测试")
             for test in data["disabled_tests"]:
                 report.append(f"- **{test['file']}:{test['line']}**")
                 report.append(f"  ```{test['content']}```")
 
         # 建议行动
-        report.append("\n## 📋 建议行动")
+        report.append("\n## 建议行动")
         if summary["risk_assessment"] == "HIGH":
-            report.append("- 🔴 **立即处理**: 存在大量高风险变更，需要立即审查")
-            report.append("- 🔍 **代码审查**: 检查所有注释掉的代码是否需要恢复")
-            report.append("- 🧪 **测试恢复**: 重新启用被禁用的测试")
+            report.append("- **立即处理**: 存在大量高风险变更，需要立即审查")
+            report.append("- **代码审查**: 检查所有注释掉的代码是否需要恢复")
+            report.append("- **测试恢复**: 重新启用被禁用的测试")
         elif summary["risk_assessment"] == "MEDIUM":
             report.append("- 🟡 **定期检查**: 安排时间处理临时标记")
-            report.append("- 📝 **文档记录**: 为临时修改添加详细说明")
+            report.append("- **文档记录**: 为临时修改添加详细说明")
         else:
             report.append("- 🟢 **保持现状**: 代码质量良好，继续监控")
 
@@ -314,16 +314,16 @@ def main():
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     tracker = CodeChangeTracker(project_root)
 
-    print("🔍 开始扫描代码变更...")
+    print("开始扫描代码变更...")
     current_data = tracker.scan_temporary_changes()
 
-    print("📊 比较历史数据...")
+    print("比较历史数据...")
     comparison = tracker.compare_with_previous(current_data)
 
-    print("💾 保存追踪数据...")
+    print("保存追踪数据...")
     tracker.save_tracking_data(current_data)
 
-    print("📝 生成报告...")
+    print("生成报告...")
     report = tracker.generate_report(current_data, comparison)
 
     # 保存报告
@@ -338,13 +338,13 @@ def main():
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(report)
 
-    print(f"✅ 报告已生成: {report_file}")
-    print(f"\n📈 扫描结果: {current_data['summary']['total_issues']} 个问题")
-    print(f"🎯 风险评估: {current_data['summary']['risk_assessment']}")
+    print(f"报告已生成: {report_file}")
+    print(f"\n扫描结果: {current_data['summary']['total_issues']} 个问题")
+    print(f"风险评估: {current_data['summary']['risk_assessment']}")
 
     # 如果有高风险问题，返回非零退出码
     if current_data["summary"]["risk_assessment"] == "HIGH":
-        print("\n⚠️ 检测到高风险问题，建议立即处理！")
+        print("\n检测到高风险问题，建议立即处理！")
         return 1
 
     return 0

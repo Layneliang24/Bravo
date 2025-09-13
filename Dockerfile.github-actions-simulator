@@ -1,0 +1,172 @@
+# GitHub Actions 完全模拟器
+# 创建一个完全独立的容器环境，模拟GitHub Actions的Ubuntu runner
+# 所有操作都在容器内进行，包括MySQL数据库
+
+FROM ubuntu:22.04
+
+# 设置环境变量
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CI=true
+ENV GITHUB_ACTIONS=true
+ENV PYTHONUNBUFFERED=1
+
+# 暂时以root用户运行，避免sudo配置冲突
+
+# 配置国内源加速
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    apt-get update
+
+# 安装基础工具
+RUN apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    git \
+    unzip \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    jq \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装MySQL Server（完全在容器内）
+RUN apt-get update && \
+    apt-get install -y mysql-server mysql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# 安装Node.js 20.x（使用国内源）
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# 安装Python 3.11
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
+
+# 配置npm国内源
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm config set maxsockets 20 && \
+    npm config set fetch-retries 3 && \
+    npm config set fetch-retry-mintimeout 10000
+
+# 配置pip国内源
+RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ && \
+    pip3 config set global.trusted-host pypi.tuna.tsinghua.edu.cn
+
+# 安装Playwright浏览器依赖
+RUN apt-get update && \
+    apt-get install -y \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libgtk-3-0 \
+    libgbm1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 创建工作目录
+WORKDIR /workspace
+RUN mkdir -p /workspace
+
+# 设置MySQL配置
+RUN service mysql start && \
+    mysql -e "CREATE DATABASE bravo_test;" && \
+    mysql -e "CREATE USER 'bravo_user'@'localhost' IDENTIFIED BY 'bravo_password';" && \
+    mysql -e "GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'localhost';" && \
+    mysql -e "CREATE USER 'bravo_user'@'127.0.0.1' IDENTIFIED BY 'bravo_password';" && \
+    mysql -e "GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'127.0.0.1';" && \
+    mysql -e "FLUSH PRIVILEGES;" && \
+    service mysql stop
+
+# 复制项目代码
+COPY . /workspace/
+
+# 创建模拟脚本
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "🚀 GitHub Actions 模拟器启动"\n\
+echo "================================"\n\
+echo "⏰ 开始时间: $(date)"\n\
+echo "📍 工作目录: $(pwd)"\n\
+echo "👤 当前用户: $(whoami)"\n\
+echo "================================"\n\
+\n\
+# 启动MySQL服务\n\
+echo "🗄️ 启动MySQL服务..."\n\
+service mysql start\n\
+\n\
+# 等待MySQL就绪\n\
+echo "⏳ 等待MySQL就绪..."\n\
+for i in {1..30}; do\n\
+    if mysql -u bravo_user -pbravo_password -h 127.0.0.1 -e "SELECT 1;" &>/dev/null; then\n\
+        echo "✅ MySQL连接成功"\n\
+        break\n\
+    fi\n\
+    echo "等待MySQL启动... ($i/30)"\n\
+    sleep 2\n\
+done\n\
+\n\
+# 设置环境变量\n\
+export DB_HOST=127.0.0.1\n\
+export DB_PORT=3306\n\
+export DB_NAME=bravo_test\n\
+export DB_USER=bravo_user\n\
+export DB_PASSWORD=bravo_password\n\
+export DJANGO_SETTINGS_MODULE=bravo.settings.test\n\
+\n\
+echo "🔧 配置国内镜像源加速..."\n\
+npm config set registry https://registry.npmmirror.com\n\
+npm config set maxsockets 20\n\
+npm config set fetch-retries 3\n\
+pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/\n\
+\n\
+echo "📦 安装依赖..."\n\
+# 安装前端依赖\n\
+cd frontend\n\
+npm ci\n\
+cd ..\n\
+\n\
+# 安装E2E依赖\n\
+cd e2e\n\
+npm ci\n\
+npx playwright install chromium\n\
+cd ..\n\
+\n\
+# 安装后端依赖\n\
+cd backend\n\
+pip3 install -r requirements/test.txt\n\
+cd ..\n\
+\n\
+echo "🧪 运行测试套件（模拟gate.yml并行作业）..."\n\
+\n\
+# Job 1: Frontend Tests\n\
+echo "📦 Job: frontend-tests"\n\
+cd frontend\n\
+npm run test\n\
+cd ..\n\
+\n\
+# Job 2: Backend Tests\n\
+echo "🐍 Job: backend-tests"\n\
+cd backend\n\
+python3 manage.py check --settings=bravo.settings.test\n\
+python3 -m pytest tests/ -v --maxfail=0 --tb=short\n\
+cd ..\n\
+\n\
+# Job 3: E2E Tests\n\
+echo "🎭 Job: e2e-tests"\n\
+cd e2e\n\
+npm run test\n\
+cd ..\n\
+\n\
+echo "✅ 所有测试完成！"\n\
+echo "⏰ 结束时间: $(date)"\n\
+' > /run_github_actions_simulation.sh && \
+chmod +x /run_github_actions_simulation.sh
+
+# 设置启动命令
+CMD ["/run_github_actions_simulation.sh"]

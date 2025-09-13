@@ -1,0 +1,76 @@
+
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: bravo_test
+      MYSQL_USER: bravo_user
+      MYSQL_PASSWORD: bravo_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    environment:
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=bravo_test
+      - DB_USER=bravo_user
+      - DB_PASSWORD=bravo_password
+      - DJANGO_SETTINGS_MODULE=bravo.settings.test
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    environment:
+      - VITE_API_URL=http://backend:8000
+      - NODE_ENV=production
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+    command: npm run preview -- --port 3001 --host 0.0.0.0
+
+  # E2E测试服务
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile.test
+    environment:
+      - TEST_BASE_URL=http://frontend:3001
+      - DOCKER_ENV=true
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./e2e:/app
+      - ./e2e/test-results:/app/test-results
+      - ./e2e/playwright-report:/app/playwright-report
+    command: npx playwright test --project=chromium
+
+volumes:
+  mysql_data:

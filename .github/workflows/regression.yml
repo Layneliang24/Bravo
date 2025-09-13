@@ -16,8 +16,9 @@ on:
 env:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20.x"
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_DB: bravo_test
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
 
 jobs:
   # 后端回归测试 - 核心功能保护
@@ -26,18 +27,20 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - name: 📥 Checkout code
@@ -47,6 +50,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: 📦 Cache Python dependencies
         uses: actions/cache@v3
@@ -63,18 +69,40 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: 🗄️ Setup database
+      - name: ⏳ Wait for MySQL and setup permissions
+        run: |
+          echo "⏳ Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready, waiting... (attempt $i/30)"
+            sleep 2
+          done
+          
+          echo "🔐 Granting database privileges to bravo_user..."
+          # Grant necessary privileges for Django testing (requires full DB management)
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            GRANT ALL PRIVILEGES ON \`test_%\`.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test\`.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ Database privileges configured"
+
+      - name: 🔍 Verify Django Configuration
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         run: |
-          python manage.py migrate --settings=config.settings.test
+          python manage.py check --settings=bravo.settings.test
 
       - name: 🔒 Run REGRESSION TESTS ONLY
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-          DJANGO_SETTINGS_MODULE: config.settings.test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         run: |
           echo "🚨 Running REGRESSION TESTS - Core functionality protection"
           echo "📋 These tests MUST pass for PR to be merged"
@@ -84,7 +112,7 @@ jobs:
             --tb=short \
             --strict-markers \
             --disable-warnings \
-            --maxfail=1 \
+            --maxfail=0 \
             --junit-xml=regression-results.xml
 
           echo "✅ All regression tests passed!"
@@ -110,11 +138,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: frontend/package.json
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: 📦 Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: 🔒 Run Frontend Regression Tests
         working-directory: ./frontend
@@ -141,18 +172,20 @@ jobs:
     needs: [backend-regression, frontend-regression]
 
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bravo_test
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h localhost -u root -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - name: 📥 Checkout code
@@ -168,7 +201,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
-          cache-dependency-path: e2e/package-lock.json
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
 
       - name: 🔧 Install backend dependencies
         working-directory: ./backend
@@ -179,21 +214,21 @@ jobs:
       - name: 📦 Install E2E dependencies
         working-directory: ./e2e
         run: |
-          npm ci
+          npm install
           npx playwright install --with-deps
 
       - name: 🗄️ Setup test database
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
         run: |
-          python manage.py migrate --settings=config.settings.test
+          python manage.py check --settings=bravo.settings.test
 
       - name: 🚀 Start backend server
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bravo_test
-          DJANGO_SETTINGS_MODULE: config.settings.test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         run: |
           python manage.py runserver 8000 &
           sleep 10

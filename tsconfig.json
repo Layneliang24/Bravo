@@ -16,8 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["frontend/src/*"]
-    },
-    "types": ["@vue/test-utils", "node"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
   "exclude": [
