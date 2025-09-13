@@ -9,8 +9,8 @@ commit_hash=$(git log -1 --pretty=%h)
 echo "📝 提交信息: $commit_msg"
 echo "🔗 提交哈希: $commit_hash"
 
-# 更新功能映射（如果存在）
-if [ -f "scripts/buildFeatureMap.js" ]; then
+# 更新功能映射（如果存在且有features.json）
+if [ -f "scripts/buildFeatureMap.js" ] && [ -f "features.json" ]; then
     echo "🗺️  更新功能映射..."
     node scripts/buildFeatureMap.js
     if [ $? -eq 0 ]; then
@@ -18,6 +18,8 @@ if [ -f "scripts/buildFeatureMap.js" ]; then
     else
         echo "⚠️  功能映射更新失败，但不影响提交"
     fi
+else
+    echo "ℹ️  跳过功能映射更新（features.json不存在）"
 fi
 
 # 更新代码变更统计（如果存在）
