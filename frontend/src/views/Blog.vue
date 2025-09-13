@@ -210,11 +210,21 @@ const publishPost = () => {
     id: Date.now(), // 简单的ID生成
     title: editForm.title,
     content: editForm.content,
-    category: '技术' // 默认分类
+    category: '技术', // 默认分类
+    createdAt: new Date().toISOString()
   }
   
   // 添加到博客列表
   mockPosts.value.push(newPost)
+  
+  // 保存到 localStorage 以便 BlogDetail 页面访问
+  try {
+    const existingPosts = JSON.parse(localStorage.getItem('mockBlogPosts') || '[]')
+    existingPosts.push(newPost)
+    localStorage.setItem('mockBlogPosts', JSON.stringify(existingPosts))
+  } catch (error) {
+    console.warn('无法保存到 localStorage:', error)
+  }
   
   // 跳转到新创建的博客详情页
   router.push(`/blog/${newPost.id}`)

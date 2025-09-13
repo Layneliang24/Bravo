@@ -4,7 +4,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 // 测试配置
-const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3001';
 
 // 页面对象模式 - 主页
 class HomePage {

@@ -123,7 +123,20 @@ const mockPosts = [
 
 // 根据路由参数获取博客详情
 const postId = parseInt(route.params.id as string)
-const post = ref(mockPosts.find(p => p.id === postId) || mockPosts[0])
+
+// 尝试从 localStorage 获取用户创建的博客
+let foundPost = mockPosts.find(p => p.id === postId)
+
+if (!foundPost) {
+  try {
+    const storedPosts = JSON.parse(localStorage.getItem('mockBlogPosts') || '[]')
+    foundPost = storedPosts.find((p: any) => p.id === postId)
+  } catch (error) {
+    console.warn('无法从 localStorage 读取博客:', error)
+  }
+}
+
+const post = ref(foundPost || mockPosts[0])
 
 const showEditForm = ref(false)
 

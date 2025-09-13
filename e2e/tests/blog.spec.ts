@@ -4,7 +4,7 @@
 import { test, expect, Page } from '@playwright/test';
 
 // 测试配置
-const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3001';
 
 // 页面对象模式 - 博客页面
 class BlogPage {
@@ -31,6 +31,9 @@ class BlogPage {
     publishButton: '[data-testid="publish-button"]',
     editButton: '[data-testid="edit-button"]',
     deleteButton: '[data-testid="delete-button"]',
+    // 博客详情页选择器
+    blogDetailTitle: '[data-testid="blog-detail-title"]',
+    blogDetailContent: '[data-testid="blog-detail-content"]',
   };
 
   // 导航到博客页面
@@ -92,9 +95,13 @@ class BlogPage {
 
   // 删除博客
   async deletePost() {
+    // 监听确认对话框并自动接受
+    this.page.once('dialog', dialog => {
+      console.log(`Dialog message: ${dialog.message()}`);
+      dialog.accept();
+    });
+    
     await this.page.click(this.selectors.deleteButton);
-    // 确认删除对话框
-    await this.page.click('button:has-text("确认")');
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -146,8 +153,15 @@ test.describe('博客功能测试', () => {
     if (blogList.length > 0) {
       await blogPage.clickBlogItem(0);
 
-      // 验证跳转到详情页
-      expect(blogPage.getPage().url()).toContain('/blog/');
+      // 等待路由跳转完成
+      await blogPage.getPage().waitForURL(/\/blog\/\d+$/, { timeout: 10000 });
+
+      // 验证跳转到详情页 (包含博客ID)
+      expect(blogPage.getPage().url()).toMatch(/\/blog\/\d+$/);
+      
+      // 验证详情页标题存在
+      const detailTitle = await blogPage.getPage().textContent(blogPage['selectors'].blogDetailTitle);
+      expect(detailTitle).toBeTruthy();
     }
   });
 
@@ -160,8 +174,15 @@ test.describe('博客功能测试', () => {
 
     await blogPage.createNewPost(testTitle, testContent);
 
-    // 验证博客创建成功
-    expect(page.url()).toContain('/blog/');
+    // 等待路由跳转到新创建的博客详情页
+    await page.waitForURL(/\/blog\/\d+$/, { timeout: 10000 });
+
+    // 验证博客创建成功并跳转到详情页
+    expect(page.url()).toMatch(/\/blog\/\d+$/);
+    
+    // 验证新创建的博客标题
+    const detailTitle = await page.textContent(blogPage['selectors'].blogDetailTitle);
+    expect(detailTitle).toContain(testTitle);
   });
 
   test('应该能够编辑博客', async ({ page }) => {
@@ -170,13 +191,22 @@ test.describe('博客功能测试', () => {
     const originalContent = '原始内容';
     await blogPage.createNewPost(originalTitle, originalContent);
 
+    // 等待跳转到详情页
+    await page.waitForURL(/\/blog\/\d+$/, { timeout: 10000 });
+
+    // 确保已跳转到详情页
+    expect(page.url()).toMatch(/\/blog\/\d+$/);
+
     // 然后编辑它
     const newTitle = `编辑后标题 ${Date.now()}`;
     const newContent = '编辑后内容';
     await blogPage.editPost(newTitle, newContent);
 
-    // 验证编辑成功
-    const updatedTitle = await page.textContent(blogPage['selectors'].postTitle);
+    // 等待编辑完成（页面可能会刷新）
+    await page.waitForLoadState('networkidle');
+
+    // 验证编辑成功 - 使用详情页的标题选择器
+    const updatedTitle = await page.textContent(blogPage['selectors'].blogDetailTitle);
     expect(updatedTitle).toContain(newTitle);
   });
 
