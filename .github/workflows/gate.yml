@@ -47,11 +47,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
         ports:
           - 3306:3306
     
@@ -206,11 +202,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
         ports:
           - 3306:3306
 
@@ -263,11 +255,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
         ports:
           - 3306:3306
 
