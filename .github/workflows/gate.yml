@@ -258,7 +258,7 @@ jobs:
         run: |
           echo "🧪 运行后端测试..."
           source .venv/bin/activate
-          python manage.py test
+          python manage.py test --settings=bravo.settings.test
           echo "✅ 后端测试完成"
         env:
           DATABASE_URL: mysql://${{ env.MYSQL_USER }}:${{ env.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ env.MYSQL_DATABASE }}
