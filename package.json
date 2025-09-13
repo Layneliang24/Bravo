@@ -41,7 +41,7 @@
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
     "postinstall:disabled": "npm run e2e:install",
-    "prepare": "husky",
+    "prepare": "is-ci || husky",
     "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
@@ -51,6 +51,7 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "husky": "^9.1.7",
+    "is-ci": "^3.0.1",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.6",
     "pinia": "^3.0.3",
