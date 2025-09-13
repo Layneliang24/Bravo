@@ -341,6 +341,36 @@ jobs:
           npm run build --workspace=frontend
           echo "✅ 前端构建完成"
 
+      - name: Install Backend Dependencies (fallback)
+        working-directory: ./backend
+        run: |
+          echo "📦 检查/安装后端依赖..."
+          if [ ! -d .venv ]; then
+            python -m venv .venv
+            source .venv/bin/activate
+            python -m pip install --upgrade pip wheel
+            pip install -r requirements/base.txt
+            pip install -r requirements/test.txt
+          else
+            echo "✅ 后端虚拟环境已存在，跳过安装"
+          fi
+
+      - name: Apply Backend Migrations
+        working-directory: ./backend
+        run: |
+          echo "🗄️ 迁移数据库..."
+          source .venv/bin/activate
+          python manage.py migrate --noinput
+          echo "✅ 数据库迁移完成"
+        env:
+          DATABASE_URL: mysql://${{ env.MYSQL_USER }}:${{ env.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ env.MYSQL_DATABASE }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: ${{ env.MYSQL_DATABASE }}
+          DB_USER: ${{ env.MYSQL_USER }}
+          DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
       - name: Start Backend Server
         working-directory: ./backend
         run: |
