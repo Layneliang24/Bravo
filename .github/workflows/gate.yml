@@ -307,6 +307,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
+            node_modules
             frontend/node_modules
             e2e/node_modules
             ~/.cache/pip
@@ -318,6 +319,15 @@ jobs:
             e2e-deps-${{ runner.os }}-
             backend-deps-${{ runner.os }}-
 
+      - name: Install Root Dependencies (fallback)
+        run: |
+          echo "📦 检查/安装根依赖..."
+          if [ ! -d node_modules ]; then
+            npm ci --prefer-offline --no-audit
+          else
+            echo "✅ 根依赖已存在，跳过安装"
+          fi
+
       - name: Install Playwright Browsers
         working-directory: ./e2e
         run: |
@@ -326,11 +336,15 @@ jobs:
           echo "✅ Playwright浏览器安装完成"
 
       - name: Build Frontend
-        working-directory: ./frontend
-        run: |
-          echo "🏗️ 构建前端..."
-          npm run build
-          echo "✅ 前端构建完成"
+-        working-directory: ./frontend
+-        run: |
+-          echo "🏗️ 构建前端..."
+-          npm run build
+-          echo "✅ 前端构建完成"
++        run: |
++          echo "🏗️ 构建前端..."
++          npm run build --workspace=frontend
++          echo "✅ 前端构建完成"
 
       - name: Start Backend Server
         working-directory: ./backend
