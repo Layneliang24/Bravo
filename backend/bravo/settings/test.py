@@ -1,5 +1,6 @@
 """测试环境配置"""
 
+import os
 from pathlib import Path
 
 # 基础目录设置
@@ -68,7 +69,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # 使用MySQL数据库进行测试（与开发环境保持一致）
-import os
 
 # 强制覆盖数据库配置，避免继承base.py中的localhost配置
 print("🔧 强制设置数据库配置，避免socket连接问题")

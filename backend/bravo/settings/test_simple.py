@@ -66,7 +66,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "bravo.wsgi.application"
 
 # 数据库 - 使用MySQL数据库（与开发环境保持一致）
-import os
 
 # 强制覆盖数据库配置，避免继承base.py中的localhost配置
 print("🔧 强制设置数据库配置，避免socket连接问题")

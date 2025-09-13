@@ -23,9 +23,9 @@ if not settings.configured:
     django.setup()
 
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
 
 User = get_user_model()
-from django.test import Client, TestCase
 
 
 @pytest.mark.unit
