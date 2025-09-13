@@ -1,0 +1,72 @@
+name: Scheduled Regression Tests
+
+# 定时回归测试 - 确保核心功能长期稳定性
+on:
+  # 每天凌晨2点运行回归测试
+  schedule:
+    - cron: "0 2 * * *"
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      test-scope:
+        description: "Test scope"
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+          - e2e
+        default: all
+
+jobs:
+  # 后端回归测试
+  backend-regression:
+    name: 🔒 Backend Regression
+    if: inputs.test-scope == 'all' || inputs.test-scope == 'backend' || github.event_name == 'schedule'
+    uses: ./.github/workflows/test-backend.yml
+    with:
+      test-type: "regression"
+
+  # 前端回归测试
+  frontend-regression:
+    name: 🔒 Frontend Regression
+    if: inputs.test-scope == 'all' || inputs.test-scope == 'frontend' || github.event_name == 'schedule'
+    uses: ./.github/workflows/test-frontend.yml
+    with:
+      test-type: "all"
+
+  # E2E回归测试
+  e2e-regression:
+    name: 🔒 E2E Regression
+    if: inputs.test-scope == 'all' || inputs.test-scope == 'e2e' || github.event_name == 'schedule'
+    needs: [backend-regression, frontend-regression]
+    uses: ./.github/workflows/test-e2e.yml
+    with:
+      test-type: "regression"
+      browser: "chromium"
+
+  # 回归测试报告
+  regression-summary:
+    name: 📋 Regression Summary
+    runs-on: ubuntu-latest
+    needs: [backend-regression, frontend-regression, e2e-regression]
+    if: always()
+    steps:
+      - name: Generate regression report
+        run: |
+          echo "🔍 Regression Test Results:"
+          echo "Backend: ${{ needs.backend-regression.result }}"
+          echo "Frontend: ${{ needs.frontend-regression.result }}"
+          echo "E2E: ${{ needs.e2e-regression.result }}"
+
+          if [[ "${{ needs.backend-regression.result }}" == "success" && \
+                "${{ needs.frontend-regression.result }}" == "success" && \
+                "${{ needs.e2e-regression.result }}" == "success" ]]; then
+            echo "✅ All regression tests passed!"
+          else
+            echo "❌ Some regression tests failed!"
+            echo "🚨 Critical: Core functionality may be compromised!"
+            exit 1
+          fi
+
+      # 可以在这里添加通知逻辑，如发送邮件或Slack消息
