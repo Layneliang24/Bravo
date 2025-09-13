@@ -5,11 +5,13 @@
 ### 强制规则
 
 1. **测试文件必须映射功能**
+
    - 写完任何测试后，必须在文件顶部调用 `linkTestToFeature('功能ID')`
    - 或使用 `describeFeature('功能ID', '描述', testFn)` 包装测试套件
    - 不允许把 `linkTestToFeature` 指向不存在的功能ID
 
 2. **功能ID验证**
+
    - 所有功能ID必须在 `features.json` 中定义
    - 格式必须为 `[A-Z]+-\d+` (如: `ENG-001`, `BLOG-002`)
    - CI会检查每个功能ID是否至少被一条测试映射；缺了就失败
@@ -117,11 +119,13 @@ describe("News component", () => {
 ## 🚫 禁止行为
 
 1. **绕过测试映射**
+
    - 不允许创建没有 `linkTestToFeature` 的测试文件
    - 不允许使用无效的功能ID
    - 不允许删除现有的功能映射
 
 2. **降低覆盖率**
+
    - 不允许修改 `jest.config.js` 中的覆盖率阈值
    - 不允许在 `collectCoverageFrom` 中排除新文件
    - 不允许使用 `/* istanbul ignore */` 除非有充分理由

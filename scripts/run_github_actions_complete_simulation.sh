@@ -248,4 +248,3 @@ docker-compose down
 
 echo "✅ GitHub Actions完整模拟完成！"
 exit $TOTAL_RESULT
-

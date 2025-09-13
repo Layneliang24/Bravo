@@ -3,6 +3,7 @@
 ## 问题描述
 
 当前遇到 Codecov 速率限制错误：
+
 ```
 429 - {"message":"Rate limit reached. Please upload with the Codecov repository upload token to resolve issue. Expected time to availability: 2193s."}
 ```
@@ -12,12 +13,14 @@
 ### 方案 1：配置 Codecov Token（推荐）
 
 1. **获取 Token**：
+
    - 访问 [Codecov.io](https://codecov.io)
    - 登录 GitHub 账户
    - 选择 `Layneliang24/Bravo` 仓库
    - 在 Settings > General 中找到 "Repository Upload Token"
 
 2. **配置 GitHub Secrets**：
+
    - 在 GitHub 仓库中，进入 Settings > Secrets and variables > Actions
    - 添加新的 Secret：
      - Name: `CODECOV_TOKEN`
@@ -38,6 +41,7 @@
 ### 方案 2：临时禁用（当前方案）
 
 当前已配置 `continue-on-error: true` 和 `fail_ci_if_error: false`，这样：
+
 - CI 不会因为 Codecov 上传失败而中断
 - 覆盖率报告仍会生成并保存为 artifacts
 - 可以稍后手动上传到 Codecov
@@ -45,6 +49,7 @@
 ### 方案 3：使用其他覆盖率服务
 
 可以考虑使用：
+
 - **Coveralls**
 - **Code Climate**
 - **SonarCloud**

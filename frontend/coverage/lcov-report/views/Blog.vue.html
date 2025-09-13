@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../index.html">All files</a> / <a href="index.html">views</a> Blog.vue</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>394/394</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/0</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/0</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>394/394</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -858,7 +858,7 @@
       &lt;a href="/blog" aria-current="page" aria-label="当前页面：博客"&gt;博客&lt;/a&gt;
       &lt;a href="/login" aria-label="登录"&gt;登录&lt;/a&gt;
     &lt;/nav&gt;
-    
+
     &lt;h1 data-testid="blog-title"&gt;博客&lt;/h1&gt;
     &lt;div data-testid="blog-list"&gt;
       &lt;div
@@ -980,7 +980,7 @@ const router = useRouter()
 onMounted(() =&gt; {
   // 动态设置页面标题和 meta 标签
   document.title = '博客 - Bravo'
-  
+
   // 添加meta描述标签
   const metaDescription = document.querySelector('meta[name="description"]')
   if (!metaDescription) {
@@ -989,7 +989,7 @@ onMounted(() =&gt; {
     meta.setAttribute('content', 'Bravo 项目博客页面，分享技术文章和生活感悟')
     document.head.appendChild(meta)
   }
-  
+
   // 添加 Open Graph 标签
   const ogTitle = document.querySelector('meta[property="og:title"]')
   if (!ogTitle) {
@@ -998,7 +998,7 @@ onMounted(() =&gt; {
     meta.setAttribute('content', '博客 - Bravo')
     document.head.appendChild(meta)
   }
-  
+
   const ogDescription = document.querySelector('meta[property="og:description"]')
   if (!ogDescription) {
     const meta = document.createElement('meta')
@@ -1057,7 +1057,7 @@ const createPost = () =&gt; {
 &nbsp;
 const publishPost = () =&gt; {
   console.log('发布博客:', editForm.title, editForm.content)
-  
+
   // 创建新博客
   const newPost = {
     id: Date.now(), // 简单的ID生成
@@ -1065,13 +1065,13 @@ const publishPost = () =&gt; {
     content: editForm.content,
     category: '技术' // 默认分类
   }
-  
+
   // 添加到博客列表
   mockPosts.value.push(newPost)
-  
+
   // 跳转到新创建的博客详情页
   router.push(`/blog/${newPost.id}`)
-  
+
   showEditForm.value = false
   editForm.title = ''
   editForm.content = ''
@@ -1264,4 +1264,3 @@ const goToBlogDetail = (postId: number) =&gt; {
         <script src="../block-navigation.js"></script>
     </body>
 </html>
-    

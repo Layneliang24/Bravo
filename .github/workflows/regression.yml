@@ -80,7 +80,7 @@ jobs:
             echo "MySQL not ready, waiting... (attempt $i/30)"
             sleep 2
           done
-          
+
           echo "🔐 Granting database privileges to bravo_user..."
           # Grant necessary privileges for Django testing (requires full DB management)
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "

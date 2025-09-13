@@ -57,9 +57,9 @@ TEMPLATES = [
 
 # 数据库配置 - 使用SQLite内存数据库
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
     }
 }
 
@@ -87,7 +87,7 @@ CACHES = {
 AUTH_PASSWORD_VALIDATORS = []
 
 # 自定义用户模型
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 # 测试邮件后端
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

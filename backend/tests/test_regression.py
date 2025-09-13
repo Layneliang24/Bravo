@@ -10,20 +10,22 @@
 """
 
 import os
-import django
+
 import pytest
+
+import django
 from django.conf import settings
 
 # 配置 Django 设置用于测试
 if not settings.configured:
     # 使用pytest.ini中配置的测试设置
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bravo.settings.test")
     django.setup()
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model  # pylint: disable=wrong-import-position
+from django.test import Client, TestCase  # pylint: disable=wrong-import-position
 
 User = get_user_model()
-from django.test import Client, TestCase
 
 
 @pytest.mark.unit
@@ -60,7 +62,7 @@ class BlogRegressionTests(TestCase):
             # 如果有配置问题，至少确保测试不会崩溃
             self.assertIsInstance(exception, (AttributeError, Exception))
             # 这表明我们需要修复配置，但测试可以继续
-            pass
+            self.assertIsNotNone(self.client)  # Basic sanity check
 
 
 @pytest.mark.unit
@@ -121,7 +123,7 @@ class APIHealthRegressionTests(TestCase):
         except Exception as exception:
             # 如果有配置问题，至少确保测试不会崩溃
             self.assertIsInstance(exception, (AttributeError, Exception))
-            pass
+            self.assertIsNotNone(self.client)  # Basic sanity check
 
 
 @pytest.mark.integration

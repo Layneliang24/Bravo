@@ -3,7 +3,7 @@
     <nav class="breadcrumb" role="navigation" aria-label="面包屑导航">
       <a href="/blog" aria-label="返回博客列表">← 返回博客列表</a>
     </nav>
-    
+
     <article class="blog-post">
       <header class="post-header">
         <h1 data-testid="blog-detail-title">{{ post.title }}</h1>
@@ -12,11 +12,11 @@
           <span class="category" aria-label="分类">{{ post.category }}</span>
         </div>
       </header>
-      
+
       <div class="post-content" data-testid="blog-detail-content">
         <p>{{ post.content }}</p>
       </div>
-      
+
       <footer class="post-footer">
         <div class="post-actions" data-testid="blog-actions">
           <button
@@ -77,7 +77,7 @@ const router = useRouter()
 onMounted(() => {
   // 动态设置页面标题和 meta 标签
   document.title = `${post.value.title} - Bravo 博客`
-  
+
   // 添加 Open Graph 标签
   const ogTitle = document.querySelector('meta[property="og:title"]')
   if (!ogTitle) {
@@ -86,7 +86,7 @@ onMounted(() => {
     meta.setAttribute('content', `${post.value.title} - Bravo 博客`)
     document.head.appendChild(meta)
   }
-  
+
   const ogDescription = document.querySelector('meta[property="og:description"]')
   if (!ogDescription) {
     const meta = document.createElement('meta')

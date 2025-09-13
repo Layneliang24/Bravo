@@ -22,7 +22,7 @@ export PYTHONUNBUFFERED=1
 export DB_HOST=mysql  # Docker环境使用服务名
 export DB_PORT=3306
 export DB_NAME=bravo
-export DB_USER=bravo_user  
+export DB_USER=bravo_user
 export DB_PASSWORD=bravo_password
 export DJANGO_SETTINGS_MODULE=bravo.settings.test
 
@@ -95,7 +95,7 @@ docker-compose run --rm backend bash -c "
 " > /tmp/backend_test.log 2>&1 &
 BACKEND_PID=$!
 
-# Job 3: frontend-tests  
+# Job 3: frontend-tests
 echo "📦 启动 Job: frontend-tests（后台运行）"
 docker-compose run --rm frontend sh -c "
     echo '📦 Job: frontend-tests 开始'
@@ -116,7 +116,7 @@ wait $BACKEND_PID
 BACKEND_RESULT=$?
 echo "🐍 backend-tests 完成，退出码: $BACKEND_RESULT"
 
-wait $FRONTEND_PID  
+wait $FRONTEND_PID
 FRONTEND_RESULT=$?
 echo "📦 frontend-tests 完成，退出码: $FRONTEND_RESULT"
 
@@ -130,7 +130,7 @@ echo "----------------------------------------"
 
 echo "📊 测试结果汇总:"
 echo "- Backend Tests: $([ $BACKEND_RESULT -eq 0 ] && echo '✅ PASSED' || echo '❌ FAILED')"
-echo "- Frontend Tests: $([ $FRONTEND_RESULT -eq 0 ] && echo '✅ PASSED' || echo '❌ FAILED')" 
+echo "- Frontend Tests: $([ $FRONTEND_RESULT -eq 0 ] && echo '✅ PASSED' || echo '❌ FAILED')"
 echo "- E2E Tests: $([ $E2E_RESULT -eq 0 ] && echo '✅ PASSED' || echo '❌ FAILED')"
 
 # 显示日志
@@ -139,7 +139,7 @@ echo "📝 详细日志:"
 echo "Backend 测试日志:"
 cat /tmp/backend_test.log
 echo ""
-echo "Frontend 测试日志:"  
+echo "Frontend 测试日志:"
 cat /tmp/frontend_test.log
 echo ""
 echo "E2E 测试日志: 跳过（服务不存在）"

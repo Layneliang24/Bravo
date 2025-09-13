@@ -1,4 +1,3 @@
-
 // Playwright配置修复 - 针对CI环境优化
 import { defineConfig, devices } from '@playwright/test';
 
@@ -8,7 +7,7 @@ export default defineConfig({
   expect: { timeout: 5000 },
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined, // CI环境使用单worker避免冲突
-  
+
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results.json' }],

@@ -25,17 +25,17 @@ graph TD
     B --> C[设置环境变量]
     C --> D[调用Python处理器]
     D --> E[PostCheckoutHandler类]
-    
+
     E --> F[检查分支切换]
     E --> G[检查依赖同步]
     E --> H[检查环境配置]
     E --> I[检查分支配置]
     E --> J[清理临时文件]
-    
+
     F --> K{是否分支切换?}
     K -->|是| L[执行完整检查]
     K -->|否| M[跳过检查]
-    
+
     L --> N[返回检查结果]
     M --> N
 ```
@@ -52,6 +52,7 @@ branch_checkout=$3  # 是否分支切换 (1=是, 0=否)
 ```
 
 **检测逻辑：**
+
 - 当`branch_checkout=1`时，表示进行了分支切换
 - 当`branch_checkout=0`时，表示只是文件检出
 
@@ -63,6 +64,7 @@ export GIT_PARAMS="$old_head $new_head $branch_checkout"
 ```
 
 **传递的参数：**
+
 - `old_head`: 切换前的提交哈希
 - `new_head`: 切换后的提交哈希
 - `branch_checkout`: 切换类型标识
@@ -92,19 +94,19 @@ def run_post_checkout_checks(self):
     if self.branch_checkout != "1":
         print("📁 文件检出，跳过分支切换检查")
         return True
-    
+
     # 获取当前分支
     current_branch = self.get_current_branch()
-    
+
     # 执行各项检查
     success = True
     if not self.check_dependencies(): success = False
     if not self.check_environment(): success = False
     if not self.check_branch_config(current_branch): success = False
-    
+
     # 清理临时文件
     self.cleanup_temp_files()
-    
+
     return success
 ```
 
@@ -119,19 +121,19 @@ def check_dependencies(self):
     if docker_compose_exists:
         print("检测到Docker开发环境，跳过本地依赖检查")
         return True
-    
+
     # 检查前端依赖
     if (self.project_root / "frontend" / "package.json").exists():
         if not (self.project_root / "frontend" / "node_modules").exists():
             print("前端依赖未安装，建议运行: cd frontend && npm install")
             return False
-    
+
     # 检查后端依赖
     if (self.project_root / "backend" / "requirements").exists():
         if not (self.project_root / "backend" / ".venv").exists():
             print("后端虚拟环境未创建，建议运行: cd backend && python -m venv .venv")
             return False
-    
+
     return True
 ```
 
@@ -145,19 +147,19 @@ def check_environment(self):
     if docker_compose_exists:
         print("检测到Docker开发环境，环境变量通过docker-compose.yml配置")
         return True
-    
+
     # 检查环境文件
     env_files = [".env", ".env.local", ".env.development"]
     missing_env = []
-    
+
     for env_file in env_files:
         if not (self.project_root / env_file).exists():
             missing_env.append(env_file)
-    
+
     if missing_env:
         print(f"缺少环境配置文件: {', '.join(missing_env)}")
         return False
-    
+
     return True
 ```
 
@@ -169,22 +171,22 @@ def check_environment(self):
 def check_branch_config(self, branch_name):
     # 检查分支是否是最新版本
     self.check_branch_up_to_date(branch_name)
-    
+
     # 检查保护分支
     if branch_name in ["main", "dev"]:
         print("切换到保护分支，确保代码已通过审查")
-        
+
         # 检查未提交的更改
         result = subprocess.run(["git", "status", "--porcelain"], ...)
         if result.stdout.strip():
             print("工作区有未提交的更改")
             return False
-    
+
     # 检查分支特定配置文件
     branch_config = self.project_root / f".config.{branch_name}.json"
     if branch_config.exists():
         print(f"📋 发现分支特定配置: {branch_config.name}")
-    
+
     return True
 ```
 
@@ -196,19 +198,19 @@ def check_branch_config(self, branch_name):
 def check_branch_up_to_date(self, branch_name):
     # 获取远程最新信息
     subprocess.run(["git", "fetch", "origin", branch_name], ...)
-    
+
     # 检查是否落后于远程
     result = subprocess.run(
         ["git", "rev-list", "--count", f"HEAD..origin/{branch_name}"],
         ...
     )
-    
+
     behind_count = int(result.stdout.strip())
     if behind_count > 0:
         print(f"警告: 当前分支落后于远程 {branch_name} {behind_count} 个提交")
         print(f"建议执行: git pull origin {branch_name}")
         return False
-    
+
     return True
 ```
 
@@ -227,7 +229,7 @@ def cleanup_temp_files(self):
         "**/dist",
         "**/build"
     ]
-    
+
     cleaned_count = 0
     for pattern in temp_patterns:
         for temp_file in self.project_root.glob(pattern):
@@ -237,7 +239,7 @@ def cleanup_temp_files(self):
             elif temp_file.is_file():
                 temp_file.unlink()
                 cleaned_count += 1
-    
+
     if cleaned_count > 0:
         print(f"清理了 {cleaned_count} 个临时文件/目录")
 ```
@@ -252,15 +254,15 @@ sequenceDiagram
     participant Hook as .husky/post-checkout
     participant Python as post_checkout_handler.py
     participant System as 系统检查
-    
+
     Git->>Hook: 触发post-checkout钩子
     Hook->>Hook: 解析Git参数
     Hook->>Hook: 设置环境变量
     Hook->>Python: 调用Python处理器
-    
+
     Python->>Python: 初始化PostCheckoutHandler
     Python->>Python: 检查是否分支切换
-    
+
     alt 分支切换
         Python->>System: 检查依赖同步
         Python->>System: 检查环境配置
@@ -270,7 +272,7 @@ sequenceDiagram
     else 文件检出
         Python->>Python: 跳过检查
     end
-    
+
     Python->>Hook: 返回处理结果
     Hook->>Git: 完成钩子执行
 ```
@@ -328,11 +330,13 @@ fi
 **功能**: 确保开发环境与分支状态同步
 
 **检查项目**:
+
 - 前端依赖 (`node_modules`)
 - 后端虚拟环境 (`.venv`)
 - 环境配置文件 (`.env*`)
 
 **示例输出**:
+
 ```
 📦 检测到前端依赖缺失，建议运行: cd frontend && npm install
 🐍 检测到后端虚拟环境缺失，建议运行: cd backend && python -m venv .venv
@@ -343,11 +347,13 @@ fi
 **功能**: 验证分支状态和配置
 
 **检查项目**:
+
 - 分支是否与远程同步
 - 保护分支的工作区状态
 - 分支特定配置文件
 
 **示例输出**:
+
 ```
 📍 当前分支: feature/new-feature
 🛡️ 警告: 您正在保护分支上，请谨慎操作
@@ -360,12 +366,14 @@ fi
 **功能**: 自动清理临时文件和缓存
 
 **清理项目**:
+
 - Python缓存 (`__pycache__`, `*.pyc`)
 - Node.js缓存 (`node_modules/.cache`)
 - 测试缓存 (`.pytest_cache`, `coverage`)
 - 构建产物 (`dist`, `build`)
 
 **示例输出**:
+
 ```
 清理临时文件...
 清理了 15 个临时文件/目录
@@ -377,6 +385,7 @@ fi
 **功能**: 智能检测Docker开发环境
 
 **检测逻辑**:
+
 ```python
 docker_compose_exists = (self.project_root / "docker-compose.yml").exists()
 if docker_compose_exists:
@@ -388,18 +397,18 @@ if docker_compose_exists:
 
 ### 环境变量
 
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| `GIT_PARAMS` | Git传递的参数 | 自动设置 |
-| `PYTHONPATH` | Python路径 | 项目根目录 |
+| 变量名       | 说明          | 默认值     |
+| ------------ | ------------- | ---------- |
+| `GIT_PARAMS` | Git传递的参数 | 自动设置   |
+| `PYTHONPATH` | Python路径    | 项目根目录 |
 
 ### 配置文件
 
-| 文件名 | 说明 | 位置 |
-|--------|------|------|
+| 文件名                  | 说明         | 位置       |
+| ----------------------- | ------------ | ---------- |
 | `.config.{branch}.json` | 分支特定配置 | 项目根目录 |
-| `docker-compose.yml` | Docker配置 | 项目根目录 |
-| `.env*` | 环境变量文件 | 项目根目录 |
+| `docker-compose.yml`    | Docker配置   | 项目根目录 |
+| `.env*`                 | 环境变量文件 | 项目根目录 |
 
 ## 🚨 错误处理
 
@@ -408,6 +417,7 @@ if docker_compose_exists:
 **特点**: 不影响分支切换，仅显示警告
 
 **示例**:
+
 ```python
 if not self.check_dependencies():
     print("⚠️ 依赖检查发现问题，但不影响分支切换")
@@ -419,6 +429,7 @@ if not self.check_dependencies():
 **特点**: 可能导致钩子执行失败
 
 **示例**:
+
 ```python
 if result.returncode != 0:
     print("❌ 无法检查分支状态")

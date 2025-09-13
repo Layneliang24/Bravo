@@ -79,7 +79,9 @@ async function checkTestEnvironment() {
   }
 
   if (!process.env.TEST_BASE_URL) {
-    process.env.TEST_BASE_URL = process.env.DOCKER_ENV ? 'http://frontend:3000' : 'http://localhost:3001';
+    process.env.TEST_BASE_URL = process.env.DOCKER_ENV
+      ? 'http://frontend:3000'
+      : 'http://localhost:3001';
     console.log(`  ✓ 设置 TEST_BASE_URL=${process.env.TEST_BASE_URL}`);
   }
 }
@@ -143,15 +145,15 @@ async function waitForServices() {
   console.log('⏳ 等待服务启动...');
 
   const services = [
-    { 
-      name: '前端服务', 
-      url: process.env.DOCKER_ENV ? 'http://frontend:3000' : 'http://localhost:3001', 
-      timeout: 120000 
+    {
+      name: '前端服务',
+      url: process.env.DOCKER_ENV ? 'http://frontend:3000' : 'http://localhost:3001',
+      timeout: 120000,
     },
-    { 
-      name: '后端API', 
-      url: process.env.DOCKER_ENV ? 'http://backend:8000/health/' : 'http://localhost:8000/health/', 
-      timeout: 120000 
+    {
+      name: '后端API',
+      url: process.env.DOCKER_ENV ? 'http://backend:8000/health/' : 'http://localhost:8000/health/',
+      timeout: 120000,
     },
   ];
 

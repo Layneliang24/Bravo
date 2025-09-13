@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
 
 echo "🚀 推送前检查开始..."
 
@@ -11,7 +10,7 @@ echo "📍 当前分支: $current_branch"
 if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
     echo "⚠️  正在推送到保护分支: $current_branch"
     echo "🔍 确保代码已通过审查和测试"
-    
+
     # 运行快速测试
     echo "🧪 运行快速测试检查..."
     if [ -f "test_all.sh" ]; then

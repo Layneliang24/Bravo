@@ -32,7 +32,9 @@ describe('Router', () => {
   })
 
   it('应该有BlogDetail路由', () => {
-    const blogDetailRoute = router.getRoutes().find(route => route.name === 'BlogDetail')
+    const blogDetailRoute = router
+      .getRoutes()
+      .find(route => route.name === 'BlogDetail')
     expect(blogDetailRoute).toBeDefined()
     expect(blogDetailRoute?.path).toBe('/blog/:id')
   })

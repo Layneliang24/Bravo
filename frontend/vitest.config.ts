@@ -47,13 +47,13 @@ export default defineConfig({
       include: ['src/**/*.{js,ts,vue}'],
       all: true,
       lines: 90,
-      functions: 70,  // 调整函数覆盖率阈值，因为Vue组件中有未使用的函数
+      functions: 70, // 调整函数覆盖率阈值，因为Vue组件中有未使用的函数
       branches: 90,
       statements: 90,
       // 基于实际覆盖率设置合理阈值
       watermarks: {
         lines: [80, 90],
-        functions: [60, 70],  // 函数覆盖率相对较低是正常的
+        functions: [60, 70], // 函数覆盖率相对较低是正常的
         branches: [80, 90],
         statements: [80, 90],
       },
