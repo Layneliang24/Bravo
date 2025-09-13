@@ -19,8 +19,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
 # 检测运行环境并设置相应的数据库配置
 if 'GITHUB_ACTIONS' in os.environ:
     # GitHub Actions CI环境
-    os.environ['DB_HOST'] = os.environ.get('DB_HOST', '127.0.0.1')
-    print("🔧 检测到GitHub Actions CI环境")
+    os.environ['DB_HOST'] = '127.0.0.1'
+    print("[CI] 检测到GitHub Actions CI环境，使用127.0.0.1")
 else:
     # Docker或本地环境
     os.environ['CI'] = 'true'
@@ -36,6 +36,9 @@ print("🧪 开始验证CI修复...")
 print(f"📍 当前工作目录: {os.getcwd()}")
 print(f"🔧 CI环境: {os.environ.get('CI')}")
 print(f"🗄️ 数据库主机: {os.environ.get('DB_HOST')}")
+print("[CI] 强制设置数据库配置，避免socket连接问题")
+print(f"[CI] 数据库配置: HOST={os.environ.get('DB_HOST')}, PORT={os.environ.get('DB_PORT')}, CI={os.environ.get('GITHUB_ACTIONS', 'false')}")
+print("[CI] 创建数据库表...")
 
 try:
     # 初始化Django

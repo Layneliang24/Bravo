@@ -304,11 +304,11 @@ jobs:
           "
           echo "✅ 测试数据库设置完成"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DB_NAME: bravo_test
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
-          DB_HOST: mysql
+          DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
@@ -319,11 +319,11 @@ jobs:
           python -m pytest tests/ -v --maxfail=0 --tb=short --junit-xml=test-results/backend-unit-results.xml --cov=. --cov-report=xml:coverage.xml --cov-report=html:htmlcov
           echo "✅ 后端测试完成"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DB_NAME: bravo_test
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
-          DB_HOST: mysql
+          DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
@@ -444,11 +444,11 @@ jobs:
           echo $! > backend.pid
           echo "✅ 后端服务器已启动"
         env:
-          DATABASE_URL: mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DB_NAME: bravo_test
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
-          DB_HOST: mysql
+          DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
