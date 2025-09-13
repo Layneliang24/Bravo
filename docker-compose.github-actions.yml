@@ -33,7 +33,7 @@ services:
       MYSQL_USER: bravo_user
       MYSQL_PASSWORD: bravo_password
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - mysql-test-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -58,7 +58,7 @@ services:
     image: redis:7-alpine
     container_name: bravo-redis-test
     ports:
-      - "6380:6379"
+      - "6381:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis-test-data:/data

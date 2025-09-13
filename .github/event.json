@@ -1,0 +1,18 @@
+{
+  "action": "opened",
+  "number": 1,
+  "pull_request": {
+    "head": {
+      "ref": "feature/infrastructure-enhancement",
+      "sha": "b0be7495ced286205934a316c4be8284ae872c4d"
+    },
+    "base": {
+      "ref": "dev",
+      "sha": "c32e1806d508ce97c3fadc09d90de7c65cd1512f"
+    }
+  },
+  "repository": {
+    "name": "Bravo",
+    "full_name": "Layneliang24/Bravo"
+  }
+}

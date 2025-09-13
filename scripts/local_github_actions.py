@@ -55,11 +55,28 @@ class LocalGitHubActions:
         """启动测试服务"""
         print("🚀 启动GitHub Actions仿真服务...")
 
-        cmd = ["docker-compose", "-f", self.docker_compose_file, "up", "-d"]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        cmd = [
+            "docker-compose",
+            "-f",
+            self.docker_compose_file,
+            "up",
+            "-d",
+            "--timeout",
+            "60",
+        ]
+        print(f"🔧 执行命令: {' '.join(cmd)}")
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            print("❌ Docker Compose启动超时（120秒）")
+            return False
 
         if result.returncode != 0:
-            print(f"❌ 启动服务失败: {result.stderr}")
+            print("❌ 启动服务失败:")
+            print(f"   返回码: {result.returncode}")
+            print(f"   错误输出: {result.stderr}")
+            print(f"   标准输出: {result.stdout}")
             return False
 
         print("✅ 服务启动成功")
@@ -129,14 +146,30 @@ class LocalGitHubActions:
         if result.returncode != 0:
             return False
 
+        # 安装系统依赖
+        print("🔧 安装系统依赖...")
+        system_deps_cmd = [
+            "docker",
+            "exec",
+            "bravo-backend-tester",
+            "sh",
+            "-c",
+            "apt-get update && apt-get install -y pkg-config "
+            "default-libmysqlclient-dev gcc",
+        ]
+        result = subprocess.run(system_deps_cmd)
+        if result.returncode != 0:
+            print("⚠️  系统依赖安装失败，尝试继续...")
+
         # 安装后端依赖
+        print("🐍 安装Python依赖...")
         backend_cmd = [
             "docker",
             "exec",
             "bravo-backend-tester",
             "sh",
             "-c",
-            "cd /workspace/backend && pip install -r requirements.txt",
+            "cd /workspace/backend && pip install -r requirements/test.txt",
         ]
         result = subprocess.run(backend_cmd)
         if result.returncode != 0:
@@ -192,7 +225,7 @@ class LocalGitHubActions:
             "bravo-backend-tester",
             "sh",
             "-c",
-            "cd /workspace/backend && pytest --maxfail=0 --cov=. --cov-report=xml",
+            "cd /workspace/backend && pytest --maxfail=0 " "--cov=. --cov-report=xml",
         ]
         result = subprocess.run(test_cmd)
         return result.returncode == 0
@@ -210,7 +243,8 @@ class LocalGitHubActions:
             "sh",
             "-c",
             "cd /workspace/backend && "
-            "python manage.py runserver 0.0.0.0:8000 --settings=bravo.settings.test",
+            "python manage.py runserver 0.0.0.0:8000 "
+            "--settings=bravo.settings.test",
         ]
         subprocess.run(backend_start)
 
@@ -222,7 +256,8 @@ class LocalGitHubActions:
             "bravo-frontend-builder",
             "sh",
             "-c",
-            "cd /workspace/frontend && npm run preview -- --port 3001 --host 0.0.0.0",
+            "cd /workspace/frontend && npm run preview -- "
+            "--port 3001 --host 0.0.0.0",
         ]
         subprocess.run(frontend_start)
 
@@ -252,7 +287,7 @@ class LocalGitHubActions:
             "bravo-backend-tester",
             "sh",
             "-c",
-            "cd /workspace && pip install bandit && bandit -r backend/apps/ -f json",
+            "cd /workspace && pip install bandit && " "bandit -r backend/apps/ -f json",
         ]
         result = subprocess.run(bandit_cmd)
         return result.returncode == 0
@@ -268,7 +303,7 @@ class LocalGitHubActions:
             "bravo-github-actions-runner",
             "sh",
             "-c",
-            "cd /workspace && pip install pre-commit && pre-commit run --all-files",
+            "cd /workspace && pip install pre-commit && " "pre-commit run --all-files",
         ]
         result = subprocess.run(precommit_cmd)
         return result.returncode == 0
