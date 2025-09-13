@@ -1,0 +1,136 @@
+version: "3.8"
+
+# GitHub Actions 本地仿真环境
+# 使用act工具运行GitHub Actions在本地容器中
+
+services:
+  # GitHub Actions Runner 仿真
+  github-actions-runner:
+    image: ghcr.io/catthehacker/ubuntu:act-latest
+    container_name: bravo-github-actions-runner
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - github-actions-cache:/tmp/cache
+    working_dir: /workspace
+    environment:
+      - RUNNER_WORKSPACE=/workspace
+      - GITHUB_WORKSPACE=/workspace
+      - GITHUB_REPOSITORY=Layneliang24/Bravo
+      - GITHUB_SHA=${GITHUB_SHA:-$(git rev-parse HEAD)}
+      - GITHUB_REF=${GITHUB_REF:-refs/heads/dev}
+      - GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-pull_request}
+      - GITHUB_EVENT_PATH=/workspace/.github/event.json
+    command: tail -f /dev/null
+
+  # MySQL 测试数据库
+  mysql-test:
+    image: mysql:8.0
+    container_name: bravo-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bravo_test
+      MYSQL_USER: bravo_user
+      MYSQL_PASSWORD: bravo_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-test-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-proot_password",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 测试实例
+  redis-test:
+    image: redis:7-alpine
+    container_name: bravo-redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-test-data:/data
+
+  # 前端构建环境
+  frontend-builder:
+    image: node:20-alpine
+    container_name: bravo-frontend-builder
+    working_dir: /workspace/frontend
+    volumes:
+      - .:/workspace
+      - frontend-node-modules:/workspace/frontend/node_modules
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: tail -f /dev/null
+
+  # 后端测试环境
+  backend-tester:
+    image: python:3.11-slim
+    container_name: bravo-backend-tester
+    working_dir: /workspace/backend
+    volumes:
+      - .:/workspace
+      - backend-pip-cache:/root/.cache/pip
+    environment:
+      - PYTHONPATH=/workspace/backend
+      - DJANGO_SETTINGS_MODULE=bravo.settings.test
+      - DB_HOST=mysql-test
+      - DB_PORT=3306
+      - DB_USER=bravo_user
+      - DB_PASSWORD=bravo_password
+      - DB_NAME=bravo_test
+      - REDIS_URL=redis://redis-test:6379
+    depends_on:
+      - mysql-test
+      - redis-test
+    command: tail -f /dev/null
+
+  # E2E 测试环境
+  e2e-tester:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    container_name: bravo-e2e-tester
+    working_dir: /workspace/e2e
+    volumes:
+      - .:/workspace
+      - e2e-node-modules:/workspace/e2e/node_modules
+    environment:
+      - TEST_BASE_URL=http://frontend-builder:3001
+      - API_URL=http://backend-tester:8000
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    depends_on:
+      - frontend-builder
+      - backend-tester
+      - mysql-test
+    command: tail -f /dev/null
+
+volumes:
+  github-actions-cache:
+    name: bravo-github-actions-cache
+  mysql-test-data:
+    name: bravo-mysql-test-data
+  redis-test-data:
+    name: bravo-redis-test-data
+  frontend-node-modules:
+    name: bravo-frontend-node-modules
+  backend-pip-cache:
+    name: bravo-backend-pip-cache
+  e2e-node-modules:
+    name: bravo-e2e-node-modules
+
+networks:
+  default:
+    name: bravo-github-actions-network
