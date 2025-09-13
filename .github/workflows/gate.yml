@@ -164,13 +164,23 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore Frontend Dependencies
+        id: frontend-cache-restore
         uses: actions/cache@v3
         with:
           path: |
             frontend/node_modules
             ~/.npm
           key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            frontend-deps-${{ runner.os }}-
+
+      - name: Install Frontend Dependencies (fallback)
+        if: steps.frontend-cache-restore.outputs.cache-hit != 'true'
+        working-directory: ./frontend
+        run: |
+          echo "📦 安装前端依赖 (缓存未命中，执行fallback安装)..."
+          npm ci --prefer-offline --no-audit
+          echo "✅ 前端依赖安装完成"
 
       - name: Run Frontend Tests
         working-directory: ./frontend
@@ -216,13 +226,35 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Restore Backend Dependencies
+        id: backend-cache-restore
         uses: actions/cache@v3
         with:
           path: |
             ~/.cache/pip
             backend/.venv
           key: backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/test.txt') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            backend-deps-${{ runner.os }}-
+
+      - name: Install Backend Dependencies (fallback)
+        if: steps.backend-cache-restore.outputs.cache-hit != 'true'
+        working-directory: ./backend
+        run: |
+          echo "🐍 安装后端依赖 (缓存未命中，执行fallback安装)..."
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/test.txt
+          echo "✅ 后端依赖安装完成"
+
+      - name: Create Backend Logs Directory
+        working-directory: ./backend
+        run: |
+          echo "📁 创建logs目录..."
+          mkdir -p logs
+          chmod 755 logs
+          echo "✅ logs目录创建完成"
 
       - name: Run Backend Tests
         working-directory: ./backend
