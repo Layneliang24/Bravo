@@ -76,19 +76,18 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            frontend/node_modules
+            node_modules
             ~/.npm
-          key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: frontend-deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             frontend-deps-${{ runner.os }}-
 
       - name: Install Frontend Dependencies (if cache miss)
         if: steps.frontend-cache.outputs.cache-hit != 'true'
-        working-directory: ./frontend
         run: |
-          echo "📦 安装前端依赖 (缓存未命中)..."
+          echo "📦 安装依赖 (缓存未命中)..."
           npm ci --prefer-offline --no-audit
-          echo "✅ 前端依赖安装完成"
+          echo "✅ 依赖安装完成"
 
       # 智能E2E依赖缓存
       - name: Cache E2E Dependencies
@@ -168,25 +167,23 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            frontend/node_modules
+            node_modules
             ~/.npm
-          key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: frontend-deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             frontend-deps-${{ runner.os }}-
 
       - name: Install Frontend Dependencies (fallback)
         if: steps.frontend-cache-restore.outputs.cache-hit != 'true'
-        working-directory: ./frontend
         run: |
-          echo "📦 安装前端依赖 (缓存未命中，执行fallback安装)..."
+          echo "📦 安装依赖 (缓存未命中，执行fallback安装)..."
           npm ci --prefer-offline --no-audit
-          echo "✅ 前端依赖安装完成"
+          echo "✅ 依赖安装完成"
 
       - name: Run Frontend Tests
-        working-directory: ./frontend
         run: |
           echo "🧪 运行前端测试..."
-          npm run test:coverage
+          npm run test:coverage --workspace=frontend
           echo "✅ 前端测试完成"
 
       - name: Upload Frontend Coverage
