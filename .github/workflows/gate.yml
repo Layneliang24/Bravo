@@ -1,4 +1,4 @@
-name: 🚀 Gate - Comprehensive Test Suite (Optimized)
+name: 🚀 Main Test Suite - Unified Pipeline
 
 # 优化触发条件，避免与branch-protection重复
 "on":

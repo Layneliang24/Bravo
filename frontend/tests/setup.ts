@@ -87,7 +87,7 @@ afterEach(() => {
 })
 
 // Global test utilities
-export const createMockRouter = () => ({
+export const createMockRouter = (): any => ({
   push: vi.fn(),
   replace: vi.fn(),
   go: vi.fn(),
@@ -104,7 +104,7 @@ export const createMockRouter = () => ({
   },
 })
 
-export const createMockStore = () => ({
+export const createMockStore = (): any => ({
   state: {},
   getters: {},
   commit: vi.fn(),
@@ -112,10 +112,11 @@ export const createMockStore = () => ({
 })
 
 // Helper function to wait for next tick
-export const nextTick = () => new Promise(resolve => setTimeout(resolve, 0))
+export const nextTick = (): Promise<void> =>
+  new Promise(resolve => setTimeout(resolve, 0))
 
 // Helper function to create a wrapper with common setup
-export const createWrapper = (component: any, options: any = {}) => {
+export const createWrapper = (component: any, options: any = {}): any => {
   return mount(component, {
     global: {
       plugins: [],

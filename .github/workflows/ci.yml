@@ -1,4 +1,4 @@
-name: CI Pipeline (Legacy - Consider Deprecation)
+name: 🚨 DEPRECATED - CI Pipeline (Use gate.yml instead)
 
 on:
   push:
@@ -207,7 +207,7 @@ jobs:
           npm run test
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

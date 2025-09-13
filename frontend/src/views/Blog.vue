@@ -189,21 +189,21 @@ const editForm = reactive({
 })
 
 const searchBlog = () => {
-  console.log('搜索博客:', searchKeyword.value)
+  // console.log('搜索博客:', searchKeyword.value)
 }
 
 const filterByCategory = () => {
-  console.log('按分类筛选:', selectedCategory.value)
+  // console.log('按分类筛选:', selectedCategory.value)
 }
 
 const createPost = () => {
-  console.log('创建新博客')
+  // console.log('创建新博客')
   showEditForm.value = true
   showActions.value = true  // 同时显示操作按钮，用于测试
 }
 
 const publishPost = () => {
-  console.log('发布博客:', editForm.title, editForm.content)
+  // console.log('发布博客:', editForm.title, editForm.content)
 
   // 创建新博客
   const newPost = {
@@ -223,7 +223,7 @@ const publishPost = () => {
     existingPosts.push(newPost)
     localStorage.setItem('mockBlogPosts', JSON.stringify(existingPosts))
   } catch (error) {
-    console.warn('无法保存到 localStorage:', error)
+    // console.warn('无法保存到 localStorage:', error)
   }
 
   // 跳转到新创建的博客详情页
@@ -235,17 +235,17 @@ const publishPost = () => {
 }
 
 const editPost = () => {
-  console.log('编辑博客')
+  // console.log('编辑博客')
   showActions.value = true
 }
 
 const deletePost = () => {
-  console.log('删除博客')
+  // console.log('删除博客')
   showActions.value = false
 }
 
 const loadMore = () => {
-  console.log('加载更多博客')
+  // console.log('加载更多博客')
 }
 
 const goToBlogDetail = (postId: number) => {

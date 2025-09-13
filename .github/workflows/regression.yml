@@ -118,7 +118,7 @@ jobs:
           echo "✅ All regression tests passed!"
 
       - name: 📊 Upload regression test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: backend-regression-results
@@ -159,7 +159,7 @@ jobs:
           echo "✅ Frontend regression tests passed!"
 
       - name: 📊 Upload frontend regression results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: frontend-regression-results
@@ -247,7 +247,7 @@ jobs:
           echo "✅ E2E regression tests passed!"
 
       - name: 📊 Upload E2E regression results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: e2e-regression-results

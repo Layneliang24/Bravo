@@ -129,10 +129,10 @@ let foundPost = mockPosts.find(p => p.id === postId)
 
 if (!foundPost) {
   try {
-    const storedPosts = JSON.parse(localStorage.getItem('mockBlogPosts') || '[]')
-    foundPost = storedPosts.find((p: any) => p.id === postId)
+    const storedPosts = JSON.parse(localStorage.getItem('mockBlogPosts') || '[]') as BlogPost[]
+    foundPost = storedPosts.find((p: BlogPost) => p.id === postId)
   } catch (error) {
-    console.warn('无法从 localStorage 读取博客:', error)
+    // console.warn('无法从 localStorage 读取博客:', error)
   }
 }
 
@@ -155,21 +155,21 @@ const formatDate = (dateString: string) => {
 }
 
 const editPost = () => {
-  console.log('编辑博客')
+  // console.log('编辑博客')
   showEditForm.value = true
   editForm.title = post.value.title
   editForm.content = post.value.content
 }
 
 const publishPost = () => {
-  console.log('发布博客:', editForm.title, editForm.content)
+  // console.log('发布博客:', editForm.title, editForm.content)
   post.value.title = editForm.title
   post.value.content = editForm.content
   showEditForm.value = false
 }
 
 const deletePost = () => {
-  console.log('删除博客')
+  // console.log('删除博客')
   if (confirm('确定要删除这篇博客吗？')) {
     router.push('/blog')
   }
