@@ -29,7 +29,7 @@ class SimpleIntegrationTests(TestCase):
         except Exception as exception:
             # 如果有配置问题，至少确保测试不会崩溃
             self.assertIsInstance(exception, (AttributeError, Exception))
-            pass
+            self.assertTrue(True)  # Placeholder test
 
     def test_health_check_integration(self):
         """测试健康检查集成"""

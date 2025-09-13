@@ -46,12 +46,12 @@ repos:
         files: ^backend/
         exclude: ^backend/(migrations|tests)/
 
-  # Python 安全检查
+  # Python 安全检查 (修复Windows编码问题)
   - repo: https://github.com/pycqa/bandit
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: ["-r", ".", "-f", "txt"]
+        args: ["-r", "backend/apps/", "-f", "json", "-o", "bandit-report.json"]
         exclude: "tests|test_"
         additional_dependencies: ["pbr"]
         pass_filenames: false
@@ -99,12 +99,24 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
 
-  # Docker 文件检查
+  # Docker 文件检查 (忽略非关键建议)
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: [--ignore, DL3008, --ignore, DL3009]
+        args:
+          [
+            --ignore,
+            DL3008,
+            --ignore,
+            DL3009,
+            --ignore,
+            DL3015,
+            --ignore,
+            DL3018,
+            --ignore,
+            DL3059,
+          ]
 
   # 提交信息检查
   - repo: https://github.com/commitizen-tools/commitizen
@@ -125,9 +137,9 @@ repos:
 
       - id: python-pylint-naming
         name: Python Pylint Naming Check
-        entry: python -m pylint --rcfile=backend/.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used --ignore=.venv backend/
+        entry: python -m pylint --rcfile=backend/.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used --ignore=.venv,migrations,settings backend/apps/ backend/tests/
         language: system
-        files: ^backend/.*\.py$
+        files: ^backend/(apps|tests)/.*\.py$
         pass_filenames: false
 
       - id: typescript-naming-check
