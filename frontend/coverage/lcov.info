@@ -1,5 +1,5 @@
 TN:
-SF:src/router/index.ts
+SF:src\router\index.ts
 FN:10,component
 FN:15,component
 FN:20,component
@@ -50,7 +50,7 @@ BRF:4
 BRH:4
 end_of_record
 TN:
-SF:src/views/Blog.vue
+SF:src\views\Blog.vue
 FNF:0
 FNH:0
 DA:1,1
@@ -453,7 +453,7 @@ BRF:0
 BRH:0
 end_of_record
 TN:
-SF:src/views/BlogDetail.vue
+SF:src\views\BlogDetail.vue
 FNF:0
 FNH:0
 DA:1,1
@@ -768,7 +768,7 @@ BRF:0
 BRH:0
 end_of_record
 TN:
-SF:src/views/Home.vue
+SF:src\views\Home.vue
 FNF:0
 FNH:0
 DA:1,1
@@ -798,7 +798,7 @@ BRF:0
 BRH:0
 end_of_record
 TN:
-SF:src/views/Login.vue
+SF:src\views\Login.vue
 FN:46,handleLogin
 FN:8,__vite_ssr_import_3__.createVNode.onUpdate:modelValue._cache.<computed>._cache.<computed>
 FN:15,__vite_ssr_import_3__.createVNode.onUpdate:modelValue._cache.<computed>._cache.<computed>

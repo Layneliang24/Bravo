@@ -27,6 +27,9 @@ locust==2.17.0
 bandit==1.7.5
 safety>=3.0.0
 
+# 开发调试工具
+django-debug-toolbar==4.2.0
+
 # 代码质量
 pylint==3.0.3
 black>=22.0.0,<24.0.0
