@@ -142,6 +142,14 @@ repos:
         files: ^backend/(apps|tests)/.*\.py$
         pass_filenames: false
 
+      - id: typescript-syntax-check
+        name: TypeScript Syntax Check
+        entry: bash -c 'echo "🔍 检查E2E TypeScript..." && cd e2e && npm run type-check && echo "✅ E2E TypeScript语法检查通过"'
+        language: system
+        files: \.(ts|tsx|vue|json)$
+        exclude: node_modules
+        pass_filenames: false
+
       - id: typescript-naming-check
         name: TypeScript Naming Convention Check
         entry: bash -c 'cd frontend && npx eslint'
