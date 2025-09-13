@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-09-12T18:26:58.235Z",
+  "timestamp": "2025-09-12T18:36:33.215Z",
   "total": 0,
   "passed": 0,
   "failed": 0,
   "skipped": 225,
-  "duration": 86413.146,
+  "duration": 97139.476,
   "environment": {
     "nodeVersion": "v18.20.8",
     "platform": "linux",

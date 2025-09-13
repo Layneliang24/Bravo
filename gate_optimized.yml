@@ -2,7 +2,7 @@
 name: 🚀 Gate - Comprehensive Test Suite (Optimized)
 
 # 优化触发条件，避免与branch-protection重复
-'on':
+on:
   push:
     branches: [main, dev]
   pull_request:
@@ -11,11 +11,6 @@ name: 🚀 Gate - Comprehensive Test Suite (Optimized)
     secrets:
       CODECOV_TOKEN:
         required: false
-
-# 并发控制，避免重复运行
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 env:
   # 全局环境变量
@@ -43,12 +38,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: bravo_test
-          MYSQL_USER: bravo_user
-          MYSQL_PASSWORD: bravo_password
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
         options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -142,10 +137,10 @@ jobs:
       - name: Configure MySQL
         run: |
           echo "🔧 配置MySQL..."
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
-            CREATE DATABASE IF NOT EXISTS bravo_test;
-            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
-            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+          mysql -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} -e "
+            CREATE DATABASE IF NOT EXISTS ${{ env.MYSQL_DATABASE }};
+            CREATE USER IF NOT EXISTS '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}';
+            GRANT ALL PRIVILEGES ON ${{ env.MYSQL_DATABASE }}.* TO '${{ env.MYSQL_USER }}'@'%';
             FLUSH PRIVILEGES;
           "
           echo "✅ MySQL配置完成"
@@ -202,12 +197,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: bravo_test
-          MYSQL_USER: bravo_user
-          MYSQL_PASSWORD: bravo_password
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
         options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -259,12 +254,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: bravo_test
-          MYSQL_USER: bravo_user
-          MYSQL_PASSWORD: bravo_password
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
         options: >
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p${{ env.MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
