@@ -65,7 +65,7 @@ jobs:
             echo "MySQL not ready, waiting... (attempt $i/30)"
             sleep 2
           done
-          
+
           echo "🔐 Granting database privileges to bravo_user..."
           # Grant necessary privileges for Django testing (requires full DB management)
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
@@ -108,7 +108,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Configure China Mirrors
@@ -186,7 +186,7 @@ jobs:
             sleep 2
           done
           echo "✅ MySQL服务已启动"
-          
+
           echo "🔧 配置数据库权限..."
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "GRANT ALL PRIVILEGES ON test_%.* TO 'bravo_user'@'%';"
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';"

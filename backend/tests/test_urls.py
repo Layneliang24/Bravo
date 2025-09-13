@@ -17,7 +17,7 @@ def api_root(request):
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('health/', health_check),
-    path('api/', api_root),
+    path("admin/", admin.site.urls),
+    path("health/", health_check),
+    path("api/", api_root),
 ]

@@ -33,10 +33,7 @@
           "outputFile": "test-results.xml"
         }
       ],
-      [
-        "line",
-        null
-      ]
+      ["line", null]
     ],
     "reportSlowTests": {
       "max": 5,
@@ -55,9 +52,7 @@
         "name": "chromium",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 0
       }
     ],

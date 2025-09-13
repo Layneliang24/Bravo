@@ -1,7 +1,7 @@
-name: 'Configure China Mirrors'
-description: '配置国内镜像源加速，包括npm、pip、apt、Docker等'
+name: "Configure China Mirrors"
+description: "配置国内镜像源加速，包括npm、pip、apt、Docker等"
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Configure npm China Mirrors and Performance
       shell: bash

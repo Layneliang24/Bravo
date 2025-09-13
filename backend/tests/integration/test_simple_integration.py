@@ -2,8 +2,9 @@
 """简单的集成测试"""
 
 import pytest
-from django.test import TestCase, Client
+
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
 
 User = get_user_model()
 
@@ -16,9 +17,7 @@ class SimpleIntegrationTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="testpass123"
+            username="testuser", email="test@example.com", password="testpass123"
         )
 
     def test_user_login_flow(self):

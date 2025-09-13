@@ -10,14 +10,16 @@
 """
 
 import os
-import django
+
 import pytest
+
+import django
 from django.conf import settings
 
 # 配置 Django 设置用于测试
 if not settings.configured:
     # 使用pytest.ini中配置的测试设置
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bravo.settings.test')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bravo.settings.test")
     django.setup()
 
 from django.contrib.auth import get_user_model

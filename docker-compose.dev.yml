@@ -1,7 +1,7 @@
 # Bravo 开发环境 Docker Compose 配置
 # 优化版本 - 支持热重载、调试、性能监控
 
-version: '3.8'
+version: "3.8"
 
 services:
   # MySQL 数据库服务
@@ -28,7 +28,17 @@ services:
       --max-connections=100
       - --log-bin-trust-function-creators=1
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-prootpassword",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -75,7 +85,7 @@ services:
       - WATCHFILES_FORCE_POLLING=1
     ports:
       - "8000:8000"
-      - "5678:5678"  # Python debugger
+      - "5678:5678" # Python debugger
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs
@@ -179,8 +189,8 @@ services:
       - WATCHPACK_POLLING=true
     ports:
       - "3000:3000"
-      - "3001:3001"  # Preview server
-      - "24678:24678"  # Vite HMR
+      - "3001:3001" # Preview server
+      - "24678:24678" # Vite HMR
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
@@ -229,12 +239,12 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=7d'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
     networks:
       - bravo-network
     restart: unless-stopped
@@ -293,8 +303,8 @@ services:
     image: mailhog/mailhog:latest
     container_name: bravo-mailhog-dev
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
     networks:
       - bravo-network
     restart: unless-stopped

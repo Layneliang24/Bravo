@@ -145,8 +145,8 @@ sudo systemctl restart docker
 - name: Setup Node.js
   uses: actions/setup-node@v4
   with:
-    node-version: '20'
-    cache: 'npm'
+    node-version: "20"
+    cache: "npm"
     cache-dependency-path: |
       frontend/package-lock.json
       e2e/package-lock.json
@@ -154,8 +154,8 @@ sudo systemctl restart docker
 - name: Setup Python
   uses: actions/setup-python@v4
   with:
-    python-version: '3.11'
-    cache: 'pip'
+    python-version: "3.11"
+    cache: "pip"
     cache-dependency-path: backend/requirements/test.txt
 ```
 
@@ -188,7 +188,7 @@ jobs:
       matrix:
         node-version: [20.x]
         python-version: [3.11]
-      max-parallel: 1  # 避免资源竞争
+      max-parallel: 1 # 避免资源竞争
 ```
 
 ## 🔧 故障排除
@@ -231,12 +231,14 @@ sudo apt-get update
 ## 📊 性能对比
 
 ### 优化前（海外源）
+
 - npm install: ~3-5分钟
 - pip install: ~2-4分钟
 - apt update: ~1-2分钟
 - **总计**: ~6-11分钟
 
 ### 优化后（国内源）
+
 - npm install: ~30-60秒
 - pip install: ~20-40秒
 - apt update: ~10-20秒

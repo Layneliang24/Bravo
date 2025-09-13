@@ -17,7 +17,7 @@ jobs:
   setup-dependencies:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -33,7 +33,7 @@ jobs:
           --health-retries=10
         ports:
           - 3306:3306
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -208,7 +208,7 @@ jobs:
     needs: setup-dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -288,10 +288,10 @@ jobs:
           from django.contrib.sessions.models import Session
           from django.contrib.admin.models import LogEntry
           from apps.users.models import User
-          
+
           print('📋 创建数据库表...')
           models_to_create = [ContentType, Group, Permission, User, Session, LogEntry]
-          
+
           with connection.schema_editor() as schema_editor:
               for model in models_to_create:
                   if not model._meta.db_table in connection.introspection.table_names():
@@ -299,7 +299,7 @@ jobs:
                       print(f'✅ Created table: {model._meta.db_table}')
                   else:
                       print(f'⏭️  Table already exists: {model._meta.db_table}')
-          
+
           print('✅ 数据库表创建完成')
           "
           echo "✅ 测试数据库设置完成"
@@ -538,13 +538,13 @@ jobs:
         run: |
           echo "⚡ 运行Lighthouse性能测试..."
           npm install -g @lhci/cli
-          
+
           # 启动前端服务器
           cd frontend/dist
           python3 -m http.server 3001 &
           FRONTEND_PID=$!
           cd ../..
-          
+
           # 等待服务器启动
           echo "等待服务器启动..."
           for i in {1..30}; do
@@ -556,7 +556,7 @@ jobs:
             echo "等待服务器启动... (attempt $i/30)"
             sleep 2
           done
-          
+
           # 运行Lighthouse CI
           if lhci autorun --config=lighthouserc.json; then
             echo "✅ Lighthouse CI 成功完成"
@@ -564,7 +564,7 @@ jobs:
             echo "⚠️ Lighthouse CI 失败，尝试备用方法..."
             lhci autorun --config=lighthouserc-simple.json || echo "❌ 简单配置失败"
           fi
-          
+
           # 清理进程
           kill $FRONTEND_PID 2>/dev/null || true
           echo "✅ 性能测试完成"
@@ -599,7 +599,7 @@ jobs:
       - name: Generate Test Summary
         run: |
           echo "📊 生成测试汇总报告..."
-          
+
           echo "## 🚀 Gate Pipeline 测试汇总" > test-summary.md
           echo "" >> test-summary.md
           echo "### 📈 Jobs 执行状态" >> test-summary.md
@@ -608,16 +608,16 @@ jobs:
           echo "- E2E测试: ${{ needs.e2e-tests.result }}" >> test-summary.md
           echo "- 性能测试: ${{ needs.performance-tests.result }}" >> test-summary.md
           echo "" >> test-summary.md
-          
+
           # 检查覆盖率文件
           if [ -f "all-test-results/frontend-test-results/coverage-frontend.lcov" ]; then
             echo "✅ 前端覆盖率报告已生成"
           fi
-          
+
           if [ -f "all-test-results/backend-test-results/coverage-backend.xml" ]; then
             echo "✅ 后端覆盖率报告已生成"
           fi
-          
+
           echo "✅ 测试汇总报告生成完成"
 
       - name: Upload Coverage to Codecov
@@ -643,17 +643,17 @@ jobs:
       - name: Check Overall Status
         run: |
           echo "🎯 检查整体测试状态..."
-          
+
           FRONTEND_STATUS="${{ needs.frontend-tests.result }}"
           BACKEND_STATUS="${{ needs.backend-tests.result }}"
           E2E_STATUS="${{ needs.e2e-tests.result }}"
           PERFORMANCE_STATUS="${{ needs.performance-tests.result }}"
-          
+
           echo "前端测试: $FRONTEND_STATUS"
-          echo "后端测试: $BACKEND_STATUS" 
+          echo "后端测试: $BACKEND_STATUS"
           echo "E2E测试: $E2E_STATUS"
           echo "性能测试: $PERFORMANCE_STATUS"
-          
+
           if [[ "$FRONTEND_STATUS" == "success" && "$BACKEND_STATUS" == "success" && "$E2E_STATUS" == "success" ]]; then
             echo "🎉 所有核心测试通过！Gate检查成功！"
             exit 0

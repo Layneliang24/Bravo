@@ -100,7 +100,7 @@ class BlogPage {
       console.log(`Dialog message: ${dialog.message()}`);
       dialog.accept();
     });
-    
+
     await this.page.click(this.selectors.deleteButton);
     await this.page.waitForLoadState('networkidle');
   }
@@ -158,9 +158,11 @@ test.describe('博客功能测试', () => {
 
       // 验证跳转到详情页 (包含博客ID)
       expect(blogPage.getPage().url()).toMatch(/\/blog\/\d+$/);
-      
+
       // 验证详情页标题存在
-      const detailTitle = await blogPage.getPage().textContent(blogPage['selectors'].blogDetailTitle);
+      const detailTitle = await blogPage
+        .getPage()
+        .textContent(blogPage['selectors'].blogDetailTitle);
       expect(detailTitle).toBeTruthy();
     }
   });
@@ -179,7 +181,7 @@ test.describe('博客功能测试', () => {
 
     // 验证博客创建成功并跳转到详情页
     expect(page.url()).toMatch(/\/blog\/\d+$/);
-    
+
     // 验证新创建的博客标题
     const detailTitle = await page.textContent(blogPage['selectors'].blogDetailTitle);
     expect(detailTitle).toContain(testTitle);

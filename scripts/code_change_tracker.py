@@ -312,39 +312,44 @@ class CodeChangeTracker:
 def main():
     """主函数"""
     import argparse
-    
-    parser = argparse.ArgumentParser(description='代码变更追踪工具')
-    parser.add_argument('--validate-commit', action='store_true', help='验证提交前的代码质量')
-    parser.add_argument('--commit', action='store_true', help='提交时记录变更')
-    
+
+    parser = argparse.ArgumentParser(description="代码变更追踪工具")
+    parser.add_argument("--validate-commit", action="store_true", help="验证提交前的代码质量")
+    parser.add_argument("--commit", action="store_true", help="提交时记录变更")
+
     args = parser.parse_args()
-    
+
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     tracker = CodeChangeTracker(project_root)
-    
+
     if args.validate_commit:
         # 提交前验证
         print("[INFO] 执行提交前代码质量验证...")
-        
+
         # 检查暂存文件
         import subprocess
+
         try:
-            result = subprocess.run(['git', 'diff', '--cached', '--name-only'], 
-                                   capture_output=True, text=True, check=True)
-            staged_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
-            
+            result = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            staged_files = [f.strip() for f in result.stdout.split("\n") if f.strip()]
+
             if not staged_files:
                 print("[INFO] 没有暂存文件，跳过验证")
                 return 0
-            
+
             print(f"[INFO] 检查 {len(staged_files)} 个暂存文件...")
-            
+
             # 执行扫描
             current_data = tracker.scan_temporary_changes()
-            
-            issues_count = current_data['summary']['total_issues']
-            risk_level = current_data['summary']['risk_assessment']
-            
+
+            issues_count = current_data["summary"]["total_issues"]
+            risk_level = current_data["summary"]["risk_assessment"]
+
             if risk_level == "HIGH":
                 print(f"\n[ERROR] 发现 {issues_count} 个高风险问题")
                 print("[ERROR] 严格模式: 请修复高风险问题后重新提交")
@@ -352,7 +357,7 @@ def main():
             else:
                 print(f"[SUCCESS] 代码质量验证通过 (发现{issues_count}个低风险问题，可接受)")
                 return 0
-                
+
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Git命令执行失败: {e}")
             return 1

@@ -1,8 +1,7 @@
-
 name: 🚀 Gate - Comprehensive Test Suite (Optimized)
 
 # 优化触发条件，避免与branch-protection重复
-'on':
+"on":
   push:
     branches: [main, dev]
   pull_request:
@@ -33,12 +32,12 @@ jobs:
   smart-dependencies:
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    
+
     outputs:
       frontend-cache-hit: ${{ steps.frontend-cache.outputs.cache-hit }}
       backend-cache-hit: ${{ steps.backend-cache.outputs.cache-hit }}
       e2e-cache-hit: ${{ steps.e2e-cache.outputs.cache-hit }}
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -50,7 +49,7 @@ jobs:
         options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
         ports:
           - 3306:3306
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -200,7 +199,7 @@ jobs:
     needs: smart-dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -276,7 +275,7 @@ jobs:
     needs: smart-dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    
+
     services:
       mysql:
         image: mysql:8.0

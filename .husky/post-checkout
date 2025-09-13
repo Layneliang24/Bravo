@@ -26,21 +26,21 @@ fi
 # 分支切换后的额外处理
 if [ "$branch_checkout" = "1" ]; then
     echo "🌿 分支切换完成，执行额外处理..."
-    
+
     # 检查是否需要安装依赖
     if [ -f "frontend/package.json" ] && [ ! -d "frontend/node_modules" ]; then
         echo "📦 检测到前端依赖缺失，建议运行: cd frontend && npm install"
     fi
-    
+
     # 检查是否需要创建虚拟环境
     if [ -f "backend/requirements.txt" ] && [ ! -d "backend/.venv" ]; then
         echo "🐍 检测到后端虚拟环境缺失，建议运行: cd backend && python -m venv .venv"
     fi
-    
+
     # 显示当前分支信息
     current_branch=$(git rev-parse --abbrev-ref HEAD)
     echo "📍 当前分支: $current_branch"
-    
+
     # 如果是保护分支，显示警告
     if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
         echo "🛡️  警告: 您正在保护分支上，请谨慎操作"

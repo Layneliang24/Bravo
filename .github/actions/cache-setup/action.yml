@@ -1,27 +1,27 @@
-name: 'Setup Optimized Cache'
-description: 'Unified caching strategy for Bravo project'
+name: "Setup Optimized Cache"
+description: "Unified caching strategy for Bravo project"
 inputs:
   cache-type:
-    description: 'Type of cache to setup (frontend|backend|e2e|full)'
+    description: "Type of cache to setup (frontend|backend|e2e|full)"
     required: true
   cache-key-suffix:
-    description: 'Additional suffix for cache key uniqueness'
+    description: "Additional suffix for cache key uniqueness"
     required: false
-    default: ''
+    default: ""
 
 outputs:
   frontend-cache-hit:
-    description: 'Frontend cache hit status'
+    description: "Frontend cache hit status"
     value: ${{ steps.frontend-cache.outputs.cache-hit }}
   backend-cache-hit:
-    description: 'Backend cache hit status' 
+    description: "Backend cache hit status"
     value: ${{ steps.backend-cache.outputs.cache-hit }}
   e2e-cache-hit:
-    description: 'E2E cache hit status'
+    description: "E2E cache hit status"
     value: ${{ steps.e2e-cache.outputs.cache-hit }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     # Frontend caching
     - name: Cache Frontend Dependencies
@@ -53,7 +53,7 @@ runs:
           backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-
           backend-deps-${{ runner.os }}-
 
-    # E2E caching  
+    # E2E caching
     - name: Cache E2E Dependencies
       if: inputs.cache-type == 'e2e' || inputs.cache-type == 'full'
       id: e2e-cache

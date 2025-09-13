@@ -18,7 +18,7 @@ if command -v npm &> /dev/null; then
 
     # 配置国内源
     npm config set registry https://registry.npmmirror.com
-    
+
     # 设置各种工具镜像环境变量（替代废弃的npm config选项）
     export NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node
     export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
@@ -39,20 +39,20 @@ if command -v npm &> /dev/null; then
         echo "  期望: https://registry.npmmirror.com"
         echo "  实际: $CURRENT_REGISTRY"
     fi
-    
+
     # 验证环境变量设置
     if [[ "$NODEJS_ORG_MIRROR" == "https://npmmirror.com/mirrors/node" ]]; then
         echo "✅ Node.js镜像环境变量配置成功"
     else
         echo "❌ Node.js镜像环境变量配置失败"
     fi
-    
+
     if [[ "$ELECTRON_MIRROR" == "https://npmmirror.com/mirrors/electron/" ]]; then
         echo "✅ Electron镜像环境变量配置成功"
     else
         echo "❌ Electron镜像环境变量配置失败"
     fi
-    
+
     if [[ "$PUPPETEER_DOWNLOAD_HOST" == "https://npmmirror.com/mirrors" ]]; then
         echo "✅ Puppeteer镜像环境变量配置成功"
     else

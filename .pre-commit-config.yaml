@@ -125,7 +125,7 @@ repos:
 
       - id: python-pylint-naming
         name: Python Pylint Naming Check
-        entry: python -m pylint --rcfile=backend/.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used backend/
+        entry: python -m pylint --rcfile=backend/.pylintrc.naming --load-plugins=pylint.extensions.bad_builtin,pylint.extensions.check_elif,pylint.extensions.docparams,pylint.extensions.docstyle,pylint.extensions.empty_comment,pylint.extensions.mccabe,pylint.extensions.overlapping_exceptions,pylint.extensions.private_import,pylint.extensions.redefined_variable_type,pylint.extensions.typing,pylint.extensions.while_used --ignore=.venv backend/
         language: system
         files: ^backend/.*\.py$
         pass_filenames: false
@@ -180,7 +180,7 @@ repos:
 
       - id: security-scan
         name: Basic security scan
-        entry: python scripts/security/security_scanner.py --quick
+        entry: python scripts/security/security_scanner.py --project-root .
         language: system
         pass_filenames: false
         always_run: true

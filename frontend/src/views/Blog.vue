@@ -5,7 +5,7 @@
       <a href="/blog" aria-current="page" aria-label="当前页面：博客">博客</a>
       <a href="/login" aria-label="登录">登录</a>
     </nav>
-    
+
     <h1 data-testid="blog-title">博客</h1>
     <div data-testid="blog-list">
       <div
@@ -127,7 +127,7 @@ const router = useRouter()
 onMounted(() => {
   // 动态设置页面标题和 meta 标签
   document.title = '博客 - Bravo'
-  
+
   // 添加meta描述标签
   const metaDescription = document.querySelector('meta[name="description"]')
   if (!metaDescription) {
@@ -136,7 +136,7 @@ onMounted(() => {
     meta.setAttribute('content', 'Bravo 项目博客页面，分享技术文章和生活感悟')
     document.head.appendChild(meta)
   }
-  
+
   // 添加 Open Graph 标签
   const ogTitle = document.querySelector('meta[property="og:title"]')
   if (!ogTitle) {
@@ -145,7 +145,7 @@ onMounted(() => {
     meta.setAttribute('content', '博客 - Bravo')
     document.head.appendChild(meta)
   }
-  
+
   const ogDescription = document.querySelector('meta[property="og:description"]')
   if (!ogDescription) {
     const meta = document.createElement('meta')
@@ -204,7 +204,7 @@ const createPost = () => {
 
 const publishPost = () => {
   console.log('发布博客:', editForm.title, editForm.content)
-  
+
   // 创建新博客
   const newPost = {
     id: Date.now(), // 简单的ID生成
@@ -213,10 +213,10 @@ const publishPost = () => {
     category: '技术', // 默认分类
     createdAt: new Date().toISOString()
   }
-  
+
   // 添加到博客列表
   mockPosts.value.push(newPost)
-  
+
   // 保存到 localStorage 以便 BlogDetail 页面访问
   try {
     const existingPosts = JSON.parse(localStorage.getItem('mockBlogPosts') || '[]')
@@ -225,10 +225,10 @@ const publishPost = () => {
   } catch (error) {
     console.warn('无法保存到 localStorage:', error)
   }
-  
+
   // 跳转到新创建的博客详情页
   router.push(`/blog/${newPost.id}`)
-  
+
   showEditForm.value = false
   editForm.title = ''
   editForm.content = ''

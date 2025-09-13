@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../index.html">All files</a> / <a href="index.html">views</a> BlogDetail.vue</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>306/306</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/0</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/0</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>306/306</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -680,7 +680,7 @@
     &lt;nav class="breadcrumb" role="navigation" aria-label="面包屑导航"&gt;
       &lt;a href="/blog" aria-label="返回博客列表"&gt;← 返回博客列表&lt;/a&gt;
     &lt;/nav&gt;
-    
+
     &lt;article class="blog-post"&gt;
       &lt;header class="post-header"&gt;
         &lt;h1 data-testid="blog-detail-title"&gt;{{ post.title }}&lt;/h1&gt;
@@ -689,11 +689,11 @@
           &lt;span class="category" aria-label="分类"&gt;{{ post.category }}&lt;/span&gt;
         &lt;/div&gt;
       &lt;/header&gt;
-      
+
       &lt;div class="post-content" data-testid="blog-detail-content"&gt;
         &lt;p&gt;{{ post.content }}&lt;/p&gt;
       &lt;/div&gt;
-      
+
       &lt;footer class="post-footer"&gt;
         &lt;div class="post-actions" data-testid="blog-actions"&gt;
           &lt;button
@@ -754,7 +754,7 @@ const router = useRouter()
 onMounted(() =&gt; {
   // 动态设置页面标题和 meta 标签
   document.title = `${post.value.title} - Bravo 博客`
-  
+
   // 添加 Open Graph 标签
   const ogTitle = document.querySelector('meta[property="og:title"]')
   if (!ogTitle) {
@@ -763,7 +763,7 @@ onMounted(() =&gt; {
     meta.setAttribute('content', `${post.value.title} - Bravo 博客`)
     document.head.appendChild(meta)
   }
-  
+
   const ogDescription = document.querySelector('meta[property="og:description"]')
   if (!ogDescription) {
     const meta = document.createElement('meta')
@@ -1000,4 +1000,3 @@ const deletePost = () =&gt; {
         <script src="../block-navigation.js"></script>
     </body>
 </html>
-    
