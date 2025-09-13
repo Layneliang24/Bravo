@@ -361,6 +361,28 @@ def main():
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Git命令执行失败: {e}")
             return 1
+    elif args.commit:
+        # 提交后记录 - 只记录日志，不修改文件
+        print("[INFO] 记录提交信息到日志...")
+
+        # 获取最新提交信息
+        import subprocess
+
+        try:
+            commit_hash = subprocess.check_output(
+                ["git", "log", "-1", "--pretty=%h"], text=True
+            ).strip()
+            commit_msg = subprocess.check_output(
+                ["git", "log", "-1", "--pretty=%B"], text=True
+            ).strip()
+
+            print(f"[INFO] 提交 {commit_hash}: {commit_msg[:50]}...")
+            print("[INFO] 提交记录完成，未修改任何文件")
+            return 0
+
+        except subprocess.CalledProcessError as e:
+            print(f"[ERROR] 获取提交信息失败: {e}")
+            return 1
     else:
         # 默认扫描和报告
         print("开始扫描代码变更...")
