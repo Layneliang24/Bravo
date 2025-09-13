@@ -2,9 +2,9 @@ name: Regression Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: "*"
   pull_request:
-    branches: [main, develop]
+    branches: "*"
   schedule:
     # 每天凌晨2点运行回归测试
     - cron: "0 2 * * *"

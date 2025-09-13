@@ -5,10 +5,10 @@ name: Regression Gate
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: "*"
     types: [opened, synchronize, reopened]
   push:
-    branches: [main, develop]
+    branches: "*"
   # 每天凌晨2点运行回归测试
   schedule:
     - cron: "0 2 * * *"
