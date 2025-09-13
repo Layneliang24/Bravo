@@ -370,10 +370,10 @@ def main():
 
         try:
             commit_hash = subprocess.check_output(
-                ["git", "log", "-1", "--pretty=%h"], text=True
+                ["git", "log", "-1", "--pretty=%h"], text=True, encoding="utf-8"
             ).strip()
             commit_msg = subprocess.check_output(
-                ["git", "log", "-1", "--pretty=%B"], text=True
+                ["git", "log", "-1", "--pretty=%B"], text=True, encoding="utf-8"
             ).strip()
 
             print(f"[INFO] 提交 {commit_hash}: {commit_msg[:50]}...")
