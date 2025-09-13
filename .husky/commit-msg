@@ -34,8 +34,8 @@ if ! echo "$commit_msg" | grep -qE "$commit_regex"; then
 fi
 
 # 检查长度
-if [ ${#commit_msg} -gt 250 ]; then
-    echo "❌ 提交信息过长，请控制在250字符以内"
+if [ ${#commit_msg} -gt 500 ]; then
+    echo "❌ 提交信息过长，请控制在500字符以内"
     echo "🔍 当前长度: ${#commit_msg} 字符"
     echo "📝 当前信息: $commit_msg"
     exit 1

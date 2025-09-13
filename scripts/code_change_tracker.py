@@ -311,43 +311,87 @@ class CodeChangeTracker:
 
 def main():
     """主函数"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='代码变更追踪工具')
+    parser.add_argument('--validate-commit', action='store_true', help='验证提交前的代码质量')
+    parser.add_argument('--commit', action='store_true', help='提交时记录变更')
+    
+    args = parser.parse_args()
+    
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     tracker = CodeChangeTracker(project_root)
+    
+    if args.validate_commit:
+        # 提交前验证
+        print("[INFO] 执行提交前代码质量验证...")
+        
+        # 检查暂存文件
+        import subprocess
+        try:
+            result = subprocess.run(['git', 'diff', '--cached', '--name-only'], 
+                                   capture_output=True, text=True, check=True)
+            staged_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
+            
+            if not staged_files:
+                print("[INFO] 没有暂存文件，跳过验证")
+                return 0
+            
+            print(f"[INFO] 检查 {len(staged_files)} 个暂存文件...")
+            
+            # 执行扫描
+            current_data = tracker.scan_temporary_changes()
+            
+            issues_count = current_data['summary']['total_issues']
+            risk_level = current_data['summary']['risk_assessment']
+            
+            if risk_level == "HIGH":
+                print(f"\n[ERROR] 发现 {issues_count} 个高风险问题")
+                print("[ERROR] 严格模式: 请修复高风险问题后重新提交")
+                return 1
+            else:
+                print(f"[SUCCESS] 代码质量验证通过 (发现{issues_count}个低风险问题，可接受)")
+                return 0
+                
+        except subprocess.CalledProcessError as e:
+            print(f"[ERROR] Git命令执行失败: {e}")
+            return 1
+    else:
+        # 默认扫描和报告
+        print("开始扫描代码变更...")
+        current_data = tracker.scan_temporary_changes()
 
-    print("开始扫描代码变更...")
-    current_data = tracker.scan_temporary_changes()
+        print("比较历史数据...")
+        comparison = tracker.compare_with_previous(current_data)
 
-    print("比较历史数据...")
-    comparison = tracker.compare_with_previous(current_data)
+        print("保存追踪数据...")
+        tracker.save_tracking_data(current_data)
 
-    print("保存追踪数据...")
-    tracker.save_tracking_data(current_data)
+        print("生成报告...")
+        report = tracker.generate_report(current_data, comparison)
 
-    print("生成报告...")
-    report = tracker.generate_report(current_data, comparison)
+        # 保存报告
+        report_file = (
+            Path(project_root)
+            / "docs"
+            / "02_test_report"
+            / "code_change_tracking_report.md"
+        )
+        report_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # 保存报告
-    report_file = (
-        Path(project_root)
-        / "docs"
-        / "02_test_report"
-        / "code_change_tracking_report.md"
-    )
-    report_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(report_file, "w", encoding="utf-8") as f:
+            f.write(report)
 
-    with open(report_file, "w", encoding="utf-8") as f:
-        f.write(report)
+        print(f"报告已生成: {report_file}")
+        print(f"\n扫描结果: {current_data['summary']['total_issues']} 个问题")
+        print(f"风险评估: {current_data['summary']['risk_assessment']}")
 
-    print(f"报告已生成: {report_file}")
-    print(f"\n扫描结果: {current_data['summary']['total_issues']} 个问题")
-    print(f"风险评估: {current_data['summary']['risk_assessment']}")
+        # 如果有高风险问题，返回非零退出码
+        if current_data["summary"]["risk_assessment"] == "HIGH":
+            print("\n检测到高风险问题，建议立即处理！")
+            return 1
 
-    # 如果有高风险问题，返回非零退出码
-    if current_data["summary"]["risk_assessment"] == "HIGH":
-        print("\n检测到高风险问题，建议立即处理！")
-        return 1
-
-    return 0
+        return 0
 
 
 if __name__ == "__main__":

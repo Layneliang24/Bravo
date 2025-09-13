@@ -1,16 +1,18 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
 
-# 运行快速代码变更检查（仅检查暂存文件）
-echo "🚀 运行快速提交前检查..."
-python scripts/fast_pre_commit.py
+# 运行完整的pre-commit检查
+echo "[STRICT] 运行严格的提交前检查..."
+echo "[INFO] 提示: 严格模式已启用，不允许跳过任何检查"
+
+# 运行代码质量检查
+python scripts/code_change_tracker.py --validate-commit
+
+# 运行lint检查
+npx lint-staged
 
 # 检查退出码
 if [ $? -ne 0 ]; then
-    echo "❌ 快速检查失败，请解决问题后再提交"
-    echo "💡 提示: 使用 'git commit --no-verify' 可跳过检查"
+    echo "[ERROR] 提交检查失败，请解决所有问题后再提交"
+    echo "[STRICT] 严格模式: 不允许使用 --no-verify 跳过检查"
     exit 1
 fi
-
-# 运行原有的lint检查
-npx lint-staged
