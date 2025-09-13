@@ -267,6 +267,7 @@ jobs:
           DB_NAME: ${{ env.MYSQL_DATABASE }}
           DB_USER: ${{ env.MYSQL_USER }}
           DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
 
   # ==========================================
   # Job 4: E2E测试 (E2E Tests) - 优化版
