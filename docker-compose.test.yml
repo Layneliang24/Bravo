@@ -1,147 +1,76 @@
-# 测试验证环境 Docker 编排配置
-# 用于验证CI环境中的MySQL连接修复
 
-version: "3.8"
+version: '3.8'
 
 services:
-  # MySQL测试数据库
-  mysql-test:
+  # MySQL数据库
+  mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: bravo_test
       MYSQL_USER: bravo_user
       MYSQL_PASSWORD: bravo_password
+      MYSQL_ROOT_PASSWORD: root_password
     ports:
-      - "3307:3306"
+      - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
       interval: 10s
       timeout: 5s
       retries: 5
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
 
-  # 后端测试服务
-  backend-test:
+  # 后端服务
+  backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.test
     environment:
-      # 模拟CI环境变量
-      - CI=true
-      - DJANGO_SETTINGS_MODULE=bravo.settings.test
-      - DB_HOST=mysql-test
+      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
+      - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=bravo_test
       - DB_USER=bravo_user
       - DB_PASSWORD=bravo_password
+      - DJANGO_SETTINGS_MODULE=bravo.settings.test
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
     volumes:
       - ./backend:/app
-    depends_on:
-      mysql-test:
-        condition: service_healthy
-    command: >
-      bash -c "
-        echo '🔧 等待MySQL服务启动...'
-        sleep 10
-        echo '✅ MySQL服务已启动'
-        
-        echo '🔄 运行数据库迁移...'
-        python manage.py migrate --run-syncdb
-        echo '✅ 数据库迁移完成'
-        
-        echo '🧪 运行后端测试...'
-        echo 'yes' | python manage.py test --verbosity=2
-        echo '✅ 后端测试完成'
-      "
 
-  # 前端测试服务
-  frontend-test:
+  # 前端服务
+  frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.test
     environment:
-      - NODE_ENV=test
-      - CI=true
-      - VITE_API_URL=http://backend-test:8000
+      - VITE_API_URL=http://backend:8000
+      - NODE_ENV=production
+    ports:
+      - "3001:3001"
     volumes:
       - ./frontend:/app
-      - frontend_test_node_modules:/app/node_modules
-    command: >
-      bash -c "
-        echo '🧪 运行前端测试...'
-        npm run test:coverage
-        echo '✅ 前端测试完成'
-      "
+    command: npm run preview -- --port 3001 --host 0.0.0.0
 
   # E2E测试服务
-  e2e-test:
+  e2e:
     build:
       context: ./e2e
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.test
     environment:
-      # 模拟CI环境
-      - CI=true
-      - GITHUB_ACTIONS=true
-      - NODE_ENV=test
+      - TEST_BASE_URL=http://frontend:3001
       - DOCKER_ENV=true
-      - TEST_BASE_URL=http://frontend-test:3000
-      - API_URL=http://backend-test:8000
-      - DB_HOST=mysql-test
-      - DB_PORT=3306
-      - DB_NAME=bravo_test
-      - DB_USER=bravo_user
-      - DB_PASSWORD=bravo_password
+    depends_on:
+      - frontend
+      - backend
     volumes:
       - ./e2e:/app
-      - e2e_test_node_modules:/app/node_modules
-    depends_on:
-      - mysql-test
-      - backend-test
-      - frontend-test
-    command: >
-      bash -c "
-        echo '🔧 等待服务启动...'
-        sleep 10
-        
-        echo '🧪 运行E2E测试...'
-        npm run test
-        echo '✅ E2E测试完成'
-      "
-
-  # 测试验证服务 - 运行我们的验证脚本
-  test-validator:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    environment:
-      - CI=true
-      - DJANGO_SETTINGS_MODULE=bravo.settings.test
-      - DB_HOST=mysql-test
-      - DB_PORT=3306
-      - DB_NAME=bravo_test
-      - DB_USER=bravo_user
-      - DB_PASSWORD=bravo_password
-    volumes:
-      - ./backend:/app
-      - .:/workspace
-    depends_on:
-      mysql-test:
-        condition: service_healthy
-    working_dir: /workspace
-    command: >
-      bash -c "
-        echo '🔧 等待MySQL服务完全启动...'
-        sleep 5
-        
-        echo '🧪 运行CI修复验证脚本...'
-        python test_ci_fix.py
-        echo '✅ 验证脚本执行完成'
-      "
+      - ./e2e/test-results:/app/test-results
+      - ./e2e/playwright-report:/app/playwright-report
+    command: npx playwright test --project=chromium
 
 volumes:
-  frontend_test_node_modules:
-  e2e_test_node_modules:
+  mysql_data:
