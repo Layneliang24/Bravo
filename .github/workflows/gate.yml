@@ -336,15 +336,10 @@ jobs:
           echo "✅ Playwright浏览器安装完成"
 
       - name: Build Frontend
--        working-directory: ./frontend
--        run: |
--          echo "🏗️ 构建前端..."
--          npm run build
--          echo "✅ 前端构建完成"
-+        run: |
-+          echo "🏗️ 构建前端..."
-+          npm run build --workspace=frontend
-+          echo "✅ 前端构建完成"
+        run: |
+          echo "🏗️ 构建前端..."
+          npm run build --workspace=frontend
+          echo "✅ 前端构建完成"
 
       - name: Start Backend Server
         working-directory: ./backend
