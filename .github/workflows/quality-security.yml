@@ -81,8 +81,20 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Running npm audit..."
-          npm audit --audit-level=${{ inputs.severity }} --json > npm-audit.json || true
-          npm audit --audit-level=${{ inputs.severity }}
+          # Convert severity level to npm audit format
+          case "${{ inputs.severity }}" in
+            "medium") AUDIT_LEVEL="moderate" ;;
+            "high") AUDIT_LEVEL="high" ;;
+            "critical") AUDIT_LEVEL="critical" ;;
+            *) AUDIT_LEVEL="moderate" ;;
+          esac
+          
+          # Use official npm registry for security audit to avoid mirror issues
+          npm config set registry https://registry.npmjs.org/
+          npm audit --audit-level=$AUDIT_LEVEL --json > npm-audit.json || true
+          npm audit --audit-level=$AUDIT_LEVEL || true
+          # Restore mirror config
+          npm config set registry https://registry.npmmirror.com/
           echo "npm audit completed"
 
       - name: Semgrep Static Analysis

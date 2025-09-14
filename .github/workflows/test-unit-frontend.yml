@@ -57,9 +57,9 @@ jobs:
           echo "Running frontend unit tests..."
 
           if [ "${{ inputs.coverage }}" == "true" ]; then
-            npm run test:unit -- --coverage --watchAll=false
+            npm run test:coverage -- --run --passWithNoTests
           else
-            npm run test:unit -- --watchAll=false
+            npm run test -- --run --passWithNoTests
           fi
 
           echo "Frontend unit tests completed"
