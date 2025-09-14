@@ -1,16 +1,21 @@
 # 预提交钩子配置模板
 
 repos:
-  # 全面代码质量检查
-  - repo: local
+  # 🚀 快速语法和格式检查优先
+  # 通用检查 - 快速失败
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
     hooks:
-      - id: comprehensive-check
-        name: Comprehensive code quality check
-        entry: python scripts/code_change_tracker.py --validate-commit
-        language: system
-        pass_filenames: false
-        always_run: true
-        fail_fast: true
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        exclude: "bandit-report.json"
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: debug-statements
+
   # Python 代码格式化
   - repo: https://github.com/psf/black
     rev: 23.11.0
@@ -84,20 +89,17 @@ repos:
   #         - "@typescript-eslint/parser@6.12.0"
   #         - "eslint-plugin-vue@9.18.1"
 
-  # 通用检查
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  # 🔍 重型检查最后执行
+  # 全面代码质量检查 - 移到最后
+  - repo: local
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-        exclude: "bandit-report.json"
-      - id: check-yaml
-      - id: check-json
-      - id: check-merge-conflict
-      - id: check-added-large-files
-      - id: check-case-conflict
-      - id: check-merge-conflict
-      - id: debug-statements
+      - id: comprehensive-check
+        name: Comprehensive code quality check
+        entry: python scripts/code_change_tracker.py --validate-commit
+        language: system
+        pass_filenames: false
+        always_run: true
+        fail_fast: true
 
   # Docker 文件检查 (忽略非关键建议)
   - repo: https://github.com/hadolint/hadolint
