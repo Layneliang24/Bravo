@@ -97,7 +97,6 @@ jobs:
         e2e-smoke,
         directory-guard,
       ]
-    if: always()
     steps:
       - name: Check All Results
         run: |
