@@ -102,7 +102,7 @@ jobs:
       - name: Quick Frontend Test
         run: |
           echo "🧪 快速前端测试..."
-          npm run test:unit --workspace=frontend
+          npm run test:coverage-check --workspace=frontend
 
       - name: Quick Backend Test
         working-directory: ./backend

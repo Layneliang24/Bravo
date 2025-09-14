@@ -159,7 +159,7 @@ jobs:
             npm run test:integration
           else
             echo "No frontend integration tests defined, running component tests instead"
-            npm run test:unit -- --testPathPattern=integration --watchAll=false
+            npm run test:coverage-check
           fi
 
           echo "Frontend integration tests completed"
