@@ -1,4 +1,4 @@
-name: 🚀 Main Test Suite - Unified Pipeline
+name: 🚨 DEPRECATED - Main Test Suite (Use atomic components instead)
 
 # 优化触发条件，避免与branch-protection重复
 "on":

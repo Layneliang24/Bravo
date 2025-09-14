@@ -1,9 +1,13 @@
 name: PR Validation - Fast Track
 
-# TEMPORARILY DISABLED: 避免与 branch-protection.yml 重复
-# 快速反馈workflow，仅手动触发用于调试
+# 原子化架构 - 快速反馈workflow
+# 用于开发阶段的快速验证，使用原子化组件
 on:
-  workflow_dispatch: # 仅允许手动触发
+  pull_request:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened]
+    # 仅在Draft PR时触发，避免与branch-protection重复
+  workflow_dispatch: # 手动触发用于调试
 
 # 并发控制，避免重复运行
 concurrency:
@@ -14,6 +18,8 @@ jobs:
   # 第一步：设置缓存 (并行基础)
   setup:
     name: Setup Cache & Environment
+    # 仅在Draft PR或手动触发时运行，避免与branch-protection重复
+    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/setup-cache.yml
 
   # 第二步：快速并行测试 (依赖setup)
