@@ -9,7 +9,7 @@ const API_URL = process.env.API_URL || 'http://localhost:8000';
 
 // 健康检查测试套件
 test.describe('服务健康检查', () => {
-  test('前端服务应该能够正常访问', async ({ page }) => {
+  test('前端服务应该能够正常访问 @smoke', async ({ page }) => {
     // 访问前端主页
     await page.goto(BASE_URL);
 
@@ -26,7 +26,7 @@ test.describe('服务健康检查', () => {
     expect(await body.count()).toBe(1);
   });
 
-  test('后端API健康检查端点应该正常响应', async ({ page }) => {
+  test('后端API健康检查端点应该正常响应 @smoke', async ({ page }) => {
     // 直接访问后端健康检查端点
     const response = await page.request.get(`${API_URL}/health/`);
 
@@ -38,7 +38,7 @@ test.describe('服务健康检查', () => {
     expect(responseText).toBeTruthy();
   });
 
-  test('前端应该能够与后端API通信', async ({ page }) => {
+  test('前端应该能够与后端API通信 @smoke', async ({ page }) => {
     // 首先检查后端API是否可用
     const backendResponse = await page.request.get(`${API_URL}/health/`);
     expect(backendResponse.status()).toBe(200);

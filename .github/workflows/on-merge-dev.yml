@@ -183,11 +183,11 @@ jobs:
           node-version: "20"
 
       - name: Check NPM Dependencies
+        working-directory: ./frontend
         run: |
           echo "📦 检查NPM依赖冲突..."
 
           # 检查前端依赖
-          cd frontend
           npm ci --dry-run
 
           # 检查依赖漏洞
