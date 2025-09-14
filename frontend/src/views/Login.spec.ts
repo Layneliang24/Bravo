@@ -27,9 +27,12 @@ describe('Login.vue', () => {
         stubs: {
           'el-card': { template: '<div class="el-card"><slot /></div>' },
           'el-form': { template: '<form class="el-form"><slot /></form>' },
-          'el-form-item': { template: '<div class="el-form-item"><slot /></div>' },
-          'el-input': { 
-            template: '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
+          'el-form-item': {
+            template: '<div class="el-form-item"><slot /></div>',
+          },
+          'el-input': {
+            template:
+              '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
             props: ['type', 'placeholder', 'modelValue'],
             emits: ['update:modelValue'],
             methods: {
@@ -39,8 +42,9 @@ describe('Login.vue', () => {
               },
             },
           },
-          'el-button': { 
-            template: '<button class="el-button" @click="handleClick"><slot /></button>',
+          'el-button': {
+            template:
+              '<button class="el-button" @click="handleClick"><slot /></button>',
             emits: ['click'],
             methods: {
               handleClick(): void {

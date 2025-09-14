@@ -168,7 +168,15 @@ async function cleanupTempFiles() {
 
   for (const pattern of tempFiles) {
     try {
-      const files = pattern.includes('*') ? await glob(pattern, { cwd: __dirname }) : [pattern];
+      let files: string[];
+      if (pattern.includes('*')) {
+        // 使用绝对路径进行glob搜索，Promise化的方式
+        const absolutePattern = path.join(__dirname, pattern);
+        const globResults = await glob(absolutePattern);
+        files = globResults.map(f => path.basename(f));
+      } else {
+        files = [pattern];
+      }
 
       for (const file of files) {
         const filePath = path.join(__dirname, file);

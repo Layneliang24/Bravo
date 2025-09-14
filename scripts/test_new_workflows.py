@@ -6,12 +6,11 @@
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 class WorkflowTester:
@@ -108,7 +107,8 @@ class WorkflowTester:
                 "-c",
                 f"""
                 # 安装act工具
-                curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
+                curl -s https://raw.githubusercontent.com/nektos/act/master/ \\
+                install.sh | bash
 
                 # 设置环境变量
                 export GITHUB_WORKSPACE=/workspace
@@ -157,8 +157,7 @@ class WorkflowTester:
             print(f"❌ Workflow文件不存在: {workflow_path}")
             return False
 
-        # 模拟不同事件类型
-        event_types = {"pr": "pull_request", "dev": "push", "main": "push"}
+        # 模拟不同事件类型（根据workflow文件名推断）
 
         try:
             # 使用简化的测试方法 - 验证workflow语法和依赖关系
