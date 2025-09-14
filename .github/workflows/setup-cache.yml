@@ -52,16 +52,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            node_modules
             frontend/node_modules
             ~/.npm
-          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'frontend/package.json') }}
           restore-keys: |
             frontend-deps-v2-${{ runner.os }}-
             frontend-deps-v1-${{ runner.os }}-
 
       - name: Install Frontend Dependencies
         if: steps.frontend-cache.outputs.cache-hit != 'true'
-        working-directory: ./frontend
         run: |
           echo "Installing frontend dependencies (cache miss)..."
           npm ci --prefer-offline --no-audit
@@ -110,7 +110,8 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "Installing E2E dependencies (cache miss)..."
-          npm install --prefer-offline --no-audit
+          npm ci --prefer-offline --no-audit
+          npx playwright install --with-deps
           echo "E2E dependencies installed"
 
       # Level 2: Build Cache (Frontend)
@@ -123,11 +124,10 @@ jobs:
             frontend-build-v1-${{ runner.os }}-
 
       - name: Build Frontend (if needed)
-        working-directory: ./frontend
         run: |
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+          if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
             echo "Building frontend (cache miss or empty)..."
-            npm run build
+            npm run build:frontend
             echo "Frontend build completed"
           else
             echo "Frontend build exists, skipping"

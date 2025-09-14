@@ -1,9 +1,9 @@
-name: PR Validation
+name: 🚨 DEPRECATED - PR Validation (Use on-pr.yml instead)
 
+# DEPRECATED: 此workflow已被 on-pr.yml 替代
+# 保留用于向后兼容，但不再触发
 on:
-  pull_request:
-    branches: [main, dev]
-    types: [opened, synchronize, reopened]
+  workflow_dispatch: # 仅允许手动触发
 
 # 并发控制，避免重复运行
 concurrency:

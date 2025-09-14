@@ -4,8 +4,7 @@ name: 🚀 Main Test Suite - Unified Pipeline
 "on":
   push:
     branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+  # pull_request 触发已移除，统一通过 branch-protection.yml 调用
   workflow_call:
     secrets:
       CODECOV_TOKEN:

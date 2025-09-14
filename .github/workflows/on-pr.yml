@@ -1,9 +1,9 @@
 name: PR Validation - Fast Track
 
+# TEMPORARILY DISABLED: 避免与 branch-protection.yml 重复
+# 快速反馈workflow，仅手动触发用于调试
 on:
-  pull_request:
-    branches: [main, dev]
-    types: [opened, synchronize, reopened]
+  workflow_dispatch: # 仅允许手动触发
 
 # 并发控制，避免重复运行
 concurrency:
