@@ -86,12 +86,12 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
-      - name: Install MySQL Client
+      - name: Install MySQL Client and Redis Client
         run: |
-          echo "Installing MySQL client tools..."
+          echo "Installing MySQL client and Redis client tools..."
           sudo apt-get update
-          sudo apt-get install -y mysql-client
-          echo "MySQL client installed successfully"
+          sudo apt-get install -y mysql-client redis-tools
+          echo "MySQL and Redis clients installed successfully"
 
       - name: Wait for Services
         run: |
@@ -211,7 +211,7 @@ jobs:
           else
             echo "Basic API health check..."
             curl -f http://localhost:8000/health/ || exit 1
-            curl -f http://localhost:8000/api/ || exit 1
+            curl -f http://localhost:8000/api-info/ || exit 1
           fi
 
           # 清理
