@@ -91,7 +91,20 @@ jobs:
           echo "Installing MySQL client and Redis client tools..."
           sudo apt-get update
           sudo apt-get install -y mysql-client redis-tools
-          echo "MySQL and Redis clients installed successfully"
+
+          # 验证安装结果
+          if command -v mysql >/dev/null 2>&1; then
+            echo "✅ MySQL client installed successfully"
+          else
+            echo "❌ MySQL client installation failed"
+            exit 1
+          fi
+
+          if command -v redis-cli >/dev/null 2>&1; then
+            echo "✅ Redis client installed successfully"
+          else
+            echo "⚠️ Redis client installation failed, will skip Redis health check"
+          fi
 
       - name: Wait for Services
         run: |
@@ -108,14 +121,19 @@ jobs:
           done
 
           # Wait for Redis
-          for i in {1..15}; do
-            if redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; then
-              echo "Redis is ready!"
-              break
-            fi
-            echo "Redis not ready, waiting... ($i/15)"
-            sleep 2
-          done
+          if command -v redis-cli >/dev/null 2>&1; then
+            echo "Checking Redis connection..."
+            for i in {1..15}; do
+              if redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; then
+                echo "✅ Redis is ready!"
+                break
+              fi
+              echo "Redis not ready, waiting... ($i/15)"
+              sleep 2
+            done
+          else
+            echo "⚠️ Redis client not available, skipping Redis health check"
+          fi
 
       - name: Setup Test Database
         run: |
