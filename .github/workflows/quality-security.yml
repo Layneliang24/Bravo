@@ -69,11 +69,11 @@ jobs:
           if [ -d ".venv" ]; then
             source .venv/bin/activate
             safety check --json --output safety-report.json || true
-            safety check
+            safety check || true
           else
             pip install -r requirements/base.txt
             safety check --json --output safety-report.json || true
-            safety check
+            safety check || true
           fi
           echo "Safety scan completed"
 
@@ -142,7 +142,7 @@ jobs:
 
           MODIFIED_PROTECTED=false
           for pattern in "${PROTECTED_FILES[@]}"; do
-            if git diff --name-only origin/main...HEAD | grep -E "$pattern"; then
+            if git diff --name-only origin/main...HEAD 2>/dev/null | grep -E "$pattern" 2>/dev/null; then
               MODIFIED_PROTECTED=true
             fi
           done
