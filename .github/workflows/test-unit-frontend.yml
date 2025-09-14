@@ -1,0 +1,81 @@
+name: Frontend Unit Tests
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        description: "Generate coverage report"
+        type: boolean
+        default: false
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 8
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  frontend-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore Frontend Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (fallback)
+        working-directory: ./frontend
+        run: |
+          if [ ! -d "node_modules" ]; then
+            echo "Installing frontend dependencies (cache miss)..."
+            npm ci --prefer-offline --no-audit
+          else
+            echo "Using cached frontend dependencies"
+          fi
+
+      - name: Run Unit Tests
+        working-directory: ./frontend
+        run: |
+          echo "Running frontend unit tests..."
+
+          if [ "${{ inputs.coverage }}" == "true" ]; then
+            npm run test:unit -- --coverage --watchAll=false
+          else
+            npm run test:unit -- --watchAll=false
+          fi
+
+          echo "Frontend unit tests completed"
+
+      - name: Upload Coverage Report
+        if: inputs.coverage && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-coverage
+          path: frontend/coverage/
+          retention-days: 7
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-results
+          path: frontend/test-results/
+          retention-days: 3
