@@ -105,7 +105,7 @@ jobs:
       - name: Run Quick Frontend Tests
         run: |
           echo "🧪 运行快速前端测试..."
-          npm run test:coverage-check --workspace=frontend
+          npm run test:ci --workspace=frontend
 
   # 第四步：代码质量快速检查
   quick-quality-check:

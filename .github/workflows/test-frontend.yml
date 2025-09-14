@@ -48,11 +48,11 @@ jobs:
           case "${{ inputs.test-type }}" in
             "unit")
               echo "🧪 Running unit tests..."
-              npm run test:coverage-check
+              npm run test:ci
               ;;
             "component")
               echo "🔧 Running component tests..."
-              npm run test:component -- --coverage
+              npm run test:coverage
               ;;
             "integration")
               echo "🔗 Running integration tests..."
