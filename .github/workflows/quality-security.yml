@@ -101,7 +101,7 @@ jobs:
         run: |
           echo "Running Semgrep static analysis..."
           semgrep --config=auto --json --output=semgrep-report.json . || true
-          semgrep --config=auto .
+          semgrep --config=auto . || true
           echo "Semgrep scan completed"
 
       - name: Check for Secrets

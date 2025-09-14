@@ -18,15 +18,13 @@ jobs:
   # 第一步：设置缓存 (并行基础)
   setup:
     name: Setup Cache & Environment
-    # 仅在Draft PR或手动触发时运行，避免与branch-protection重复
-    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
+    # 快速反馈模式，为所有PR提供轻量级验证
     uses: ./.github/workflows/setup-cache.yml
 
   # 第二步：快速并行测试 (依赖setup)
   unit-tests-backend:
     name: Backend Unit Tests
     needs: setup
-    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/test-unit-backend.yml
     with:
       coverage: true
@@ -35,7 +33,6 @@ jobs:
   unit-tests-frontend:
     name: Frontend Unit Tests
     needs: setup
-    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/test-unit-frontend.yml
     with:
       coverage: true
@@ -45,7 +42,6 @@ jobs:
   integration-tests:
     name: Integration Tests
     needs: [unit-tests-backend, unit-tests-frontend]
-    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/test-integration.yml
     with:
       timeout: 12
@@ -54,7 +50,6 @@ jobs:
   e2e-smoke:
     name: E2E Smoke Tests
     needs: integration-tests
-    if: github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/test-e2e-smoke.yml
     with:
       browser: "chromium"

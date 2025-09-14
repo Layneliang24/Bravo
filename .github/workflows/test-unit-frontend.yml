@@ -35,20 +35,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            frontend/node_modules
+            node_modules
             ~/.npm
-          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             frontend-deps-v2-${{ runner.os }}-
 
       - name: Install Dependencies (fallback)
-        working-directory: ./frontend
         run: |
           if [ ! -d "node_modules" ]; then
-            echo "Installing frontend dependencies (cache miss)..."
+            echo "Installing workspace dependencies (cache miss)..."
             npm ci --prefer-offline --no-audit
           else
-            echo "Using cached frontend dependencies"
+            echo "Using cached workspace dependencies"
           fi
 
       - name: Run Unit Tests
