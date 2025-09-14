@@ -78,9 +78,9 @@ jobs:
           echo "Safety scan completed"
 
       - name: Frontend Dependency Audit
-        working-directory: ./frontend
         run: |
           echo "Running npm audit..."
+          cd frontend
           # Convert severity level to npm audit format
           case "${{ inputs.severity }}" in
             "medium") AUDIT_LEVEL="moderate" ;;

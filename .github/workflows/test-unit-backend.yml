@@ -105,11 +105,11 @@ jobs:
           echo "Running backend unit tests..."
 
           if [ "${{ inputs.coverage }}" == "true" ]; then
-            python -m pytest tests/ -k "not integration" \
+            python -m pytest tests/ \
               --cov=. --cov-report=xml --cov-report=html \
               --maxfail=5 -v --tb=short
           else
-            python -m pytest tests/ -k "not integration" \
+            python -m pytest tests/ \
               --maxfail=5 -v --tb=short
           fi
 

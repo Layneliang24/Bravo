@@ -191,7 +191,7 @@ jobs:
         run: |
           cd frontend
           npm run test:coverage
-          npm run test:coverage-check
+          npm run test:ci
 
       - name: Validate feature mapping
         run: |

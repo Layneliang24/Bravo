@@ -186,7 +186,8 @@ jobs:
         run: |
           echo "📦 检查NPM依赖冲突..."
 
-          # 检查package-lock.json是否有冲突
+          # 检查前端依赖
+          cd frontend
           npm ci --dry-run
 
           # 检查依赖漏洞
