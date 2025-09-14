@@ -127,6 +127,11 @@ jobs:
         run: |
           if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
             echo "Building frontend (cache miss or empty)..."
+            # 确保依赖已安装后再构建
+            if [ ! -d "node_modules" ]; then
+              echo "Installing workspace dependencies first..."
+              npm ci --prefer-offline --no-audit
+            fi
             npm run build:frontend
             echo "Frontend build completed"
           else

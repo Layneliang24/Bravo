@@ -96,8 +96,17 @@ onMounted(() => {
   }
 })
 
+// 博客数据类型定义
+interface BlogPost {
+  id: number
+  title: string
+  content: string
+  category: string
+  createdAt: string
+}
+
 // 模拟博客数据
-const mockPosts = [
+const mockPosts: BlogPost[] = [
   {
     id: 1,
     title: '测试博客标题 1',
