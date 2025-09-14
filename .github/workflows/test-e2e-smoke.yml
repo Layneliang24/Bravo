@@ -98,6 +98,13 @@ jobs:
           npx playwright install ${{ inputs.browser }} --with-deps
           echo "Browser installation completed"
 
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
       - name: Setup Test Database
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
@@ -128,16 +135,45 @@ jobs:
       - name: Start Frontend Server
         working-directory: ./frontend
         run: |
-          npm run serve &
+          echo "Starting frontend preview server on port 3001..."
+          npm run preview -- --port 3001 --host 0.0.0.0 &
           echo $! > frontend.pid
-          echo "Frontend server started"
+          echo "Frontend server started on port 3001"
 
       - name: Wait for Servers
         run: |
           echo "Waiting for servers to be ready..."
-          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do sleep 1; done' || exit 1
-          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do sleep 1; done' || exit 1
-          echo "All servers are ready!"
+
+          # Check backend server
+          echo "Checking backend server (http://localhost:8000/health/)..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do
+            echo "Backend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Backend server failed to start within 60 seconds"
+            echo "Backend process status:"
+            ps aux | grep python || true
+            echo "Backend logs (if available):"
+            [ -f backend/backend.pid ] && kill -0 $(cat backend/backend.pid) 2>/dev/null || echo "Backend process not running"
+            exit 1
+          }
+          echo "✅ Backend server is ready"
+
+          # Check frontend server
+          echo "Checking frontend server (http://localhost:3001)..."
+          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do
+            echo "Frontend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Frontend server failed to start within 60 seconds"
+            echo "Frontend process status:"
+            ps aux | grep vite || true
+            [ -f frontend/frontend.pid ] && kill -0 $(cat frontend/frontend.pid) 2>/dev/null || echo "Frontend process not running"
+            exit 1
+          }
+          echo "✅ Frontend server is ready"
+
+          echo "🎉 All servers are ready!"
 
       - name: Run Smoke Tests
         working-directory: ./e2e
