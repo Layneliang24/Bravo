@@ -185,9 +185,19 @@ jobs:
         run: |
           echo "Running API integration tests..."
 
+          # 确保数据库状态正确
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            FLUSH PRIVILEGES;
+          "
+
           # 启动后端服务器进行API测试
           cd backend
           source .venv/bin/activate
+
+          # 重新运行迁移确保数据库结构正确
+          python manage.py migrate --settings=bravo.settings.test
+
           python manage.py runserver 8000 --settings=bravo.settings.test &
           BACKEND_PID=$!
           cd ..
@@ -211,6 +221,7 @@ jobs:
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           REDIS_URL: redis://127.0.0.1:6379/0
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Upload Integration Test Results
         if: always() && !env.ACT
