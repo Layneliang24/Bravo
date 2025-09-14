@@ -71,6 +71,13 @@ jobs:
             echo "Using cached backend dependencies"
           fi
 
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
       - name: Wait for MySQL
         run: |
           echo "Waiting for MySQL to be ready..."
