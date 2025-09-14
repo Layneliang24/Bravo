@@ -135,6 +135,13 @@ jobs:
           REDIS_URL: redis://127.0.0.1:6379/0
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
+      - name: Install Frontend Dependencies for Integration
+        working-directory: ./frontend
+        run: |
+          echo "Installing frontend dependencies in frontend directory..."
+          npm install
+          echo "Frontend dependencies installed"
+
       - name: Build Frontend for Integration
         working-directory: ./frontend
         run: |
