@@ -86,6 +86,13 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
       - name: Wait for Services
         run: |
           echo "Waiting for services to be ready..."
@@ -117,6 +124,16 @@ jobs:
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
             FLUSH PRIVILEGES;
           "
+
+      - name: Run Database Migrations
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          echo "Running Django migrations..."
+          python manage.py migrate --settings=bravo.settings.test
+          echo "Database migrations completed"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
 
       - name: Run Backend Integration Tests
         working-directory: ./backend
