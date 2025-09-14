@@ -21,18 +21,15 @@ describe('Login.vue', () => {
     // 清除所有mock调用记录
     vi.clearAllMocks()
 
-    // 创建组件实例
+    // 创建组件实例，使用更可靠的stub配置
     wrapper = mount(Login, {
       global: {
         stubs: {
-          ElCard: { template: '<div class="el-card"><slot /></div>' },
-          ElForm: { template: '<form class="el-form"><slot /></form>' },
-          ElFormItem: {
-            template: '<div class="el-form-item"><slot /></div>',
-          },
-          ElInput: {
-            template:
-              '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
+          'el-card': { template: '<div class="el-card"><slot /></div>' },
+          'el-form': { template: '<form class="el-form"><slot /></form>' },
+          'el-form-item': { template: '<div class="el-form-item"><slot /></div>' },
+          'el-input': { 
+            template: '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
             props: ['type', 'placeholder', 'modelValue'],
             emits: ['update:modelValue'],
             methods: {
@@ -42,9 +39,8 @@ describe('Login.vue', () => {
               },
             },
           },
-          ElButton: {
-            template:
-              '<button class="el-button" @click="handleClick"><slot /></button>',
+          'el-button': { 
+            template: '<button class="el-button" @click="handleClick"><slot /></button>',
             emits: ['click'],
             methods: {
               handleClick(): void {

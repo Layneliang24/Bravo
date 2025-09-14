@@ -118,7 +118,7 @@ jobs:
 
           FOUND_SECRETS=false
           for pattern in "${SECRET_PATTERNS[@]}"; do
-            if grep -r -E "$pattern" . --exclude-dir=.git --exclude-dir=node_modules --exclude="*.json" --exclude="*.md"; then
+            if grep -r -E "$pattern" . --exclude-dir=.git --exclude-dir=node_modules --exclude="*.json" --exclude="*.md" >/dev/null 2>&1; then
               FOUND_SECRETS=true
             fi
           done
