@@ -127,12 +127,19 @@ jobs:
         run: |
           if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
             echo "Building frontend (cache miss or empty)..."
-            # 确保依赖已安装后再构建
+            # 确保workspace根依赖已安装
             if [ ! -d "node_modules" ]; then
               echo "Installing workspace dependencies first..."
               npm ci --prefer-offline --no-audit
             fi
-            npm run build:frontend
+            # 确保frontend子项目依赖已安装
+            if [ ! -d "frontend/node_modules" ]; then
+              echo "Installing frontend dependencies..."
+              cd frontend && npm ci --prefer-offline --no-audit && cd ..
+            fi
+            # 在frontend目录内执行构建，确保vue-tsc等工具在PATH中
+            echo "Building frontend..."
+            cd frontend && npm run build && cd ..
             echo "Frontend build completed"
           else
             echo "Frontend build exists, skipping"
