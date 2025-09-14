@@ -1,4 +1,4 @@
-// Vue Test Utils 测试配置 - 在测试框架初始化后运行
+// Vue Test Utils 测试配置
 import { config } from '@vue/test-utils'
 
 // Vue Test Utils 全局配置
@@ -24,7 +24,6 @@ config.global.plugins = []
 // 控制台警告过滤
 const originalWarn = console.warn
 console.warn = (...args) => {
-  // 过滤掉一些已知的无害警告
   const message = args[0]
   if (
     typeof message === 'string' &&
