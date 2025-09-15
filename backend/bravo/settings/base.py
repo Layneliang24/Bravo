@@ -56,7 +56,6 @@ LOCAL_APPS = [
     "apps.english",
     "apps.jobs",
     "apps.common",
-    "ai_pipeline",
     "feature_flags",
 ]
 
