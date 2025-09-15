@@ -101,9 +101,12 @@ class StandardResultsSetPaginationTests(TestCase):
         self.assertEqual(page_size, 20)
 
         # 测试页面大小超过总数的情况
-        large_page_size = total_count + 10
+        large_page_size = total_count + 10  # 应该是70
         max_page_size = 100
 
+        # 实际逻辑：min(70, 100) = 70，但期望测试max_page_size限制
+        # 修复：使用更大的large_page_size来测试max_page_size限制
+        large_page_size = 150
         actual_page_size = min(large_page_size, max_page_size)
         self.assertEqual(actual_page_size, max_page_size)
 

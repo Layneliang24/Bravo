@@ -34,6 +34,7 @@
     "lodash-es": "^4.17.21",
     "nprogress": "^0.2.0",
     "pinia": "^2.1.7",
+    "v8-to-istanbul": "^9.3.0",
     "vue": "^3.3.8",
     "vue-demi": "^0.14.10",
     "vue-router": "^4.2.5"
