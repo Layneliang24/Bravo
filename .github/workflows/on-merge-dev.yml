@@ -12,65 +12,12 @@ concurrency:
   cancel-in-progress: false # 合并后验证不应该被取消
 
 jobs:
-  # 检测是否是合并提交
-  detect-merge:
-    name: Detect Merge Commit
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    outputs:
-      is-merge: ${{ steps.check.outputs.is-merge }}
-      source-branch: ${{ steps.check.outputs.source-branch }}
-      pr-number: ${{ steps.check.outputs.pr-number }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 10 # 获取足够的历史记录
-
-      - name: Check if Merge Commit
-        id: check
-        run: |
-          echo "🔍 检测合并提交..."
-
-          # 检查最新提交是否是合并提交
-          if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
-            echo "✅ 检测到合并提交"
-            echo "is-merge=true" >> $GITHUB_OUTPUT
-
-            # 安全获取合并信息（处理多行和特殊字符）
-            COMMIT_MSG=$(git log -1 --pretty=%s)  # 只获取标题行，避免多行问题
-            echo "提交信息: $COMMIT_MSG"
-
-            # 提取PR编号（更严格的模式匹配）
-            if [[ "$COMMIT_MSG" =~ ^Merge\ pull\ request\ #([0-9]+) ]]; then
-              PR_NUMBER="${BASH_REMATCH[1]}"
-              echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-              echo "✅ 检测到PR #$PR_NUMBER"
-            else
-              echo "pr-number=" >> $GITHUB_OUTPUT
-              echo "ℹ️ 未检测到标准PR合并格式"
-            fi
-
-            # 提取源分支（更严格的模式匹配）
-            if [[ "$COMMIT_MSG" =~ from\ [^/]+/(.+)$ ]]; then
-              SOURCE_BRANCH="${BASH_REMATCH[1]}"
-              # 清理分支名称，确保不包含特殊字符
-              SOURCE_BRANCH=$(echo "$SOURCE_BRANCH" | sed 's/[^a-zA-Z0-9_-]//g')
-              echo "source-branch=${SOURCE_BRANCH}" >> $GITHUB_OUTPUT
-              echo "✅ 源分支: $SOURCE_BRANCH"
-            else
-              echo "source-branch=" >> $GITHUB_OUTPUT
-              echo "ℹ️ 未检测到源分支信息"
-            fi
-          else
-            echo "ℹ️ 非合并提交，跳过合并后验证"
-            echo "is-merge=false" >> $GITHUB_OUTPUT
-          fi
+  # Dev分支验证（移除复杂的合并检测，直接对所有dev推送运行验证）
 
   # 合并后的快速烟雾测试
   post-merge-smoke:
     name: Post-Merge Smoke Tests
-    needs: detect-merge
-    if: needs.detect-merge.outputs.is-merge == 'true'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 8
 
@@ -138,8 +85,7 @@ jobs:
   # 合并冲突检测
   conflict-detection:
     name: Merge Conflict Detection
-    needs: detect-merge
-    if: needs.detect-merge.outputs.is-merge == 'true'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -178,8 +124,7 @@ jobs:
   # 依赖冲突检测
   dependency-validation:
     name: Dependency Conflict Check
-    needs: detect-merge
-    if: needs.detect-merge.outputs.is-merge == 'true'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
@@ -225,8 +170,7 @@ jobs:
   # 代码质量下降检测
   quality-regression:
     name: Quality Regression Check
-    needs: detect-merge
-    if: needs.detect-merge.outputs.is-merge == 'true'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -263,17 +207,16 @@ jobs:
 
   # 合并后汇总报告
   merge-validation-summary:
-    name: Merge Validation Summary
+    name: Dev Validation Summary
     runs-on: ubuntu-latest
     needs:
       [
-        detect-merge,
         post-merge-smoke,
         conflict-detection,
         dependency-validation,
         quality-regression,
       ]
-    if: always() && needs.detect-merge.outputs.is-merge == 'true'
+    if: always() && github.ref == 'refs/heads/dev'
     steps:
       - name: Generate Merge Report
         run: |

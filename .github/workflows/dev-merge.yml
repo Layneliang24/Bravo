@@ -51,14 +51,16 @@ jobs:
   # 第二步：快速验证（并行执行）
   fast-validation:
     name: Fast Validation Pipeline
-    if: github.ref == 'refs/heads/dev'
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
     uses: ./.github/workflows/fast-validation.yml
     with:
-      skip-e2e: false # 始终运行完整验证
+      skip-e2e: ${{ needs.detect-merge.outputs.validation-type == 'fast' }}
 
   # 第三步：关键问题检查（并行执行）
   critical-checks:
-    if: github.ref == 'refs/heads/dev'
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -102,8 +104,8 @@ jobs:
   # 第四步：验证汇总（仅在需要时运行完整验证）
   validation-summary:
     name: Validation Summary
-    needs: [fast-validation, critical-checks]
-    if: always() && github.ref == 'refs/heads/dev'
+    needs: [detect-merge, fast-validation, critical-checks]
+    if: always() && needs.detect-merge.outputs.is-merge == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Generate Summary
