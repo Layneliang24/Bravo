@@ -107,7 +107,7 @@ jobs:
 
           # 读取覆盖率数据
           FEATURE_COVERAGE=$(node -e "
-            const report = JSON.parse(require('fs').readFileSync('feature-test-map.json', 'utf8'));
+            const report = JSON.parse(require('fs').readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
             console.log(Math.round(report.summary.coveragePercentage));
           ")
 
@@ -145,7 +145,7 @@ jobs:
           EOF
 
           node -e "
-            const report = JSON.parse(require('fs').readFileSync('feature-test-map.json', 'utf8'));
+            const report = JSON.parse(require('fs').readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
             console.log('- Total Features:', report.summary.totalFeatures);
             console.log('- Covered Features:', report.summary.coveredFeatures);
             console.log('- Uncovered Features:', report.summary.totalFeatures - report.summary.coveredFeatures);
@@ -170,10 +170,10 @@ jobs:
         with:
           name: feature-coverage-reports
           path: |
-            feature-test-map.md
-            feature-test-map.json
-            feature-test-mapping.json
-            feature-coverage-report.json
+            docs/02_test_report/feature-test-map.md
+            docs/02_test_report/feature-test-map.json
+            docs/02_test_report/feature-test-mapping.json
+            docs/02_test_report/feature-coverage-report.json
             frontend/coverage/
             backend/htmlcov/
           retention-days: 30
@@ -186,7 +186,7 @@ jobs:
             const fs = require('fs');
 
             try {
-              const report = JSON.parse(fs.readFileSync('feature-test-map.json', 'utf8'));
+              const report = JSON.parse(fs.readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
               const coverage = Math.round(report.summary.coveragePercentage);
 
               let emoji = '🔴';
