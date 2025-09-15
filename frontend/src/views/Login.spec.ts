@@ -66,7 +66,7 @@ describe('Login.vue', () => {
 
     // 检查Element Plus组件存在
     expect(wrapper.find('.el-card').exists()).toBe(true)
-    expect(wrapper.find('.el-form').exists()).toBe(true)
+    expect(wrapper.find('form.el-form').exists()).toBe(true)
     expect(wrapper.find('.el-button').exists()).toBe(true)
     expect(wrapper.find('.el-button').text()).toBe('登录')
   })
