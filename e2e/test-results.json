@@ -9,10 +9,8 @@
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
-    "maxFailures": 1,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "maxFailures": 0,
+    "metadata": {},
     "preserveOutput": "always",
     "reporter": [
       [
@@ -45,22 +43,20 @@
         "outputDir": "S:/WorkShop/cursor/Bravo/e2e/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium",
         "name": "chromium",
         "testDir": "S:/WorkShop/cursor/Bravo/e2e/tests",
         "testIgnore": [],
         "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
-        "timeout": 0
+        "timeout": 30000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
     "version": "1.55.0",
-    "workers": 1,
+    "workers": 10,
     "webServer": {
       "command": "npm run preview -- --port 3001 --host 0.0.0.0",
       "cwd": "../frontend",
@@ -75,77 +71,113 @@
   },
   "suites": [
     {
-      "title": "blog.spec.ts",
-      "file": "blog.spec.ts",
+      "title": "app.spec.ts",
+      "file": "app.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "博客功能测试",
-          "file": "blog.spec.ts",
-          "line": 112,
+          "title": "主页功能测试",
+          "file": "app.spec.ts",
+          "line": 61,
           "column": 6,
           "specs": [
             {
-              "title": "应该能够点击博客项目查看详情",
+              "title": "应该正确显示主页标题 @smoke",
               "ok": true,
-              "tags": [],
+              "tags": ["smoke"],
               "tests": [
                 {
-                  "timeout": 0,
+                  "timeout": 30000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
                   "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "interrupted",
-                      "duration": 131950,
-                      "error": {
-                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/blog\", waiting until \"load\"\u001b[22m\n",
-                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/blog\", waiting until \"load\"\u001b[22m\n\n    at BlogPage.goto (S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts:41:21)\n    at S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts:117:20",
-                        "location": {
-                          "file": "S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts",
-                          "column": 21,
-                          "line": 41
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 39 |\u001b[39m   \u001b[90m// 导航到博客页面\u001b[39m\n \u001b[90m 40 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m`${BASE_URL}/blog`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m   }\n \u001b[90m 44 |\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts",
-                            "column": 21,
-                            "line": 41
-                          },
-                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/blog\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 39 |\u001b[39m   \u001b[90m// 导航到博客页面\u001b[39m\n \u001b[90m 40 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m`${BASE_URL}/blog`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m   }\n \u001b[90m 44 |\u001b[39m\u001b[0m\n\u001b[2m    at BlogPage.goto (S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts:41:21)\u001b[22m\n\u001b[2m    at S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts:117:20\u001b[22m"
-                        },
-                        {
-                          "message": "Error: browserContext.close: Target page, context or browser has been closed"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-13T03:31:23.445Z",
-                      "annotations": [],
-                      "attachments": [],
-                      "errorLocation": {
-                        "file": "S:\\WorkShop\\cursor\\Bravo\\e2e\\tests\\blog.spec.ts",
-                        "column": 21,
-                        "line": 41
-                      }
-                    }
-                  ],
+                  "results": [],
                   "status": "skipped"
                 }
               ],
-              "id": "a378e5ce917615b4b643-4560e810d355286c72d4",
-              "file": "blog.spec.ts",
-              "line": 147,
+              "id": "c31ff144dc4fee3acd0a-3cda618d57c19314be1a",
+              "file": "app.spec.ts",
+              "line": 68,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "health.spec.ts",
+      "file": "health.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "服务健康检查",
+          "file": "health.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "前端服务应该能够正常访问 @smoke",
+              "ok": true,
+              "tags": ["smoke"],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "760d72a3746ac5132f88-50bba73e90a0098f9900",
+              "file": "health.spec.ts",
+              "line": 12,
+              "column": 3
+            },
+            {
+              "title": "后端API健康检查端点应该正常响应 @smoke",
+              "ok": true,
+              "tags": ["smoke"],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "760d72a3746ac5132f88-184d93e1b56f1a3050c9",
+              "file": "health.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "前端应该能够与后端API通信 @smoke",
+              "ok": true,
+              "tags": ["smoke"],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "760d72a3746ac5132f88-9192182fb0fe7f814d61",
+              "file": "health.spec.ts",
+              "line": 41,
               "column": 3
             }
           ]
@@ -155,10 +187,10 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-13T03:31:22.236Z",
-    "duration": 134371.514,
+    "startTime": "2025-09-14T17:55:20.901Z",
+    "duration": 317.07399999999984,
     "expected": 0,
-    "skipped": 1,
+    "skipped": 4,
     "unexpected": 0,
     "flaky": 0
   }

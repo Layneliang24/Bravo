@@ -65,7 +65,7 @@ test.describe('主页功能测试', () => {
     homePage = new HomePage(page);
   });
 
-  test('应该正确显示主页标题', async () => {
+  test('应该正确显示主页标题 @smoke', async () => {
     await homePage.goto();
     const title = await homePage.getTitle();
     expect(title).toBe('欢迎来到 Bravo');

@@ -34,8 +34,9 @@ else
 fi
 
 # 检查是否有未提交的更改
-if ! git diff-index --quiet HEAD --; then
+if ! git diff --quiet && ! git diff --cached --quiet; then
     echo "❌ 存在未提交的更改，请先提交"
+    git status --porcelain
     exit 1
 fi
 

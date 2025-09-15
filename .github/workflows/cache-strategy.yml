@@ -1,0 +1,51 @@
+# 统一缓存策略 - 可重用的workflow
+name: Cache Strategy
+
+on:
+  workflow_call:
+    inputs:
+      cache-key:
+        required: true
+        type: string
+      cache-paths:
+        required: true
+        type: string
+
+jobs:
+  setup-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            **/node_modules
+            frontend/dist
+            e2e/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Python Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+            backend/htmlcov
+          key: ${{ runner.os }}-python-${{ hashFiles('backend/requirements/**/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+
+      - name: Setup Test Results Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend/htmlcov
+            frontend/coverage
+            e2e/test-results
+            e2e/playwright-report
+          key: ${{ runner.os }}-test-results-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-test-results-

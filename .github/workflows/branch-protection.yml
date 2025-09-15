@@ -35,15 +35,56 @@ jobs:
 
           echo "✅ Target branch validation passed: ${{ github.head_ref }} -> ${{ github.base_ref }}"
 
-  # Job 2: Mandatory full test suite (cannot be bypassed)
-  mandatory-full-tests:
+  # Job 2: Setup cache and environment (原子化架构)
+  setup-cache:
     if: github.event_name == 'pull_request'
     needs: validate-source-branch
-    uses: ./.github/workflows/gate.yml
-    secrets: inherit
+    uses: ./.github/workflows/setup-cache.yml
 
-  # Job 3: Additional security checks
-  security-validation:
+  # Job 3: Parallel unit tests (原子化架构)
+  unit-tests-backend:
+    if: github.event_name == 'pull_request'
+    needs: setup-cache
+    uses: ./.github/workflows/test-unit-backend.yml
+    with:
+      coverage: true
+      timeout: 10
+
+  unit-tests-frontend:
+    if: github.event_name == 'pull_request'
+    needs: setup-cache
+    uses: ./.github/workflows/test-unit-frontend.yml
+    with:
+      coverage: true
+      timeout: 8
+
+  # Job 4: Integration tests (依赖单元测试)
+  integration-tests:
+    if: github.event_name == 'pull_request'
+    needs: [unit-tests-backend, unit-tests-frontend]
+    uses: ./.github/workflows/test-integration.yml
+    with:
+      timeout: 15
+
+  # Job 5: Security and quality checks (并行执行)
+  security-scan:
+    if: github.event_name == 'pull_request'
+    needs: setup-cache
+    uses: ./.github/workflows/quality-security.yml
+    with:
+      severity: "high"
+      timeout: 15
+
+  # Job 6: E2E smoke tests (关键路径验证)
+  e2e-smoke:
+    if: github.event_name == 'pull_request'
+    needs: integration-tests
+    uses: ./.github/workflows/test-e2e-smoke.yml
+    with:
+      timeout: 20
+
+  # Job 7: Protected files validation (特殊安全检查)
+  protected-files-check:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -119,10 +160,10 @@ jobs:
 
           echo "✅ Test file integrity check passed"
 
-  # Job 4: Performance and quality gates
+  # Job 9: Performance and quality gates (保留原有功能)
   quality-gates:
     if: github.event_name == 'pull_request'
-    needs: [validate-source-branch, mandatory-full-tests]
+    needs: [setup-cache, integration-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -150,7 +191,7 @@ jobs:
         run: |
           cd frontend
           npm run test:coverage
-          npm run test:coverage-check
+          npm run test:ci
 
       - name: Validate feature mapping
         run: |
@@ -312,14 +353,18 @@ jobs:
           lhci autorun
           echo "✅ Performance audit completed"
 
-  # Job 5: Final approval gate
+  # Job 10: Final approval gate (原子化架构)
   approval-gate:
     if: github.event_name == 'pull_request'
     needs:
       [
         validate-source-branch,
-        mandatory-full-tests,
-        security-validation,
+        unit-tests-backend,
+        unit-tests-frontend,
+        integration-tests,
+        security-scan,
+        e2e-smoke,
+        protected-files-check,
         quality-gates,
       ]
     runs-on: ubuntu-latest

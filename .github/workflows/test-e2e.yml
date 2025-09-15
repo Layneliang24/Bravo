@@ -1,0 +1,136 @@
+name: E2E Tests
+
+on:
+  workflow_call:
+    inputs:
+      test-type:
+        description: "Test type: smoke, regression, full"
+        type: string
+        default: "full"
+      browser:
+        description: "Browser: chromium, firefox, webkit"
+        type: string
+        default: "chromium"
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Install E2E dependencies
+        working-directory: ./e2e
+        run: |
+          npm install
+          npx playwright install ${{ inputs.browser }}
+
+      - name: Setup test database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: |
+          python manage.py migrate --settings=bravo.settings.test
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          echo "Backend server started"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+
+      - name: Start frontend server
+        working-directory: ./frontend
+        run: |
+          npm run serve &
+          echo "Frontend server started"
+
+      - name: Wait for servers
+        run: |
+          echo "⏳ Waiting for servers to be ready..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do sleep 1; done' || exit 1
+          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do sleep 1; done' || exit 1
+          echo "✅ Servers are ready!"
+
+      - name: Run E2E tests
+        working-directory: ./e2e
+        run: |
+          case "${{ inputs.test-type }}" in
+            "smoke")
+              echo "💨 Running smoke tests..."
+              npx playwright test --grep "@smoke" --project=${{ inputs.browser }}
+              ;;
+            "regression")
+              echo "🔒 Running regression tests..."
+              npx playwright test --grep "@regression" --project=${{ inputs.browser }}
+              ;;
+            *)
+              echo "🚀 Running all E2E tests..."
+              npx playwright test --project=${{ inputs.browser }}
+              ;;
+          esac
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ inputs.test-type }}-${{ inputs.browser }}
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/

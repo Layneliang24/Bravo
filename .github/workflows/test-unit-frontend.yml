@@ -1,0 +1,66 @@
+name: Frontend Unit Tests
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        description: "Generate coverage report"
+        type: boolean
+        default: false
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 8
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  frontend-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          echo "Installing workspace dependencies..."
+          npm ci --prefer-offline --no-audit
+
+      - name: Run Unit Tests
+        working-directory: ./frontend
+        run: |
+          echo "Running frontend unit tests..."
+
+          if [ "${{ inputs.coverage }}" == "true" ]; then
+            npm run test:ci
+          else
+            npm run test -- --run --passWithNoTests
+          fi
+
+          echo "Frontend unit tests completed"
+
+      - name: Upload Coverage Report
+        if: inputs.coverage && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-coverage
+          path: frontend/coverage/
+          retention-days: 7
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-results
+          path: frontend/test-results/
+          retention-days: 3

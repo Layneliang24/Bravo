@@ -1,0 +1,326 @@
+name: Dev Branch - Post-Merge Validation
+
+on:
+  push:
+    branches: [dev]
+    # 只在合并提交时触发
+  workflow_dispatch:
+
+# 并发控制
+concurrency:
+  group: dev-merge-${{ github.ref }}
+  cancel-in-progress: false # 合并后验证不应该被取消
+
+jobs:
+  # 检测是否是合并提交
+  detect-merge:
+    name: Detect Merge Commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      is-merge: ${{ steps.check.outputs.is-merge }}
+      source-branch: ${{ steps.check.outputs.source-branch }}
+      pr-number: ${{ steps.check.outputs.pr-number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10 # 获取足够的历史记录
+
+      - name: Check if Merge Commit
+        id: check
+        run: |
+          echo "🔍 检测合并提交..."
+
+          # 检查最新提交是否是合并提交
+          if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
+            echo "✅ 检测到合并提交"
+            echo "is-merge=true" >> $GITHUB_OUTPUT
+
+            # 尝试获取合并信息
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            echo "提交信息: $COMMIT_MSG"
+
+            # 提取PR编号
+            if [[ "$COMMIT_MSG" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
+              PR_NUMBER="${BASH_REMATCH[1]}"
+              echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              echo "✅ 检测到PR #$PR_NUMBER"
+            fi
+
+            # 提取源分支
+            if [[ "$COMMIT_MSG" =~ from\ .*/(.+) ]]; then
+              SOURCE_BRANCH="${BASH_REMATCH[1]}"
+              echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+              echo "✅ 源分支: $SOURCE_BRANCH"
+            fi
+          else
+            echo "ℹ️ 非合并提交，跳过合并后验证"
+            echo "is-merge=false" >> $GITHUB_OUTPUT
+          fi
+
+  # 合并后的快速烟雾测试
+  post-merge-smoke:
+    name: Post-Merge Smoke Tests
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=5
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          echo "📦 快速安装依赖..."
+          npm ci --workspace=frontend
+          cd backend && pip install -r requirements/test.txt
+
+      - name: Quick Frontend Test
+        run: |
+          echo "🧪 快速前端测试..."
+          npm run test:ci --workspace=frontend
+
+      - name: Quick Backend Test
+        working-directory: ./backend
+        run: |
+          echo "🧪 快速后端测试..."
+          python manage.py test --settings=bravo.settings.test --keepdb --parallel 2 tests.quick
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+
+      - name: Integration Smoke Test
+        run: |
+          echo "🧪 集成烟雾测试..."
+          # 启动服务
+          cd backend && python manage.py runserver 8000 &
+          sleep 5
+
+          # 基本API测试
+          curl -f http://localhost:8000/health/ || exit 1
+          echo "✅ 服务健康检查通过"
+
+  # 合并冲突检测
+  conflict-detection:
+    name: Merge Conflict Detection
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for Merge Conflicts Markers
+        run: |
+          echo "🔍 检查合并冲突标记..."
+
+          # 检查是否有合并冲突标记残留
+          if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" --include="*.py" --include="*.js" --include="*.vue" --include="*.ts" .; then
+            echo "❌ 发现合并冲突标记残留!"
+            echo "请手动解决这些冲突标记"
+            exit 1
+          else
+            echo "✅ 未发现合并冲突标记"
+          fi
+
+      - name: Check File Conflicts
+        run: |
+          echo "🔍 检查潜在文件冲突..."
+
+          # 检查是否有重复的文件（比如 file.py 和 file.py.orig）
+          duplicates=$(find . -name "*.orig" -o -name "*.rej" -o -name "*.bak")
+          if [ -n "$duplicates" ]; then
+            echo "❌ 发现冲突备份文件:"
+            echo "$duplicates"
+            echo "请清理这些文件"
+            exit 1
+          else
+            echo "✅ 未发现冲突备份文件"
+          fi
+
+  # 依赖冲突检测
+  dependency-validation:
+    name: Dependency Conflict Check
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check NPM Dependencies
+        working-directory: ./frontend
+        run: |
+          echo "📦 检查NPM依赖冲突..."
+
+          # 检查前端依赖
+          npm ci --dry-run
+
+          # 检查依赖漏洞
+          npm audit --audit-level=high
+
+          echo "✅ NPM依赖检查完成"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Check Python Dependencies
+        working-directory: ./backend
+        run: |
+          echo "📦 检查Python依赖冲突..."
+
+          # 检查requirements文件
+          pip install --dry-run -r requirements/base.txt
+          pip install --dry-run -r requirements/test.txt
+
+          # 检查依赖冲突
+          pip check || echo "⚠️ 发现Python依赖冲突"
+
+          echo "✅ Python依赖检查完成"
+
+  # 代码质量下降检测
+  quality-regression:
+    name: Quality Regression Check
+    needs: detect-merge
+    if: needs.detect-merge.outputs.is-merge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Analysis Tools
+        run: |
+          npm install -g jscpd # 代码重复检测
+          pip install flake8 pylint # Python代码质量
+
+      - name: Code Duplication Check
+        run: |
+          echo "🔍 检查代码重复..."
+
+          # 检查前端代码重复
+          jscpd frontend/src --threshold 5 --format html --output ./duplication-report.html
+
+          # 检查后端代码重复
+          # Python重复检测可以用其他工具
+
+          echo "✅ 代码重复检查完成"
+
+      - name: Code Complexity Check
+        working-directory: ./backend
+        run: |
+          echo "🔍 检查代码复杂度..."
+
+          # 使用flake8检查复杂度
+          flake8 --max-complexity=10 . || echo "⚠️ 发现高复杂度代码"
+
+          echo "✅ 代码复杂度检查完成"
+
+  # 合并后汇总报告
+  merge-validation-summary:
+    name: Merge Validation Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        detect-merge,
+        post-merge-smoke,
+        conflict-detection,
+        dependency-validation,
+        quality-regression,
+      ]
+    if: always() && needs.detect-merge.outputs.is-merge == 'true'
+    steps:
+      - name: Generate Merge Report
+        run: |
+          echo "## 🔄 Dev Branch Merge Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Merge Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Branch:** ${{ needs.detect-merge.outputs.source-branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "**PR Number:** #${{ needs.detect-merge.outputs.pr-number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Merged By:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 收集验证结果
+          SMOKE_STATUS="${{ needs.post-merge-smoke.result }}"
+          CONFLICT_STATUS="${{ needs.conflict-detection.result }}"
+          DEPENDENCY_STATUS="${{ needs.dependency-validation.result }}"
+          QUALITY_STATUS="${{ needs.quality-regression.result }}"
+
+          echo "| Validation Check | Status | Impact |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Post-Merge Smoke Tests | $SMOKE_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Conflict Detection | $CONFLICT_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Validation | $DEPENDENCY_STATUS | ⚠️ Important |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Regression | $QUALITY_STATUS | 📊 Monitor |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 判断合并验证结果
+          if [[ "$SMOKE_STATUS" == "success" && "$CONFLICT_STATUS" == "success" ]]; then
+            echo "✅ **Merge validation PASSED!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 合并成功，dev分支状态良好" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 可以继续在dev分支上开发" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "$DEPENDENCY_STATUS" != "success" ]]; then
+              echo "⚠️ 依赖验证有警告，请检查" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [[ "$QUALITY_STATUS" != "success" ]]; then
+              echo "📊 代码质量有下降，建议改进" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "Merge validation completed successfully"
+          else
+            echo "❌ **Merge validation FAILED!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💥 合并后验证失败" >> $GITHUB_STEP_SUMMARY
+            echo "🚨 需要立即修复关键问题" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 建议创建紧急修复PR" >> $GITHUB_STEP_SUMMARY
+            echo "Merge validation failed"
+            exit 1
+          fi
+
+      - name: Merge Status Notification
+        run: |
+          echo "📍 Dev Branch Merge Summary:"
+          echo "   - Merge Commit: ${{ github.sha }}"
+          echo "   - Source: ${{ needs.detect-merge.outputs.source-branch }}"
+          echo "   - PR: #${{ needs.detect-merge.outputs.pr-number }}"
+          echo "   - Status: Validation completed"

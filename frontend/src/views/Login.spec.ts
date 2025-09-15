@@ -21,7 +21,7 @@ describe('Login.vue', () => {
     // 清除所有mock调用记录
     vi.clearAllMocks()
 
-    // 创建组件实例
+    // 创建组件实例，使用更可靠的stub配置
     wrapper = mount(Login, {
       global: {
         stubs: {
@@ -36,7 +36,7 @@ describe('Login.vue', () => {
             props: ['type', 'placeholder', 'modelValue'],
             emits: ['update:modelValue'],
             methods: {
-              handleInput(event: Event) {
+              handleInput(event: Event): void {
                 const target = event.target as HTMLInputElement
                 this.$emit('update:modelValue', target.value)
               },
@@ -47,7 +47,7 @@ describe('Login.vue', () => {
               '<button class="el-button" @click="handleClick"><slot /></button>',
             emits: ['click'],
             methods: {
-              handleClick() {
+              handleClick(): void {
                 this.$emit('click')
               },
             },
