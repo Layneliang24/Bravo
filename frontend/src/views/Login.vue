@@ -21,8 +21,8 @@
         <el-form-item>
           <el-button
             type="primary"
-            @click="handleLogin"
             data-testid="login-button"
+            @click="handleLogin"
           >
             登录
           </el-button>

@@ -21,17 +21,17 @@
         <div class="post-actions" data-testid="blog-actions">
           <button
             data-testid="edit-button"
-            @click="editPost"
             class="edit-button"
             aria-label="编辑博客"
+            @click="editPost"
           >
             编辑
           </button>
           <button
             data-testid="delete-button"
-            @click="deletePost"
             class="delete-button"
             aria-label="删除博客"
+            @click="deletePost"
           >
             删除
           </button>
@@ -42,23 +42,23 @@
     <!-- 编辑表单（隐藏状态，用于测试） -->
     <div v-if="showEditForm" class="edit-form" data-testid="edit-form">
       <input
+        v-model="editForm.title"
         type="text"
         placeholder="博客标题"
         data-testid="post-title"
-        v-model="editForm.title"
         aria-label="博客标题"
       />
       <textarea
+        v-model="editForm.content"
         placeholder="博客内容"
         data-testid="post-content"
-        v-model="editForm.content"
         aria-label="博客内容"
       ></textarea>
       <button
         data-testid="publish-button"
-        @click="publishPost"
         class="publish-button"
         aria-label="发布博客"
+        @click="publishPost"
       >
         发布
       </button>
