@@ -223,8 +223,8 @@ jobs:
           echo "## 🔄 Dev Branch Merge Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Merge Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Source Branch:** ${{ needs.detect-merge.outputs.source-branch }}" >> $GITHUB_STEP_SUMMARY
-          echo "**PR Number:** #${{ needs.detect-merge.outputs.pr-number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Event:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Ref:** ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
           echo "**Merged By:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -272,6 +272,6 @@ jobs:
         run: |
           echo "📍 Dev Branch Merge Summary:"
           echo "   - Merge Commit: ${{ github.sha }}"
-          echo "   - Source: ${{ needs.detect-merge.outputs.source-branch }}"
-          echo "   - PR: #${{ needs.detect-merge.outputs.pr-number }}"
+          echo "   - Branch: ${{ github.ref_name }}"
+          echo "   - Actor: ${{ github.actor }}"
           echo "   - Status: Validation completed"
