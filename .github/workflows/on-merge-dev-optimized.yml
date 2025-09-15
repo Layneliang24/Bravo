@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       force-full-validation:
-        description: 'Force full validation (including slow E2E)'
+        description: "Force full validation (including slow E2E)"
         type: boolean
         default: false
 
@@ -33,14 +33,14 @@ jobs:
         run: |
           if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
             echo "is-merge=true" >> $GITHUB_OUTPUT
-            
+
             # 智能选择验证级别
             COMMIT_MSG=$(git log -1 --pretty=%s)
             if [[ "$COMMIT_MSG" =~ (hotfix|critical|urgent) ]] || [[ "${{ github.event.inputs.force-full-validation }}" == "true" ]]; then
               echo "validation-type=full" >> $GITHUB_OUTPUT
               echo "🔥 检测到关键修复，运行完整验证"
             else
-              echo "validation-type=fast" >> $GITHUB_OUTPUT  
+              echo "validation-type=fast" >> $GITHUB_OUTPUT
               echo "⚡ 常规合并，运行快速验证"
             fi
           else
@@ -65,12 +65,12 @@ jobs:
       fail-fast: false
       matrix:
         check: ["conflicts", "dependencies", "security"]
-        
+
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Run Critical Check
         run: |
           case "${{ matrix.check }}" in
@@ -92,7 +92,7 @@ jobs:
               echo "📦 快速依赖检查..."
               npm audit --audit-level=critical --production || echo "⚠️ 依赖警告"
               ;;
-            "security") 
+            "security")
               echo "🔐 基础安全扫描..."
               # 检查敏感文件
               if find . -name "*.key" -o -name "*.pem" -o -name ".env" -type f | head -1; then
@@ -103,7 +103,7 @@ jobs:
 
   # 第四步：验证汇总（仅在需要时运行完整验证）
   validation-summary:
-    name: Validation Summary 
+    name: Validation Summary
     needs: [detect-merge, fast-validation, critical-checks]
     if: always() && needs.detect-merge.outputs.is-merge == 'true'
     runs-on: ubuntu-latest
@@ -112,13 +112,13 @@ jobs:
         run: |
           echo "## ⚡ Optimized Dev Merge Validation" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Validation Type**: ${{ needs.detect-merge.outputs.validation-type }}" >> $GITHUB_STEP_SUMMARY  
+          echo "**Validation Type**: ${{ needs.detect-merge.outputs.validation-type }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           FAST_STATUS="${{ needs.fast-validation.result }}"
           CRITICAL_STATUS="${{ needs.critical-checks.result }}"
-          
+
           echo "| Component | Status | Time Saved |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|------------|" >> $GITHUB_STEP_SUMMARY
           echo "| Fast Validation | $FAST_STATUS | ~45min → ~12min |" >> $GITHUB_STEP_SUMMARY
