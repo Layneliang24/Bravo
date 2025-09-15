@@ -117,16 +117,18 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Building frontend for E2E tests..."
-          # Ensure dependencies are installed before building
-          if [ ! -d node_modules ]; then
+          # Always ensure dependencies are fully installed before building
+          echo "Verifying frontend dependencies..."
+          if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ]; then
             echo "Installing frontend dependencies..."
             npm ci --prefer-offline --no-audit
           fi
 
-          # Verify critical build dependencies
-          if ! command -v npx vue-tsc &> /dev/null; then
-            echo "vue-tsc not found, installing dependencies..."
-            npm ci --prefer-offline --no-audit
+          # Verify vue-tsc is available after dependency installation
+          if ! npx vue-tsc --version &> /dev/null; then
+            echo "vue-tsc not working properly, reinstalling dependencies..."
+            rm -rf node_modules package-lock.json
+            npm install --prefer-offline --no-audit
           fi
 
           echo "Building with vue-tsc and vite..."
