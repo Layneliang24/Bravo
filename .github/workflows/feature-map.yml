@@ -42,10 +42,11 @@ jobs:
           cd frontend
           npm install
 
-      - name: Install Python dependencies
-        run: |
-          cd backend
-          pip install -r requirements/base.txt
+        - name: Install Python dependencies
+          run: |
+            cd backend
+            pip install -r requirements/base.txt
+            pip install -r requirements/test.txt
           pip install -r requirements/test.txt
 
       - name: Install mapping script dependencies
