@@ -1,12 +1,12 @@
 name: PR Validation - Fast Track
 
 # 原子化架构 - 快速反馈workflow
-# 用于开发阶段的快速验证，使用原子化组件
+# 🔥 紧急修复：必须对所有PR进行验证，确保代码质量
 on:
   pull_request:
     branches: [main, dev]
     types: [opened, synchronize, reopened]
-    # 仅在Draft PR时触发，避免与branch-protection重复
+    # 🚨 重要：所有PR都必须通过这些检查才能合并
   workflow_dispatch: # 手动触发用于调试
 
 # 并发控制，避免重复运行
@@ -79,10 +79,10 @@ jobs:
 
           echo "Directory protection check passed"
 
-  # 第六步：PR验证汇总
+  # 第六步：PR验证汇总 - 🔥 紧急修复：所有PR都必须验证！
   pr-validation-summary:
     name: PR Validation Summary
-    if: always() && (github.event.pull_request.draft == true || github.event_name == 'workflow_dispatch')
+    if: always() # 移除draft限制 - 所有PR都必须通过验证！
     runs-on: ubuntu-latest
     needs:
       [

@@ -77,6 +77,13 @@ jobs:
             echo "Using cached backend dependencies"
           fi
 
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
       - name: Setup Test Database
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
@@ -128,7 +135,7 @@ jobs:
           curl -f http://localhost:8000/health/ || exit 1
 
           # API根端点
-          curl -f http://localhost:8000/api/ || exit 1
+          curl -f http://localhost:8000/api-info/ || exit 1
 
           # 用户相关API (如果存在)
           if curl -s http://localhost:8000/api/users/ | grep -q "users\|User"; then

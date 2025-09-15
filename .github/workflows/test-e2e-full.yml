@@ -153,9 +153,10 @@ jobs:
       - name: Start Frontend Server
         working-directory: ./frontend
         run: |
-          npm run serve &
+          echo "Starting frontend server for E2E tests..."
+          npm run preview -- --port 3001 --host 0.0.0.0 &
           echo $! > frontend.pid
-          echo "Frontend server started"
+          echo "Frontend server started on port 3001"
 
       - name: Wait for Servers
         run: |

@@ -56,6 +56,7 @@ jobs:
       - name: Install Coverage Tools
         run: |
           echo "Installing coverage analysis tools..."
+          sudo apt-get update && sudo apt-get install -y bc
           pip install coverage
           npm install -g nyc
           echo "Coverage tools installed"
@@ -68,16 +69,7 @@ jobs:
             echo "Found backend coverage report"
 
             # 提取覆盖率百分比
-            BACKEND_COVERAGE=$(python -c "
-            import xml.etree.ElementTree as ET
-            try:
-                tree = ET.parse('backend-coverage/coverage.xml')
-                root = tree.getroot()
-                line_rate = float(root.attrib.get('line-rate', 0)) * 100
-                print(f'{line_rate:.1f}')
-            except Exception as e:
-                print('0.0')
-            ")
+            BACKEND_COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('backend-coverage/coverage.xml') if True else None; root = tree.getroot() if tree else None; line_rate = float(root.attrib.get('line-rate', 0)) * 100 if root else 0.0; print(f'{line_rate:.1f}')" 2>/dev/null || echo "0.0")
 
             echo "Backend coverage: ${BACKEND_COVERAGE}%"
             echo "Required minimum: ${{ inputs.min-backend-coverage }}%"
@@ -109,18 +101,7 @@ jobs:
             FRONTEND_COVERAGE="0.0"
 
             if [ -f "frontend-coverage/coverage-summary.json" ]; then
-              FRONTEND_COVERAGE=$(python -c "
-              import json
-              try:
-                  with open('frontend-coverage/coverage-summary.json', 'r') as f:
-                      data = json.load(f)
-                      total = data.get('total', {})
-                      lines = total.get('lines', {})
-                      pct = lines.get('pct', 0)
-                      print(f'{pct:.1f}')
-              except Exception as e:
-                  print('0.0')
-              ")
+              FRONTEND_COVERAGE=$(python -c "import json; data = json.load(open('frontend-coverage/coverage-summary.json', 'r')); total = data.get('total', {}); lines = total.get('lines', {}); pct = lines.get('pct', 0); print(f'{pct:.1f}')" 2>/dev/null || echo "0.0")
             elif [ -f "frontend-coverage/lcov.info" ]; then
               # 从 lcov.info 提取覆盖率
               FRONTEND_COVERAGE=$(awk '
