@@ -13,12 +13,12 @@
         :key="post.id"
         class="blog-item"
         data-testid="blog-item"
-        @click="goToBlogDetail(post.id)"
-        @keydown.enter="goToBlogDetail(post.id)"
-        @keydown.space="goToBlogDetail(post.id)"
         role="button"
         tabindex="0"
         :aria-label="`查看博客：${post.title}`"
+        @click="goToBlogDetail(post.id)"
+        @keydown.enter="goToBlogDetail(post.id)"
+        @keydown.space="goToBlogDetail(post.id)"
       >
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
@@ -28,16 +28,16 @@
     <!-- 搜索功能 -->
     <nav class="search-section" role="search">
       <input
+        v-model="searchKeyword"
         type="text"
         placeholder="搜索博客..."
         data-testid="search-input"
-        v-model="searchKeyword"
         aria-label="搜索博客"
       />
       <button
         data-testid="search-button"
-        @click="searchBlog"
         aria-label="执行搜索"
+        @click="searchBlog"
       >
         搜索
       </button>
@@ -46,8 +46,8 @@
     <!-- 分类筛选 -->
     <div class="filter-section">
       <select
-        data-testid="category-filter"
         v-model="selectedCategory"
+        data-testid="category-filter"
         @change="filterByCategory"
       >
         <option value="">所有分类</option>
@@ -60,8 +60,8 @@
     <!-- 创建博客按钮 -->
     <button
       data-testid="create-post"
-      @click="createPost"
       class="create-button"
+      @click="createPost"
     >
       创建新博客
     </button>
@@ -69,20 +69,20 @@
     <!-- 博客编辑表单（隐藏状态，用于测试） -->
     <div v-if="showEditForm" class="edit-form" data-testid="edit-form">
       <input
+        v-model="editForm.title"
         type="text"
         placeholder="博客标题"
         data-testid="post-title"
-        v-model="editForm.title"
       />
       <textarea
+        v-model="editForm.content"
         placeholder="博客内容"
         data-testid="post-content"
-        v-model="editForm.content"
       ></textarea>
       <button
         data-testid="publish-button"
-        @click="publishPost"
         class="publish-button"
+        @click="publishPost"
       >
         发布
       </button>
@@ -92,15 +92,15 @@
     <div v-if="showActions" class="blog-actions" data-testid="blog-actions">
       <button
         data-testid="edit-button"
-        @click="editPost"
         class="edit-button"
+        @click="editPost"
       >
         编辑
       </button>
       <button
         data-testid="delete-button"
-        @click="deletePost"
         class="delete-button"
+        @click="deletePost"
       >
         删除
       </button>
@@ -109,8 +109,8 @@
     <!-- 加载更多按钮 -->
     <button
       data-testid="load-more"
-      @click="loadMore"
       class="load-more-button"
+      @click="loadMore"
     >
       加载更多
     </button>
