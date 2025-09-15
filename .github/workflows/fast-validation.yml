@@ -90,18 +90,34 @@ jobs:
         run: |
           case "${{ matrix.test-type }}" in
             "backend-unit")
-              cd backend && python -m pytest tests/unit/ --maxfail=5 -x
+              # 等待数据库准备就绪
+              until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+                echo "等待MySQL启动..."
+                sleep 2
+              done
+              cd backend && python manage.py migrate --noinput --settings=bravo.settings.test
+              python -m pytest tests/unit/ --maxfail=5 -x
               ;;
             "frontend-unit")
               cd frontend && npm run test:unit:fast
               ;;
             "integration-smoke")
+              # 等待数据库准备就绪
+              until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+                echo "等待MySQL启动..."
+                sleep 2
+              done
               # 最小集成测试
-              cd backend && python manage.py test tests.quick --parallel 4
+              cd backend && python manage.py migrate --noinput --settings=bravo.settings.test
+              python manage.py test tests.quick --parallel 4
               ;;
           esac
         env:
           DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
 
   # 第三步：条件性E2E（仅在需要时运行）
   e2e-critical:

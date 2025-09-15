@@ -63,6 +63,14 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 快速后端测试..."
+          # 等待数据库准备就绪
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+          # 运行迁移
+          python manage.py migrate --noinput --settings=bravo.settings.test
+          # 运行测试
           python manage.py test --settings=bravo.settings.test --keepdb --parallel 2 tests.quick
         env:
           DB_HOST: 127.0.0.1
@@ -74,13 +82,51 @@ jobs:
       - name: Integration Smoke Test
         run: |
           echo "🧪 集成烟雾测试..."
+          # 等待数据库完全准备就绪
+          echo "⏳ 等待数据库连接..."
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+          echo "✅ 数据库连接成功"
+
+          # 运行数据库迁移
+          cd backend
+          echo "🔄 运行数据库迁移..."
+          python manage.py migrate --noinput
+
           # 启动服务
-          cd backend && python manage.py runserver 8000 &
-          sleep 5
+          echo "🚀 启动Django服务..."
+          python manage.py runserver 8000 &
+          SERVER_PID=$!
+
+          # 等待服务启动
+          echo "⏳ 等待服务启动..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health/ > /dev/null; then
+              echo "✅ 服务启动成功"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ 服务启动超时"
+              kill $SERVER_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 1
+          done
 
           # 基本API测试
           curl -f http://localhost:8000/health/ || exit 1
           echo "✅ 服务健康检查通过"
+
+          # 清理
+          kill $SERVER_PID 2>/dev/null || true
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
 
   # 合并冲突检测
   conflict-detection:
