@@ -24,38 +24,10 @@ describe('Login.vue', () => {
     // 清除所有mock调用记录
     vi.clearAllMocks()
 
-    // 创建组件实例，使用更可靠的stub配置
+    // 使用字符串stubs，避免命名规则冲突，并产出 *-stub 标签
     wrapper = mount(Login, {
       global: {
-        stubs: {
-          ElCard: { template: '<div class="el-card"><slot /></div>' },
-          ElForm: { template: '<form class="el-form"><slot /></form>' },
-          ElFormItem: {
-            template: '<div class="el-form-item"><slot /></div>',
-          },
-          ElInput: {
-            template:
-              '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
-            props: ['type', 'placeholder', 'modelValue'],
-            emits: ['update:modelValue'],
-            methods: {
-              handleInput(event: Event): void {
-                const target = event.target as HTMLInputElement
-                this.$emit('update:modelValue', target.value)
-              },
-            },
-          },
-          ElButton: {
-            template:
-              '<button class="el-button" @click="handleClick"><slot /></button>',
-            emits: ['click'],
-            methods: {
-              handleClick(): void {
-                this.$emit('click')
-              },
-            },
-          },
-        },
+        stubs: ['el-card', 'el-form', 'el-form-item', 'el-input', 'el-button'],
       },
     })
   })
@@ -64,11 +36,11 @@ describe('Login.vue', () => {
     // 检查标题
     expect(wrapper.find('h2').text()).toBe('登录')
 
-    // 检查Element Plus组件存在
-    expect(wrapper.find('.el-card').exists()).toBe(true)
-    expect(wrapper.find('.el-form').exists()).toBe(true)
-    expect(wrapper.find('.el-button').exists()).toBe(true)
-    expect(wrapper.find('.el-button').text()).toBe('登录')
+    // 检查Element Plus组件存在（字符串stub会渲染为 *-stub 标签）
+    expect(wrapper.find('el-card-stub').exists()).toBe(true)
+    expect(wrapper.find('el-form-stub').exists()).toBe(true)
+    expect(wrapper.find('el-button-stub').exists()).toBe(true)
+    expect(wrapper.find('el-button-stub').text()).toBe('登录')
   })
 
   it('应该能够输入用户名和密码', async () => {
