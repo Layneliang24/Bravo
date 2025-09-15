@@ -24,8 +24,8 @@ describe('Login.vue', () => {
     vi.clearAllMocks()
     wrapper = mount(Login, {
       global: {
-        // 🔥 关键修复：不要stub el-card，让它正常渲染，只stub内部组件
-        stubs: ['el-form', 'el-form-item', 'el-input', 'el-button'],
+        // 🔥 关键修复：不要stub el-card和el-form-item，避免内容清空
+        stubs: ['el-form', 'el-input', 'el-button'],
       },
     })
   })
