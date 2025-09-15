@@ -168,16 +168,10 @@ async function cleanupTempFiles() {
 
   for (const pattern of tempFiles) {
     try {
-      let filePaths: string[];
-      if (pattern.includes('*')) {
-        // 使用绝对路径进行glob搜索，直接获取完整路径
-        const absolutePattern = path.join(__dirname, pattern);
-        filePaths = await glob(absolutePattern);
-      } else {
-        filePaths = [path.join(__dirname, pattern)];
-      }
+      const files = pattern.includes('*') ? glob.sync(pattern, { cwd: __dirname }) : [pattern];
 
-      for (const filePath of filePaths) {
+      for (const file of files) {
+        const filePath = path.join(__dirname, file);
         if (fs.existsSync(filePath)) {
           const stat = fs.statSync(filePath);
           if (stat.isDirectory()) {
@@ -185,7 +179,7 @@ async function cleanupTempFiles() {
           } else {
             fs.unlinkSync(filePath);
           }
-          console.log(`  ✓ 已删除 ${path.basename(filePath)}`);
+          console.log(`  ✓ 已删除 ${file}`);
         }
       }
     } catch (error) {

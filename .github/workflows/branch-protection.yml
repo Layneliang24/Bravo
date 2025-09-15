@@ -37,13 +37,14 @@ jobs:
 
   # Job 2: Setup cache and environment (原子化架构)
   setup-cache:
-    if: github.event_name == 'pull_request'
-    needs: validate-source-branch
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+    # 注意：为了支持push事件，移除了对validate-source-branch的依赖
+    # validate-source-branch只在PR时运行，push时会被跳过
     uses: ./.github/workflows/setup-cache.yml
 
   # Job 3: Parallel unit tests (原子化架构)
   unit-tests-backend:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: setup-cache
     uses: ./.github/workflows/test-unit-backend.yml
     with:
@@ -51,7 +52,7 @@ jobs:
       timeout: 10
 
   unit-tests-frontend:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: setup-cache
     uses: ./.github/workflows/test-unit-frontend.yml
     with:
@@ -60,7 +61,7 @@ jobs:
 
   # Job 4: Integration tests (依赖单元测试)
   integration-tests:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: [unit-tests-backend, unit-tests-frontend]
     uses: ./.github/workflows/test-integration.yml
     with:
@@ -68,7 +69,7 @@ jobs:
 
   # Job 5: Security and quality checks (并行执行)
   security-scan:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: setup-cache
     uses: ./.github/workflows/quality-security.yml
     with:
@@ -77,7 +78,7 @@ jobs:
 
   # Job 6: E2E smoke tests (关键路径验证)
   e2e-smoke:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: integration-tests
     uses: ./.github/workflows/test-e2e-smoke.yml
     with:
@@ -85,7 +86,7 @@ jobs:
 
   # Job 7: Protected files validation (特殊安全检查)
   protected-files-check:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -162,7 +163,7 @@ jobs:
 
   # Job 9: Performance and quality gates (保留原有功能)
   quality-gates:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: [setup-cache, integration-tests]
     runs-on: ubuntu-latest
     steps:
@@ -400,23 +401,132 @@ jobs:
 
           echo "✅ PR ready for human approval"
 
-  # Job 6: Dev branch monitoring (when Cursor pushes to dev)
-  dev-branch-monitor:
+  # Job 11: Push validation summary (for direct pushes to dev)
+  push-validation-summary:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs:
+      [
+        unit-tests-backend,
+        unit-tests-frontend,
+        integration-tests,
+        security-scan,
+        e2e-smoke,
+        protected-files-check,
+        quality-gates,
+      ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Push Validation Summary
+        run: |
+          echo "🛡️ DEV BRANCH PUSH VALIDATION SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "=======================================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Push Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查各个验证结果
+          BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
+          FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
+          INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
+          SECURITY_STATUS="${{ needs.security-scan.result }}"
+          E2E_STATUS="${{ needs.e2e-smoke.result }}"
+          PROTECTED_STATUS="${{ needs.protected-files-check.result }}"
+          QUALITY_STATUS="${{ needs.quality-gates.result }}"
+
+          echo "| Validation Check | Status | Impact |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Unit Tests | $BACKEND_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Unit Tests | $FRONTEND_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | $INTEGRATION_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | $SECURITY_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Smoke Tests | $E2E_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Protected Files Check | $PROTECTED_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gates | $QUALITY_STATUS | ⚠️ Important |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 判断整体结果
+          if [[ "$BACKEND_STATUS" == "success" && \
+                "$FRONTEND_STATUS" == "success" && \
+                "$INTEGRATION_STATUS" == "success" && \
+                "$SECURITY_STATUS" == "success" && \
+                "$E2E_STATUS" == "success" && \
+                "$PROTECTED_STATUS" == "success" ]]; then
+            echo "✅ **All push validations PASSED!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 Dev branch is secure and stable" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 Ready for continued development" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "$QUALITY_STATUS" != "success" ]]; then
+              echo "⚠️ Quality gates have warnings - please review" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "Dev branch push validation completed successfully"
+          else
+            echo "❌ **Push validation FAILED!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💥 Critical issues detected in dev branch push" >> $GITHUB_STEP_SUMMARY
+            echo "🚨 Immediate action required" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 Please create a fix commit immediately" >> $GITHUB_STEP_SUMMARY
+            echo "Dev branch push validation failed"
+            exit 1
+          fi
+
+  # Job 12: Dev分支直接Push保护 (重要：防止绕过PR流程)
+  dev-direct-push-guard:
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-      - name: Monitor Dev Branch Activity
+      - name: 检查Push来源
         run: |
-          echo "👀 MONITORING: New push to dev branch detected"
+          echo "🔍 检查dev分支push来源..."
           echo "   Commit: ${{ github.sha }}"
           echo "   Author: ${{ github.actor }}"
           echo "   Message: ${{ github.event.head_commit.message }}"
-          echo ""
-          echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
-          echo "   ✅ Cursor successfully pushed to dev branch"
-          echo "   ⏳ Key B will activate when PR is created to main"
-          echo ""
-          echo "💡 Next steps:"
-          echo "   1. Create PR from dev to main"
-          echo "   2. Automated full test suite will run (Key B)"
-          echo "   3. Human approval required for merge"
+
+          # 检查是否是合并提交（允许的情况）
+          git fetch origin main:main || true
+
+          # 如果是从main或通过GitHub合并的，允许
+          if git merge-base --is-ancestor main HEAD 2>/dev/null || \
+             [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ # ]]; then
+            echo "✅ 检测到合法的合并操作"
+            echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
+            echo "   ✅ 合并已通过PR验证流程"
+            echo "   ⏳ Key B will activate when PR is created to main"
+          else
+            echo "❌ 警告：检测到直接push到dev分支"
+            echo "🚨 违反了PR-first开发流程"
+            echo ""
+            echo "📋 正确的开发流程："
+            echo "   1. 创建feature分支：git checkout -b feature/your-feature"
+            echo "   2. 开发和提交：git commit -m 'your changes'"
+            echo "   3. 推送feature分支：git push origin feature/your-feature"
+            echo "   4. 创建PR到dev分支"
+            echo "   5. 等待CI验证和审查"
+            echo "   6. 合并PR到dev"
+            echo ""
+            echo "🔧 如需紧急修复，请："
+            echo "   - 创建hotfix分支进行修复"
+            echo "   - 通过PR流程合并"
+            echo ""
+            echo "⚠️  直接push到dev分支可能导致："
+            echo "   - 跳过必要的CI验证"
+            echo "   - 缺少代码审查"
+            echo "   - 破坏分支保护策略"
+
+            # 警告但不阻止，因为可能是合法的紧急情况
+            echo ""
+            echo "🟡 警告已记录，请遵循正确流程"
+          fi
+
+      - name: 记录Dev分支活动
+        run: |
+          echo "📊 Dev分支活动日志:"
+          echo "   时间: $(date)"
+          echo "   操作: Push到dev分支"
+          echo "   提交: ${{ github.sha }}"
+          echo "   作者: ${{ github.actor }}"
