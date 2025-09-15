@@ -41,7 +41,7 @@
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
     "postinstall:disabled": "npm run e2e:install",
-    "prepare": "is-ci || husky install",
+    "prepare": "node -e \"if (process.env.CI) process.exit(0); try { require('child_process').execSync('npx husky install', {stdio: 'inherit'}); } catch (e) { console.log('Husky install skipped'); }\"",
     "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
