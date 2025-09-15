@@ -78,9 +78,14 @@ jobs:
           echo "Safety scan completed"
 
       - name: Frontend Dependency Audit
-        working-directory: ./frontend
         run: |
-          echo "Running npm audit in frontend directory..."
+          echo "Running npm audit for frontend workspace..."
+          # Ensure frontend dependencies are installed
+          if [ ! -d frontend/node_modules ]; then
+            echo "Installing frontend dependencies first..."
+            cd frontend && npm ci --prefer-offline --no-audit && cd ..
+          fi
+
           # Convert severity level to npm audit format
           case "${{ inputs.severity }}" in
             "medium") AUDIT_LEVEL="moderate" ;;
@@ -91,8 +96,9 @@ jobs:
 
           # Use official npm registry for security audit to avoid mirror issues
           npm config set registry https://registry.npmjs.org/
-          npm audit --audit-level=$AUDIT_LEVEL --json > npm-audit.json || true
-          npm audit --audit-level=$AUDIT_LEVEL || true
+          # Run audit for frontend workspace from root directory
+          npm audit --workspace=frontend --audit-level=$AUDIT_LEVEL --json > frontend-audit.json || true
+          npm audit --workspace=frontend --audit-level=$AUDIT_LEVEL || true
           # Restore mirror config
           npm config set registry https://registry.npmmirror.com/
           echo "npm audit completed"
