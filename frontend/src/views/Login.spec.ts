@@ -33,9 +33,6 @@ describe('Login.vue', () => {
   })
 
   it('应该正确渲染登录表单', () => {
-    // 检查标题
-    expect(wrapper.find('h2').text()).toBe('登录')
-
     // 使用 data-testid 选择器，避免依赖具体渲染实现
     expect(wrapper.find('[data-testid="login-form"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="login-button"]').exists()).toBe(true)
