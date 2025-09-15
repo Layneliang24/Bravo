@@ -5,10 +5,13 @@ import Login from './Login.vue'
 // Mock vue-router
 const mockPush = vi.fn()
 vi.mock('vue-router', async () => {
-  const actual = (await vi.importActual('vue-router')) as any
+  const actual = (await vi.importActual('vue-router')) as Record<
+    string,
+    unknown
+  >
   return {
     ...actual,
-    useRouter: () => ({
+    useRouter: (): { push: typeof mockPush } => ({
       push: mockPush,
     }),
   }
@@ -25,12 +28,12 @@ describe('Login.vue', () => {
     wrapper = mount(Login, {
       global: {
         stubs: {
-          'el-card': { template: '<div class="el-card"><slot /></div>' },
-          'el-form': { template: '<form class="el-form"><slot /></form>' },
-          'el-form-item': {
+          ElCard: { template: '<div class="el-card"><slot /></div>' },
+          ElForm: { template: '<form class="el-form"><slot /></form>' },
+          ElFormItem: {
             template: '<div class="el-form-item"><slot /></div>',
           },
-          'el-input': {
+          ElInput: {
             template:
               '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
             props: ['type', 'placeholder', 'modelValue'],
@@ -42,7 +45,7 @@ describe('Login.vue', () => {
               },
             },
           },
-          'el-button': {
+          ElButton: {
             template:
               '<button class="el-button" @click="handleClick"><slot /></button>',
             emits: ['click'],

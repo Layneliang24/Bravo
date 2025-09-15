@@ -41,7 +41,7 @@
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
     "postinstall:disabled": "npm run e2e:install",
-    "prepare": "npx is-ci || npx husky",
+    "prepare": "is-ci || husky install",
     "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
