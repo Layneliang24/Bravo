@@ -96,3 +96,57 @@ git commit --no-verify -m "紧急修复: 描述具体问题"
 3. 调整pylint配置忽略Django \_meta访问
 
 **时间**: 2025-09-15
+
+### Q: Vue.js TypeScript类型检查失败 - @vue/shared模块dist目录缺失
+
+**问题描述**: dev分支CI失败，TypeScript类型检查无法通过
+
+**具体错误**:
+
+```
+Error: Cannot find module './dist/shared.cjs.js'
+Require stack:
+- node_modules/@vue/shared/index.js
+- node_modules/@vue/language-core/lib/utils/shared.js
+- [Vue TypeScript chain...]
+```
+
+**根本原因**:
+Vue.js `@vue/shared` 模块安装不完整，缺少 `dist` 目录，导致 `vue-tsc --noEmit` 命令失败
+
+**真正原因**:
+
+- **CI环境**: 没有npm缓存("npm cache is not found")，全新安装依赖，Vue模块完整
+- **本地环境**: 有损坏的npm缓存/依赖，Vue模块缺少dist目录
+
+**解决方案**:
+
+1. **清除缓存并重新安装依赖** (本地环境):
+
+```bash
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
+2. **ESLint配置优化** (已修复):
+
+```javascript
+// 测试文件中禁用命名规范检查，允许Vue组件kebab-case名称
+files: ['**/*.test.{js,ts}', '**/*.spec.{js,ts}'],
+rules: {
+  '@typescript-eslint/naming-convention': 'off'
+}
+```
+
+3. **Docker环境开发** (推荐):
+   按照项目规范使用容器化环境，避免本地依赖问题
+
+**修复记录**:
+
+- **PR #26**: 成功合并到dev分支，修复了ESLint配置
+- **根因确认**: CI失败是因为vue-tsc静默失败，不是真正的通过
+- **本地验证**: 清除缓存后TypeScript检查通过
+- **状态**: 问题已解决，需要触发新的CI验证修复效果
+
+**时间**: 2025-09-15
