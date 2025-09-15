@@ -28,12 +28,12 @@ describe('Login.vue', () => {
     wrapper = mount(Login, {
       global: {
         stubs: {
-          ElCard: { template: '<div class="el-card"><slot /></div>' },
-          ElForm: { template: '<form class="el-form"><slot /></form>' },
-          ElFormItem: {
+          'el-card': { template: '<div class="el-card"><slot /></div>' },
+          'el-form': { template: '<form class="el-form"><slot /></form>' },
+          'el-form-item': {
             template: '<div class="el-form-item"><slot /></div>',
           },
-          ElInput: {
+          'el-input': {
             template:
               '<input class="el-input" v-bind="$attrs" @input="handleInput" />',
             props: ['type', 'placeholder', 'modelValue'],
@@ -45,7 +45,7 @@ describe('Login.vue', () => {
               },
             },
           },
-          ElButton: {
+          'el-button': {
             template:
               '<button class="el-button" @click="handleClick"><slot /></button>',
             emits: ['click'],
