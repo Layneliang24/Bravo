@@ -179,7 +179,7 @@ repos:
     hooks:
       - id: root-clutter
         name: Root Clutter Guard (strict)
-        entry: bash -c 'git diff --cached --name-only | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example|\.backup|\.old|\.tmp|\.temp)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "❌ 禁止在根目录添加临时文件，请放入 docs/ 或对应目录" && exit 1 || exit 0'
+        entry: bash -c 'git diff --cached --name-status | grep "^[AM]" | cut -f2- | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example|\.backup|\.old|\.tmp|\.temp)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "❌ 禁止在根目录添加临时文件，请放入 docs/ 或对应目录" && exit 1 || exit 0'
         language: system
         always_run: true
         fail_fast: true
