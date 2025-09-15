@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-快速烟雾测试模块 - 用于合并后快速验证
+"""快速烟雾测试模块 - 用于合并后快速验证
 包含最关键的功能测试，确保基本系统完整性
 """
 
@@ -8,7 +7,6 @@ import pytest
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
-from django.urls import reverse
 
 User = get_user_model()
 
