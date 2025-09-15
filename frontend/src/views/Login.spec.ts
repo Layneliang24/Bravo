@@ -24,8 +24,8 @@ describe('Login.vue', () => {
     vi.clearAllMocks()
     wrapper = mount(Login, {
       global: {
-        // 使用字符串stubs，CI更稳定
-        stubs: ['el-card', 'el-form', 'el-form-item', 'el-input', 'el-button'],
+        // 🔥 关键修复：不要stub el-card，让它正常渲染，只stub内部组件
+        stubs: ['el-form', 'el-form-item', 'el-input', 'el-button'],
       },
     })
   })
@@ -36,12 +36,10 @@ describe('Login.vue', () => {
     console.log(wrapper.html())
     console.log('=== END DOM STRUCTURE ===')
 
-    // 接受 stub 标签或真实DOM渲染的多种形态
-    const formSelector =
-      'el-form-stub,[data-testid="login-form"],form.el-form,.el-form'
-    const buttonSelector =
-      'el-button-stub,[data-testid="login-button"],.el-button,button.el-button'
-    const cardSelector = 'el-card-stub,.el-card'
+    // el-card真实渲染，其他组件用stub
+    const formSelector = 'el-form-stub,[data-testid="login-form"]'
+    const buttonSelector = 'el-button-stub,[data-testid="login-button"]'
+    const cardSelector = '.el-card' // 真实的Element Plus组件
 
     expect(wrapper.find(cardSelector).exists()).toBe(true)
     expect(wrapper.find(formSelector).exists()).toBe(true)
