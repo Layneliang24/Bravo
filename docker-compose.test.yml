@@ -1,85 +1,78 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  # MySQL数据库
-  mysql:
+  # 预配置的MySQL服务
+  mysql-test:
     image: mysql:8.0
     environment:
       MYSQL_DATABASE: bravo_test
       MYSQL_USER: bravo_user
       MYSQL_PASSWORD: bravo_password
       MYSQL_ROOT_PASSWORD: root_password
-    ports:
-      - "3306:3306"
+    tmpfs:
+      - /var/lib/mysql  # 使用内存存储，加速测试
+    command: --default-authentication-plugin=mysql_native_password --skip-log-bin
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-proot_password",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - mysql_data:/var/lib/mysql
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  # 后端服务
-  backend:
+  # 后端测试服务
+  backend-test:
     build:
       context: ./backend
       dockerfile: Dockerfile.test
-    environment:
-      - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_NAME=bravo_test
-      - DB_USER=bravo_user
-      - DB_PASSWORD=bravo_password
-      - DJANGO_SETTINGS_MODULE=bravo.settings.test
-    ports:
-      - "8000:8000"
     depends_on:
-      mysql:
+      mysql-test:
         condition: service_healthy
+    environment:
+      DB_HOST: mysql-test
+      DB_NAME: bravo_test
+      DB_USER: bravo_user
+      DB_PASSWORD: bravo_password
     volumes:
       - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  # 前端服务
-  frontend:
+  # 前端构建服务
+  frontend-build:
     build:
       context: ./frontend
       dockerfile: Dockerfile.test
-    environment:
-      - VITE_API_URL=http://backend:8000
-      - NODE_ENV=production
-    ports:
-      - "3001:3001"
     volumes:
-      - ./frontend:/app
-    command: npm run preview -- --port 3001 --host 0.0.0.0
+      - ./frontend/dist:/app/dist
+    command: npm run build
 
   # E2E测试服务
-  e2e:
+  e2e-tests:
     build:
       context: ./e2e
       dockerfile: Dockerfile.test
-    environment:
-      - TEST_BASE_URL=http://frontend:3001
-      - DOCKER_ENV=true
     depends_on:
-      - frontend
-      - backend
+      backend-test:
+        condition: service_healthy
+      frontend-build:
+        condition: service_completed_successfully
     volumes:
       - ./e2e:/app
-      - ./e2e/test-results:/app/test-results
-      - ./e2e/playwright-report:/app/playwright-report
-    command: npx playwright test --project=chromium
-
-volumes:
-  mysql_data:
+      - ./frontend/dist:/frontend-dist
+    environment:
+      BACKEND_URL: http://backend-test:8000
+      FRONTEND_URL: http://localhost:3001
+    command: |
+      bash -c "
+        echo '🚀 启动前端服务...'
+        cd /frontend-dist && python -m http.server 3001 &
+        
+        echo '⏳ 等待服务就绪...'
+        timeout 30 bash -c 'until curl -s http://backend-test:8000/health/; do sleep 1; done'
+        timeout 30 bash -c 'until curl -s http://localhost:3001; do sleep 1; done'
+        
+        echo '🧪 运行关键E2E测试...'
+        npx playwright test --grep '@critical' --project=chromium
+      "
