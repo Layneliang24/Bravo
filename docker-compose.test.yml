@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # 预配置的MySQL服务
@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: bravo_password
       MYSQL_ROOT_PASSWORD: root_password
     tmpfs:
-      - /var/lib/mysql  # 使用内存存储，加速测试
+      - /var/lib/mysql # 使用内存存储，加速测试
     command: --default-authentication-plugin=mysql_native_password --skip-log-bin
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -68,11 +68,11 @@ services:
       bash -c "
         echo '🚀 启动前端服务...'
         cd /frontend-dist && python -m http.server 3001 &
-        
+
         echo '⏳ 等待服务就绪...'
         timeout 30 bash -c 'until curl -s http://backend-test:8000/health/; do sleep 1; done'
         timeout 30 bash -c 'until curl -s http://localhost:3001; do sleep 1; done'
-        
+
         echo '🧪 运行关键E2E测试...'
         npx playwright test --grep '@critical' --project=chromium
       "
