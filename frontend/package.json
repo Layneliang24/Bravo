@@ -34,6 +34,7 @@
     "lodash-es": "^4.17.21",
     "nprogress": "^0.2.0",
     "pinia": "^2.1.7",
+    "v8-to-istanbul": "^9.3.0",
     "vue": "^3.3.8",
     "vue-demi": "^0.14.10",
     "vue-router": "^4.2.5"
@@ -42,6 +43,7 @@
     "@babel/core": "^7.22.0",
     "@babel/preset-env": "^7.22.0",
     "@babel/preset-typescript": "^7.22.0",
+    "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
     "@playwright/test": "^1.40.0",
     "@storybook/addon-essentials": "^7.5.3",

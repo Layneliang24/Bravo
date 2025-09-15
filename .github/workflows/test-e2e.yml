@@ -98,7 +98,7 @@ jobs:
       - name: Start frontend server
         working-directory: ./frontend
         run: |
-          npm run serve &
+          npm run preview -- --port 3001 --host 0.0.0.0 &
           echo "Frontend server started"
 
       - name: Wait for servers

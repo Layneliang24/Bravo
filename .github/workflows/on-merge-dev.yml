@@ -36,22 +36,30 @@ jobs:
             echo "✅ 检测到合并提交"
             echo "is-merge=true" >> $GITHUB_OUTPUT
 
-            # 尝试获取合并信息
-            COMMIT_MSG=$(git log -1 --pretty=%B)
+            # 安全获取合并信息（处理多行和特殊字符）
+            COMMIT_MSG=$(git log -1 --pretty=%s)  # 只获取标题行，避免多行问题
             echo "提交信息: $COMMIT_MSG"
 
-            # 提取PR编号
-            if [[ "$COMMIT_MSG" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
+            # 提取PR编号（更严格的模式匹配）
+            if [[ "$COMMIT_MSG" =~ ^Merge\ pull\ request\ #([0-9]+) ]]; then
               PR_NUMBER="${BASH_REMATCH[1]}"
-              echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
               echo "✅ 检测到PR #$PR_NUMBER"
+            else
+              echo "pr-number=" >> $GITHUB_OUTPUT
+              echo "ℹ️ 未检测到标准PR合并格式"
             fi
 
-            # 提取源分支
-            if [[ "$COMMIT_MSG" =~ from\ .*/(.+) ]]; then
+            # 提取源分支（更严格的模式匹配）
+            if [[ "$COMMIT_MSG" =~ from\ [^/]+/(.+)$ ]]; then
               SOURCE_BRANCH="${BASH_REMATCH[1]}"
-              echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+              # 清理分支名称，确保不包含特殊字符
+              SOURCE_BRANCH=$(echo "$SOURCE_BRANCH" | sed 's/[^a-zA-Z0-9_-]//g')
+              echo "source-branch=${SOURCE_BRANCH}" >> $GITHUB_OUTPUT
               echo "✅ 源分支: $SOURCE_BRANCH"
+            else
+              echo "source-branch=" >> $GITHUB_OUTPUT
+              echo "ℹ️ 未检测到源分支信息"
             fi
           else
             echo "ℹ️ 非合并提交，跳过合并后验证"
