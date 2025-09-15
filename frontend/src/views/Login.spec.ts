@@ -39,7 +39,7 @@ describe('Login.vue', () => {
     // el-card真实渲染，其他组件用stub
     const formSelector = 'el-form-stub,[data-testid="login-form"]'
     const buttonSelector = 'el-button-stub,[data-testid="login-button"]'
-    const cardSelector = '.el-card' // 真实的Element Plus组件
+    const cardSelector = 'el-card' // Element Plus标签选择器
 
     expect(wrapper.find(cardSelector).exists()).toBe(true)
     expect(wrapper.find(formSelector).exists()).toBe(true)
