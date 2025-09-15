@@ -76,13 +76,17 @@ jobs:
           case "${{ matrix.check }}" in
             "conflicts")
               echo "🔍 检查合并冲突标记..."
-              if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" --include="*.py" --include="*.js" --include="*.vue" .; then
-                echo "❌ 发现合并冲突标记!" && exit 1
+              # 检查合并冲突标记
+              conflict_files=$(find . -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.ts" | head -20 | xargs grep -l "<<<<<<< HEAD\|>>>>>>> \|=======" 2>/dev/null || true)
+              if [ -n "$conflict_files" ]; then
+                echo "❌ 发现合并冲突标记: $conflict_files" && exit 1
               fi
               # 检查备份文件
-              if find . -name "*.orig" -o -name "*.rej" -o -name "*.bak" | head -1; then
-                echo "❌ 发现冲突备份文件!" && exit 1
+              backup_files=$(find . -maxdepth 3 -name "*.orig" -o -name "*.rej" -o -name "*.bak" 2>/dev/null | head -5 || true)
+              if [ -n "$backup_files" ]; then
+                echo "❌ 发现冲突备份文件: $backup_files" && exit 1
               fi
+              echo "✅ 无冲突标记和备份文件"
               ;;
             "dependencies")
               echo "📦 快速依赖检查..."
