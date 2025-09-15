@@ -61,3 +61,33 @@ npx prettier --check .
 **解决**：使用 `npx prettier --write src/` 一次性修复
 **结果**：所有文件格式统一，代码可读性提升
 **时间**：2025-09-09
+
+## 开发环境问题
+
+### Q: Pre-commit检查持续失败，无法提交代码
+**问题描述**: 遇到TypeScript和ESLint依赖问题导致pre-commit失败
+
+**具体错误**:
+1. `global-teardown.ts: Type 'IGlob' is missing properties` - glob API版本不兼容
+2. `Cannot find module '@eslint/eslintrc/dist/eslintrc.cjs'` - ESLint依赖路径错误
+3. Python pylint _meta访问警告（可接受级别）
+
+**尝试的解决方案**:
+- 修复Python变量命名和导入问题 ✅
+- 安装缺失的TypeScript类型定义 ✅ 
+- 修复glob API使用方式 ❌ (API不兼容)
+- 重新安装npm依赖 ❌ (权限问题)
+
+**临时解决方案**:
+当pre-commit阻止关键修复验证时，可以考虑：
+```bash
+# 仅在紧急情况下使用，之后必须修复质量问题
+git commit --no-verify -m "紧急修复: 描述具体问题"
+```
+
+**根本解决方案**:
+1. 升级到兼容的glob版本
+2. 重建ESLint配置和依赖
+3. 调整pylint配置忽略Django _meta访问
+
+**时间**: 2025-09-15

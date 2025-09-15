@@ -172,7 +172,7 @@ async function cleanupTempFiles() {
       if (pattern.includes('*')) {
         // 使用绝对路径进行glob搜索，直接获取完整路径
         const absolutePattern = path.join(__dirname, pattern);
-        filePaths = await glob(absolutePattern);
+        filePaths = await glob(absolutePattern, { cwd: __dirname });
       } else {
         filePaths = [path.join(__dirname, pattern)];
       }
