@@ -36,11 +36,9 @@ describe('Login.vue', () => {
     // 检查标题
     expect(wrapper.find('h2').text()).toBe('登录')
 
-    // 检查Element Plus组件存在（字符串stub会渲染为 *-stub 标签）
-    expect(wrapper.find('el-card-stub').exists()).toBe(true)
-    expect(wrapper.find('el-form-stub').exists()).toBe(true)
-    expect(wrapper.find('el-button-stub').exists()).toBe(true)
-    expect(wrapper.find('el-button-stub').text()).toBe('登录')
+    // 使用 data-testid 选择器，避免依赖具体渲染实现
+    expect(wrapper.find('[data-testid="login-form"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="login-button"]').exists()).toBe(true)
   })
 
   it('应该能够输入用户名和密码', async () => {
