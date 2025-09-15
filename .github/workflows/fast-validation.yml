@@ -42,7 +42,7 @@ jobs:
           key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
           
       - name: Setup Environment
-        uses: ./.github/actions/setup-fast-env
+        uses: ./.github/actions/setup-cached-env
         
       - name: Run Check
         run: |
