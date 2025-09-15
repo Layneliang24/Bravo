@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-13T04:42:02.059Z",
+  "timestamp": "2025-09-15T05:08:12.754Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 17,
+    "totalTestFiles": 20,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -12,14 +12,6 @@
       "desc": "英语新闻列表页显示标题和摘要",
       "category": "english",
       "priority": "high",
-      "components": [
-        "NewsList.vue",
-        "NewsCard.vue"
-      ],
-      "apis": [
-        "/api/english/news/"
-      ],
-      "status": "active",
       "tests": [
         "frontend\\tests\\examples\\feature-mapping-demo.test.js"
       ],
@@ -35,15 +27,6 @@
       "desc": "英语新闻详情页点击翻译按钮出现中文翻译",
       "category": "english",
       "priority": "high",
-      "components": [
-        "NewsDetail.vue",
-        "TranslationButton.vue"
-      ],
-      "apis": [
-        "/api/english/news/{id}/",
-        "/api/english/translate/"
-      ],
-      "status": "active",
       "tests": [
         "frontend\\tests\\examples\\feature-mapping-demo.test.js"
       ],
@@ -59,14 +42,6 @@
       "desc": "打字练习页面统计正确率和速度",
       "category": "english",
       "priority": "medium",
-      "components": [
-        "TypingPractice.vue",
-        "TypingStats.vue"
-      ],
-      "apis": [
-        "/api/english/typing/stats/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -78,15 +53,6 @@
       "desc": "英语单词收藏和复习功能",
       "category": "english",
       "priority": "medium",
-      "components": [
-        "WordCollection.vue",
-        "ReviewMode.vue"
-      ],
-      "apis": [
-        "/api/english/words/favorites/",
-        "/api/english/words/review/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -98,14 +64,6 @@
       "desc": "博客列表页展示3篇最新博客",
       "category": "blog",
       "priority": "high",
-      "components": [
-        "BlogList.vue",
-        "BlogCard.vue"
-      ],
-      "apis": [
-        "/api/blog/posts/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -117,15 +75,6 @@
       "desc": "博客详情页显示完整内容和评论",
       "category": "blog",
       "priority": "high",
-      "components": [
-        "BlogDetail.vue",
-        "CommentSection.vue"
-      ],
-      "apis": [
-        "/api/blog/posts/{id}/",
-        "/api/blog/comments/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -137,15 +86,6 @@
       "desc": "博客搜索和分类筛选功能",
       "category": "blog",
       "priority": "medium",
-      "components": [
-        "BlogSearch.vue",
-        "CategoryFilter.vue"
-      ],
-      "apis": [
-        "/api/blog/search/",
-        "/api/blog/categories/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -157,15 +97,6 @@
       "desc": "用户注册和登录功能",
       "category": "auth",
       "priority": "critical",
-      "components": [
-        "LoginForm.vue",
-        "RegisterForm.vue"
-      ],
-      "apis": [
-        "/api/auth/login/",
-        "/api/auth/register/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -177,15 +108,6 @@
       "desc": "用户个人资料管理",
       "category": "auth",
       "priority": "medium",
-      "components": [
-        "ProfileEdit.vue",
-        "AvatarUpload.vue"
-      ],
-      "apis": [
-        "/api/auth/profile/",
-        "/api/auth/avatar/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -197,14 +119,6 @@
       "desc": "用户学习进度跟踪",
       "category": "auth",
       "priority": "medium",
-      "components": [
-        "ProgressDashboard.vue",
-        "ProgressChart.vue"
-      ],
-      "apis": [
-        "/api/auth/progress/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -216,12 +130,6 @@
       "desc": "响应式导航栏和菜单",
       "category": "common",
       "priority": "high",
-      "components": [
-        "NavBar.vue",
-        "SideMenu.vue"
-      ],
-      "apis": [],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -233,12 +141,6 @@
       "desc": "全局错误处理和提示",
       "category": "common",
       "priority": "high",
-      "components": [
-        "ErrorBoundary.vue",
-        "NotificationToast.vue"
-      ],
-      "apis": [],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -250,13 +152,6 @@
       "desc": "多语言国际化支持",
       "category": "common",
       "priority": "medium",
-      "components": [
-        "LanguageSwitcher.vue"
-      ],
-      "apis": [
-        "/api/i18n/"
-      ],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -268,9 +163,6 @@
       "desc": "页面加载性能优化",
       "category": "performance",
       "priority": "medium",
-      "components": [],
-      "apis": [],
-      "status": "active",
       "tests": [
         "frontend\\tests\\examples\\feature-mapping-demo.test.js"
       ],
@@ -286,11 +178,6 @@
       "desc": "图片懒加载和压缩",
       "category": "performance",
       "priority": "medium",
-      "components": [
-        "LazyImage.vue"
-      ],
-      "apis": [],
-      "status": "active",
       "tests": [],
       "staticTests": [],
       "runtimeTests": [],
@@ -345,7 +232,7 @@
       "featureCount": 0
     },
     {
-      "file": "backend\\test_coverage.py",
+      "file": "backend\\tests\\test_users_models.py",
       "features": [],
       "featureCount": 0
     },
@@ -356,6 +243,21 @@
     },
     {
       "file": "backend\\tests\\test_regression.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_common_views.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_common_pagination.py",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "backend\\tests\\test_apps_urls.py",
       "features": [],
       "featureCount": 0
     },
