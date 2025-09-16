@@ -120,12 +120,16 @@ jobs:
         run: |
           source .venv/bin/activate
           echo "Running backend regression tests (scope: ${{ inputs.scope }})..."
+          echo "Python version: $(python --version)"
+          echo "Django version: $(python -c 'import django; print(django.get_version())')"
+          echo "Current directory: $(pwd)"
+          echo "Available test files: $(ls tests/)"
 
           if [ "${{ inputs.scope }}" == "light" ]; then
             # 轻量级回归测试 - 只运行关键功能
             python -m pytest tests/test_regression.py \
               -k "test_critical or test_api_compatibility" \
-              --maxfail=5 -v --tb=short
+              --maxfail=5 -v --tb=long
           else
             # 完整回归测试
             python -m pytest tests/test_regression.py \
