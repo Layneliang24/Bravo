@@ -114,7 +114,7 @@ jobs:
                 CREATE DATABASE IF NOT EXISTS bravo_test;
                 CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
                 GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-                GRANT CREATE ON *.* TO 'bravo_user'@'%';
+                GRANT ALL PRIVILEGES ON *.* TO 'bravo_user'@'%';
                 FLUSH PRIVILEGES;
               "
               echo "✅ 已授予bravo_user创建测试数据库的权限"
