@@ -58,6 +58,8 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 运行快速后端测试..."
+          # 激活虚拟环境
+          source .venv/bin/activate
           python -m pytest tests/ -v --maxfail=5 --tb=short
         env:
           DB_HOST: 127.0.0.1
