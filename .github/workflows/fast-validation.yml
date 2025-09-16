@@ -146,7 +146,13 @@ jobs:
       - name: Run E2E with Container
         run: |
           echo "🚀 使用容器化E2E测试..."
-          docker-compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests
+          # 检查docker-compose是否可用，否则使用docker compose (newer syntax)
+          if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests
+          else
+            echo "docker-compose not found, using 'docker compose' instead..."
+            docker compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests
+          fi
 
   # 汇总结果
   validation-summary:

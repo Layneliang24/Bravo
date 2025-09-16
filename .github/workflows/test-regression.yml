@@ -126,9 +126,9 @@ jobs:
           echo "Available test files: $(ls tests/)"
 
           if [ "${{ inputs.scope }}" == "light" ]; then
-            # 轻量级回归测试 - 只运行关键功能
+            # 轻量级回归测试 - 运行核心功能测试
             python -m pytest tests/test_regression.py \
-              -k "test_critical or test_api_compatibility" \
+              -k "test_user or test_auth or test_basic" \
               --maxfail=5 -v --tb=long
           else
             # 完整回归测试
