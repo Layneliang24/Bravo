@@ -94,6 +94,7 @@ jobs:
             source .venv/bin/activate
             pip install --upgrade pip wheel
             pip install -r requirements/base.txt
+            pip install -r requirements/test.txt
             cd ..
           fi
 
