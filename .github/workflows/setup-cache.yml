@@ -92,7 +92,7 @@ jobs:
           pip install -r requirements/test.txt
           echo "Backend dependencies installed"
 
-      # Level 1: E2E Dependencies Cache
+      # Level 1A: E2E NPM Dependencies Cache
       - name: Cache E2E Dependencies
         id: e2e-cache
         uses: actions/cache@v4
@@ -111,15 +111,32 @@ jobs:
         run: |
           echo "Installing E2E dependencies (cache miss)..."
           npm ci --prefer-offline --no-audit
-          npx playwright install --with-deps
           echo "E2E dependencies installed"
+
+      # Level 1B: Playwright Browsers Cache (CRITICAL for performance)
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v1-${{ runner.os }}-
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "Installing Playwright browsers (cache miss) - ~280MB download..."
+          npx playwright install --with-deps
+          echo "✅ Playwright browsers installed and cached"
 
       # Level 2: Build Cache (Frontend)
       - name: Cache Frontend Build
         uses: actions/cache@v4
         with:
           path: frontend/dist
-          key: frontend-build-v1-${{ runner.os }}-${{ hashFiles('frontend/src/**/*', 'frontend/package.json') }}
+          key: frontend-build-v3-${{ runner.os }}-${{ hashFiles('frontend/src/**/*', 'frontend/package.json') }}
           restore-keys: |
             frontend-build-v1-${{ runner.os }}-
 

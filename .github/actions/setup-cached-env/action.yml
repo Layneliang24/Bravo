@@ -64,3 +64,15 @@ runs:
         fi
 
         echo "✅ 依赖检查完成"
+
+    - name: Save Full Dependency Cache
+      uses: actions/cache/save@v4
+      if: always()
+      with:
+        path: |
+          node_modules
+          frontend/node_modules
+          e2e/node_modules
+          ~/.cache/pip
+          backend/.venv
+        key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}

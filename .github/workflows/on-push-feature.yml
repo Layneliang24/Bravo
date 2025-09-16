@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 第一步：快速环境设置
+  # 第一步：快速环境设置（使用统一缓存）
   quick-setup:
     name: Quick Environment Setup
     runs-on: ubuntu-latest
@@ -18,26 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install Dependencies
-        run: |
-          echo "📦 快速安装依赖..."
-          npm ci --workspace=frontend
-          cd backend && pip install -r requirements/test.txt
+      # 使用统一的缓存环境设置
+      - name: Setup Cached Environment
+        uses: ./.github/actions/setup-cached-env
 
       - name: Environment Ready
-        run: echo "✅ 开发环境准备完成"
+        run: echo "✅ 开发环境准备完成（已缓存）"
 
   # 第二步：快速后端测试
   quick-backend-tests:
@@ -66,15 +52,28 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: |
-          pip install -r requirements/test.txt
+      # 依赖已由setup-cached-env action安装，无需重复安装
 
       - name: Run Quick Backend Tests
         working-directory: ./backend
         run: |
           echo "🧪 运行快速后端测试..."
+          # 调试信息
+          echo "Debug: 当前目录: $(pwd)"
+          echo "Debug: .venv目录是否存在: $(ls -la | grep venv || echo '不存在')"
+
+          # 检查并创建虚拟环境（如果不存在）
+          if [ ! -d ".venv" ]; then
+            echo "⚠️ .venv不存在，创建虚拟环境..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt -r requirements/test.txt
+          else
+            echo "✅ .venv已存在，激活虚拟环境..."
+            source .venv/bin/activate
+          fi
+
           python -m pytest tests/ -v --maxfail=5 --tb=short
         env:
           DB_HOST: 127.0.0.1
@@ -93,14 +92,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Frontend Dependencies
-        run: |
-          npm ci --workspace=frontend
+      # 使用统一的缓存环境设置
+      - name: Setup Cached Environment
+        uses: ./.github/actions/setup-cached-env
 
       - name: Run Quick Frontend Tests
         run: |

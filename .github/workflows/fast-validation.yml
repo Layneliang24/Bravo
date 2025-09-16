@@ -104,10 +104,21 @@ jobs:
               ;;
             "integration-smoke")
               # 等待数据库准备就绪
-              until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+              until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
                 echo "等待MySQL启动..."
                 sleep 2
               done
+
+              # 授予bravo_user创建测试数据库的权限
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+                CREATE DATABASE IF NOT EXISTS bravo_test;
+                CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+                GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+                GRANT CREATE ON *.* TO 'bravo_user'@'%';
+                FLUSH PRIVILEGES;
+              "
+              echo "✅ 已授予bravo_user创建测试数据库的权限"
+
               # 最小集成测试
               cd backend && source .venv/bin/activate
               python manage.py migrate --noinput --settings=bravo.settings.test
