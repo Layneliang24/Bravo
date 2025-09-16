@@ -10,9 +10,9 @@ RUN apk add --no-cache curl
 # 复制 package 文件
 COPY package*.json ./
 
-# 安装依赖（使用install而不是ci以提高网络容错性）
+# 安装依赖（包含开发依赖用于构建）
 RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm install --no-package-lock
+    npm install
 
 # 复制源代码
 COPY . .

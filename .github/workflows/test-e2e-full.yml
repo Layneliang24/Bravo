@@ -198,8 +198,7 @@ jobs:
           npx playwright test \
             --project=${{ inputs.browser }} \
             --max-failures=5 \
-            --reporter=html,junit \
-            --output-dir=test-results
+            --reporter=html,junit
 
           echo "Full E2E test suite completed"
         env:
