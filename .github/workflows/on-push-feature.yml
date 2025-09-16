@@ -58,8 +58,22 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 运行快速后端测试..."
-          # 激活虚拟环境
-          source .venv/bin/activate
+          # 调试信息
+          echo "Debug: 当前目录: $(pwd)"
+          echo "Debug: .venv目录是否存在: $(ls -la | grep venv || echo '不存在')"
+
+          # 检查并创建虚拟环境（如果不存在）
+          if [ ! -d ".venv" ]; then
+            echo "⚠️ .venv不存在，创建虚拟环境..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt -r requirements/test.txt
+          else
+            echo "✅ .venv已存在，激活虚拟环境..."
+            source .venv/bin/activate
+          fi
+
           python -m pytest tests/ -v --maxfail=5 --tb=short
         env:
           DB_HOST: 127.0.0.1
