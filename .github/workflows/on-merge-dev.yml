@@ -187,12 +187,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+      - name: Setup Cached Environment
+        uses: ./.github/actions/setup-cached-env
 
       - name: Check NPM Dependencies
         working-directory: ./frontend
@@ -201,11 +197,6 @@ jobs:
           # 检查依赖漏洞 (临时降低审计级别，跳过开发依赖的安全问题)
           npm audit --audit-level=critical --production || echo "⚠️ 发现安全问题，但仅影响开发环境"
           echo "✅ NPM依赖检查完成"
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
 
       - name: Check Python Dependencies
         working-directory: ./backend
