@@ -326,6 +326,13 @@ jobs:
             echo "✅ 根依赖已存在，跳过安装"
           fi
 
+      # 使用统一的E2E缓存设置（包含Playwright浏览器缓存）
+      - name: Setup E2E Cache
+        uses: ./.github/actions/cache-setup
+        with:
+          cache-type: e2e
+          cache-key-suffix: chromium
+
       - name: Install Playwright Browsers
         working-directory: ./e2e
         run: |

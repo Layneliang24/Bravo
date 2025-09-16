@@ -33,7 +33,7 @@ runs:
           frontend/node_modules
           frontend/.npm
           ~/.npm
-        key: frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-${{ inputs.cache-key-suffix }}
+        key: frontend-deps-v3-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-${{ inputs.cache-key-suffix }}
         restore-keys: |
           frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-
           frontend-deps-${{ runner.os }}-
@@ -48,7 +48,7 @@ runs:
           ~/.cache/pip
           backend/.venv
           backend/htmlcov
-        key: backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-${{ inputs.cache-key-suffix }}
+        key: backend-deps-v3-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-${{ inputs.cache-key-suffix }}
         restore-keys: |
           backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-
           backend-deps-${{ runner.os }}-
@@ -63,7 +63,7 @@ runs:
           e2e/node_modules
           e2e/.npm
           ~/.cache/ms-playwright
-        key: e2e-deps-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-${{ inputs.cache-key-suffix }}
+        key: e2e-deps-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-${{ inputs.cache-key-suffix }}
         restore-keys: |
           e2e-deps-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-
           e2e-deps-${{ runner.os }}-

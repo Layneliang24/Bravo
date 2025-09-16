@@ -68,11 +68,20 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      # 使用统一的缓存设置（包含Playwright浏览器缓存）
+      - name: Setup E2E Cache
+        uses: ./.github/actions/cache-setup
+        with:
+          cache-type: e2e
+          cache-key-suffix: ${{ inputs.browser }}
+
       - name: Install E2E dependencies
         working-directory: ./e2e
         run: |
           npm install
+          echo "🎭 Installing Playwright browser: ${{ inputs.browser }}..."
           npx playwright install ${{ inputs.browser }}
+          echo "✅ Browser installation completed"
 
       - name: Setup test database
         run: |

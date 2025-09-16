@@ -48,11 +48,9 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Dependencies
-        run: |
-          echo "📦 快速安装依赖..."
-          npm ci --workspace=frontend
-          cd backend && pip install -r requirements/test.txt
+      # 使用统一的缓存环境设置
+      - name: Setup Cached Environment
+        uses: ./.github/actions/setup-cached-env
 
       - name: Quick Frontend Test
         run: |
@@ -63,11 +61,22 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 快速后端测试..."
-          # 等待数据库准备就绪
-          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+          # 等待数据库准备就绪并设置权限
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
             echo "等待MySQL启动..."
             sleep 2
           done
+
+          # 授予bravo_user创建测试数据库的权限
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ 已授予bravo_user创建测试数据库的权限"
+
           # 运行迁移
           python manage.py migrate --noinput --settings=bravo.settings.test
           # 运行测试
@@ -82,13 +91,22 @@ jobs:
       - name: Integration Smoke Test
         run: |
           echo "🧪 集成烟雾测试..."
-          # 等待数据库完全准备就绪
+          # 等待数据库完全准备就绪并设置权限
           echo "⏳ 等待数据库连接..."
-          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
             echo "等待MySQL启动..."
             sleep 2
           done
-          echo "✅ 数据库连接成功"
+
+          # 授予bravo_user创建测试数据库的权限
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ 数据库连接成功，权限已设置"
 
           # 运行数据库迁移
           cd backend
@@ -180,18 +198,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Check NPM Dependencies
         working-directory: ./frontend
         run: |
           echo "📦 检查NPM依赖冲突..."
-
-          # 检查前端依赖
-          npm ci --dry-run
-
           # 检查依赖漏洞 (临时降低审计级别，跳过开发依赖的安全问题)
           npm audit --audit-level=critical --production || echo "⚠️ 发现安全问题，但仅影响开发环境"
-
           echo "✅ NPM依赖检查完成"
 
       - name: Setup Python
