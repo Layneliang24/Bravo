@@ -36,18 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
       # 使用统一的缓存环境设置
       - name: Setup Cached Environment
         uses: ./.github/actions/setup-cached-env
@@ -72,10 +60,13 @@ jobs:
             CREATE DATABASE IF NOT EXISTS bravo_test;
             CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON *.* TO 'bravo_user'@'%';
             FLUSH PRIVILEGES;
           "
           echo "✅ 已授予bravo_user创建测试数据库的权限"
+
+          # 激活虚拟环境
+          source .venv/bin/activate
 
           # 运行迁移
           python manage.py migrate --noinput --settings=bravo.settings.test
@@ -103,13 +94,15 @@ jobs:
             CREATE DATABASE IF NOT EXISTS bravo_test;
             CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON *.* TO 'bravo_user'@'%';
             FLUSH PRIVILEGES;
           "
           echo "✅ 数据库连接成功，权限已设置"
 
           # 运行数据库迁移
           cd backend
+          echo "🔄 激活虚拟环境..."
+          source .venv/bin/activate
           echo "🔄 运行数据库迁移..."
           python manage.py migrate --noinput
 
