@@ -95,7 +95,8 @@ jobs:
                 echo "等待MySQL启动..."
                 sleep 2
               done
-              cd backend && python manage.py migrate --noinput --settings=bravo.settings.test
+              cd backend && source .venv/bin/activate
+              python manage.py migrate --noinput --settings=bravo.settings.test
               python -m pytest tests/unit/ --maxfail=5 -x
               ;;
             "frontend-unit")
@@ -108,7 +109,8 @@ jobs:
                 sleep 2
               done
               # 最小集成测试
-              cd backend && python manage.py migrate --noinput --settings=bravo.settings.test
+              cd backend && source .venv/bin/activate
+              python manage.py migrate --noinput --settings=bravo.settings.test
               python manage.py test tests.quick --parallel 4
               ;;
           esac
