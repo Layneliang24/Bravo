@@ -131,6 +131,13 @@ jobs:
           if [ ! -d "node_modules" ]; then
             echo "node_modules not found, installing dependencies..."
             npm ci --prefer-offline --no-audit
+          else
+            echo "node_modules found, ensuring TypeScript tools are available..."
+            # Check if vue-tsc is available, if not install it
+            if ! npm list vue-tsc >/dev/null 2>&1; then
+              echo "vue-tsc not found, installing missing dev dependencies..."
+              npm ci --prefer-offline --no-audit
+            fi
           fi
           echo "Running build..."
           npm run build
