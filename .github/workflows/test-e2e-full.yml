@@ -118,6 +118,14 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Building frontend for E2E tests..."
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Checking if node_modules exists..."
+          if [ ! -d "node_modules" ]; then
+            echo "node_modules not found, installing dependencies..."
+            npm ci --prefer-offline --no-audit
+          fi
+          echo "Running build..."
           npm run build
           echo "Frontend build completed"
 
