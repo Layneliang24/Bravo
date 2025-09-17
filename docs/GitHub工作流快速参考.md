@@ -4,21 +4,22 @@
 
 ### 开发者日常操作对应的工作流
 
-| 开发者操作 | 触发的工作流 | 预期时长 | 测试级别 |
-|------------|--------------|----------|----------|
-| 创建 PR to main/dev | `on-pr.yml` | 10-15分钟 | 标准验证 |
-| Push to feature/xxx | `on-push-feature.yml` | 5-8分钟 | 快速检查 |
-| Push to dev | `on-push-dev.yml` | 20-30分钟 | 完整测试 |
-| Merge PR to dev | `on-merge-dev.yml` | 8-12分钟 | 合并验证 |
-| Merge PR to main | `on-merge-main.yml` | 15-25分钟 | 生产验证 |
+| 开发者操作          | 触发的工作流          | 预期时长  | 测试级别 |
+| ------------------- | --------------------- | --------- | -------- |
+| 创建 PR to main/dev | `on-pr.yml`           | 10-15分钟 | 标准验证 |
+| Push to feature/xxx | `on-push-feature.yml` | 5-8分钟   | 快速检查 |
+| Push to dev         | `on-push-dev.yml`     | 20-30分钟 | 完整测试 |
+| Merge PR to dev     | `on-merge-dev.yml`    | 8-12分钟  | 合并验证 |
+| Merge PR to main    | `on-merge-main.yml`   | 15-25分钟 | 生产验证 |
 
 ## 🛠️ 常用工作流命令
 
 ### 手动触发工作流
+
 ```bash
 # 使用 GitHub CLI 手动触发工作流
 gh workflow run "PR Validation - Fast Track"
-gh workflow run "Dev Branch - Medium Validation" 
+gh workflow run "Dev Branch - Medium Validation"
 gh workflow run "Feature Branch - Development Validation"
 
 # 查看工作流运行状态
@@ -27,6 +28,7 @@ gh run view [RUN_ID] --verbose
 ```
 
 ### 本地模拟 GitHub Actions
+
 ```bash
 # 使用 act 工具在本地运行 GitHub Actions
 # 安装: https://github.com/nektos/act
@@ -46,26 +48,30 @@ act -e .github/event.json
 ### 工作流健康状态检查清单
 
 **✅ 正常状态指标**:
+
 - [ ] 缓存命中率 > 80%
 - [ ] 平均运行时间在预期范围内
 - [ ] 失败率 < 5%
 - [ ] 无超时作业
 
 **⚠️ 需要关注**:
+
 - [ ] 缓存命中率 60-80%
 - [ ] 运行时间超出预期20%以上
 - [ ] 失败率 5-10%
 - [ ] 偶发超时
 
 **🚨 需要立即处理**:
+
 - [ ] 缓存命中率 < 60%
-- [ ] 运行时间超出预期50%以上  
+- [ ] 运行时间超出预期50%以上
 - [ ] 失败率 > 10%
 - [ ] 频繁超时
 
 ### 常见问题快速诊断
 
 **问题**: PR 检查一直在"pending"状态
+
 ```bash
 # 排查步骤
 1. 检查工作流是否正确触发
@@ -79,6 +85,7 @@ act -e .github/event.json
 ```
 
 **问题**: 缓存未命中导致构建缓慢
+
 ```bash
 # 排查步骤
 1. 检查缓存键是否发生变化
@@ -97,6 +104,7 @@ act -e .github/event.json
 ### 阶段1: 立即可行的优化 (本周内)
 
 **1. 创建统一环境 Action**
+
 ```yaml
 # 文件: .github/actions/setup-unified-env/action.yml
 name: "Unified Environment Setup"
@@ -122,6 +130,7 @@ runs:
 ```
 
 **使用方式**:
+
 ```yaml
 # 在现有工作流中替换重复的环境设置
 - name: Setup Environment
@@ -131,6 +140,7 @@ runs:
 ```
 
 **2. 优化缓存键**
+
 ```yaml
 # 当前
 key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -142,6 +152,7 @@ key: frontend-deps-v3-${{ runner.os }}-${{ hashFiles('package-lock.json', 'front
 ### 阶段2: 中期改进 (下周内)
 
 **1. 创建智能测试策略**
+
 ```yaml
 # .github/workflows/smart-test-selector.yml
 name: Smart Test Selector
@@ -176,6 +187,7 @@ jobs:
 ```
 
 **2. 实现并行优化**
+
 ```yaml
 # 优化前: 串行执行
 setup → unit-backend → integration → e2e
@@ -189,11 +201,13 @@ setup → (unit-backend + unit-frontend + lint + type-check) → integration →
 ### GitHub Actions 原生监控
 
 **启用工作流监控**:
+
 1. Repository Settings → Actions → General
 2. 启用 "Send notifications for failed workflows"
 3. 配置 webhook 到企业微信/钉钉
 
 **设置分支保护规则**:
+
 ```bash
 # 使用 GitHub CLI 设置分支保护
 gh api repos/:owner/:repo/branches/main/protection \
@@ -206,11 +220,12 @@ gh api repos/:owner/:repo/branches/main/protection \
 ### 第三方监控集成
 
 **Grafana 仪表盘配置** (如果使用):
+
 ```yaml
 # GitHub Actions 指标收集
 metrics:
   - workflow_run_duration_seconds
-  - workflow_run_conclusion_total  
+  - workflow_run_conclusion_total
   - workflow_job_duration_seconds
   - cache_hit_rate_percentage
 
@@ -218,8 +233,8 @@ alerts:
   - name: "Workflow Failure Rate High"
     condition: "failure_rate > 10%"
     duration: "5m"
-    
-  - name: "Build Time Increased"  
+
+  - name: "Build Time Increased"
     condition: "avg_duration > 1.2 * baseline"
     duration: "15m"
 ```
@@ -229,6 +244,7 @@ alerts:
 ### 常见故障及解决方案
 
 **故障1: MySQL 服务启动失败**
+
 ```yaml
 # 症状: "MySQL is unavailable - sleeping"
 # 原因: MySQL 服务启动超时
@@ -252,6 +268,7 @@ services:
 ```
 
 **故障2: 前端构建失败 - vue-tsc 找不到**
+
 ```yaml
 # 症状: "vue-tsc: command not found"
 # 原因: 依赖安装不完整
@@ -264,27 +281,28 @@ services:
     if [ -d "node_modules" ] && [ ! -f "node_modules/.installed" ]; then
       rm -rf node_modules package-lock.json
     fi
-    
+
     # 安装依赖
     npm ci --prefer-offline --no-audit
-    
+
     # 标记安装完成
     touch node_modules/.installed
-    
+
     # 验证关键工具可用
     npx vue-tsc --version || exit 1
 ```
 
 **故障3: E2E 测试 Playwright 浏览器下载失败**
+
 ```yaml
 # 解决方案: 分阶段下载 + 重试机制
 - name: Install Playwright Browsers (Robust)
   run: |
     cd e2e
-    
+
     # 设置国内镜像
     export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/
-    
+
     # 分阶段安装
     for browser in chromium firefox webkit; do
       echo "Installing $browser..."
@@ -294,7 +312,7 @@ services:
         npx playwright install $browser
       }
     done
-    
+
     # 安装系统依赖
     npx playwright install-deps
 ```
@@ -304,34 +322,37 @@ services:
 ### CPU 密集型任务优化
 
 **并行构建**:
+
 ```yaml
 # 利用多核 CPU
 - name: Build with Parallel Processing
   run: |
     # 前端构建使用多线程
     npm run build -- --parallel
-    
+
     # Python 测试使用多进程
     python -m pytest --numprocesses=auto
 ```
 
 **合理分配资源**:
+
 ```yaml
 # 根据任务类型选择合适的运行器
 jobs:
   lint:
-    runs-on: ubuntu-latest  # 轻量级任务
-    
+    runs-on: ubuntu-latest # 轻量级任务
+
   build:
-    runs-on: ubuntu-latest-4-cores  # 构建任务需要更多 CPU
-    
+    runs-on: ubuntu-latest-4-cores # 构建任务需要更多 CPU
+
   e2e:
-    runs-on: ubuntu-latest-8-cores  # E2E 测试需要最多资源
+    runs-on: ubuntu-latest-8-cores # E2E 测试需要最多资源
 ```
 
 ### 网络优化
 
 **下载优化**:
+
 ```yaml
 # 使用国内镜像 + 并行下载
 - name: Optimized Downloads
@@ -339,10 +360,10 @@ jobs:
     # npm 配置
     npm config set registry https://registry.npmmirror.com
     npm config set maxsockets 20
-    
+
     # pip 配置
     pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
-    
+
     # 并行安装
     npm ci & pip install -r requirements.txt & wait
 ```
@@ -375,7 +396,6 @@ jobs:
 
 ---
 
-**更新时间**: 2025-09-17  
-**维护者**: DevOps Team  
+**更新时间**: 2025-09-17
+**维护者**: DevOps Team
 **版本**: v1.0
-

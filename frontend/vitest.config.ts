@@ -60,7 +60,7 @@ export default defineConfig({
     },
     reporters: ['verbose', 'junit'],
     outputFile: {
-      junit: './tests/reports/junit.xml',
+      junit: './test-results/junit.xml',
     },
     testTimeout: 10000,
     hookTimeout: 10000,
