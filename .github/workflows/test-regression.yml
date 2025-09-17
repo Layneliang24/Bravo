@@ -33,7 +33,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e 'SELECT 1'" --health-interval=5s --health-timeout=10s --health-retries=20
         ports:
           - 3306:3306
 
@@ -95,26 +95,41 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL to be ready..."
-          MAX_ATTEMPTS=30
+          MAX_ATTEMPTS=40
           ATTEMPT=0
 
+          # 等待MySQL基本连接
           until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
             ATTEMPT=$((ATTEMPT + 1))
             if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
-              echo "❌ MySQL启动超时 (${MAX_ATTEMPTS}次尝试)"
+              echo "❌ MySQL基本连接超时 (${MAX_ATTEMPTS}次尝试)"
               exit 1
             fi
-            echo "MySQL不可用 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
-            sleep 3
+            echo "MySQL基本连接不可用 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
+            sleep 2
+          done
+          echo "✅ MySQL基本连接建立成功"
+
+          # 验证bravo_test数据库存在并可用
+          ATTEMPT=0
+          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" >/dev/null 2>&1; do
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+              echo "❌ bravo_test数据库验证超时 (${MAX_ATTEMPTS}次尝试)"
+              echo "🔍 当前数据库状态："
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;"
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';"
+              exit 1
+            fi
+            echo "bravo_test数据库尚未就绪 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
+            sleep 2
           done
 
-          # 额外等待确保数据库完全初始化
-          echo "✅ MySQL连接成功，等待完全初始化..."
-          sleep 5
-
-          # 验证数据库和权限
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES LIKE 'bravo_test';" | grep bravo_test
-          echo "✅ MySQL已完全准备就绪！"
+          # 最终验证
+          echo "✅ MySQL和bravo_test数据库完全准备就绪！"
+          echo "🔍 数据库状态验证："
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES LIKE 'bravo_test';"
+          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password bravo_test -e "SELECT 1 as connection_test;"
 
       - name: Run Database Migrations
         working-directory: ./backend
@@ -181,13 +196,20 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
-          # 确保MySQL服务已准备就绪
-          echo "Verifying MySQL connection..."
-          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
-            echo "Waiting for MySQL to be ready..."
-            sleep 2
+          # 确保MySQL和bravo_test数据库完全就绪
+          echo "Verifying MySQL and bravo_test database..."
+          MAX_WAIT=30
+          ATTEMPT=0
+          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; do
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ $ATTEMPT -gt $MAX_WAIT ]; then
+              echo "❌ bravo_test数据库验证失败"
+              exit 1
+            fi
+            echo "等待bravo_test数据库就绪 (${ATTEMPT}/${MAX_WAIT})..."
+            sleep 1
           done
-          echo "MySQL is ready!"
+          echo "✅ MySQL和bravo_test数据库已就绪！"
 
           # 启动后端服务器
           cd backend
