@@ -65,7 +65,7 @@ test.describe('主页功能测试', () => {
     homePage = new HomePage(page);
   });
 
-  test('应该正确显示主页标题 @smoke', async () => {
+  test('应该正确显示主页标题 @smoke @critical', async () => {
     await homePage.goto();
     const title = await homePage.getTitle();
     expect(title).toBe('欢迎来到 Bravo');
@@ -109,7 +109,7 @@ test.describe('登录功能测试', () => {
     expect(passwordValue).toBe('testpass');
   });
 
-  test('应该能够成功登录并跳转到主页', async ({ page }) => {
+  test('应该能够成功登录并跳转到主页 @critical @regression', async ({ page }) => {
     await loginPage.goto();
     await loginPage.login('testuser', 'testpass');
 
@@ -129,7 +129,7 @@ test.describe('登录功能测试', () => {
 
 // 导航测试套件
 test.describe('页面导航测试', () => {
-  test('应该能够在主页和登录页之间导航', async ({ page }) => {
+  test('应该能够在主页和登录页之间导航 @regression', async ({ page }) => {
     // 访问主页
     await page.goto(BASE_URL);
     expect(page.url()).toBe(`${BASE_URL}/`);
@@ -165,7 +165,7 @@ test.describe('响应式设计测试', () => {
 
 // 性能测试
 test.describe('页面性能测试', () => {
-  test('主页加载时间应该在合理范围内', async ({ page }) => {
+  test('主页加载时间应该在合理范围内 @critical', async ({ page }) => {
     const startTime = Date.now();
 
     await page.goto(BASE_URL);
