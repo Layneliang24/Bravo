@@ -9,9 +9,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined, // CI环境使用单worker避免冲突
 
   reporter: [
-    ['html', { outputFolder: 'test-results/playwright-report' }],
-    ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/results.xml' }],
+    ['html', { outputFolder: 'playwright-report' }],
+    ['json', { outputFile: 'test-results.json' }],
+    ['junit', { outputFile: 'test-results.xml' }],
     ['line'],
   ],
 
@@ -33,15 +33,17 @@ export default defineConfig({
   ],
 
   // 优化的webServer配置 - 修复CI环境路径问题
-  webServer: {
-    command: 'npm run preview -- --port 3001 --host 0.0.0.0',
-    cwd: '../frontend',
-    port: 3001,
-    reuseExistingServer: !process.env.CI, // CI环境不重用，避免端口冲突
-    timeout: 120 * 1000,
-    env: {
-      NODE_ENV: 'production',
-      VITE_API_URL: 'http://localhost:8000',
-    },
-  },
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: 'npm run preview -- --port 3001 --host 0.0.0.0',
+        cwd: '../frontend',
+        port: 3001,
+        reuseExistingServer: true,
+        timeout: 120 * 1000,
+        env: {
+          NODE_ENV: 'production',
+          VITE_API_URL: 'http://localhost:8000',
+        },
+      },
 });
