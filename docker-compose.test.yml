@@ -13,10 +13,16 @@ services:
       - /var/lib/mysql # 使用内存存储，加速测试
     command: --default-authentication-plugin=mysql_native_password --skip-log-bin
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test:
+        [
+          "CMD",
+          "bash",
+          "-c",
+          "mysqladmin ping -h localhost && mysql -u root -proot_password -e 'USE bravo_test; SELECT 1;'",
+        ]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 15
 
   # 后端测试服务
   backend-test:
