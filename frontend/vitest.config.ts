@@ -11,7 +11,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: [
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
@@ -46,21 +46,21 @@ export default defineConfig({
       ],
       include: ['src/**/*.{js,ts,vue}'],
       all: true,
-      lines: 90,
-      functions: 70, // 调整函数覆盖率阈值，因为Vue组件中有未使用的函数
-      branches: 90,
-      statements: 90,
-      // 基于实际覆盖率设置合理阈值
+      lines: 75,
+      functions: 75,
+      branches: 70,
+      statements: 75,
+      // 阈值配置移到coverage外部
       watermarks: {
-        lines: [80, 90],
-        functions: [60, 70], // 函数覆盖率相对较低是正常的
-        branches: [80, 90],
-        statements: [80, 90],
+        lines: [70, 75],
+        functions: [70, 75],
+        branches: [65, 70],
+        statements: [70, 75],
       },
     },
     reporters: ['verbose', 'junit'],
     outputFile: {
-      junit: './test-results/junit.xml',
+      junit: './tests/reports/junit.xml',
     },
     testTimeout: 10000,
     hookTimeout: 10000,

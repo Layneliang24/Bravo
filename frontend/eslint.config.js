@@ -71,8 +71,7 @@ export default [
             // - COVERAGE_THRESHOLDS：测试覆盖率配置常量
             // - router-link/router-view：Vue Router组件名
             // - ./开头：文件路径配置（如Jest配置中的路径映射）
-            // - el-开头：Element Plus组件名（用于测试stub配置）
-            regex: '^(@|COVERAGE_THRESHOLDS|router-link|router-view|\\./|el-)',
+            regex: '^(@|COVERAGE_THRESHOLDS|router-link|router-view|\\./)',
             match: false,
           },
         },
@@ -118,7 +117,6 @@ export default [
     rules: {
       'no-console': 'off', // 测试文件中允许console
       '@typescript-eslint/no-explicit-any': 'off', // 测试文件中允许any类型
-      '@typescript-eslint/naming-convention': 'off', // 测试文件中关闭命名规范检查，允许Vue组件的kebab-case名称
     },
   },
   // 配置文件特定规则

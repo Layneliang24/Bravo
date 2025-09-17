@@ -23,30 +23,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: "npm"
-          cache-dependency-path: frontend/package.json
+          cache-dependency-path: "frontend/package-lock.json"
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: "backend/requirements/*.txt"
-
-      - name: Configure China Mirrors
-        uses: ./.github/actions/configure-china-mirrors
+          cache-dependency-path: "backend/requirements.txt"
 
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm install
+          npm ci
 
       - name: Install Python dependencies
         run: |
           cd backend
-          pip install -r requirements/base.txt
-          pip install -r requirements/test.txt
+          pip install -r requirements.txt
 
       - name: Install mapping script dependencies
         run: |
@@ -92,13 +88,13 @@ jobs:
         run: |
           cd backend
           export VALIDATE_FEATURE_COVERAGE=true
-          python -m pytest --cov=. --cov-report=json --cov-report=html --maxfail=0
+          python -m pytest --cov=. --cov-report=json --cov-report=html
         continue-on-error: true
 
       - name: Build feature-test mapping
         run: |
           echo "🗺️ Building feature-test coverage map..."
-          export MIN_FEATURE_COVERAGE=20  # 临时从70%降到20%
+          export MIN_FEATURE_COVERAGE=70
           node scripts/buildFeatureMap.js
 
       - name: Generate coverage badges
@@ -107,7 +103,7 @@ jobs:
 
           # 读取覆盖率数据
           FEATURE_COVERAGE=$(node -e "
-            const report = JSON.parse(require('fs').readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
+            const report = JSON.parse(require('fs').readFileSync('feature-test-map.json', 'utf8'));
             console.log(Math.round(report.summary.coveragePercentage));
           ")
 
@@ -145,7 +141,7 @@ jobs:
           EOF
 
           node -e "
-            const report = JSON.parse(require('fs').readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
+            const report = JSON.parse(require('fs').readFileSync('feature-test-map.json', 'utf8'));
             console.log('- Total Features:', report.summary.totalFeatures);
             console.log('- Covered Features:', report.summary.coveredFeatures);
             console.log('- Uncovered Features:', report.summary.totalFeatures - report.summary.coveredFeatures);
@@ -170,10 +166,10 @@ jobs:
         with:
           name: feature-coverage-reports
           path: |
-            docs/02_test_report/feature-test-map.md
-            docs/02_test_report/feature-test-map.json
-            docs/02_test_report/feature-test-mapping.json
-            docs/02_test_report/feature-coverage-report.json
+            feature-test-map.md
+            feature-test-map.json
+            feature-test-mapping.json
+            feature-coverage-report.json
             frontend/coverage/
             backend/htmlcov/
           retention-days: 30
@@ -186,7 +182,7 @@ jobs:
             const fs = require('fs');
 
             try {
-              const report = JSON.parse(fs.readFileSync('docs/02_test_report/feature-test-map.json', 'utf8'));
+              const report = JSON.parse(fs.readFileSync('feature-test-map.json', 'utf8'));
               const coverage = Math.round(report.summary.coveragePercentage);
 
               let emoji = '🔴';
@@ -215,9 +211,9 @@ jobs:
             }
 
       - name: Fail on low coverage
-        if: env.FEATURE_COVERAGE < 20
+        if: env.FEATURE_COVERAGE < 70
         run: |
-          echo "💥 Feature coverage ${{ env.FEATURE_COVERAGE }}% is below minimum 20%"
+          echo "💥 Feature coverage ${{ env.FEATURE_COVERAGE }}% is below minimum 70%"
           echo "Please add tests for uncovered features or update the threshold."
           exit 1
 

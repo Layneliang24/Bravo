@@ -1,7 +1,7 @@
 # Vue 前端 Dockerfile 模板
 
 # 构建阶段
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 

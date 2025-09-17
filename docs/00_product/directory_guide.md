@@ -62,7 +62,3 @@ make move-clutter
 ├── backend/apps/utils/tests/test_utils.py
 └── docs/01_guideline/temp_config.txt
 ```
-
-## 测试格式检查
-
-这是一个测试段落，用于验证prettier是否会检查产品文档的格式。

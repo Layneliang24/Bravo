@@ -25,7 +25,6 @@ class AntiCheatValidator {
       warning: chalk.yellow,
     };
 
-    // eslint-disable-next-line no-console
     console.log(`[${timestamp}] ${colors[type](message)}`);
   }
 

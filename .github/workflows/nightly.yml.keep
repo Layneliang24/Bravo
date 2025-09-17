@@ -1,0 +1,138 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨2点运行
+  workflow_dispatch:
+
+jobs:
+  nightly-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          e2e/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements/test.txt
+        cd ../frontend
+        npm ci
+        cd ../e2e
+        npm ci
+
+    - name: Run comprehensive tests
+      run: |
+        # 后端测试
+        cd backend
+        pytest --cov=. --cov-report=xml --cov-report=html -v
+
+        # 前端测试
+        cd ../frontend
+        npm run test:coverage
+
+        # E2E 测试
+        cd ../e2e
+        npx playwright test --project=chromium
+
+    - name: Run performance tests
+      run: |
+        cd tests/load
+        locust -f locustfile.py --headless -u 100 -r 10 -t 60s --html=performance-report.html
+
+    - name: Run security scan
+      run: |
+        # 依赖漏洞扫描
+        cd backend
+        safety check --json --output safety-report.json
+
+        # 代码安全扫描
+        bandit -r . -f json -o bandit-report.json
+
+    - name: Generate reports
+      run: |
+        # 合并覆盖率报告
+        cd tests/coverage
+        coverage combine ../backend/.coverage ../frontend/coverage/lcov.info
+        coverage html -d merged-coverage
+
+    - name: Upload reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: nightly-reports-${{ github.run_number }}
+        path: |
+          backend/coverage.xml
+          frontend/coverage/lcov.info
+          tests/load/performance-report.html
+          backend/safety-report.json
+          backend/bandit-report.json
+          tests/coverage/merged-coverage/
+        retention-days: 30
+
+    - name: Send notification
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#nightly-builds'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  dependency-update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Check for outdated dependencies
+      run: |
+        # Python 依赖检查
+        cd backend
+        pip list --outdated --format=json > outdated-python.json
+
+        # Node.js 依赖检查
+        cd ../frontend
+        npm outdated --json > ../outdated-node.json
+
+    - name: Create PR for updates
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'Nightly dependency updates'
+        body: |
+          This PR contains automatic dependency updates from the nightly build.
+
+          ## Python Dependencies
+          See outdated-python.json for details.
+
+          ## Node.js Dependencies
+          See outdated-node.json for details.
+
+          Please review and test before merging.
+        branch: nightly-dependency-updates
+        delete-branch: true

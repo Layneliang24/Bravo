@@ -1,0 +1,67 @@
+{
+  "mcpServers": {
+    "bravo-ai": {
+      "command": "python",
+      "args": ["-m", "bravo.ai.mcp_server"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "BRAVO_ENV": "development"
+      }
+    },
+    "bravo-tools": {
+      "command": "node",
+      "args": ["dist/mcp-tools.js"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  },
+  "tools": {
+    "code_generator": {
+      "description": "生成 Django 和 Vue 代码",
+      "parameters": {
+        "type": {
+          "type": "string",
+          "enum": ["django_model", "vue_component", "api_endpoint"],
+          "description": "代码生成类型"
+        },
+        "name": {
+          "type": "string",
+          "description": "生成代码的名称"
+        },
+        "options": {
+          "type": "object",
+          "description": "生成选项"
+        }
+      }
+    },
+    "test_generator": {
+      "description": "生成测试用例",
+      "parameters": {
+        "file_path": {
+          "type": "string",
+          "description": "要生成测试的文件路径"
+        },
+        "test_type": {
+          "type": "string",
+          "enum": ["unit", "integration", "e2e"],
+          "description": "测试类型"
+        }
+      }
+    },
+    "security_scan": {
+      "description": "执行安全扫描",
+      "parameters": {
+        "scan_type": {
+          "type": "string",
+          "enum": ["static", "dependency", "runtime"],
+          "description": "扫描类型"
+        },
+        "target": {
+          "type": "string",
+          "description": "扫描目标"
+        }
+      }
+    }
+  }
+}

@@ -105,41 +105,17 @@ createsuperuser: ## 创建超级用户
 collectstatic: ## 收集静态文件
 	cd backend && python manage.py collectstatic --noinput
 
-# 清理误放根目录的文件（按类型/用途分类路由）
-move-clutter: ## 将根目录误放文件按类型归档至对应目录
+# 清理误放根目录的文件
+move-clutter: ## 将误放根目录的文件移动到正确位置
 	@echo "🔍 扫描根目录违规文件..."
-	@files=$$(find . -maxdepth 1 -type f \
-		-not -name "Makefile" -not -name "README.md" -not -name "LICENSE" \
-		-not -name ".gitignore" -not -name "CODE_OF_CONDUCT.md" \
-		-not -name "CONTRIBUTING.md" -not -name "SECURITY.md" \
-		-not -name "package.json" -not -name "docker-compose*.yml" \
-		-not -name "tsconfig.json" -not -name "pyproject.toml" \
-		-not -name "requirements*.txt" \
-	); \
+	@files=$$(find . -maxdepth 1 -type f \( -name "*.md" -o -name "*.txt" -o -name "test_*.py" -o -name "*_test.py" -o -name "*.keep" -o -name "*.example" \) -not -name "Makefile" -not -name "README.md" -not -name "LICENSE" -not -name ".gitignore"); \
 	if [ -n "$$files" ]; then \
-		echo "📁 发现违规文件，按规则分类移动..."; \
-		for f in $$files; do \
-			base=$$(basename "$$f"); \
-			case "$$base" in \
-				product_*|prd_*|roadmap*|*product*.md) dest="docs/00_product" ;; \
-				guideline_*|policy_*|process_*|*guideline*.md) dest="docs/01_guideline" ;; \
-				*report*.md|*report*.json|coverage*|junit*|lighthouse*) dest="docs/02_test_report" ;; \
-				operate_*|ops_*|sre_*|deploy_*|runbook*|*operate*.md) dest="docs/03_operate" ;; \
-				guide_*|quickstart_*|howto_*|*usage*.md) dest="docs/03_usage_guide" ;; \
-				adr-*.md|architecture*|design*) dest="docs/architecture" ;; \
-				test_*.py|*_test.py) dest="tests/system" ;; \
-				*.sh|*.bat|*.ps1|*.js) dest="scripts" ;; \
-				*.example) dest="docs/usage_configs" ;; \
-				*.md|*.txt|*.json) dest="docs/99_misc" ;; \
-				*) dest="" ;; \
-			esac; \
-			if [ -n "$$dest" ]; then \
-				mkdir -p "$$dest"; \
-				git mv "$$f" "$$dest"/ 2>/dev/null || mv "$$f" "$$dest"/; \
-				echo "✅ 移动 $$base -> $$dest/"; \
-			fi; \
+		echo "📁 发现违规文件，正在移动到 docs/00_product/"; \
+		mkdir -p docs/00_product; \
+		for file in $$files; do \
+			mv "$$file" docs/00_product/; \
+			echo "✅ 移动 $$file -> docs/00_product/"; \
 		done; \
-		echo "✨ 分类移动完成"; \
 	else \
 		echo "✨ 未发现违规文件"; \
 	fi

@@ -28,7 +28,7 @@
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && black . && isort .",
     "lighthouse": "cd e2e && npm run lighthouse",
-    "e2e:install": "cd e2e && npm install && npx playwright install --with-deps",
+    "e2e:install": "cd e2e && npm ci && npx playwright install --with-deps",
     "e2e:ui": "cd e2e && npx playwright test --ui",
     "e2e:headed": "cd e2e && npx playwright test --headed",
     "e2e:debug": "cd e2e && npx playwright test --debug",
@@ -40,24 +40,20 @@
     "clean:backend": "cd backend && find . -name '*.pyc' -delete && find . -name '__pycache__' -delete",
     "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
     "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
-    "postinstall:disabled": "npm run e2e:install",
-    "prepare": "node -e \"if (process.env.CI) process.exit(0); try { require('child_process').execSync('npx husky install', {stdio: 'inherit'}); } catch (e) { console.log('Husky install skipped'); }\"",
+    "postinstall": "npm run e2e:install",
+    "prepare": "husky",
     "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^2.1.4",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
-    "@vue/shared": "^3.5.21",
     "@vue/test-utils": "^2.4.6",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "husky": "^9.1.7",
-    "is-ci": "^3.0.1",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.6",
     "pinia": "^3.0.3",
-    "uri-js": "^4.4.1",
     "vitest": "^3.2.4",
     "vue-router": "^4.5.1"
   },
@@ -70,7 +66,7 @@
       "python -m pylint --rcfile=backend/.pylintrc.naming --disable=all --enable=invalid-name"
     ],
     "frontend/src/**/*.{ts,tsx,js,jsx,vue}": [
-      "npx eslint --config frontend/eslint.config.js --fix"
+      "npx eslint --config frontend/.eslintrc.cjs --fix"
     ],
     "**/*.{ts,tsx,js,jsx,vue}": [
       "npm run check:syntax"
@@ -98,9 +94,5 @@
   "bugs": {
     "url": "https://github.com/your-username/bravo/issues"
   },
-  "homepage": "https://github.com/your-username/bravo#readme",
-  "dependencies": {
-    "eslint": "^8.57.1",
-    "eslint-scope": "^8.4.0"
-  }
+  "homepage": "https://github.com/your-username/bravo#readme"
 }

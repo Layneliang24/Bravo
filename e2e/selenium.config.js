@@ -42,7 +42,7 @@ const BROWSERS = {
 // 测试环境配置
 const TEST_CONFIG = {
   // 基础URL
-  baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3001',
+  baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3000',
 
   // 超时设置
   timeouts: {

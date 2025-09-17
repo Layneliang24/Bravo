@@ -1,0 +1,112 @@
+"""
+用户管理应用 API 视图模板
+"""
+
+from rest_framework import generics, status, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+
+from .models import User, UserProfile, UserActivity
+from .serializers import (
+    UserSerializer,
+    UserProfileSerializer,
+    UserActivitySerializer,
+    CustomTokenObtainPairSerializer
+)
+from .permissions import IsOwnerOrReadOnly
+from .filters import UserFilter
+
+User = get_user_model()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """自定义 JWT 令牌获取视图"""
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+class UserListCreateView(generics.ListCreateAPIView):
+    """用户列表和创建视图"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_class = UserFilter
+
+    def get_queryset(self):
+        """根据权限过滤用户列表"""
+        if self.request.user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(is_active=True)
+
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """用户详情视图"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """用户配置视图"""
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        """获取当前用户的配置"""
+        profile, created = UserProfile.objects.get_or_create(
+            user=self.request.user
+        )
+        return profile
+
+
+class UserActivityListView(generics.ListAPIView):
+    """用户活动列表视图"""
+    serializer_class = UserActivitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """获取当前用户的活动记录"""
+        return UserActivity.objects.filter(user=self.request.user)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def follow_user(request, user_id):
+    """关注用户"""
+    try:
+        target_user = User.objects.get(id=user_id)
+        if target_user == request.user:
+            return Response(
+                {'error': '不能关注自己'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 这里可以添加关注逻辑
+        # request.user.following.add(target_user)
+
+        return Response({'message': '关注成功'})
+    except User.DoesNotExist:
+        return Response(
+            {'error': '用户不存在'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def user_stats(request):
+    """获取用户统计信息"""
+    user = request.user
+
+    stats = {
+        'total_posts': 0,  # 这里需要根据实际业务逻辑计算
+        'total_followers': 0,
+        'total_following': 0,
+        'total_likes': 0,
+        'join_date': user.date_joined,
+        'last_login': user.last_login,
+    }
+
+    return Response(stats)

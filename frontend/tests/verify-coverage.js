@@ -93,7 +93,7 @@ function verifyCoverage() {
     console.error('')
     console.error('🚫 Build failed due to insufficient coverage.')
     console.error(
-      '💡 Increase test coverage or adjust thresholds in vitest.config.ts'
+      '💡 Increase test coverage or adjust thresholds in jest.config.coverage.js'
     )
     process.exit(1)
   }

@@ -17,15 +17,13 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Validate Target Branch
+      - name: Validate Source Branch
         run: |
-          echo "🔑 DOUBLE KEY SYSTEM: Validating target branch"
+          echo "🔑 DOUBLE KEY SYSTEM: Validating source branch"
 
-          # Check if PR is targeting main branch (which should only come from dev)
-          if [ "${{ github.base_ref }}" == "main" ] && [ "${{ github.head_ref }}" != "dev" ]; then
+          if [ "${{ github.head_ref }}" != "dev" ]; then
             echo "❌ SECURITY VIOLATION: Direct push to main branch detected!"
             echo "   Source branch: ${{ github.head_ref }}"
-            echo "   Target branch: ${{ github.base_ref }}"
             echo "   Only 'dev' branch is allowed to create PRs to main"
             echo "   This enforces the Double Key System:"
             echo "   - Key A: Cursor pushes to dev only"
@@ -33,60 +31,18 @@ jobs:
             exit 1
           fi
 
-          echo "✅ Target branch validation passed: ${{ github.head_ref }} -> ${{ github.base_ref }}"
+          echo "✅ Source branch validation passed: ${{ github.head_ref }} -> main"
 
-  # Job 2: Setup cache and environment (原子化架构)
-  setup-cache:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    # 注意：为了支持push事件，移除了对validate-source-branch的依赖
-    # validate-source-branch只在PR时运行，push时会被跳过
-    uses: ./.github/workflows/setup-cache.yml
+  # Job 2: Mandatory full test suite (cannot be bypassed)
+  mandatory-full-tests:
+    if: github.event_name == 'pull_request'
+    needs: validate-source-branch
+    uses: ./.github/workflows/gate.yml
+    secrets: inherit
 
-  # Job 3: Parallel unit tests (原子化架构)
-  unit-tests-backend:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: setup-cache
-    uses: ./.github/workflows/test-unit-backend.yml
-    with:
-      coverage: true
-      timeout: 10
-
-  unit-tests-frontend:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: setup-cache
-    uses: ./.github/workflows/test-unit-frontend.yml
-    with:
-      coverage: true
-      timeout: 8
-
-  # Job 4: Integration tests (依赖单元测试)
-  integration-tests:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: [unit-tests-backend, unit-tests-frontend]
-    uses: ./.github/workflows/test-integration.yml
-    with:
-      timeout: 15
-
-  # Job 5: Security and quality checks (并行执行)
-  security-scan:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: setup-cache
-    uses: ./.github/workflows/quality-security.yml
-    with:
-      severity: "high"
-      timeout: 15
-
-  # Job 6: E2E smoke tests (关键路径验证)
-  e2e-smoke:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: integration-tests
-    uses: ./.github/workflows/test-e2e-smoke.yml
-    with:
-      timeout: 20
-
-  # Job 7: Protected files validation (特殊安全检查)
-  protected-files-check:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+  # Job 3: Additional security checks
+  security-validation:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -161,38 +117,35 @@ jobs:
 
           echo "✅ Test file integrity check passed"
 
-  # Job 9: Performance and quality gates (保留原有功能)
+  # Job 4: Performance and quality gates
   quality-gates:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-    needs: [setup-cache, integration-tests]
+    if: github.event_name == 'pull_request'
+    needs: [validate-source-branch, mandatory-full-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js with Cache
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: "npm"
-          cache-dependency-path: frontend/package.json
-
-      - name: Configure China Mirrors
-        uses: ./.github/actions/configure-china-mirrors
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       - name: Build for performance testing
         working-directory: ./frontend
-        run: npm run build:skip-check || npm run build
+        run: npm run build
 
       - name: Run frontend tests with coverage
         run: |
           cd frontend
           npm run test:coverage
-          npm run test:ci
+          npm run test:coverage-check
 
       - name: Validate feature mapping
         run: |
@@ -205,143 +158,20 @@ jobs:
           npm install -g @lhci/cli
           echo "⚡ Running Lighthouse performance audit"
 
-          # Ensure frontend is built
-          cd frontend && npm run build && cd ..
-
-          # Create lighthouse test page for reliable testing
-          cat > frontend/dist/lighthouse-test.html << 'HTML_EOF'
-          <!DOCTYPE html>
-          <html lang="zh-CN">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Bravo - 智能学习平台</title>
-              <meta name="description" content="Bravo 是一个集博客、英语学习、求职于一体的智能学习平台">
-              <style>
-                  body {
-                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                      margin: 0;
-                      padding: 0;
-                      background-color: #f5f5f5;
-                      color: #333;
-                  }
-                  .container {
-                      max-width: 1200px;
-                      margin: 0 auto;
-                      padding: 20px;
-                  }
-                  .header {
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      color: white;
-                      padding: 60px 20px;
-                      text-align: center;
-                      margin-bottom: 40px;
-                  }
-                  .header h1 {
-                      font-size: 3rem;
-                      margin: 0 0 20px 0;
-                      font-weight: 700;
-                  }
-                  .header p {
-                      font-size: 1.2rem;
-                      margin: 0;
-                      opacity: 0.9;
-                  }
-                  .features {
-                      display: grid;
-                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                      gap: 30px;
-                      margin: 40px 0;
-                  }
-                  .feature {
-                      background: white;
-                      padding: 30px;
-                      border-radius: 10px;
-                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                      text-align: center;
-                  }
-                  .feature h3 {
-                      color: #667eea;
-                      margin-bottom: 15px;
-                  }
-                  .footer {
-                      text-align: center;
-                      padding: 40px 20px;
-                      color: #666;
-                      border-top: 1px solid #eee;
-                      margin-top: 60px;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="header">
-                  <h1>Bravo 智能学习平台</h1>
-                  <p>集博客、英语学习、求职于一体的智能学习解决方案</p>
-              </div>
-
-              <div class="container">
-                  <div class="features">
-                      <div class="feature">
-                          <h3>📝 智能博客</h3>
-                          <p>创建和分享高质量的技术博客，支持 Markdown 编辑和多媒体内容</p>
-                      </div>
-                      <div class="feature">
-                          <h3>🌍 英语学习</h3>
-                          <p>AI 驱动的英语学习系统，提供个性化的学习路径和实时反馈</p>
-                      </div>
-                      <div class="feature">
-                          <h3>💼 求职助手</h3>
-                          <p>智能简历优化和面试准备，帮助你在职场中脱颖而出</p>
-                      </div>
-                  </div>
-
-                  <div style="text-align: center; margin: 60px 0;">
-                      <h2>开始你的学习之旅</h2>
-                      <p>加入 Bravo，体验智能化的学习和成长</p>
-                  </div>
-              </div>
-
-              <div class="footer">
-                  <p>&copy; 2025 Bravo 智能学习平台. All rights reserved.</p>
-              </div>
-          </body>
-          </html>
-          HTML_EOF
-
-          # Create reliable lighthouse config for CI
+          # Create basic lighthouse config
           cat > lighthouserc.json << EOF
           {
             "ci": {
               "collect": {
                 "staticDistDir": "./frontend/dist",
-                "url": ["lighthouse-test.html"],
-                "numberOfRuns": 3,
-                "settings": {
-                  "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-web-security --disable-features=VizDisplayCompositor --headless --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows",
-                  "maxWaitForFcp": 60000,
-                  "maxWaitForLoad": 120000,
-                  "pauseAfterFcpMs": 2000,
-                  "pauseAfterLoadMs": 2000,
-                  "networkQuietThresholdMs": 2000,
-                  "cpuQuietThresholdMs": 2000,
-                  "throttlingMethod": "simulate",
-                  "emulatedFormFactor": "desktop",
-                  "formFactor": "desktop",
-                  "screenEmulation": {
-                    "mobile": false,
-                    "width": 1350,
-                    "height": 940,
-                    "deviceScaleFactor": 1,
-                    "disabled": false
-                  }
-                }
+                "numberOfRuns": 3
               },
               "assert": {
                 "assertions": {
-                  "categories:performance": ["warn", {"minScore": 0.5}],
-                  "categories:accessibility": ["warn", {"minScore": 0.8}],
-                  "categories:best-practices": ["warn", {"minScore": 0.8}],
-                  "categories:seo": ["warn", {"minScore": 0.8}]
+                  "categories:performance": ["error", {"minScore": 0.9}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["error", {"minScore": 0.9}],
+                  "categories:seo": ["error", {"minScore": 0.9}]
                 }
               },
               "upload": {
@@ -354,18 +184,14 @@ jobs:
           lhci autorun
           echo "✅ Performance audit completed"
 
-  # Job 10: Final approval gate (原子化架构)
+  # Job 5: Final approval gate
   approval-gate:
     if: github.event_name == 'pull_request'
     needs:
       [
         validate-source-branch,
-        unit-tests-backend,
-        unit-tests-frontend,
-        integration-tests,
-        security-scan,
-        e2e-smoke,
-        protected-files-check,
+        mandatory-full-tests,
+        security-validation,
         quality-gates,
       ]
     runs-on: ubuntu-latest
@@ -401,132 +227,23 @@ jobs:
 
           echo "✅ PR ready for human approval"
 
-  # Job 11: Push validation summary (for direct pushes to dev)
-  push-validation-summary:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-    needs:
-      [
-        unit-tests-backend,
-        unit-tests-frontend,
-        integration-tests,
-        security-scan,
-        e2e-smoke,
-        protected-files-check,
-        quality-gates,
-      ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate Push Validation Summary
-        run: |
-          echo "🛡️ DEV BRANCH PUSH VALIDATION SUMMARY" >> $GITHUB_STEP_SUMMARY
-          echo "=======================================" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Push Validation Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Message:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # 检查各个验证结果
-          BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
-          FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
-          INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
-          SECURITY_STATUS="${{ needs.security-scan.result }}"
-          E2E_STATUS="${{ needs.e2e-smoke.result }}"
-          PROTECTED_STATUS="${{ needs.protected-files-check.result }}"
-          QUALITY_STATUS="${{ needs.quality-gates.result }}"
-
-          echo "| Validation Check | Status | Impact |" >> $GITHUB_STEP_SUMMARY
-          echo "|------------------|---------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend Unit Tests | $BACKEND_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend Unit Tests | $FRONTEND_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | $INTEGRATION_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | $SECURITY_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Smoke Tests | $E2E_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Protected Files Check | $PROTECTED_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Quality Gates | $QUALITY_STATUS | ⚠️ Important |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # 判断整体结果
-          if [[ "$BACKEND_STATUS" == "success" && \
-                "$FRONTEND_STATUS" == "success" && \
-                "$INTEGRATION_STATUS" == "success" && \
-                "$SECURITY_STATUS" == "success" && \
-                "$E2E_STATUS" == "success" && \
-                "$PROTECTED_STATUS" == "success" ]]; then
-            echo "✅ **All push validations PASSED!**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 Dev branch is secure and stable" >> $GITHUB_STEP_SUMMARY
-            echo "🚀 Ready for continued development" >> $GITHUB_STEP_SUMMARY
-
-            if [[ "$QUALITY_STATUS" != "success" ]]; then
-              echo "⚠️ Quality gates have warnings - please review" >> $GITHUB_STEP_SUMMARY
-            fi
-
-            echo "Dev branch push validation completed successfully"
-          else
-            echo "❌ **Push validation FAILED!**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "💥 Critical issues detected in dev branch push" >> $GITHUB_STEP_SUMMARY
-            echo "🚨 Immediate action required" >> $GITHUB_STEP_SUMMARY
-            echo "🔧 Please create a fix commit immediately" >> $GITHUB_STEP_SUMMARY
-            echo "Dev branch push validation failed"
-            exit 1
-          fi
-
-  # Job 12: Dev分支直接Push保护 (重要：防止绕过PR流程)
-  dev-direct-push-guard:
+  # Job 6: Dev branch monitoring (when Cursor pushes to dev)
+  dev-branch-monitor:
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-      - name: 检查Push来源
+      - name: Monitor Dev Branch Activity
         run: |
-          echo "🔍 检查dev分支push来源..."
+          echo "👀 MONITORING: New push to dev branch detected"
           echo "   Commit: ${{ github.sha }}"
           echo "   Author: ${{ github.actor }}"
           echo "   Message: ${{ github.event.head_commit.message }}"
-
-          # 检查是否是合并提交（允许的情况）
-          git fetch origin main:main || true
-
-          # 如果是从main或通过GitHub合并的，允许
-          if git merge-base --is-ancestor main HEAD 2>/dev/null || \
-             [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ # ]]; then
-            echo "✅ 检测到合法的合并操作"
-            echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
-            echo "   ✅ 合并已通过PR验证流程"
-            echo "   ⏳ Key B will activate when PR is created to main"
-          else
-            echo "❌ 警告：检测到直接push到dev分支"
-            echo "🚨 违反了PR-first开发流程"
-            echo ""
-            echo "📋 正确的开发流程："
-            echo "   1. 创建feature分支：git checkout -b feature/your-feature"
-            echo "   2. 开发和提交：git commit -m 'your changes'"
-            echo "   3. 推送feature分支：git push origin feature/your-feature"
-            echo "   4. 创建PR到dev分支"
-            echo "   5. 等待CI验证和审查"
-            echo "   6. 合并PR到dev"
-            echo ""
-            echo "🔧 如需紧急修复，请："
-            echo "   - 创建hotfix分支进行修复"
-            echo "   - 通过PR流程合并"
-            echo ""
-            echo "⚠️  直接push到dev分支可能导致："
-            echo "   - 跳过必要的CI验证"
-            echo "   - 缺少代码审查"
-            echo "   - 破坏分支保护策略"
-
-            # 警告但不阻止，因为可能是合法的紧急情况
-            echo ""
-            echo "🟡 警告已记录，请遵循正确流程"
-          fi
-
-      - name: 记录Dev分支活动
-        run: |
-          echo "📊 Dev分支活动日志:"
-          echo "   时间: $(date)"
-          echo "   操作: Push到dev分支"
-          echo "   提交: ${{ github.sha }}"
-          echo "   作者: ${{ github.actor }}"
+          echo ""
+          echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
+          echo "   ✅ Cursor successfully pushed to dev branch"
+          echo "   ⏳ Key B will activate when PR is created to main"
+          echo ""
+          echo "💡 Next steps:"
+          echo "   1. Create PR from dev to main"
+          echo "   2. Automated full test suite will run (Key B)"
+          echo "   3. Human approval required for merge"

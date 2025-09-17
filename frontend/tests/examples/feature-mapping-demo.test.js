@@ -8,7 +8,6 @@ const {
   describeFeature,
   linkMultipleFeatures,
 } = require('../../matchFeatures')
-const { vi } = require('vitest')
 
 // 方法1: 使用 linkTestToFeature 单独映射
 linkTestToFeature('ENG-001')
@@ -57,7 +56,7 @@ describeFeature('ENG-002', '英语新闻详情页翻译功能', () => {
     const translatedText = '你好世界'
 
     // 模拟翻译API调用
-    const mockTranslate = vi.fn().mockResolvedValue(translatedText)
+    const mockTranslate = jest.fn().mockResolvedValue(translatedText)
     const result = await mockTranslate(originalText)
 
     expect(mockTranslate).toHaveBeenCalledWith(originalText)
@@ -66,7 +65,7 @@ describeFeature('ENG-002', '英语新闻详情页翻译功能', () => {
 
   it('should handle translation errors', async () => {
     // 模拟翻译错误处理
-    const mockTranslateError = vi
+    const mockTranslateError = jest
       .fn()
       .mockRejectedValue(new Error('Translation failed'))
 
@@ -99,7 +98,7 @@ describe('通用组件测试', () => {
   describe('[COMMON-002] 全局错误处理', () => {
     it('should catch and display errors', () => {
       // 模拟错误处理测试
-      const errorHandler = vi.fn()
+      const errorHandler = jest.fn()
       const error = new Error('Test error')
 
       errorHandler(error)
@@ -168,7 +167,7 @@ describe('功能集成测试', () => {
   it('should integrate news list and detail pages', () => {
     // 模拟从列表页到详情页的集成测试
     const newsId = 1
-    const navigateToDetail = vi.fn()
+    const navigateToDetail = jest.fn()
 
     navigateToDetail(newsId)
     expect(navigateToDetail).toHaveBeenCalledWith(newsId)

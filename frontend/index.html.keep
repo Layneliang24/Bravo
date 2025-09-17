@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bravo - 智能学习平台</title>
+    <meta name="description" content="Bravo 是一个集博客、英语学习、求职于一体的智能学习平台" />
+    <meta name="keywords" content="博客,英语学习,求职,AI,智能学习" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

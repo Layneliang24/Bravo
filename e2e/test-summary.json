@@ -1,16 +1,16 @@
 {
-  "timestamp": "2025-09-12T18:36:33.215Z",
+  "timestamp": "2025-09-07T08:48:28.482Z",
   "total": 0,
   "passed": 0,
   "failed": 0,
-  "skipped": 225,
-  "duration": 97139.476,
+  "skipped": 0,
+  "duration": 176652.616,
   "environment": {
-    "nodeVersion": "v18.20.8",
-    "platform": "linux",
+    "nodeVersion": "v22.18.0",
+    "platform": "win32",
     "arch": "x64",
-    "baseUrl": "http://frontend:3000",
-    "ci": true
+    "baseUrl": "http://localhost:3000",
+    "ci": false
   },
   "browsers": [
     "chromium",

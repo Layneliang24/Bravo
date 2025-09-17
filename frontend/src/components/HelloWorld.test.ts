@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createApp } from 'vue'
 
 // 简单的测试组件
 const helloWorld = {

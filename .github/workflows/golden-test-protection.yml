@@ -5,11 +5,11 @@ name: 🔒 Golden Test Protection
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main, develop]
     paths:
       - "tests-golden/**"
   push:
-    branches: [main, dev]
+    branches: [main, develop]
     paths:
       - "tests-golden/**"
 

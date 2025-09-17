@@ -1,41 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# 运行完整的pre-commit检查 - 显示所有检查项目
-echo "[PRECOMMIT] 运行完整的pre-commit检查系统"
-echo "[INFO] 执行.pre-commit-config.yaml中配置的所有检查项目"
+# 运行快速代码变更检查（仅检查暂存文件）
+echo "🚀 运行快速提交前检查..."
+python scripts/fast_pre_commit.py
 
-# 运行完整的pre-commit检查，显示详细输出
-echo "====== 完整Pre-commit检查开始 ======"
-pre-commit run --all-files --verbose
-
-# 检查是否有失败的项目
+# 检查退出码
 if [ $? -ne 0 ]; then
-    echo ""
-    echo "[ERROR] ========================="
-    echo "[ERROR] Pre-commit检查失败!"
-    echo "[ERROR] ========================="
-    echo "[HELP] 请根据上述错误信息修复问题："
-    echo "[HELP] - 格式化问题: 运行对应的格式化工具"
-    echo "[HELP] - 代码质量问题: 根据错误提示修复代码"
-    echo "[HELP] - 文件问题: 检查文件格式和大小"
-    echo "[ERROR] 修复后请重新提交"
+    echo "❌ 快速检查失败，请解决问题后再提交"
+    echo "💡 提示: 使用 'git commit --no-verify' 可跳过检查"
     exit 1
 fi
 
-echo ""
-echo "[SUCCESS] ========================="
-echo "[SUCCESS] 所有Pre-commit检查通过!"
-echo "[SUCCESS] ========================="
-echo "[INFO] 已执行的检查包括："
-echo "  ✅ 代码质量验证 (comprehensive-check)"
-echo "  ✅ Python格式化 (black, isort)"
-echo "  ✅ Python代码检查 (flake8)"
-echo "  ✅ Python类型检查 (mypy)"
-echo "  ✅ Python安全检查 (bandit)"
-echo "  ✅ 前端格式化 (prettier)"
-echo "  ✅ 通用文件检查 (yaml, json, 合并冲突等)"
-echo "  ✅ Docker文件检查 (hadolint)"
-echo "  ✅ 命名规范检查 (python, typescript, vue)"
-echo "  ✅ 项目保护检查 (根目录守卫, 大文件检查等)"
-echo "  ✅ 提交信息格式检查"
-echo "[INFO] 代码质量达标，可以安全提交！"
+# 运行原有的lint检查
+npx lint-staged
