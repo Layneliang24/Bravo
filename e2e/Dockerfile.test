@@ -64,6 +64,9 @@ RUN npx playwright install --with-deps
 # 复制测试代码
 COPY . .
 
+# 重新安装依赖确保所有文件同步
+RUN npm install --verbose
+
 # 设置环境变量
 ENV CI=true
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
