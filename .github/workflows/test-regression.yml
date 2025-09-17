@@ -167,7 +167,7 @@ jobs:
           curl -f http://localhost:8000/health/ || exit 1
 
           # API根端点
-          curl -f http://localhost:8000/api-info/ || exit 1
+          curl -f http://localhost:8000/info/ || exit 1
 
           # 用户相关API (如果存在)
           if curl -s http://localhost:8000/api/users/ | grep -q "users\|User"; then

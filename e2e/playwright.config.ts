@@ -9,9 +9,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined, // CI环境使用单worker避免冲突
 
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'test-results.json' }],
-    ['junit', { outputFile: 'test-results.xml' }],
+    ['html', { outputFolder: 'test-results/playwright-report' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['junit', { outputFile: 'test-results/results.xml' }],
     ['line'],
   ],
 
