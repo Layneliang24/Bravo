@@ -48,9 +48,12 @@ RUN apt-get update && apt-get install -y \
 # 复制package文件
 COPY package*.json ./
 
-# 安装依赖（使用install而不是ci以提高网络容错性）
+# 安装依赖（添加网络超时配置和重试机制）
 RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm install --no-package-lock
+    npm config set fetch-timeout 300000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retry-mintimeout 10000 && \
+    npm install --verbose
 
 # 安装Playwright浏览器
 RUN npx playwright install --with-deps

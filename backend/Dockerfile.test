@@ -19,9 +19,12 @@ RUN apt-get update \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 Python 依赖
+# 安装 Python 依赖（添加超时和重试配置）
 COPY requirements/ requirements/
-RUN pip install --no-cache-dir -r requirements/test.txt
+RUN pip config set global.timeout 300 && \
+    pip config set global.retries 5 && \
+    pip config set global.extra-index-url "https://pypi.tuna.tsinghua.edu.cn/simple" && \
+    pip install --no-cache-dir -r requirements/test.txt --timeout 300 --retries 5
 
 # 复制项目代码
 COPY . .
