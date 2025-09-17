@@ -228,7 +228,7 @@ class ComprehensiveCodeManager:
             f"[SUCCESS] 扫描完成: {scanned_files} 文件, {len(issues)} 问题, "
             f"耗时 {elapsed_time:.2f}s"
         )
-        print(f"[INFO] 平均速度: {scanned_files/elapsed_time:.1f} 文件/秒")
+        print(f"[INFO] 平均速度: {scanned_files / elapsed_time:.1f} 文件/秒")
 
         return issues
 
@@ -266,7 +266,7 @@ class ComprehensiveCodeManager:
                 context_start = max(0, line_num - 2)
                 context_end = min(len(all_lines), line_num + 1)
                 context = [
-                    f"{i+1:4d}: {all_lines[i].rstrip()}"
+                    f"{i + 1:4d}: {all_lines[i].rstrip()}"
                     for i in range(context_start, context_end)
                 ]
 

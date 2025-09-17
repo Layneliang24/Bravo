@@ -200,7 +200,7 @@ def main():
     results = {}
 
     for test_name, test_func in tests:
-        print(f"\n{'='*20} {test_name} {'='*20}")
+        print(f"\n{'=' * 20} {test_name} {'=' * 20}")
         try:
             results[test_name] = test_func()
         except Exception as e:
@@ -213,7 +213,7 @@ def main():
             print(f"❌ {test_name} 测试失败")
 
     # 总结
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("📊 测试结果总结:")
     passed = sum(results.values())
     total = len(results)
@@ -222,7 +222,7 @@ def main():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"  {test_name:<20} {status}")
 
-    print(f"\n🎯 通过率: {passed}/{total} ({passed/total*100:.1f}%)")
+    print(f"\n🎯 通过率: {passed}/{total} ({passed / total * 100:.1f}%)")
 
     if passed == total:
         print("🎉 所有测试通过！基础设施状态良好")
