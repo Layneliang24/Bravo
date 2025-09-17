@@ -1,0 +1,227 @@
+name: E2E Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      browser:
+        description: "Browser to run tests on"
+        type: string
+        default: "chromium"
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 15
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  e2e-smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore All Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            e2e/node_modules
+            backend/.venv
+            ~/.cache/pip
+            ~/.npm
+          key: all-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'e2e/package-lock.json', 'backend/requirements/*.txt') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+            e2e-deps-v2-${{ runner.os }}-
+            backend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (fallback)
+        run: |
+          # Frontend
+          if [ ! -d "frontend/node_modules" ]; then
+            echo "Installing frontend dependencies..."
+            cd frontend && npm ci --prefer-offline --no-audit && cd ..
+          fi
+
+          # E2E
+          if [ ! -d "e2e/node_modules" ]; then
+            echo "Installing E2E dependencies..."
+            cd e2e && npm install --prefer-offline --no-audit && cd ..
+          fi
+
+          # Backend
+          if [ ! -d "backend/.venv" ]; then
+            echo "Installing backend dependencies..."
+            cd backend
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt
+            cd ..
+          fi
+
+      # 使用统一的缓存设置（包含Playwright浏览器缓存）
+      - name: Setup E2E Cache
+        uses: ./.github/actions/cache-setup
+        with:
+          cache-type: e2e
+          cache-key-suffix: ${{ inputs.browser }}
+
+      - name: Install Playwright Browser
+        working-directory: ./e2e
+        run: |
+          echo "🎭 Installing Playwright browser: ${{ inputs.browser }}..."
+          npx playwright install ${{ inputs.browser }} --with-deps
+          echo "✅ Browser installation completed"
+
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
+      - name: Setup Test Database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          echo "Building frontend for E2E tests..."
+          # Always ensure dependencies are fully installed before building
+          echo "Verifying frontend dependencies..."
+          if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ]; then
+            echo "Installing frontend dependencies..."
+            npm ci --prefer-offline --no-audit
+          fi
+
+          # Verify vue-tsc is available after dependency installation
+          if ! npx vue-tsc --version &> /dev/null; then
+            echo "vue-tsc not working properly, reinstalling dependencies..."
+            rm -rf node_modules package-lock.json
+            npm install --prefer-offline --no-audit
+          fi
+
+          echo "Building with vue-tsc and vite..."
+          npm run build
+          echo "Frontend build completed"
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          python manage.py migrate --settings=bravo.settings.test
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          echo $! > backend.pid
+          echo "Backend server started"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Start Frontend Server
+        working-directory: ./frontend
+        run: |
+          echo "Starting frontend preview server on port 3001..."
+          npm run preview -- --port 3001 --host 0.0.0.0 &
+          echo $! > frontend.pid
+          echo "Frontend server started on port 3001"
+
+      - name: Wait for Servers
+        run: |
+          echo "Waiting for servers to be ready..."
+
+          # Check backend server
+          echo "Checking backend server (http://localhost:8000/health/)..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do
+            echo "Backend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Backend server failed to start within 60 seconds"
+            echo "Backend process status:"
+            ps aux | grep python || true
+            echo "Backend logs (if available):"
+            [ -f backend/backend.pid ] && kill -0 $(cat backend/backend.pid) 2>/dev/null || echo "Backend process not running"
+            exit 1
+          }
+          echo "✅ Backend server is ready"
+
+          # Check frontend server
+          echo "Checking frontend server (http://localhost:3001)..."
+          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do
+            echo "Frontend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Frontend server failed to start within 60 seconds"
+            echo "Frontend process status:"
+            ps aux | grep vite || true
+            [ -f frontend/frontend.pid ] && kill -0 $(cat frontend/frontend.pid) 2>/dev/null || echo "Frontend process not running"
+            exit 1
+          }
+          echo "✅ Frontend server is ready"
+
+          echo "🎉 All servers are ready!"
+
+      - name: Run Smoke Tests
+        working-directory: ./e2e
+        run: |
+          echo "Running E2E smoke tests..."
+          npx playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
+          echo "Smoke tests completed"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+          API_URL: http://localhost:8000
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-results-${{ inputs.browser }}
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 3
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "Cleaning up processes..."
+          [ -f backend/backend.pid ] && kill $(cat backend/backend.pid) 2>/dev/null || true
+          [ -f frontend/frontend.pid ] && kill $(cat frontend/frontend.pid) 2>/dev/null || true
+          echo "Cleanup completed"

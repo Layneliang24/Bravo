@@ -1,0 +1,50 @@
+#!/bin/sh
+
+echo "🚀 推送前检查开始..."
+
+# 获取当前分支
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+echo "📍 当前分支: $current_branch"
+
+# 检查是否在保护分支上
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
+    echo "❌ 禁止直接推送到保护分支: $current_branch"
+    echo "💡 请使用feature分支开发，然后创建PR合并"
+    echo "🔗 工作流: feature/* → dev → main"
+    echo ""
+    echo "🔒 分支保护规则:"
+    echo "  - main分支: 只能通过PR从dev分支合并"
+    echo "  - dev分支: 只能通过PR从feature分支合并"
+    echo "  - feature分支: 可以自由推送和开发"
+    exit 1
+fi
+
+# 运行推送前测试检查
+echo "🧪 运行推送前测试检查..."
+if [ -f "test_all.sh" ]; then
+    bash test_all.sh
+    if [ $? -ne 0 ]; then
+        echo "❌ 测试失败，推送被阻止"
+        echo "💡 请修复测试问题后再推送"
+        exit 1
+    fi
+    echo "✅ 测试检查通过"
+else
+    echo "ℹ️  未找到test_all.sh，跳过测试检查"
+fi
+
+# 检查是否有未提交的更改
+if ! git diff --quiet && ! git diff --cached --quiet; then
+    echo "❌ 存在未提交的更改，请先提交"
+    git status --porcelain
+    exit 1
+fi
+
+# 检查是否有未推送的提交
+if [ -n "$(git log @{u}..HEAD --oneline)" ]; then
+    echo "📤 准备推送 $(git log @{u}..HEAD --oneline | wc -l) 个提交"
+else
+    echo "ℹ️  没有新的提交需要推送"
+fi
+
+echo "✅ 推送前检查通过"

@@ -2,31 +2,29 @@
   "folders": [
     {
       "name": "Bravo Project",
-      "path": "."
+      "path": ".",
     },
     {
       "name": "Frontend",
-      "path": "./frontend"
+      "path": "./frontend",
     },
     {
       "name": "Tests Golden",
-      "path": "./tests-golden"
-    }
+      "path": "./tests-golden",
+    },
   ],
   "settings": {
     "typescript.preferences.includePackageJsonAutoImports": "on",
     "typescript.suggest.autoImports": true,
     "typescript.preferences.importModuleSpecifier": "relative",
     "files.associations": {
-      "*.test.ts": "typescript"
+      "*.test.ts": "typescript",
     },
     "typescript.preferences.includePackageJsonAutoImports": "on",
     "typescript.validate.enable": true,
-    "typescript.format.enable": true
+    "typescript.format.enable": true,
   },
   "extensions": {
-    "recommendations": [
-      "ms-vscode.vscode-typescript-next"
-    ]
-  }
+    "recommendations": ["ms-vscode.vscode-typescript-next"],
+  },
 }

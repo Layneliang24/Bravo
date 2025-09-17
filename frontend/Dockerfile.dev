@@ -1,14 +1,22 @@
-# 开发环境 Dockerfile
-FROM node:18-alpine
+# 开发环境 Dockerfile - 修复版
+FROM node:20-alpine
 
 # 设置工作目录
 WORKDIR /app
+
+# 配置npm国内源（只使用有效选项）
+RUN echo "📦 配置npm国内源..." && \
+    npm config set registry https://registry.npmmirror.com && \
+    npm config set maxsockets 20 && \
+    npm config set fetch-retries 3 && \
+    npm config set fetch-retry-mintimeout 10000 && \
+    npm config set fetch-retry-maxtimeout 60000
 
 # 复制 package 文件
 COPY package*.json ./
 
 # 安装依赖
-RUN npm ci
+RUN npm ci --prefer-offline --no-audit
 
 # 复制源代码
 COPY . .
@@ -18,7 +26,7 @@ EXPOSE 3000
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 # 启动开发服务器
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

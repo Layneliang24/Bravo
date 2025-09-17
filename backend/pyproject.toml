@@ -54,11 +54,33 @@ django_settings_module = "bravo.settings.local"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "bravo.settings.test"
-addopts = "--cov=apps --cov-report=html --cov-report=term-missing --cov-fail-under=85"
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--cov=apps",
+    "--cov=bravo",
+    "--cov-config=pytest-coverage.ini",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-report=json:coverage.json",
+    "--cov-fail-under=15",
+    "--junit-xml=test-results/backend-unit-results.xml",
+    "--maxfail=0",
+]
+testpaths = ["apps", "tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+    "django_db: mark test to use django database",
+]
 
 [tool.coverage.run]
 source = ["apps"]

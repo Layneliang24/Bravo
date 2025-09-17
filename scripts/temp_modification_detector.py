@@ -185,7 +185,7 @@ class TempModificationDetector:
                 context_start = max(0, line_num - 3)
                 context_end = min(len(all_lines), line_num + 2)
                 context_lines = [
-                    f"{i+1:4d}: {all_lines[i].rstrip()}"
+                    f"{i + 1:4d}: {all_lines[i].rstrip()}"
                     for i in range(context_start, context_end)
                 ]
 

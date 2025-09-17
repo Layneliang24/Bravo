@@ -65,7 +65,7 @@ async function generateTestSummary() {
           nodeVersion: process.version,
           platform: process.platform,
           arch: process.arch,
-          baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3000',
+          baseUrl: process.env.TEST_BASE_URL || 'http://localhost:3001',
           ci: !!process.env.CI,
         },
         browsers: testResults.config?.projects?.map((p: any) => p.name) || [],
@@ -168,7 +168,7 @@ async function cleanupTempFiles() {
 
   for (const pattern of tempFiles) {
     try {
-      const files = pattern.includes('*') ? await glob(pattern, { cwd: __dirname }) : [pattern];
+      const files = pattern.includes('*') ? glob.sync(pattern, { cwd: __dirname }) : [pattern];
 
       for (const file of files) {
         const filePath = path.join(__dirname, file);

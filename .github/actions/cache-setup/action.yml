@@ -1,0 +1,82 @@
+name: "Setup Optimized Cache"
+description: "Unified caching strategy for Bravo project"
+inputs:
+  cache-type:
+    description: "Type of cache to setup (frontend|backend|e2e|full)"
+    required: true
+  cache-key-suffix:
+    description: "Additional suffix for cache key uniqueness"
+    required: false
+    default: ""
+
+outputs:
+  frontend-cache-hit:
+    description: "Frontend cache hit status"
+    value: ${{ steps.frontend-cache.outputs.cache-hit }}
+  backend-cache-hit:
+    description: "Backend cache hit status"
+    value: ${{ steps.backend-cache.outputs.cache-hit }}
+  e2e-cache-hit:
+    description: "E2E cache hit status"
+    value: ${{ steps.e2e-cache.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    # Frontend caching
+    - name: Cache Frontend Dependencies
+      if: inputs.cache-type == 'frontend' || inputs.cache-type == 'full'
+      id: frontend-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          frontend/node_modules
+          ~/.npm
+          node_modules
+        key: frontend-deps-v3-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-${{ inputs.cache-key-suffix }}
+        restore-keys: |
+          frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-
+          frontend-deps-${{ runner.os }}-
+
+    # Backend caching
+    - name: Cache Backend Dependencies
+      if: inputs.cache-type == 'backend' || inputs.cache-type == 'full'
+      id: backend-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          backend/.venv
+          backend/htmlcov
+        key: backend-deps-v3-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-${{ inputs.cache-key-suffix }}
+        restore-keys: |
+          backend-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/base.txt', 'backend/requirements/local.txt', 'backend/requirements/test.txt') }}-
+          backend-deps-${{ runner.os }}-
+
+    # E2E caching
+    - name: Cache E2E Dependencies
+      if: inputs.cache-type == 'e2e' || inputs.cache-type == 'full'
+      id: e2e-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          e2e/node_modules
+          ~/.cache/ms-playwright
+          ~/.npm
+        key: e2e-deps-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-${{ inputs.cache-key-suffix }}
+        restore-keys: |
+          e2e-deps-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-
+          e2e-deps-${{ runner.os }}-
+
+    # Build cache (for compiled assets)
+    - name: Cache Build Artifacts
+      if: inputs.cache-type == 'frontend' || inputs.cache-type == 'full'
+      uses: actions/cache@v4
+      with:
+        path: |
+          frontend/dist
+          frontend/coverage
+          .lighthouseci
+        key: build-artifacts-${{ runner.os }}-${{ github.sha }}-${{ inputs.cache-key-suffix }}
+        restore-keys: |
+          build-artifacts-${{ runner.os }}-

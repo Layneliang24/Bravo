@@ -1,0 +1,170 @@
+name: Setup Cache Strategy
+
+on:
+  workflow_call:
+    outputs:
+      frontend-cache-hit:
+        description: "Frontend dependencies cache hit"
+        value: ${{ jobs.setup-cache.outputs.frontend-cache-hit }}
+      backend-cache-hit:
+        description: "Backend dependencies cache hit"
+        value: ${{ jobs.setup-cache.outputs.backend-cache-hit }}
+      e2e-cache-hit:
+        description: "E2E dependencies cache hit"
+        value: ${{ jobs.setup-cache.outputs.e2e-cache-hit }}
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  setup-cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    outputs:
+      frontend-cache-hit: ${{ steps.frontend-cache.outputs.cache-hit }}
+      backend-cache-hit: ${{ steps.backend-cache.outputs.cache-hit }}
+      e2e-cache-hit: ${{ steps.e2e-cache.outputs.cache-hit }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
+      # Level 1: Frontend Dependencies Cache
+      - name: Cache Frontend Dependencies
+        id: frontend-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            frontend/node_modules
+            ~/.npm
+          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'frontend/package.json') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+            frontend-deps-v1-${{ runner.os }}-
+
+      - name: Install Frontend Dependencies
+        if: steps.frontend-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Installing frontend dependencies (cache miss)..."
+          npm ci --prefer-offline --no-audit
+          echo "Frontend dependencies installed"
+
+      # Level 1: Backend Dependencies Cache
+      - name: Cache Backend Dependencies
+        id: backend-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: backend-deps-v2-${{ runner.os }}-${{ hashFiles('backend/requirements/*.txt') }}
+          restore-keys: |
+            backend-deps-v2-${{ runner.os }}-
+            backend-deps-v1-${{ runner.os }}-
+
+      - name: Install Backend Dependencies
+        if: steps.backend-cache.outputs.cache-hit != 'true'
+        working-directory: ./backend
+        run: |
+          echo "Installing backend dependencies (cache miss)..."
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip wheel
+          pip install -r requirements/base.txt
+          pip install -r requirements/test.txt
+          echo "Backend dependencies installed"
+
+      # Level 1A: E2E NPM Dependencies Cache
+      - name: Cache E2E Dependencies
+        id: e2e-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            e2e/node_modules
+            ~/.npm
+          key: e2e-deps-v2-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            e2e-deps-v2-${{ runner.os }}-
+            e2e-deps-v1-${{ runner.os }}-
+
+      - name: Install E2E Dependencies
+        if: steps.e2e-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "Installing E2E dependencies (cache miss)..."
+          npm ci --prefer-offline --no-audit
+          echo "E2E dependencies installed"
+
+      # Level 1B: Playwright Browsers Cache (CRITICAL for performance)
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v1-${{ runner.os }}-
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "Installing Playwright browsers (cache miss) - ~280MB download..."
+          npx playwright install --with-deps
+          echo "✅ Playwright browsers installed and cached"
+
+      # Level 2: Build Cache (Frontend)
+      - name: Cache Frontend Build
+        uses: actions/cache@v4
+        with:
+          path: frontend/dist
+          key: frontend-build-v3-${{ runner.os }}-${{ hashFiles('frontend/src/**/*', 'frontend/package.json') }}
+          restore-keys: |
+            frontend-build-v1-${{ runner.os }}-
+
+      - name: Build Frontend (if needed)
+        run: |
+          if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
+            echo "Building frontend (cache miss or empty)..."
+            # 确保workspace根依赖已安装
+            if [ ! -d "node_modules" ]; then
+              echo "Installing workspace dependencies first..."
+              npm ci --prefer-offline --no-audit
+            fi
+            # 确保frontend子项目依赖已安装
+            if [ ! -d "frontend/node_modules" ]; then
+              echo "Installing frontend dependencies..."
+              cd frontend && npm ci --prefer-offline --no-audit && cd ..
+            fi
+            # 在frontend目录内执行构建，确保vue-tsc等工具在PATH中
+            echo "Building frontend..."
+            cd frontend && npm run build && cd ..
+            echo "Frontend build completed"
+          else
+            echo "Frontend build exists, skipping"
+          fi
+
+      - name: Cache Summary
+        run: |
+          echo "Cache Summary:"
+          echo "Frontend Cache Hit: ${{ steps.frontend-cache.outputs.cache-hit }}"
+          echo "Backend Cache Hit: ${{ steps.backend-cache.outputs.cache-hit }}"
+          echo "E2E Cache Hit: ${{ steps.e2e-cache.outputs.cache-hit }}"

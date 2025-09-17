@@ -1,0 +1,78 @@
+name: Setup Cached Environment
+description: "Fast environment setup with aggressive caching"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js with Cache
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: |
+          package-lock.json
+          frontend/package-lock.json
+          e2e/package-lock.json
+
+    - name: Setup Python with Cache
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: "pip"
+        cache-dependency-path: "backend/requirements/*.txt"
+
+    - name: Restore Full Dependency Cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          node_modules
+          frontend/node_modules
+          e2e/node_modules
+          ~/.cache/pip
+          backend/.venv
+        key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+        restore-keys: |
+          full-deps-v3-${{ runner.os }}-
+          full-deps-v2-${{ runner.os }}-
+
+    - name: Install Missing Dependencies
+      shell: bash
+      run: |
+        echo "🚀 检查并安装缺失依赖..."
+
+        # 检查根依赖
+        if [ ! -d "node_modules" ]; then
+          echo "安装根依赖..."
+          npm ci --prefer-offline --no-audit
+        fi
+
+        # 检查前端依赖
+        if [ ! -d "frontend/node_modules" ]; then
+          echo "安装前端依赖..."
+          cd frontend && npm ci --prefer-offline --no-audit && cd ..
+        fi
+
+        # 检查后端依赖
+        if [ ! -d "backend/.venv" ]; then
+          echo "安装后端依赖..."
+          cd backend
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip wheel
+          pip install -r requirements/base.txt -r requirements/test.txt
+          cd ..
+        fi
+
+        echo "✅ 依赖检查完成"
+
+    - name: Save Full Dependency Cache
+      uses: actions/cache/save@v4
+      if: always()
+      with:
+        path: |
+          node_modules
+          frontend/node_modules
+          e2e/node_modules
+          ~/.cache/pip
+          backend/.venv
+        key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}

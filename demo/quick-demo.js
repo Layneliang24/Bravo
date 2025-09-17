@@ -22,6 +22,7 @@ class QuickDemo {
   }
 
   log(message, color = "blue") {
+    // eslint-disable-next-line no-console
     console.log(colors[color](message));
   }
 

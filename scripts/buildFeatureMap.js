@@ -14,9 +14,9 @@ const CONFIG = {
     "backend/**/test_*.py",
     "tests/**/*.test.{js,py}",
   ],
-  outputFile: "feature-test-map.md",
-  jsonOutputFile: "feature-test-map.json",
-  mappingFile: "feature-test-mapping.json",
+  outputFile: "docs/02_test_report/feature-test-map.md",
+  jsonOutputFile: "docs/02_test_report/feature-test-map.json",
+  mappingFile: "docs/02_test_report/feature-test-mapping.json",
 };
 
 // 加载功能清单
