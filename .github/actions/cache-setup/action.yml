@@ -31,8 +31,8 @@ runs:
       with:
         path: |
           frontend/node_modules
-          frontend/.npm
           ~/.npm
+          node_modules
         key: frontend-deps-v3-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-${{ inputs.cache-key-suffix }}
         restore-keys: |
           frontend-deps-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'package-lock.json') }}-
@@ -61,8 +61,8 @@ runs:
       with:
         path: |
           e2e/node_modules
-          e2e/.npm
           ~/.cache/ms-playwright
+          ~/.npm
         key: e2e-deps-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-${{ inputs.cache-key-suffix }}
         restore-keys: |
           e2e-deps-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}-

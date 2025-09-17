@@ -349,7 +349,7 @@ class LocalGitHubActions:
 
             failed_jobs = []
             for job in jobs:
-                print(f"\n{'='*20} {job.upper()} {'='*20}")
+                print(f"\n{'=' * 20} {job.upper()} {'=' * 20}")
                 if not self.run_workflow_job(job):
                     failed_jobs.append(job)
                     print(f"❌ 作业失败: {job}")
@@ -357,7 +357,7 @@ class LocalGitHubActions:
                     print(f"✅ 作业成功: {job}")
 
             # 总结
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print("📊 工作流执行结果:")
             print(f"✅ 成功作业: {len(jobs) - len(failed_jobs)}/{len(jobs)}")
             if failed_jobs:
