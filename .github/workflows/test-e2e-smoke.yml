@@ -206,6 +206,7 @@ jobs:
         env:
           CI: true
           TEST_BASE_URL: http://localhost:3001
+          API_URL: http://localhost:8000
 
       - name: Upload Test Results
         if: always()
