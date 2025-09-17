@@ -85,6 +85,13 @@ jobs:
 
       - name: Setup test database
         run: |
+          echo "Verifying MySQL connection..."
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
+            echo "Waiting for MySQL to be ready..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
             CREATE DATABASE IF NOT EXISTS bravo_test;
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';

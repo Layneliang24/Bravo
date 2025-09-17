@@ -150,6 +150,14 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
+          # 确保MySQL服务已准备就绪
+          echo "Verifying MySQL connection..."
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
+            echo "Waiting for MySQL to be ready..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+
           # 启动后端服务器
           cd backend
           source .venv/bin/activate
