@@ -1,6 +1,6 @@
 # Vue 前端测试环境 Dockerfile
 
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
