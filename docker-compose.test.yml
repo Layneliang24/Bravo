@@ -47,6 +47,7 @@ services:
     volumes:
       - ./frontend/dist:/app/dist
     command: npm run build
+    restart: "no" # 构建完成后不重启
 
   # E2E测试服务
   e2e-tests:

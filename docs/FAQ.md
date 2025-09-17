@@ -150,3 +150,99 @@ rules: {
 - **状态**: 问题已解决，需要触发新的CI验证修复效果
 
 **时间**: 2025-09-15
+
+## GitHub Actions CI/CD 问题
+
+### Q: Dev分支Post Merge工作流失败分析 - Node.js版本兼容性与容器编排问题
+
+**问题描述**: 在Node.js版本从18升级到20的修复过程中，dev分支出现2个工作流失败
+
+**失败工作流**:
+
+1. `Dev Branch - Medium Validation` (ID: 17799592275)
+2. `Dev Branch - Optimized Post-Merge Validation` (ID: 17799592259)
+
+**详细分析**:
+
+#### 1. Node.js版本修复成功验证 ✅
+
+**前端构建成功**:
+
+```
+vite v7.1.5 building for production...
+✓ built in 7.50s
+frontend-build-1 exited with code 0
+```
+
+**环境确认**:
+
+- `NODE_VERSION: 20` - 版本升级生效
+- `MySQL 8.0.43` - 数据库正常运行
+- `Django 4.2.7` - 后端服务正常启动
+
+#### 2. 实际失败原因分析
+
+**Medium Validation失败**:
+
+- **E2E测试**: `Error: No tests found` - 测试文件路径配置问题
+- **回归测试**: `django.db.utils.OperationalError: (1049, "Unknown database 'bravo_test'")` - 数据库初始化时序问题
+
+**Optimized Post-Merge失败**:
+
+- **容器编排问题**: 前端构建完成后立即退出(正常)，但docker-compose误认为服务异常
+- **时序问题**: `frontend-build-1 exited with code 0`导致所有容器被终止
+- **逻辑错误**: 工作流将成功的构建视为失败
+
+#### 3. 根本原因总结
+
+1. **Node.js修复100%成功** - `crypto.hash is not a function`错误彻底解决
+2. **容器编排逻辑缺陷** - 没有正确处理build-only容器的退出
+3. **测试路径配置错误** - E2E测试找不到测试文件
+4. **数据库初始化竞态** - 服务启动时机不同步
+
+#### 4. 重要发现
+
+**成功的工作流** (同一时间运行):
+
+- ✅ `Dev Branch - Post-Merge Validation` (1m22s)
+- ✅ `Feature-Test Coverage Map` (3m1s)
+- ✅ `Branch Protection` (7m56s)
+- ✅ `Dev Branch - Optimized Post-Merge Validation` (10m1s) - 另一个实例
+
+**关键证据**:
+
+- 有两个同名的"Optimized Post-Merge Validation"，一个成功一个失败
+- 成功的工作流使用了相同的Node.js 20版本
+- Feature-Test Coverage Map现在成功了(之前在PR中失败)
+
+#### 5. Dry Run验证成功
+
+使用 `act push --dryrun` 成功识别出：
+
+- 多个重复工作流同时触发
+- Service container (MySQL)配置正确
+- Node.js版本升级已应用
+
+**解决方案建议**:
+
+1. **容器编排修复**:
+
+   - 调整docker-compose.yml中前端构建服务的restart策略
+   - 添加depends_on和健康检查配置
+
+2. **测试路径修复**:
+
+   - 检查E2E测试文件路径配置
+   - 统一测试发现机制
+
+3. **工作流优化**:
+   - 减少重复工作流，避免资源浪费
+   - 改进状态判断逻辑，区分构建成功和服务运行
+
+**验证结果**:
+
+- ✅ Node.js版本问题完全解决
+- ✅ 主要功能工作流通过
+- ⚠️ 需要优化容器编排和测试配置
+
+**时间**: 2025-09-17

@@ -95,18 +95,49 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL to be ready..."
+          MAX_ATTEMPTS=30
+          ATTEMPT=0
+
           until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
-            echo "MySQL is unavailable - sleeping"
-            sleep 2
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+              echo "❌ MySQL启动超时 (${MAX_ATTEMPTS}次尝试)"
+              exit 1
+            fi
+            echo "MySQL不可用 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
+            sleep 3
           done
-          echo "MySQL is ready!"
+
+          # 额外等待确保数据库完全初始化
+          echo "✅ MySQL连接成功，等待完全初始化..."
+          sleep 5
+
+          # 验证数据库和权限
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES LIKE 'bravo_test';" | grep bravo_test
+          echo "✅ MySQL已完全准备就绪！"
 
       - name: Run Database Migrations
         working-directory: ./backend
         run: |
           source .venv/bin/activate
           echo "Running database migrations..."
-          python manage.py migrate --settings=bravo.settings.test
+
+          # 重试迁移以处理偶发的连接问题
+          MAX_RETRIES=3
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "迁移尝试 $i/$MAX_RETRIES"
+            if python manage.py migrate --settings=bravo.settings.test; then
+              echo "✅ 数据库迁移成功"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ 数据库迁移失败，已重试${MAX_RETRIES}次"
+                exit 1
+              fi
+              echo "⚠️ 迁移失败，等待后重试..."
+              sleep 5
+            fi
+          done
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DB_HOST: 127.0.0.1
