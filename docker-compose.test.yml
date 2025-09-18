@@ -66,25 +66,29 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - ./frontend/dist:/app/dist
+      - ./frontend/dist:/app/dist:ro
     environment:
       VITE_API_URL: http://backend-test:8000
+      PORT: 3000
     command: >
       bash -c "
       echo '🚀 启动前端测试服务...' &&
-      if [ -d '/app/dist' ] && [ -n \"\$(ls -A /app/dist 2>/dev/null)\" ]; then
-        echo '📦 使用构建后的静态文件' &&
-        cd /app/dist && python3 -m http.server 3000 --bind 0.0.0.0;
+      echo '📁 检查构建文件目录...' &&
+      ls -la /app/dist/ || echo '构建目录为空' &&
+      if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then
+        echo '📦 使用构建后的静态文件服务' &&
+        cd /app/dist && python3 -m http.server 3000 --bind 0.0.0.0
       else
-        echo '🔧 使用开发服务器' &&
-        npm run dev -- --host 0.0.0.0 --port 3000;
+        echo '🔧 构建文件不存在，使用开发服务器' &&
+        npm run dev -- --host 0.0.0.0 --port 3000
       fi
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   # E2E测试服务
   e2e-tests:
@@ -105,12 +109,17 @@ services:
     command: >
       bash -c "
       echo '⏳ 等待所有服务就绪...' &&
-      timeout 60 bash -c 'until curl -s http://backend-test:8000/health/; do echo \"等待后端服务...\"; sleep 2; done' &&
-      timeout 60 bash -c 'until curl -s http://frontend-test:3000/; do echo \"等待前端服务...\"; sleep 2; done' &&
-      echo '🔍 服务状态验证...' &&
-      echo \"后端服务: \$(curl -s http://backend-test:8000/health/ | head -c 100)\" &&
-      echo \"前端服务: \$(curl -s http://frontend-test:3000/ | head -c 100)\" &&
+      echo '🔗 测试服务连通性...' &&
+      timeout 90 bash -c 'until curl -s http://backend-test:8000/health/; do echo \"等待后端服务...\"; sleep 3; done' &&
+      echo '✅ 后端服务已就绪' &&
+      timeout 90 bash -c 'until curl -s http://frontend-test:3000/; do echo \"等待前端服务...\"; sleep 3; done' &&
+      echo '✅ 前端服务已就绪' &&
+      echo '🔍 详细服务状态验证...' &&
+      echo \"后端健康检查: \$(curl -s http://backend-test:8000/health/)\" &&
+      echo \"前端首页响应: \$(curl -s http://frontend-test:3000/ | head -c 200)\" &&
       echo \"环境变量: TEST_BASE_URL=\$TEST_BASE_URL, FRONTEND_URL=\$FRONTEND_URL\" &&
+      echo \"当前工作目录: \$(pwd)\" &&
+      echo \"Playwright配置: \$(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')\" &&
       echo '🧪 运行关键E2E测试...' &&
-      npm run test -- --grep '@critical' --project=chromium
+      npm run test -- --grep '@critical' --project=chromium --reporter=list --verbose
       "
