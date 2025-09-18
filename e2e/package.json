@@ -30,6 +30,8 @@
     "codegen:blog": "playwright codegen http://localhost:3000/blog",
     "install": "playwright install",
     "install:deps": "playwright install-deps",
+    "playwright:install": "playwright install",
+    "playwright:install-deps": "playwright install-deps",
     "doctor": "playwright doctor",
     "clean": "rimraf test-results playwright-report coverage screenshots",
     "clean:all": "npm run clean && rimraf node_modules package-lock.json",
