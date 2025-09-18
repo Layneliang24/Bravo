@@ -76,8 +76,8 @@ services:
       echo '📁 检查构建文件目录...' &&
       ls -la /app/dist/ || echo '构建目录为空' &&
       if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then
-        echo '📦 使用构建后的静态文件服务' &&
-        cd /app/dist && python3 -m http.server 3000 --bind 0.0.0.0
+        echo '📦 使用构建后的静态文件（Vite preview）' &&
+        npm run preview -- --host 0.0.0.0 --port 3000
       else
         echo '🔧 构建文件不存在，使用开发服务器' &&
         npm run dev -- --host 0.0.0.0 --port 3000
