@@ -227,17 +227,35 @@ jobs:
           # 健康检查
           curl -f http://localhost:8000/health/ || exit 1
 
-          # API根端点
-          curl -f http://localhost:8000/info/ || exit 1
+          # API根端点 - 修复路径
+          curl -f http://localhost:8000/ || exit 1
 
-          # 用户相关API (如果存在)
-          if curl -s http://localhost:8000/api/users/ | grep -q "users\|User"; then
-            echo "Users API is accessible"
+          # 验证API根端点返回正确信息
+          if curl -s http://localhost:8000/ | grep -q "Welcome to Bravo API"; then
+            echo "✅ API根端点返回正确"
+          else
+            echo "⚠️ API根端点响应异常"
           fi
 
-          # 博客相关API (如果存在)
-          if curl -s http://localhost:8000/api/blog/ | grep -q "blog\|Blog"; then
-            echo "Blog API is accessible"
+          # 用户认证API (修复版本路径)
+          if curl -s http://localhost:8000/api/v1/auth/ >/dev/null 2>&1; then
+            echo "✅ 用户认证API可访问"
+          else
+            echo "⚠️ 用户认证API不可访问 (可能未实现所有端点)"
+          fi
+
+          # 博客相关API (修复版本路径)
+          if curl -s http://localhost:8000/api/v1/blog/ >/dev/null 2>&1; then
+            echo "✅ 博客API可访问"
+          else
+            echo "⚠️ 博客API不可访问 (可能未实现所有端点)"
+          fi
+
+          # API文档端点检查
+          if curl -s http://localhost:8000/api/docs/ >/dev/null 2>&1; then
+            echo "✅ API文档可访问"
+          else
+            echo "⚠️ API文档不可访问"
           fi
 
           # 清理

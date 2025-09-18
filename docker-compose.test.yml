@@ -55,6 +55,37 @@ services:
     command: npm run build
     restart: "no" # 构建完成后不重启
 
+  # 前端测试服务
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    depends_on:
+      frontend-build:
+        condition: service_completed_successfully
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend/dist:/app/dist
+    environment:
+      VITE_API_URL: http://backend-test:8000
+    command: |
+      bash -c "
+        echo '🚀 启动前端测试服务...'
+        if [ -d '/app/dist' ] && [ -n \"\$(ls -A /app/dist 2>/dev/null)\" ]; then
+          echo '📦 使用构建后的静态文件'
+          cd /app/dist && python3 -m http.server 3000 --bind 0.0.0.0
+        else
+          echo '🔧 使用开发服务器'
+          npm run dev -- --host 0.0.0.0 --port 3000
+        fi
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   # E2E测试服务
   e2e-tests:
     build:
@@ -63,23 +94,25 @@ services:
     depends_on:
       backend-test:
         condition: service_healthy
-      frontend-build:
-        condition: service_completed_successfully
+      frontend-test:
+        condition: service_healthy
     volumes:
       - ./e2e:/app
-      - ./frontend/dist:/frontend-dist
     environment:
       BACKEND_URL: http://backend-test:8000
-      FRONTEND_URL: http://localhost:3001
+      FRONTEND_URL: http://frontend-test:3000
+      TEST_BASE_URL: http://frontend-test:3000
     command: |
       bash -c "
-        echo '🚀 启动前端服务...'
-        cd /frontend-dist && python -m http.server 3001 &
+        echo '⏳ 等待所有服务就绪...'
+        timeout 60 bash -c 'until curl -s http://backend-test:8000/health/; do echo \"等待后端服务...\"; sleep 2; done'
+        timeout 60 bash -c 'until curl -s http://frontend-test:3000/; do echo \"等待前端服务...\"; sleep 2; done'
 
-        echo '⏳ 等待服务就绪...'
-        timeout 30 bash -c 'until curl -s http://backend-test:8000/health/; do sleep 1; done'
-        timeout 30 bash -c 'until curl -s http://localhost:3001; do sleep 1; done'
+        echo '🔍 服务状态验证...'
+        echo \"后端服务: \$(curl -s http://backend-test:8000/health/ | head -c 100)\"
+        echo \"前端服务: \$(curl -s http://frontend-test:3000/ | head -c 100)\"
+        echo \"环境变量: TEST_BASE_URL=\$TEST_BASE_URL, FRONTEND_URL=\$FRONTEND_URL\"
 
         echo '🧪 运行关键E2E测试...'
-        npx playwright test --grep '@critical' --project=chromium
+        npm run test -- --grep '@critical' --project=chromium
       "
