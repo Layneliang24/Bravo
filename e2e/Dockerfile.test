@@ -71,9 +71,9 @@ RUN npm install --verbose --no-audit
 ENV CI=true
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-# 健康检查
+# 健康检查 - 使用npm script验证安装
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD npx playwright --version || exit 1
+    CMD npm list @playwright/test > /dev/null 2>&1 || exit 1
 
-# 默认命令
-CMD ["npx", "playwright", "test", "--config=playwright.config.ts"]
+# 默认命令 - 使用npm script确保正确的@playwright/test包
+CMD ["npm", "run", "test"]
