@@ -18,12 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 使用统一的缓存环境设置
-      - name: Setup Cached Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Environment Ready
-        run: echo "✅ 开发环境准备完成（已缓存）"
+        run: echo "✅ 开发环境准备完成"
 
   # 第二步：快速后端测试
   quick-backend-tests:
@@ -92,9 +100,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 使用统一的缓存环境设置
-      - name: Setup Cached Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: |
+          echo "安装根依赖..."
+          npm ci --prefer-offline --no-audit
+          echo "安装前端依赖..."
+          cd frontend && npm ci --prefer-offline --no-audit
 
       - name: Run Quick Frontend Tests
         run: |
