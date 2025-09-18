@@ -109,8 +109,8 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "🎭 Installing Playwright browsers..."
-          npx playwright install ${{ inputs.browser }} --with-deps
-          npx playwright install-deps
+          npm run playwright:install -- ${{ inputs.browser }} --with-deps || npx playwright install ${{ inputs.browser }} --with-deps
+          npm run playwright:install-deps || npx playwright install-deps
           echo "✅ Browser installation completed"
 
       - name: Setup Test Database
@@ -194,8 +194,8 @@ jobs:
           echo "Running complete E2E test suite..."
           echo "Browser: ${{ inputs.browser }}"
 
-          # 运行完整的E2E测试套件
-          npx playwright test \
+          # 运行完整的E2E测试套件 - 使用npm run test确保包一致性
+          npm run test -- \
             --project=${{ inputs.browser }} \
             --max-failures=5 \
             --reporter=html,junit
@@ -211,8 +211,8 @@ jobs:
         run: |
           echo "Running regression E2E tests..."
 
-          # 运行标记为回归测试的E2E测试
-          npx playwright test \
+          # 运行标记为回归测试的E2E测试 - 使用npm run test
+          npm run test -- \
             --grep "@regression" \
             --project=${{ inputs.browser }} \
             --max-failures=3 \
@@ -229,8 +229,8 @@ jobs:
         run: |
           echo "Running cross-browser compatibility tests..."
 
-          # 运行关键路径的跨浏览器测试
-          npx playwright test \
+          # 运行关键路径的跨浏览器测试 - 使用npm run test
+          npm run test -- \
             --grep "@critical" \
             --project=${{ inputs.browser }} \
             --max-failures=2

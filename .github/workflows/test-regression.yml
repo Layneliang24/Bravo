@@ -227,14 +227,14 @@ jobs:
           # 健康检查
           curl -f http://localhost:8000/health/ || exit 1
 
-          # API根端点 - 修复路径
-          curl -f http://localhost:8000/ || exit 1
-
-          # 验证API根端点返回正确信息
+          # API根端点 - 修复路径，增强容错性
           if curl -s http://localhost:8000/ | grep -q "Welcome to Bravo API"; then
             echo "✅ API根端点返回正确"
           else
-            echo "⚠️ API根端点响应异常"
+            echo "❌ API根端点测试失败"
+            echo "响应内容: $(curl -s http://localhost:8000/ | head -c 200)"
+            echo "HTTP状态码: $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/)"
+            exit 1
           fi
 
           # 用户认证API (修复版本路径)
