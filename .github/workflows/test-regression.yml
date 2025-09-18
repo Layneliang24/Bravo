@@ -81,7 +81,8 @@ jobs:
         run: |
           echo "Installing MySQL client tools..."
           sudo apt-get update
-          sudo apt-get install -y mysql-client
+          # 仅安装客户端核心工具，避免拉起本机 MySQL Server 与服务容器端口冲突
+          sudo apt-get install -y --no-install-recommends mysql-client-core-8.0
           echo "MySQL client installed successfully"
 
       - name: Setup Test Database
@@ -198,7 +199,7 @@ jobs:
 
           # 确保MySQL和bravo_test数据库完全就绪
           echo "Verifying MySQL and bravo_test database..."
-          MAX_WAIT=30
+          MAX_WAIT=60
           ATTEMPT=0
           until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; do
             ATTEMPT=$((ATTEMPT + 1))
