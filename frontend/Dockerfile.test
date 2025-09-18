@@ -4,8 +4,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# 安装curl用于健康检查
-RUN apk add --no-cache curl
+# 安装 curl 与 python3（用于静态文件http服务）
+RUN apk add --no-cache curl python3
 
 # 复制 package 文件
 COPY package*.json ./

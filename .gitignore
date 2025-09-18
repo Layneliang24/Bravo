@@ -95,6 +95,7 @@ coverage.xml
 test-results/
 playwright-report/
 test-results.xml
+_gha_artifacts/
 
 # Docker
 .dockerignore
