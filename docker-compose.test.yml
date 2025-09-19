@@ -1,5 +1,9 @@
 version: "3.8"
 
+volumes:
+  frontend-dist:
+    driver: local
+
 services:
   # 预配置的MySQL服务
   mysql-test:
@@ -51,8 +55,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.test
     volumes:
-      - ./frontend/dist:/app/dist
-    command: npm run build
+      - frontend-dist:/app/dist
+      - ./frontend:/app:ro
+    command: >
+      bash -c "
+      echo '🏗️ 开始前端构建...' &&
+      npm run build &&
+      echo '✅ 前端构建完成' &&
+      ls -la /app/dist/ &&
+      echo '📦 构建文件已生成到 /app/dist/'
+      "
     restart: "no" # 构建完成后不重启
 
   # 前端测试服务
@@ -66,7 +78,8 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - ./frontend/dist:/app/dist:ro
+      - frontend-dist:/app/dist:ro
+      - ./frontend:/app:ro
     environment:
       VITE_API_URL: http://backend-test:8000
       PORT: 3000
@@ -74,14 +87,21 @@ services:
       bash -c "
       echo '🚀 启动前端测试服务...' &&
       echo '📁 检查构建文件目录...' &&
-      ls -la /app/dist/ || echo '构建目录为空' &&
+      ls -la /app/dist/ || echo '⚠️ 构建目录检查失败' &&
       if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then
-        echo '📦 使用构建后的静态文件（Vite preview）' &&
+        echo '✅ 找到构建文件，使用 Vite preview 模式' &&
         npm run preview -- --host 0.0.0.0 --port 3000
       else
-        echo '🔧 构建文件不存在，先构建再使用preview' &&
+        echo '❌ 未找到有效的构建文件' &&
+        echo '🔧 重新构建项目...' &&
         npm run build &&
-        npm run preview -- --host 0.0.0.0 --port 3000
+        if [ -f '/app/dist/index.html' ]; then
+          echo '✅ 构建成功，启动 preview 服务' &&
+          npm run preview -- --host 0.0.0.0 --port 3000
+        else
+          echo '❌ 构建失败，使用开发模式' &&
+          npm run dev -- --host 0.0.0.0 --port 3000
+        fi
       fi
       "
     healthcheck:

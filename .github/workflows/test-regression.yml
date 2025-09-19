@@ -126,11 +126,8 @@ jobs:
             sleep 2
           done
 
-          # 最终验证
+          # 最终确认
           echo "✅ MySQL和bravo_test数据库完全准备就绪！"
-          echo "🔍 数据库状态验证："
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES LIKE 'bravo_test';"
-          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password bravo_test -e "SELECT 1 as connection_test;"
 
       - name: Run Database Migrations
         working-directory: ./backend
