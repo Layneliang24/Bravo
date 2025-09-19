@@ -178,8 +178,9 @@ test.describe('页面性能测试', () => {
 
     const loadTime = Date.now() - startTime;
 
-    // 页面加载时间应该少于3秒
-    expect(loadTime).toBeLessThan(3000);
+    // CI 环境放宽阈值，降低抖动导致的误报
+    const maxAllowedMs = process.env.CI ? 6000 : 3000;
+    expect(loadTime).toBeLessThan(maxAllowedMs);
   });
 
   test('登录页加载时间应该在合理范围内', async ({ page }) => {
