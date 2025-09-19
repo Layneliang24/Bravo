@@ -1,6 +1,9 @@
 # FUCKING_CI - 问题修复记录簿
 
+说明：这个文档是用来修复合并到dev分支之后触发的post merge工作流。
+流程：feature分支作修复，创建PR，CI通过之后merge到dev分支，触发post merge工作流。
 用途：持续记录 CI 问题与修复，避免重复踩坑。每次修复追加一条“记录项”。
+工具：github CLI、act等等
 
 ## 记录模板
 

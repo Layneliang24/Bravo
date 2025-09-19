@@ -197,20 +197,8 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
-          # 确保MySQL和bravo_test数据库完全就绪
-          echo "Verifying MySQL and bravo_test database..."
-          MAX_WAIT=60
-          ATTEMPT=0
-          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; do
-            ATTEMPT=$((ATTEMPT + 1))
-            if [ $ATTEMPT -gt $MAX_WAIT ]; then
-              echo "❌ bravo_test数据库验证失败"
-              exit 1
-            fi
-            echo "等待bravo_test数据库就绪 (${ATTEMPT}/${MAX_WAIT})..."
-            sleep 1
-          done
-          echo "✅ MySQL和bravo_test数据库已就绪！"
+          # 数据库已通过第一次验证，跳过冗余检查避免连接池抖动
+          echo "✅ 数据库已验证，开始API兼容性测试..."
 
           # 启动后端服务器
           cd backend
