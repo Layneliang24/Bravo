@@ -28,6 +28,7 @@
 - 第几次 dev post merge：1
 - 关联提交/分支/Run 链接：
   - commit: ee85baa
+  - PR: #63 https://github.com/Layneliang24/Bravo/pull/63
   - feature: feature/fix-e2e-critical-baseurl
   - runs:
     - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17835618521
@@ -54,6 +55,7 @@
 - 第几次 dev post merge：2
 - 关联提交/分支/Run 链接：
   - commit: da6cb7f (dev head)
+  - PR: #64 https://github.com/Layneliang24/Bravo/pull/64
   - feature: feature/fix-e2e-critical-baseurl (merged)
   - runs:
     - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17849528297
@@ -83,6 +85,7 @@
 - 第几次 dev post merge：3
 - 关联提交/分支/Run 链接：
   - commits: f8ed932, c977b90
+  - PR: #65 https://github.com/Layneliang24/Bravo/pull/65
   - features: feature/postmerge-stabilize, feature/postmerge-stabilize-2
   - runs:
     - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17851844332
