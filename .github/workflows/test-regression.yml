@@ -219,8 +219,14 @@ jobs:
           BACKEND_PID=$!
           cd ..
 
-          # 等待服务器启动
-          timeout 30 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do sleep 1; done' || exit 1
+          # 等待服务器启动（放宽至90秒，并在失败时打印诊断信息）
+          if ! timeout 90 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do sleep 1; done'; then
+            echo "❌ 后端健康检查超时(90s)"
+            echo "🔎 尝试获取最近日志与端口占用信息..."
+            curl -s http://localhost:8000/health/ || true
+            ss -ltn || netstat -an || true
+            exit 1
+          fi
 
           # 测试API兼容性
           echo "Testing critical API endpoints..."

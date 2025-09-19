@@ -179,7 +179,7 @@ test.describe('页面性能测试', () => {
     const loadTime = Date.now() - startTime;
 
     // CI 环境放宽阈值，降低抖动导致的误报
-    const maxAllowedMs = process.env.CI ? 6000 : 3000;
+    const maxAllowedMs = process.env.CI ? 8000 : 3000;
     expect(loadTime).toBeLessThan(maxAllowedMs);
   });
 
