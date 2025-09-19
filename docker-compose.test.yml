@@ -1,9 +1,5 @@
 version: "3.8"
 
-volumes:
-  frontend-dist:
-    driver: local
-
 services:
   # 预配置的MySQL服务
   mysql-test:
@@ -55,7 +51,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.test
     volumes:
-      - frontend-dist:/app/dist
+      - ./frontend/dist:/app/dist
       - ./frontend:/app:ro
     command: >
       bash -c "
@@ -78,7 +74,7 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - frontend-dist:/app/dist:ro
+      - ./frontend/dist:/app/dist:ro
       - ./frontend:/app:ro
     environment:
       VITE_API_URL: http://backend-test:8000
