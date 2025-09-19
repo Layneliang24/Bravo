@@ -126,11 +126,8 @@ jobs:
             sleep 2
           done
 
-          # 最终验证
+          # 最终确认
           echo "✅ MySQL和bravo_test数据库完全准备就绪！"
-          echo "🔍 数据库状态验证："
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES LIKE 'bravo_test';"
-          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password bravo_test -e "SELECT 1 as connection_test;"
 
       - name: Run Database Migrations
         working-directory: ./backend
@@ -197,20 +194,8 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
-          # 确保MySQL和bravo_test数据库完全就绪
-          echo "Verifying MySQL and bravo_test database..."
-          MAX_WAIT=60
-          ATTEMPT=0
-          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; do
-            ATTEMPT=$((ATTEMPT + 1))
-            if [ $ATTEMPT -gt $MAX_WAIT ]; then
-              echo "❌ bravo_test数据库验证失败"
-              exit 1
-            fi
-            echo "等待bravo_test数据库就绪 (${ATTEMPT}/${MAX_WAIT})..."
-            sleep 1
-          done
-          echo "✅ MySQL和bravo_test数据库已就绪！"
+          # 数据库已通过第一次验证，跳过冗余检查避免连接池抖动
+          echo "✅ 数据库已验证，开始API兼容性测试..."
 
           # 启动后端服务器
           cd backend
@@ -275,6 +260,7 @@ jobs:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
 
       - name: Database Schema Regression
+        if: inputs.scope == 'full'
         working-directory: ./backend
         run: |
           source .venv/bin/activate

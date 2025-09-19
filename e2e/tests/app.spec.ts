@@ -170,7 +170,7 @@ test.describe('响应式设计测试', () => {
 
 // 性能测试
 test.describe('页面性能测试', () => {
-  test('主页加载时间应该在合理范围内 @critical', async ({ page }) => {
+  test('主页加载时间应该在合理范围内 @perf @regression', async ({ page }) => {
     const startTime = Date.now();
 
     await page.goto(BASE_URL);
