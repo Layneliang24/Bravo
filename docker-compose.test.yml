@@ -106,6 +106,7 @@ services:
       BACKEND_URL: http://backend-test:8000
       FRONTEND_URL: http://frontend-test:3000
       TEST_BASE_URL: http://frontend-test:3000
+      CI: "true"
     command: >
       bash -c "
       echo '⏳ 等待所有服务就绪...' &&
