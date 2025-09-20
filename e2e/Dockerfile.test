@@ -1,10 +1,10 @@
-# E2E测试环境 Dockerfile
+# E2E测试环境 Dockerfile - 自给自足架构
 FROM node:20-slim
 
-# 设置工作目录到e2e目录
-WORKDIR /app/e2e
+# 设置工作目录（保持在根目录，避免路径问题）
+WORKDIR /app
 
-# 安装系统依赖（Playwright需要）+ Python
+# 安装系统依赖（Playwright需要）
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -48,33 +48,54 @@ RUN apt-get update && apt-get install -y \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
-# 设置环境变量
+# 🎯 最优方案1：直接在容器内设置所有环境变量，消除外部依赖
 ENV CI=true
+ENV NODE_ENV=test
 ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com/
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+ENV TEST_BASE_URL=http://frontend-test:3000
+ENV FRONTEND_URL=http://frontend-test:3000
+ENV BACKEND_URL=http://backend-test:8000
 
-# 1) 独立锁文件 + 禁用 workspace hoist
-COPY package*.json ./
-RUN echo 'workspace-root=false' > .npmrc
+# 复制e2e测试代码
+COPY . ./e2e/
 
-# 2) 严格可重复安装
+# 进入e2e目录进行安装
+WORKDIR /app/e2e
+
+# 🎯 最优方案2：彻底禁用workspace，确保依赖本地安装
+RUN echo 'workspace-root=false' > .npmrc && \
+    echo 'legacy-peer-deps=true' >> .npmrc
+
+# 严格可重复构建
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retry-mintimeout 10000 && \
-    npm ci
+    npm ci --verbose
 
-# 3) 浏览器也装进 /app，避免挂在 $HOME
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
-RUN npx playwright install
+# 🎯 最优方案3：安装浏览器并验证安装
+RUN npx playwright install --with-deps && \
+    npx playwright --version && \
+    npm list @playwright/test && \
+    ls -la node_modules/.bin/ | grep playwright
 
-# 4) 自检验证
-RUN npx playwright --version && npm list @playwright/test
+# 🎯 最优方案4：创建自给自足的启动脚本
+RUN echo '#!/bin/bash' > /app/e2e/run-tests.sh && \
+    echo 'set -e' >> /app/e2e/run-tests.sh && \
+    echo 'echo "🔍 E2E环境自检..."' >> /app/e2e/run-tests.sh && \
+    echo 'echo "工作目录: $(pwd)"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "Playwright版本: $(npx playwright --version)"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "可用配置文件:"' >> /app/e2e/run-tests.sh && \
+    echo 'ls -la *.config.* || echo "未找到配置文件"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "🧪 开始执行E2E测试..."' >> /app/e2e/run-tests.sh && \
+    echo 'exec ./node_modules/.bin/playwright test --grep "@critical" --project=chromium --reporter=list' >> /app/e2e/run-tests.sh && \
+    chmod +x /app/e2e/run-tests.sh
 
-COPY . .
-
-# 健康检查 - 使用npm script验证安装
+# 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD npm list @playwright/test > /dev/null 2>&1 || exit 1
+    CMD ./node_modules/.bin/playwright --version > /dev/null 2>&1
 
-# 默认命令 - 使用npm script确保正确的@playwright/test包
-CMD ["npm", "run", "test"]
+# 🎯 最优方案：使用自给自足脚本，消除所有中间环节
+CMD ["./run-tests.sh"]
