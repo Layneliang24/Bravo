@@ -482,32 +482,90 @@
 
 ---
 
-## 记录项 17 - PR #81史诗级验证进展
+## 记录项 17 - GitHub Actions脚本Bug的史诗级发现
 
-- 北京时间：2025-09-20 23:40:00 CST
-- 第几次推送到 feature：1
-- 第几次 PR：1 (干净分支，无冲突)
+- 北京时间：2025-09-21 00:15:00 CST
+- 第几次推送到 feature：2 (发现根本原因后的紧急修复)
+- 第几次 PR：1 (继续PR #81)
 - 第几次 dev post merge：待定
 - 关联提交/分支/Run 链接：
-  - commit: d819a4f (feat: 最优根本性解决方案)
+  - commit: cd44bd6 (fix: GitHub Actions脚本bug彻底修复)
   - branch: feature/ultimate-solution-clean
   - PR: #81 https://github.com/Layneliang24/Bravo/pull/81
-  - 基于：干净的dev分支，无任何合并冲突
-- 原因定位：
-  - **本地验证100%成功**：2个@critical测试全部通过（3.8秒）
-  - **自给自足架构完美**：容器内置所有环境变量和依赖
-  - **环境完全统一**：PR和post-merge使用完全相同的容器
-- 当前PR验证进展：
-  - **✅ 所有基础检查通过**：安全、单元测试、质量检查
-  - **✅ 前端测试完美**：所有前端相关检查通过
-  - **✅ 后端测试完美**：所有后端相关检查通过
-  - **🔄 集成测试进行中**：包含关键E2E测试的最后阶段
-- 技术验证成果：
-  1. **Dockerfile自给自足架构** ✅：环境变量内置成功
-  2. **docker-compose简化配置** ✅：移除外部依赖成功
-  3. **GitHub Actions简化** ✅：移除环境变量传递成功
-  4. **版本冲突消除** ✅：./node_modules/.bin/playwright直接调用
-- 预期最终结果：
-  - **史诗级PR验证成功**：所有检查包括E2E测试通过
-  - **史诗级post-merge成功**：环境完全统一，无差异
-  - **长期CI稳定性**：自给自足架构确保持续成功
+  - 基于：用户质疑后的深度分析发现
+- **🎯 震惊发现：E2E测试实际100%成功，GitHub Actions脚本虚假报告失败**
+- 详细分析日志发现的事实：
+  ```
+  e2e-tests-1  |   ✓  1 [chromium] › 主页功能测试 (812ms)
+  e2e-tests-1  |   ✓  2 [chromium] › 登录功能测试 (850ms)
+  e2e-tests-1  |   2 passed (2.6s)
+  e2e-tests-1 exited with code 0  👈 真实退出码是0！
+  但是：
+  E2E测试退出码: 1  👈 脚本错误报告为1！
+  ```
+- **根本原因定位**：
+  1. **✅ 我修复了fast-validation.yml** - 输出"E2E测试真实退出码"
+  2. **❌ 遗漏了on-pr.yml** - 仍输出"E2E测试退出码"，bug逻辑未修复
+  3. **PR #81使用的是on-pr.yml** - 所以看到的是旧的错误逻辑
+- **用户关键质疑回答**：
+  - **"为什么没有模拟GitHub Actions脚本逻辑？"** ✅ 质疑完全正确！
+  - **我的本地验证致命疏漏**：只测试了Docker容器（`docker-compose up e2e-tests`），没有用`act`模拟完整工作流
+  - **应该做的**：`act pull_request`模拟完整GitHub Actions流程，就能发现脚本层面的bug
+  - **教训**：本地验证必须包含两层 - 容器层 + 脚本层
+- **彻底修复方案**：
+  - 修复`.github/workflows/on-pr.yml`中相同的退出码检测bug
+  - 统一`fast-validation.yml`和`on-pr.yml`的退出码逻辑
+  - 移除环境变量传递，完全依赖自给自足容器
+- **技术成果总结**：
+  1. **自给自足容器架构** ✅：E2E测试容器内100%成功
+  2. **环境统一理论验证** ✅：PR和post-merge使用相同容器
+  3. **GitHub Actions脚本bug修复** ✅：两个工作流文件统一退出码逻辑
+- **预期最终结果**：
+  - **GitHub Actions脚本正确报告E2E成功**
+  - **PR验证和post-merge验证完全一致**
+  - **长期CI稳定：容器自给自足 + 脚本逻辑正确**
+
+---
+
+## 记录项 18 - Docker-Compose兼容性问题修复
+
+- 北京时间：2025-09-21 00:50:00 CST
+- 第几次推送到 feature：3 (发现兼容性问题后的紧急修复)
+- 第几次 PR：1 (继续PR #81)
+- 第几次 dev post merge：待定
+- 关联提交/分支/Run 链接：
+  - commit: 5c0b3f6 (fix: docker-compose兼容性问题)
+  - branch: feature/ultimate-solution-clean
+  - PR: #81 https://github.com/Layneliang24/Bravo/pull/81
+  - 基于：脚本修复后发现的新环境兼容性问题
+- **🎯 发现：E2E测试容器成功，但GitHub Actions脚本有兼容性问题**
+- 详细分析新发现的问题：
+
+  ```
+  脚本修复确实生效：
+  ✅ 输出"E2E测试真实退出码"而不是"E2E测试退出码"
+  ✅ 脚本bug已修复
+
+  但发现新问题：
+  ❌ docker-compose: command not found
+  ❌ GitHub Actions环境没有docker-compose命令，只有docker compose
+  ❌ fallback逻辑中仍使用docker-compose
+  ```
+
+- **根本原因定位**：
+  1. **✅ 脚本修复100%生效** - 退出码检测逻辑已正确
+  2. **❌ 环境兼容性问题** - 检测逻辑认为有docker-compose，但执行时失败
+  3. **❌ fallback逻辑缺陷** - 第102和104行在fallback中仍使用docker-compose
+- **技术修复方案**：
+  - 修复`.github/workflows/on-pr.yml`第102和104行
+  - 将fallback逻辑中的`docker-compose`改为`docker compose`
+  - 确保无论检测结果如何，都能在GitHub Actions环境中正确执行
+- **教训总结**：
+  - **用户质疑完全正确**：本地验证确实无法发现所有环境差异
+  - **act模拟限制**：依赖链复杂，无法直接测试E2E job
+  - **环境兼容性复杂**：不同运行环境的命令可用性差异
+  - **脚本逻辑需考虑所有分支**：包括检测成功但执行失败的情况
+- **预期最终结果**：
+  - **docker-compose和docker compose双重兼容**
+  - **所有环境下都能正确执行E2E测试**
+  - **彻底解决命令不兼容导致的失败**

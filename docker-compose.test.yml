@@ -114,7 +114,7 @@ services:
         echo '🔍 详细服务状态验证...'
         echo "后端健康检查: $(curl -s http://backend-test:8000/health/)"
         echo "前端首页响应: $(curl -s http://frontend-test:3000/ | head -c 200)"
-        echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL"
+        echo "环境变量: TEST_BASE_URL=$$TEST_BASE_URL, FRONTEND_URL=$$FRONTEND_URL"
         echo "当前工作目录: $(pwd)"
         echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')"
         echo '🧪 执行自给自足E2E测试...'
