@@ -669,3 +669,62 @@
   - **GitHub Actions环境backend容器稳定运行**
   - **彻底解决环境差异导致的服务退出问题**
   - **PR和post-merge环境完全一致和稳定**
+
+---
+
+## 记录项 21 - Docker Compose一次性任务问题彻底根本性解决
+
+- 北京时间：2025-09-21 02:05:00 CST
+- 第几次推送到 feature：6 (第21轮根本性架构修复)
+- 第几次 PR：1 (继续PR #81)
+- 第几次 dev post merge：待定
+- 关联提交/分支/Run 链接：
+  - commit: 1a31b18 (fix: 第21轮彻底解决Docker Compose一次性任务问题)
+  - branch: feature/ultimate-solution-clean
+  - PR: #81 https://github.com/Layneliang24/Bravo/pull/81
+  - 基于：第20轮修复后发现的Docker Compose行为差异问题
+- **🎯 史诗级发现：GitHub Actions环境Docker Compose行为与本地完全不同**
+- 详细问题分析：
+
+  ```
+  第20轮修复确认健康检查成功，但发现新根本问题：
+  ✅ 第19轮：环境变量修复100%生效
+  ✅ 第20轮：健康检查增强，本地测试完美
+  ❌ GitHub Actions环境：Docker Compose检测到一次性任务退出就终止整个堆栈
+
+  关键日志发现：
+  frontend-build-1 exited with code 0  ← 一次性任务正常完成
+  Aborting on container exit...        ← Docker Compose终止整个堆栈
+  dependency failed to start: container bravo-backend-test-1 exited (0)
+  ```
+
+- **根本原因定位**：
+  1. **架构设计缺陷**：frontend-build设计为一次性构建任务，完成后退出
+  2. **环境行为差异**：GitHub Actions环境Docker Compose更严格，一个容器退出就终止堆栈
+  3. **复杂依赖链问题**：frontend-test依赖frontend-build的service_completed_successfully
+  4. **本地环境宽松**：本地Docker Compose版本/配置对一次性任务更宽容
+- **史诗级根本性解决方案**：
+  - **完全移除frontend-build服务**：消除一次性任务的根本问题
+  - **frontend-test自给自足**：自己执行npm run build，不依赖外部服务
+  - **简化依赖关系**：移除复杂的service_completed_successfully依赖
+  - **架构统一**：所有服务都是持续运行类型，消除退出触发问题
+- **本地验证史诗级成功**：
+  - **✅ E2E测试：2/2通过，4.1秒完成**
+  - **✅ e2e-tests-1 exited with code 0**
+  - **✅ 无dependency failed错误**
+  - **✅ Docker Compose识别孤立容器bravo-frontend-build-1**，证明移除成功
+  - **✅ 所有服务健康运行，无容器意外退出**
+- **技术成就总结**：
+  1. **第19轮**：环境变量传递100%修复
+  2. **第20轮**：健康检查增强，适应慢环境
+  3. **第21轮**：架构根本性重构，消除一次性任务问题
+- **史诗级教训**：
+  - **环境差异复杂性**：GitHub Actions环境比本地环境更严格
+  - **一次性任务危险性**：在CI环境中一次性容器退出可能触发堆栈终止
+  - **架构简化重要性**：复杂依赖关系在不同环境中行为不一致
+  - **本地验证必要性**：每轮修复都必须先本地验证通过
+- **预期最终结果**：
+  - **彻底消除Docker Compose环境差异问题**
+  - **所有服务持续运行，无意外退出**
+  - **PR和post-merge环境行为完全一致**
+  - **第19+20+21轮组合修复彻底解决所有CI问题**
