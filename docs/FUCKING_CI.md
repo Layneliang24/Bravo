@@ -22,7 +22,7 @@
       gh run view $(gh run list --branch=dev --limit=1 --jq '.[0].number') --log-failed > failed.log
       cat failed.log → 把关键错误贴到 fucking_ci.md 末尾
 - [ ] **第2步**：在 fucking_ci.md 新增一条「本地+远程双方案」记录
-      格式：## 2025-09-20 13:xx - 本地冒烟：act 镜像       catthehacker/ubuntu:act-latest - 错误定位：xxx步骤失败 → 原因：xxx - 新方案：xxx
+      格式：## 2025-09-20 13:xx - 本地冒烟：act 镜像 catthehacker/ubuntu:act-latest - 错误定位：xxx步骤失败 → 原因：xxx - 新方案：xxx
 - [ ] **第3步**：切分支 & 修复
       git checkout -b feature/fix-ci-XXround
       改完文件 → git add . → git commit -m "ci: fix xxx"
@@ -237,3 +237,33 @@
 - 预期效果：
   - e2e-tests容器成功启动并执行测试
   - Dev Branch - Optimized Post-Merge Validation全部通过
+
+---
+
+## 记录项 8
+
+- 北京时间：2025-09-20 15:10:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：8
+- 关联提交/分支/Run 链接：
+  - commit: 第8轮E2E命令格式修复合并后
+  - runs:
+    - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17875510355 (failure)
+- 原因定位：
+  - **sh: 1: playwright: not found** - E2E容器中playwright命令不在PATH中，exit code 127的根本原因
+  - **环境变量缺失** - TEST_BASE_URL和FRONTEND_URL都为空，导致baseURL配置错误
+  - **Vite访问限制** - frontend服务不允许从"frontend-test"主机名访问
+- 证据：
+  - Dockerfile.test安装了playwright但执行时找不到命令
+  - 环境变量显示为空：TEST_BASE_URL=, FRONTEND_URL=
+  - Vite错误：Blocked request. This host ("frontend-test") is not allowed
+- 修复方案：
+  - 修复E2E容器中playwright命令的PATH问题，使用npx或完整路径
+  - 在docker-compose.test.yml中设置正确的环境变量TEST_BASE_URL和FRONTEND_URL
+  - 修复Vite配置允许frontend-test主机访问
+  - 确保第7+8+9轮组合修复解决所有CI问题
+- 预期效果：
+  - E2E容器可以正确执行playwright测试
+  - 服务间连通性完全正常
+  - Dev Branch - Optimized Post-Merge Validation 100%成功
