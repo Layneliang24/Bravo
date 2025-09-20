@@ -59,7 +59,7 @@
     "start": "npm run test:ui"
   },
   "dependencies": {
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.55.0"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.3",

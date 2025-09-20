@@ -326,3 +326,33 @@
   - E2E测试使用正确的本地playwright版本
   - 避免npx的自动版本安装冲突
   - Dev Branch - Optimized Post-Merge Validation最终成功
+
+---
+
+## 记录项 11
+
+- 北京时间：2025-09-20 16:30:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：11
+- 关联提交/分支/Run 链接：
+  - commit: 第11轮playwright版本修复合并后
+  - runs:
+    - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17876336928 (failure)
+- 原因定位：
+  - **震惊发现**: exit code又回到127，说明第11轮修复在post-merge环境中没有生效
+  - **根本问题**: @playwright/test包在E2E容器中根本没有正确安装到期望路径
+  - **workspace问题**: npm workspaces将依赖提升到根目录，./node_modules/.bin/playwright在容器中不存在
+- 证据：
+  - 本地检查发现e2e/node_modules/.bin/中没有playwright命令
+  - @playwright/test@1.55.0安装在workspace根目录层级
+  - 容器中工作目录为/app，但playwright不在/app/node_modules/.bin/
+- 修复方案：
+  - 使用npm run test替代直接调用playwright二进制文件
+  - 通过package.json脚本确保正确的依赖解析
+  - 避免依赖路径和workspace配置问题
+  - 第7+8+9+10+11+12轮组合修复应彻底解决依赖安装问题
+- 预期效果：
+  - E2E测试通过npm脚本正确执行
+  - 避免所有路径和workspace相关问题
+  - Dev Branch - Optimized Post-Merge Validation最终成功
