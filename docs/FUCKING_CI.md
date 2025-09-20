@@ -6,17 +6,23 @@
 
 **流程**：
 
-- [ ] **第0步**：本地冒烟测试 1.安装工具（一次）：
-      brew install nektos/tap/act 2.缓存镜像（一次）：
-      act -P ubuntu-latest=catthehacker/ubuntu:act-latest --pull 3.在本仓库根目录执行：
-      act push -P ubuntu-latest=catthehacker/ubuntu:act-latest --eventpath <(echo '{"ref":"refs/heads/feature"}') 4.结果判断：
+- [ ] **第0步**：本地冒烟测试
+      安装工具（一次）：
+      brew install nektos/tap/act
+      缓存镜像（一次）：
+      act -P ubuntu-latest=catthehacker/ubuntu:act-latest --pull
+      在本仓库根目录执行：
+      act push -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+       --eventpath <(echo '{"ref":"refs/heads/feature"}')
+      结果判断：
       全绿 ✅ → 继续 第1步
       有红 ❌ → 看 /tmp/act/log\*.log 定位 → 改代码 → 重复第 0 步直到绿
 - [ ] **第1步**：查看远程失败信息
       gh run list --branch=dev --limit=5 --json number,conclusion,workflowName
       gh run view $(gh run list --branch=dev --limit=1 --jq '.[0].number') --log-failed > failed.log
       cat failed.log → 把关键错误贴到 fucking_ci.md 末尾
-- [ ] **第2步**：在 fucking_ci.md 新增一条「本地+远程双方案」记录，格式：## 2025-09-20 13:xx - 本地冒烟：act 镜像 catthehacker/ubuntu:act-latest - 错误定位：xxx步骤失败 → 原因：xxx - 新方案：xxx
+- [ ] **第2步**：在 fucking_ci.md 新增一条「本地+远程双方案」记录
+      格式：## 2025-09-20 13:xx - 本地冒烟：act 镜像       catthehacker/ubuntu:act-latest - 错误定位：xxx步骤失败 → 原因：xxx - 新方案：xxx
 - [ ] **第3步**：切分支 & 修复
       git checkout -b feature/fix-ci-XXround
       改完文件 → git add . → git commit -m "ci: fix xxx"
@@ -203,13 +209,31 @@
 
 ---
 
-## 2025-09-20 13:15
+## 记录项 7
 
-- 本地冒烟：act 镜像 catthehacker/ubuntu:act-latest
-- 错误定位：
+- 北京时间：2025-09-20 14:35:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：7
+- 关联提交/分支/Run 链接：
+  - commit: feature/fix-ci-bash-quotes-round7 merged
+  - runs:
+    - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17875129369 (failure)
+- 原因定位：
   - **本地act失败**：fast-validation.yml中quick-checks job的bash语法错误（缩进问题）
   - **远程失败**：`e2e-tests-1 | bash: -c: line 1: unexpected EOF while looking for matching '"'` - docker-compose.test.yml中命令引号格式错误
-- 新方案：
-  1. 修复fast-validation.yml中bash case语句的缩进错误
-  2. 修复docker-compose.test.yml中command字段的引号格式
-  3. 本地act验证 → 远程验证双保险
+  - **e2e-tests-1 exited with code 127** - docker-compose.test.yml中e2e-tests command执行"命令未找到"错误
+  - **PR验证100%成功** - fast-validation.yml的bash语法修复完全有效
+  - **Post-merge 4/5成功** - 但Optimized Post-Merge Validation中的e2e测试仍失败
+- 证据：
+  - 退出码127表示"command not found"，通常是command格式或路径问题
+  - e2e-tests-1容器无法正确执行docker-compose.test.yml中定义的command
+- 修复方案：
+  - 修复fast-validation.yml中bash case语句的缩进错误
+  - 简化docker-compose.test.yml中e2e-tests的command格式，避免复杂的引号嵌套
+  - 使用多行YAML格式或script文件来替代单行超长command
+  - 本地docker-compose up e2e-tests验证command可执行性
+  - 本地act验证 → 远程验证双保险
+- 预期效果：
+  - e2e-tests容器成功启动并执行测试
+  - Dev Branch - Optimized Post-Merge Validation全部通过
