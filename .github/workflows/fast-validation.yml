@@ -154,18 +154,25 @@ jobs:
             docker-compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
-            # 等待e2e-tests容器完成并获取退出码
+            # 🎯 修复：在清理前先获取退出码
+            # 等待e2e-tests容器完成
             if docker-compose -f docker-compose.test.yml logs -f e2e-tests; then
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' $(docker-compose -f docker-compose.test.yml ps -q e2e-tests) 2>/dev/null || echo "1")
+              # 先获取容器ID和退出码，再进行任何清理操作
+              E2E_CID=$(docker-compose -f docker-compose.test.yml ps -q e2e-tests)
+              if [ -n "$E2E_CID" ]; then
+                E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+              else
+                E2E_EXIT_CODE=1
+              fi
+              echo "E2E测试退出码: $E2E_EXIT_CODE"
+
               echo "📦 收集E2E测试产物..."
               mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker-compose -f docker-compose.test.yml ps -q e2e-tests)
               if [ -n "$E2E_CID" ]; then
                 docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
                 docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
                 docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
               fi
-              echo "E2E测试退出码: $E2E_EXIT_CODE"
 
               echo "清理Docker服务..."
               docker-compose -f docker-compose.test.yml down
@@ -190,17 +197,24 @@ jobs:
             docker compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
+            # 🎯 修复：在清理前先获取退出码
             if docker compose -f docker-compose.test.yml logs -f e2e-tests; then
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' $(docker compose -f docker-compose.test.yml ps -q e2e-tests) 2>/dev/null || echo "1")
+              # 先获取容器ID和退出码，再进行任何清理操作
+              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
+              if [ -n "$E2E_CID" ]; then
+                E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+              else
+                E2E_EXIT_CODE=1
+              fi
+              echo "E2E测试退出码: $E2E_EXIT_CODE"
+
               echo "📦 收集E2E测试产物..."
               mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
               if [ -n "$E2E_CID" ]; then
                 docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
                 docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
                 docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
               fi
-              echo "E2E测试退出码: $E2E_EXIT_CODE"
 
               echo "清理Docker服务..."
               docker compose -f docker-compose.test.yml down
