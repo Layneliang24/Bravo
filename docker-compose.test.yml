@@ -23,6 +23,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+      start_period: 30s
 
   # 后端测试服务
   backend-test:
@@ -42,8 +43,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 15
+      start_period: 45s
 
   # 前端构建服务 - 修复权限问题：不使用卷映射到主机
   frontend-build:
