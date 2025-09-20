@@ -123,4 +123,4 @@ services:
         echo "当前工作目录: $(pwd)"
         echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')"
         echo '🧪 运行关键E2E测试...'
-        npx playwright test --grep '@critical' --project=chromium --reporter=list --verbose
+        npx playwright test --grep '@critical' --project=chromium --reporter=list

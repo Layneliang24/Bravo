@@ -267,3 +267,32 @@
   - E2E容器可以正确执行playwright测试
   - 服务间连通性完全正常
   - Dev Branch - Optimized Post-Merge Validation 100%成功
+
+---
+
+## 记录项 9
+
+- 北京时间：2025-09-20 15:30:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：9
+- 关联提交/分支/Run 链接：
+  - commit: 第9轮E2E环境修复合并后
+  - runs:
+    - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17875801826 (failure)
+- 原因定位：
+  - **重大进展**: exit code从127变为1，证明playwright命令修复成功
+  - **新错误**: error: unknown option '--verbose' - Playwright不支持--verbose参数
+  - **环境差异**: PR验证成功但post-merge失败，说明使用了不同的测试配置
+- 证据：
+  - e2e-tests-1 exited with code 1（而非之前的127）
+  - 明确错误信息：error: unknown option '--verbose'
+  - PR环境史无前例10分钟成功验证vs post-merge环境失败
+- 修复方案：
+  - 移除docker-compose.test.yml中错误的--verbose参数
+  - 使用正确的Playwright命令参数：--reporter=list（无--verbose）
+  - 第7+8+9+10轮组合修复应彻底解决所有CI问题
+- 预期效果：
+  - E2E测试命令完全正确执行
+  - PR和post-merge环境保持一致
+  - Dev Branch - Optimized Post-Merge Validation最终成功
