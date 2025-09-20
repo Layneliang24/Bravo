@@ -47,27 +47,12 @@ services:
       retries: 15
       start_period: 45s
 
-  # 前端构建服务 - 修复权限问题：不使用卷映射到主机
-  frontend-build:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.test
-    command:
-      [
-        "/bin/sh",
-        "-c",
-        "echo '🏗️ 开始前端构建...' && npm run build && echo '✅ 前端构建完成' && ls -la /app/dist/ && echo '📦 构建文件已生成到容器内 /app/dist/' && echo '📋 构建文件清单:' && find /app/dist -type f | head -10",
-      ]
-    restart: "no" # 构建完成后不重启
-
-  # 前端测试服务 - 修复方案：独立构建，不依赖卷映射
+  # 前端测试服务 - 第21轮修复：移除frontend-build依赖，自给自足
   frontend-test:
     build:
       context: ./frontend
       dockerfile: Dockerfile.test
-    depends_on:
-      frontend-build:
-        condition: service_completed_successfully
+    # 移除对frontend-build的依赖，消除一次性任务导致的Docker Compose终止问题
     ports:
       - "3001:3000"
     environment:

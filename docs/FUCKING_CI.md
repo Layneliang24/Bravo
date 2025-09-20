@@ -616,3 +616,56 @@
   - **彻底解决环境变量传递问题**
   - **E2E测试在PR和post-merge环境一致成功**
   - **实现真正的自给自足容器架构**
+
+---
+
+## 记录项 20 - GitHub Actions环境差异健康检查修复
+
+- 北京时间：2025-09-21 01:45:00 CST
+- 第几次推送到 feature：5 (第20轮环境差异修复)
+- 第几次 PR：1 (继续PR #81)
+- 第几次 dev post merge：待定
+- 关联提交/分支/Run 链接：
+  - commit: cd8840a (fix: 第20轮增强健康检查配置解决GitHub Actions环境差异)
+  - branch: feature/ultimate-solution-clean
+  - PR: #81 https://github.com/Layneliang24/Bravo/pull/81
+  - 基于：第19轮环境变量修复成功，发现新的环境差异问题
+- **🎯 发现：本地完全正常，GitHub Actions环境backend容器意外退出**
+- 详细问题分析：
+
+  ```
+  第19轮成功确认：
+  ✅ 环境变量修复100%成功：TEST_BASE_URL=http://frontend-test:3000
+  ✅ 本地docker-compose stack完全正常
+  ✅ 本地E2E测试2/2通过，3.6-4.1秒完成
+
+  GitHub Actions环境问题：
+  ❌ dependency failed to start: container bravo-backend-test-1 exited (0)
+  ❌ backend服务正常启动但意外退出
+  ❌ 健康检查在慢环境中可能失败
+  ```
+
+- **根本原因定位**：
+  - **环境启动速度差异**：GitHub Actions环境比本地启动显著更慢
+  - **健康检查配置不足**：backend和mysql缺少start_period缓冲期
+  - **服务依赖链敏感**：慢环境中的时序问题导致服务意外退出
+- **技术修复方案**：
+  - **backend-test健康检查增强**：
+    - timeout: 3s → 5s (增加单次检查时间)
+    - retries: 10 → 15 (增加重试次数)
+    - 新增start_period: 45s (给Django充分启动时间)
+  - **mysql-test健康检查增强**：
+    - 新增start_period: 30s (避免启动期健康检查失败)
+- **本地验证100%成功**：
+  - **✅ E2E测试：2/2通过，3.6秒完成**
+  - **✅ 所有服务健康检查正常**
+  - **✅ 环境变量完全正确传递**
+  - **✅ 服务启动顺序和依赖关系正确**
+- **修复策略**：
+  - **治本approach**：给慢环境足够的启动和稳定时间
+  - **双重保险**：增加缓冲期 + 增加重试容错
+  - **保持兼容性**：本地快环境依然高效，慢环境也能稳定运行
+- **预期最终结果**：
+  - **GitHub Actions环境backend容器稳定运行**
+  - **彻底解决环境差异导致的服务退出问题**
+  - **PR和post-merge环境完全一致和稳定**
