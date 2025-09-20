@@ -60,28 +60,43 @@ jobs:
         run: |
           echo "🚀 PR验证使用统一的Docker容器环境..."
 
-          # 使用与post-merge完全相同的命令
+          # 🎯 最优方案：使用自给自足容器架构，与post-merge完全相同
           if command -v docker-compose >/dev/null 2>&1; then
             echo "启动Docker服务..."
-            TEST_BASE_URL=http://frontend-test:3000 FRONTEND_URL=http://frontend-test:3000 docker-compose -f docker-compose.test.yml up --build -d
+            # 🎯 移除环境变量传递，容器自给自足
+            docker-compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
-            # 等待e2e-tests容器完成并获取退出码
-            if docker-compose -f docker-compose.test.yml logs -f e2e-tests; then
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' $(docker-compose -f docker-compose.test.yml ps -q e2e-tests) 2>/dev/null || echo "1")
-              echo "📦 收集E2E测试产物..."
-              mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker-compose -f docker-compose.test.yml ps -q e2e-tests)
-              if [ -n "$E2E_CID" ]; then
-                docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-                docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-              fi
-              echo "E2E测试退出码: $E2E_EXIT_CODE"
+            # 🎯 彻底修复：使用直接的容器退出码检测
+            echo "等待E2E容器完成..."
+            docker-compose -f docker-compose.test.yml logs -f e2e-tests || true
 
-              echo "清理Docker服务..."
-              docker-compose -f docker-compose.test.yml down
+            # 直接获取容器退出码，不依赖if分支
+            E2E_CID=$(docker-compose -f docker-compose.test.yml ps -q e2e-tests)
+            echo "E2E容器ID: $E2E_CID"
 
-              exit $E2E_EXIT_CODE
+            if [ -n "$E2E_CID" ]; then
+              # 等待容器完全停止
+              docker wait "$E2E_CID" > /dev/null 2>&1 || true
+              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+            else
+              echo "❌ 无法获取E2E容器ID"
+              E2E_EXIT_CODE=1
+            fi
+
+            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
+
+            echo "📦 收集E2E测试产物..."
+            mkdir -p e2e-artifacts || true
+            if [ -n "$E2E_CID" ]; then
+              docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
+              docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
+            fi
+
+            echo "清理Docker服务..."
+            docker-compose -f docker-compose.test.yml down
+
+            exit $E2E_EXIT_CODE
             else
               echo "Docker Compose日志获取失败，使用传统方法..."
               docker-compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests || true
@@ -91,24 +106,41 @@ jobs:
             fi
           else
             echo "docker-compose not found, using 'docker compose' instead..."
-            TEST_BASE_URL=http://frontend-test:3000 FRONTEND_URL=http://frontend-test:3000 docker compose -f docker-compose.test.yml up --build -d
+            # 🎯 移除环境变量传递，容器自给自足
+            docker compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
-            if docker compose -f docker-compose.test.yml logs -f e2e-tests; then
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' $(docker compose -f docker-compose.test.yml ps -q e2e-tests) 2>/dev/null || echo "1")
-              echo "📦 收集E2E测试产物..."
-              mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-              if [ -n "$E2E_CID" ]; then
-                docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-                docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-              fi
-              echo "E2E测试退出码: $E2E_EXIT_CODE"
+            # 🎯 彻底修复：使用直接的容器退出码检测
+            echo "等待E2E容器完成..."
+            docker compose -f docker-compose.test.yml logs -f e2e-tests || true
 
-              echo "清理Docker服务..."
-              docker compose -f docker-compose.test.yml down
+            # 直接获取容器退出码，不依赖if分支
+            E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
+            echo "E2E容器ID: $E2E_CID"
 
-              exit $E2E_EXIT_CODE
+            if [ -n "$E2E_CID" ]; then
+              # 等待容器完全停止
+              docker wait "$E2E_CID" > /dev/null 2>&1 || true
+              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+            else
+              echo "❌ 无法获取E2E容器ID"
+              E2E_EXIT_CODE=1
+            fi
+
+            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
+
+            echo "📦 收集E2E测试产物..."
+            mkdir -p e2e-artifacts || true
+            if [ -n "$E2E_CID" ]; then
+              docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
+              docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
+              docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
+            fi
+
+            echo "清理Docker服务..."
+            docker compose -f docker-compose.test.yml down
+
+            exit $E2E_EXIT_CODE
             else
               echo "Docker Compose日志获取失败，使用传统方法..."
               docker compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests || true
