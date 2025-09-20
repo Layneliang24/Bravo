@@ -58,18 +58,18 @@ RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 10000 && \
     npm install --verbose
 
-# 安装Playwright浏览器
-RUN npx playwright install --with-deps
-
 # 复制测试代码
 COPY . .
 
 # 重新安装依赖确保所有文件同步（跳过audit避免404错误）
 RUN npm install --verbose --no-audit
 
-# 设置环境变量
+# 设置环境变量（必须在安装浏览器之前）
 ENV CI=true
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# 安装Playwright浏览器（在依赖安装完成后，使用正确的环境变量）
+RUN npx playwright install --with-deps
 
 # 健康检查 - 使用npm script验证安装
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
