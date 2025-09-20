@@ -150,7 +150,7 @@ jobs:
           # 启动所有服务
           if command -v docker-compose >/dev/null 2>&1; then
             echo "启动Docker服务..."
-            docker-compose -f docker-compose.test.yml up --build -d
+            TEST_BASE_URL=http://frontend-test:3000 FRONTEND_URL=http://frontend-test:3000 docker-compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
             # 等待e2e-tests容器完成并获取退出码
@@ -185,7 +185,7 @@ jobs:
             fi
           else
             echo "docker-compose not found, using 'docker compose' instead..."
-            docker compose -f docker-compose.test.yml up --build -d
+            TEST_BASE_URL=http://frontend-test:3000 FRONTEND_URL=http://frontend-test:3000 docker compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
             if docker compose -f docker-compose.test.yml logs -f e2e-tests; then
