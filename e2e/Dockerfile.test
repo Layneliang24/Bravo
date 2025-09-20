@@ -1,8 +1,8 @@
 # E2E测试环境 Dockerfile
 FROM node:20-slim
 
-# 设置工作目录
-WORKDIR /app
+# 设置工作目录到e2e目录
+WORKDIR /app/e2e
 
 # 安装系统依赖（Playwright需要）+ Python
 RUN apt-get update && apt-get install -y \
@@ -48,28 +48,29 @@ RUN apt-get update && apt-get install -y \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制package文件
-COPY package*.json ./
+# 设置环境变量
+ENV CI=true
+ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com/
 
-# 安装依赖（添加网络超时配置和重试机制）
+# 1) 独立锁文件 + 禁用 workspace hoist
+COPY package*.json ./
+RUN echo 'workspace-root=false' > .npmrc
+
+# 2) 严格可重复安装
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retry-mintimeout 10000 && \
-    npm install --verbose
+    npm ci
 
-# 复制测试代码
+# 3) 浏览器也装进 /app，避免挂在 $HOME
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+RUN npx playwright install
+
+# 4) 自检验证
+RUN npx playwright --version && npm list @playwright/test
+
 COPY . .
-
-# 重新安装依赖确保所有文件同步（跳过audit避免404错误）
-RUN npm install --verbose --no-audit
-
-# 设置环境变量（必须在安装浏览器之前）
-ENV CI=true
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-
-# 安装Playwright浏览器（在依赖安装完成后，使用正确的环境变量）
-RUN npx playwright install --with-deps
 
 # 健康检查 - 使用npm script验证安装
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \

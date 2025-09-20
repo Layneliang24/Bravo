@@ -356,3 +356,126 @@
   - E2E测试通过npm脚本正确执行
   - 避免所有路径和workspace相关问题
   - Dev Branch - Optimized Post-Merge Validation最终成功
+
+---
+
+## 记录项 12
+
+- 北京时间：2025-09-20 17:45:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：12
+- 关联提交/分支/Run 链接：
+  - commit: 第12轮npm脚本修复
+  - branch: feature/fix-ci-playwright-workspace-round12
+  - PR: #75 https://github.com/Layneliang24/Bravo/pull/75
+  - runs:
+    - PR Validation成功，post-merge失败
+- 原因定位：
+  - **依然127错误**: npm run test执行成功但playwright仍找不到
+  - **npm workspace提升**: @playwright/test被提升到根目录，容器内无法解析
+  - **路径问题**: 即使通过npm scripts，依然无法在容器PATH中找到playwright
+- 证据：
+  - 本地docker-compose测试完美复现问题
+  - container内node_modules为空
+  - @playwright/test实际安装在workspace根目录
+- 修复方案：
+  - 回退到npm run test脚本
+  - 依赖package.json脚本的workspace解析能力
+- 预期效果：
+  - npm workspace正确解析playwright位置
+  - 第12轮应最终解决workspace依赖问题
+
+---
+
+## 记录项 13
+
+- 北京时间：2025-09-20 18:30:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：13
+- 关联提交/分支/Run 链接：
+  - commit: 第13轮Docker依赖彻底修复
+  - branch: feature/fix-ci-npm-script-round13
+  - PR: #76 https://github.com/Layneliang24/Bravo/pull/76
+  - runs:
+    - PR Validation史诗级成功，post-merge失败
+- 原因定位：
+  - **Docker内依赖安装失败**: npm install根本没有正确安装依赖
+  - **package.json冲突**: "install"脚本与npm install命令冲突
+  - **浏览器路径问题**: PLAYWRIGHT_BROWSERS_PATH设置时机错误
+- 证据：
+  - 本地docker exec验证：e2e容器内node_modules为空
+  - npm install被"install"脚本劫持
+  - playwright浏览器无法持久化
+- 修复方案：
+  - 重命名"install"脚本为"playwright-install"避免冲突
+  - 调整Dockerfile.test中PLAYWRIGHT_BROWSERS_PATH设置时机
+  - 创建.dockerignore防止本地node_modules干扰
+- 预期效果：
+  - 容器内正确安装所有npm依赖
+  - Playwright浏览器正确安装到持久路径
+  - 第13轮彻底解决Docker依赖安装问题
+
+---
+
+## 记录项 14
+
+- 北京时间：2025-09-20 19:15:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：14
+- 关联提交/分支/Run 链接：
+  - commit: 第14轮环境变量传递修复
+  - branch: feature/fix-ci-env-vars-round14
+  - PR: #77 https://github.com/Layneliang24/Bravo/pull/77
+  - runs:
+    - PR Validation史诗级成功，post-merge失败
+- 原因定位：
+  - **PR与post-merge环境差异**: PR用test-e2e-smoke.yml，post-merge用fast-validation.yml
+  - **环境变量缺失**: fast-validation.yml未正确传递TEST_BASE_URL和FRONTEND_URL
+  - **不同执行环境**: PR在宿主机，post-merge在Docker容器
+- 证据：
+  - PR validation: 直接在Runner执行，环境变量正确
+  - post-merge: Docker容器内缺少关键环境变量
+  - 日志显示"TEST_BASE_URL=, FRONTEND_URL="为空
+- 修复方案：
+  - 修复fast-validation.yml中docker-compose命令
+  - 显式设置TEST_BASE_URL=http://frontend-test:3000
+  - 确保环境变量正确传递到容器
+- 预期效果：
+  - post-merge和PR使用相同的环境变量
+  - 第14轮彻底解决环境变量传递问题
+
+---
+
+## 记录项 15
+
+- 北京时间：2025-09-20 20:00:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：15
+- 关联提交/分支/Run 链接：
+  - commit: 第15轮npx强制解析修复
+  - branch: feature/fix-ci-npx-playwright-round15
+  - PR: #78 https://github.com/Layneliang24/Bravo/pull/78
+  - runs:
+    - PR Validation史诗级成功，post-merge再次失败
+- 原因定位：
+  - **npm scripts依然无法解析**: 即使使用npm run test，容器内playwright命令找不到
+  - **npx版本冲突**: npx尝试安装playwright@1.55.0但配置是@playwright/test@^1.40.0
+  - **容器PATH问题**: npm workspace依赖提升导致容器内路径解析失败
+- 证据：
+  - 日志："npm warn exec The following package was not found and will be installed: playwright@1.55.0"
+  - 错误："Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@playwright/test'"
+  - 环境变量正确但依然exit code 1
+- 修复方案：
+  - 修改package.json test脚本：从"playwright test"改为"npx playwright test"
+  - 强制npx从node_modules解析playwright
+- 预期效果：
+  - npx绕过PATH解析问题
+  - 第15轮最终解决playwright命令解析
+- **最终结论：15轮修复暴露根本问题**
+  - **Docker环境存在根本性设计缺陷**
+  - **PR成功但post-merge失败证明环境不一致**
+  - **需要统一测试环境，建议方案A：让PR也使用相同环境**
