@@ -45,25 +45,20 @@ services:
       timeout: 3s
       retries: 10
 
-  # 前端构建服务
+  # 前端构建服务 - 修复权限问题：不使用卷映射到主机
   frontend-build:
     build:
       context: ./frontend
       dockerfile: Dockerfile.test
-    volumes:
-      - ./frontend/dist:/app/dist
-      - ./frontend:/app:ro
-    command: >
-      bash -c "
-      echo '🏗️ 开始前端构建...' &&
-      npm run build &&
-      echo '✅ 前端构建完成' &&
-      ls -la /app/dist/ &&
-      echo '📦 构建文件已生成到 /app/dist/'
-      "
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "echo '🏗️ 开始前端构建...' && npm run build && echo '✅ 前端构建完成' && ls -la /app/dist/ && echo '📦 构建文件已生成到容器内 /app/dist/' && echo '📋 构建文件清单:' && find /app/dist -type f | head -10",
+      ]
     restart: "no" # 构建完成后不重启
 
-  # 前端测试服务
+  # 前端测试服务 - 修复方案：独立构建，不依赖卷映射
   frontend-test:
     build:
       context: ./frontend
@@ -73,33 +68,15 @@ services:
         condition: service_completed_successfully
     ports:
       - "3001:3000"
-    volumes:
-      - ./frontend/dist:/app/dist:ro
-      - ./frontend:/app:ro
     environment:
       VITE_API_URL: http://backend-test:8000
       PORT: 3000
-    command: >
-      bash -c "
-      echo '🚀 启动前端测试服务...' &&
-      echo '📁 检查构建文件目录...' &&
-      ls -la /app/dist/ || echo '⚠️ 构建目录检查失败' &&
-      if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then
-        echo '✅ 找到构建文件，使用 Vite preview 模式' &&
-        npm run preview -- --host 0.0.0.0 --port 3000
-      else
-        echo '❌ 未找到有效的构建文件' &&
-        echo '🔧 重新构建项目...' &&
-        npm run build &&
-        if [ -f '/app/dist/index.html' ]; then
-          echo '✅ 构建成功，启动 preview 服务' &&
-          npm run preview -- --host 0.0.0.0 --port 3000
-        else
-          echo '❌ 构建失败，使用开发模式' &&
-          npm run dev -- --host 0.0.0.0 --port 3000
-        fi
-      fi
-      "
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "echo '🚀 启动前端测试服务...' && echo '🔧 容器内独立构建前端项目...' && npm run build && echo '📁 检查构建文件目录...' && ls -la /app/dist/ || echo '⚠️ 构建目录检查失败' && if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then echo '✅ 找到构建文件，使用 Vite preview 模式' && npm run preview -- --host 0.0.0.0 --port 3000; else echo '❌ 构建失败，回退到开发模式' && npm run dev -- --host 0.0.0.0 --port 3000; fi",
+      ]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
