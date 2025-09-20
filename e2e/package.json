@@ -28,7 +28,7 @@
     "show-trace": "playwright show-trace",
     "codegen": "playwright codegen",
     "codegen:blog": "playwright codegen http://localhost:3000/blog",
-    "install": "playwright install",
+    "playwright-install": "playwright install",
     "install:deps": "playwright install-deps",
     "playwright:install": "playwright install",
     "playwright:install-deps": "playwright install-deps",
