@@ -296,3 +296,33 @@
   - E2E测试命令完全正确执行
   - PR和post-merge环境保持一致
   - Dev Branch - Optimized Post-Merge Validation最终成功
+
+---
+
+## 记录项 10
+
+- 北京时间：2025-09-20 16:00:00 CST
+- 第几次推送到 feature：1
+- 第几次 PR：1
+- 第几次 dev post merge：10
+- 关联提交/分支/Run 链接：
+  - commit: 第10轮playwright参数修复合并后
+  - runs:
+    - Dev Branch - Optimized Post-Merge Validation https://github.com/Layneliang24/Bravo/actions/runs/17876065481 (failure)
+- 原因定位：
+  - **重大进展**: 第10轮--verbose修复生效，npx playwright test能执行
+  - **新错误**: Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@playwright/test'
+  - **版本冲突**: npx安装playwright@1.55.0但容器中是@playwright/test@^1.40.0
+- 证据：
+  - npm warn exec: playwright@1.55.0将被安装
+  - 容器中@playwright/test@^1.40.0与npx版本不匹配
+  - 版本冲突导致模块无法找到
+- 修复方案：
+  - 使用本地安装的playwright避免npx版本冲突
+  - 修改命令：npx playwright → ./node_modules/.bin/playwright
+  - 确保使用容器中已安装的正确版本
+  - 第7+8+9+10+11轮组合修复应彻底解决版本问题
+- 预期效果：
+  - E2E测试使用正确的本地playwright版本
+  - 避免npx的自动版本安装冲突
+  - Dev Branch - Optimized Post-Merge Validation最终成功
