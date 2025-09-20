@@ -94,14 +94,9 @@ services:
         condition: service_healthy
       frontend-test:
         condition: service_healthy
-    volumes:
-      - ./e2e:/app
-    environment:
-      BACKEND_URL: http://backend-test:8000
-      FRONTEND_URL: http://frontend-test:3000
-      TEST_BASE_URL: http://frontend-test:3000
-      CI: "true"
-      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    # 🎯 最优方案：移除所有volumes和environment，容器完全自给自足
+    # volumes:  # 移除：不依赖外部挂载
+    # environment:  # 移除：环境变量已在Dockerfile中设置
     command:
       - /bin/sh
       - -c
@@ -122,5 +117,5 @@ services:
         echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL"
         echo "当前工作目录: $(pwd)"
         echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')"
-        echo '🧪 运行关键E2E测试...'
-        npm run test -- --grep '@critical' --project=chromium --reporter=list
+        echo '🧪 执行自给自足E2E测试...'
+        ./run-tests.sh
