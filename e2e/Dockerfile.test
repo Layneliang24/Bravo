@@ -48,35 +48,28 @@ RUN apt-get update && apt-get install -y \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制package文件
-COPY package*.json ./
-
 # 设置环境变量（必须在安装依赖之前）
 ENV CI=true
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com/
 
-# 安装依赖（彻底修复方案）
+# 复制测试代码（包含package-lock.json）
+COPY . .
+
+# 使用npm ci进行严格的可重复构建
+# 禁用workspace功能，让e2e作为独立项目安装依赖
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retry-mintimeout 10000 && \
-    npm install --verbose --no-package-lock
-
-# 复制测试代码
-COPY . .
-
-# 强制重新安装确保容器内依赖正确（绕过workspace问题）
-RUN rm -rf node_modules package-lock.json && \
-    npm install --verbose --no-audit --no-package-lock && \
-    npm ls @playwright/test || echo "检查playwright安装状态"
+    npm config set workspaces false && \
+    npm ci --verbose
 
 # 安装Playwright浏览器（确保环境变量已设置）
 RUN npx playwright install --with-deps
 
 # 验证安装结果
 RUN echo "验证Playwright安装..." && \
-    npm run playwright-install --if-present && \
     ls -la node_modules/.bin/ | grep playwright || echo "playwright not in local bin" && \
     which playwright || echo "playwright not in PATH" && \
     npm ls @playwright/test
