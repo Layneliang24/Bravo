@@ -101,20 +101,9 @@ services:
       FRONTEND_URL: http://frontend-test:3000
       TEST_BASE_URL: http://frontend-test:3000
       CI: "true"
-    command: >
-      bash -c "
-      echo '⏳ 等待所有服务就绪...' &&
-      echo '🔗 测试服务连通性...' &&
-      timeout 90 bash -c 'until curl -s http://backend-test:8000/health/; do echo \"等待后端服务...\"; sleep 3; done' &&
-      echo '✅ 后端服务已就绪' &&
-      timeout 90 bash -c 'until curl -s http://frontend-test:3000/; do echo \"等待前端服务...\"; sleep 3; done' &&
-      echo '✅ 前端服务已就绪' &&
-      echo '🔍 详细服务状态验证...' &&
-      echo \"后端健康检查: \$(curl -s http://backend-test:8000/health/)\" &&
-      echo \"前端首页响应: \$(curl -s http://frontend-test:3000/ | head -c 200)\" &&
-      echo \"环境变量: TEST_BASE_URL=\$TEST_BASE_URL, FRONTEND_URL=\$FRONTEND_URL\" &&
-      echo \"当前工作目录: \$(pwd)\" &&
-      echo \"Playwright配置: \$(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')\" &&
-      echo '🧪 运行关键E2E测试...' &&
-      npm run test -- --grep '@critical' --project=chromium --reporter=list --verbose
-      "
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        'echo ''⏳ 等待所有服务就绪...'' && echo ''🔗 测试服务连通性...'' && timeout 90 bash -c ''until curl -s http://backend-test:8000/health/; do echo "等待后端服务..."; sleep 3; done'' && echo ''✅ 后端服务已就绪'' && timeout 90 bash -c ''until curl -s http://frontend-test:3000/; do echo "等待前端服务..."; sleep 3; done'' && echo ''✅ 前端服务已就绪'' && echo ''🔍 详细服务状态验证...'' && echo "后端健康检查: $(curl -s http://backend-test:8000/health/)" && echo "前端首页响应: $(curl -s http://frontend-test:3000/ | head -c 200)" && echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL" && echo "当前工作目录: $(pwd)" && echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo ''未找到baseURL配置'')" && echo ''🧪 运行关键E2E测试...'' && npm run test -- --grep ''@critical'' --project=chromium --reporter=list --verbose',
+      ]

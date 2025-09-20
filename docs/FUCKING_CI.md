@@ -2,32 +2,47 @@
 
 **说明**：修复要24小时不间断进行，并且要保持互动，不能超过60S无汇报，不需要征询我的意见，按照以下流程，除非任务完成，否则继续流程。
 
+**工具**：docker desktop、github CLI、act等等
+
 **流程**：
 
-- [ ] **第0步**：本地冒烟测试
-      安装工具（一次）：
-      brew install nekto\*_s/tap/act
-      缓存镜像（一次）：
-      act -P ubuntu-latest=catthehacker/ubuntu:act-latest --pull
-      在本仓库根目录执行：
-      act push -P ubuntu-latest=catthehacker/ubuntu:act-latest \
-      --eventpath <(echo '{"ref":"refs/heads/feature"}')
-      结果判断：
+- [ ] **第0步**：本地冒烟测试 1.安装工具（一次）：
+      brew install nektos/tap/act 2.缓存镜像（一次）：
+      act -P ubuntu-latest=catthehacker/ubuntu:act-latest --pull 3.在本仓库根目录执行：
+      act push -P ubuntu-latest=catthehacker/ubuntu:act-latest --eventpath <(echo '{"ref":"refs/heads/feature"}') 4.结果判断：
       全绿 ✅ → 继续 第1步
-      有红 ❌ → 看 /tmp/act/log_.log 定位 → 改代码 → 重复第 0 步直到绿
-- [ ] **第1步**：查看 `fucking_ci.md` 文档了解已尝试方案 + GitHub CLI 工作流日志，**定位错误信息**。
-- [ ] **第2步**：在 `fucking_ci.md` 新增记录项（制定新方案）。
-- [ ] **第3步**：在 `feature` 分支修复并提交。
-- [ ] **第4步**：推送 `feature` 分支。
+      有红 ❌ → 看 /tmp/act/log\*.log 定位 → 改代码 → 重复第 0 步直到绿
+- [ ] **第1步**：查看远程失败信息
+      gh run list --branch=dev --limit=5 --json number,conclusion,workflowName
+      gh run view $(gh run list --branch=dev --limit=1 --jq '.[0].number') --log-failed > failed.log
+      cat failed.log → 把关键错误贴到 fucking_ci.md 末尾
+- [ ] **第2步**：在 fucking_ci.md 新增一条「本地+远程双方案」记录，格式：## 2025-09-20 13:xx - 本地冒烟：act 镜像 catthehacker/ubuntu:act-latest - 错误定位：xxx步骤失败 → 原因：xxx - 新方案：xxx
+- [ ] **第3步**：切分支 & 修复
+      git checkout -b feature/fix-ci-XXround
+      改完文件 → git add . → git commit -m "ci: fix xxx"
+- [ ] **第4步**：再跑一次本地冒烟（同第 0 步命令）→ 必须全绿 ✅ 才继续
 - [ ] **第5步**：创建 `feature → dev` 的 PR。
-- [ ] **第6步**：每隔 60s 观察 👀⏰ PR 触发的 GitHub Action 工作流；若全部跑完则进入第7步，否则 **🔄** 继续本轮循环。
-- [ ] **第7步**：若 PR 工作流全绿 ✅ → **管理员身份** merge 到 `dev`；否则 ❌🤦‍♂️ 回到 **第1步**。
-- [ ] **第8步**：每 60s 观察 👀⏰ merge 到 `dev` 触发的 post-merge 工作流；若全部跑完则进入第9步，否则 **🔄** 继续本轮循环。
-- [ ] **第9步**：post-merge 全绿 ✅ → **任务完成 🎉**；否则 ❌🤦‍♂️ 回到 **第1步**。
-- [ ] **第10步**：把本问题记入 `FAQ.md`，并在 dev 版本的 commit 信息写上：
-      `【2025-09-XX】完全修复合并到 dev 的工作流`
-
-**工具**：github CLI、act等等
+      git push origin feature/fix-ci-XXround
+- [ ] **第6步**：创建 PR 并监控
+      gh pr create --title "ci: fix dev workflow" --body "close ci failure" --base dev
+      拿到 PR 号 $PR_NUM
+      循环命令（60 s 一次）：
+      watch -n 60 'gh run list --pr=$PR_NUM --json conclusion | jq "map(select(.conclusion != \"success\")) | length"'
+      输出 = 0 说明全绿 → 进入第7步；否则继续本轮循环
+- [ ] **第7步**：PR 全绿 → 管理员合并
+      gh pr merge $PR_NUM --admin --squash --delete-branch
+      若合并不成功 → ❌ 回到 第1步
+- [ ] **第8步**：监控 post-merge
+      export DEV_RUNS=$(gh run list --branch=dev --limit=3 --json number | jq .[0].number)
+      watch -n 60 'gh run view $DEV_RUNS --json conclusion -q .conclusion'
+      显示 "success" → 进入第9步；否则继续本轮循环
+- [ ] **第9步**：post-merge 全绿 → 任务完成 🎉
+      若仍有红 → ❌ 回到 第1步
+- [ ] **第10步**：写 FAQ & 打标签
+      把本次错误+解决步骤写进 FAQ.md
+      git checkout dev && git pull
+      git commit --allow-empty -m "【2025-09-20】完全修复合并到 dev 的工作流"
+      git push origin dev
 
 ## 记录模板
 
@@ -185,3 +200,16 @@
 - 预期效果：
   - Optimized Post-Merge的前端构建成功，e2e-critical通过
   - Medium Validation状态汇总准确反映实际测试结果，消除误报
+
+---
+
+## 2025-09-20 13:15
+
+- 本地冒烟：act 镜像 catthehacker/ubuntu:act-latest
+- 错误定位：
+  - **本地act失败**：fast-validation.yml中quick-checks job的bash语法错误（缩进问题）
+  - **远程失败**：`e2e-tests-1 | bash: -c: line 1: unexpected EOF while looking for matching '"'` - docker-compose.test.yml中命令引号格式错误
+- 新方案：
+  1. 修复fast-validation.yml中bash case语句的缩进错误
+  2. 修复docker-compose.test.yml中command字段的引号格式
+  3. 本地act验证 → 远程验证双保险
