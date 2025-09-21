@@ -79,10 +79,14 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
-          # E2E
+          # E2E - 禁用workspace解析，强制本地安装（参考成功的Dockerfile.test）
           if [ ! -d "e2e/node_modules" ]; then
-            echo "Installing E2E dependencies..."
-            cd e2e && npm install --prefer-offline --no-audit && cd ..
+            echo "Installing E2E dependencies with workspace disabled..."
+            cd e2e
+            echo 'workspace-root=false' > .npmrc
+            echo 'legacy-peer-deps=true' >> .npmrc
+            npm install --prefer-offline --no-audit
+            cd ..
           fi
 
           # Backend
@@ -206,7 +210,8 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "Running E2E smoke tests..."
-          npx playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
+          # 使用本地安装的playwright，避免workspace解析问题（参考成功的Dockerfile.test）
+          ./node_modules/.bin/playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
           echo "Smoke tests completed"
         env:
           CI: true
