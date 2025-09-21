@@ -171,7 +171,7 @@ jobs:
           echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Message:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 收集测试结果

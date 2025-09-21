@@ -425,7 +425,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Message:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 检查各个验证结果
@@ -485,14 +485,14 @@ jobs:
           echo "🔍 检查dev分支push来源..."
           echo "   Commit: ${{ github.sha }}"
           echo "   Author: ${{ github.actor }}"
-          echo "   Message: ${{ github.event.head_commit.message }}"
+          echo "   Message: $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)"
 
           # 检查是否是合并提交（允许的情况）
           git fetch origin main:main || true
 
           # 如果是从main或通过GitHub合并的，允许
           if git merge-base --is-ancestor main HEAD 2>/dev/null || \
-             [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ # ]]; then
+             [[ "$(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 50)" =~ ^Merge\ pull\ request\ # ]]; then
             echo "✅ 检测到合法的合并操作"
             echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
             echo "   ✅ 合并已通过PR验证流程"
