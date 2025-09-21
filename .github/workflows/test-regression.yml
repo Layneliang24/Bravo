@@ -106,21 +106,39 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user;" || true
 
-          # 强制创建数据库和用户（即使已存在）
-          echo "🛠️ 创建/确认bravo_test数据库和用户..."
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password << 'EOF'
-          -- 删除现有数据库和用户（如果存在）
-          DROP DATABASE IF EXISTS bravo_test;
-          DROP USER IF EXISTS 'bravo_user'@'%';
+          # 🔧 第30轮修复：智能验证和修复数据库，而非强制重建
+          echo "🛠️ 智能验证bravo_test数据库和用户状态..."
 
-          -- 重新创建数据库
-          CREATE DATABASE bravo_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          # 检查数据库是否存在
+          if mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; then
+            echo "✅ bravo_test数据库已存在，检查用户权限..."
 
-          -- 重新创建用户并授权
-          CREATE USER 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
-          GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-          FLUSH PRIVILEGES;
+            # 检查bravo_user是否可以访问数据库
+            if mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" >/dev/null 2>&1; then
+              echo "🎉 bravo_test数据库和bravo_user用户权限完全正常，无需修复！"
+            else
+              echo "⚠️ bravo_user无法访问bravo_test数据库，修复用户权限..."
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password << 'EOF'
+              -- 确保用户存在并有正确权限
+              CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+              GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+              FLUSH PRIVILEGES;
           EOF
+              echo "✅ 用户权限修复完成"
+            fi
+          else
+            echo "⚠️ bravo_test数据库不存在，创建数据库和用户..."
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password << 'EOF'
+            -- 创建数据库
+            CREATE DATABASE bravo_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+            -- 创建用户并授权
+            CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          EOF
+            echo "✅ 数据库和用户创建完成"
+          fi
 
           # 验证创建结果
           echo "✅ 验证数据库和用户创建结果..."
