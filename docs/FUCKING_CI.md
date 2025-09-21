@@ -1221,3 +1221,78 @@ fi
 - 建立正确的本地验证方法论
 
 ---
+
+## 记录项 31 - 第30轮成功但发现2个系统性残留问题
+
+- 北京时间：2025-09-21 14:40:00 CST
+- 第几次推送到 feature：待定
+- 第几次 PR：待定
+- 第几次 dev post merge：31
+- 关联提交/分支/Run 链接：
+  - commit: 第30轮成功合并 (PR #88)
+  - runs:
+    - Dev Branch - Medium Validation https://github.com/Layneliang24/Bravo/actions/runs/17890343653 ❌ FAILURE
+    - Branch Protection - Double Key System https://github.com/Layneliang24/Bravo/actions/runs/17890343659 ❌ FAILURE
+
+### 🎯 第30轮数据库修复100%成功确认
+
+**✅ 数据库修复完全生效**：
+
+- ✅ `🎉 bravo_test数据库和bravo_user用户权限完全正常，无需修复！`
+- ✅ `✅ 数据库迁移成功`
+- ✅ 回归测试本身通过：`7 passed, 5 deselected, 1 warning in 3.27s`
+- ✅ 第30轮智能验证策略与MySQL容器协作成功
+
+### 🚨 发现2个系统性残留问题（打地鼠确认）
+
+**❌ 问题1：Branch Protection bash语法错误**：
+
+```bash
+syntax error near unexpected token '('
+```
+
+- **根因**：commit message中括号`(#88)`导致bash解析错误
+- **问题本质**：第28轮只修复了部分工作流，Branch Protection工作流仍有相同问题
+
+**❌ 问题2：Medium Validation硬编码失败状态**：
+
+```bash
+REGRESSION_STATUS="failure"  ← 硬编码，忽略实际测试结果！
+```
+
+- **根因**：与第28轮发现的相同问题，状态汇总逻辑错误
+- **实际结果**：回归测试100%通过，但被硬编码报告为失败
+
+### 💡 用户质疑再次100%正确
+
+**关键质疑**：
+
+1. **"不仅仅一个问题，还有其他问题"** ← 完全正确！确实有2个问题
+2. **"打地鼠一样修复吗"** ← 确实是！需要系统性搜索所有相同问题
+3. **"修复之后act+docker验证之后再推送"** ← 必须严格遵循！
+
+### 🔧 第31轮系统性修复策略
+
+**技术方案**：
+
+1. **系统性搜索所有工作流文件**：
+
+   - 搜索所有包含commit message处理的bash代码
+   - 搜索所有硬编码status的地方
+   - 一次性修复所有相同问题
+
+2. **本地验证策略**：
+
+   - act验证所有修改的工作流语法
+   - bash脚本测试特殊字符处理
+   - 确保所有修复在本地验证通过
+
+3. **避免打地鼠**：
+   - 不再单点修复，系统性解决所有相同类型问题
+   - 建立检查清单确保无遗漏
+
+### ⚡ 第31轮立即行动
+
+立即进入第31轮：系统性搜索和修复所有bash语法错误和硬编码状态问题
+
+---
