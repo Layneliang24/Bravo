@@ -23,6 +23,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+      start_period: 30s
 
   # 后端测试服务
   backend-test:
@@ -42,30 +43,16 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 15
+      start_period: 45s
 
-  # 前端构建服务 - 修复权限问题：不使用卷映射到主机
-  frontend-build:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.test
-    command:
-      [
-        "/bin/sh",
-        "-c",
-        "echo '🏗️ 开始前端构建...' && npm run build && echo '✅ 前端构建完成' && ls -la /app/dist/ && echo '📦 构建文件已生成到容器内 /app/dist/' && echo '📋 构建文件清单:' && find /app/dist -type f | head -10",
-      ]
-    restart: "no" # 构建完成后不重启
-
-  # 前端测试服务 - 修复方案：独立构建，不依赖卷映射
+  # 前端测试服务 - 第21轮修复：移除frontend-build依赖，自给自足
   frontend-test:
     build:
       context: ./frontend
       dockerfile: Dockerfile.test
-    depends_on:
-      frontend-build:
-        condition: service_completed_successfully
+    # 移除对frontend-build的依赖，消除一次性任务导致的Docker Compose终止问题
     ports:
       - "3001:3000"
     environment:
@@ -84,7 +71,7 @@ services:
       retries: 12
       start_period: 30s
 
-  # E2E测试服务
+  # E2E测试服务 - 自给自足架构
   e2e-tests:
     build:
       context: ./e2e
@@ -94,14 +81,9 @@ services:
         condition: service_healthy
       frontend-test:
         condition: service_healthy
-    volumes:
-      - ./e2e:/app
-    environment:
-      BACKEND_URL: http://backend-test:8000
-      FRONTEND_URL: http://frontend-test:3000
-      TEST_BASE_URL: http://frontend-test:3000
-      CI: "true"
-      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    # 🎯 最优方案：移除所有volumes和environment，容器完全自给自足
+    # volumes:  # 移除：不依赖外部挂载
+    # environment:  # 移除：环境变量已在Dockerfile中设置
     command:
       - /bin/sh
       - -c
@@ -119,8 +101,8 @@ services:
         echo '🔍 详细服务状态验证...'
         echo "后端健康检查: $(curl -s http://backend-test:8000/health/)"
         echo "前端首页响应: $(curl -s http://frontend-test:3000/ | head -c 200)"
-        echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL"
+        echo "环境变量: TEST_BASE_URL=$$TEST_BASE_URL, FRONTEND_URL=$$FRONTEND_URL"
         echo "当前工作目录: $(pwd)"
         echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')"
-        echo '🧪 运行关键E2E测试...'
-        npm run test -- --grep '@critical' --project=chromium --reporter=list
+        echo '🧪 执行自给自足E2E测试...'
+        ./run-tests.sh
