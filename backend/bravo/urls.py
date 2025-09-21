@@ -62,8 +62,8 @@ urlpatterns = [
     path("api/v1/jobs/", include("apps.jobs.urls")),
     # 健康检查
     path("health/", include("health_check.urls")),
-    # 自定义健康检查
-    path("", include("apps.common.urls")),
+    # 自定义健康检查 (使用common/前缀避免与根路径冲突)
+    path("common/", include("apps.common.urls")),
 ]
 
 # 开发环境静态文件服务
