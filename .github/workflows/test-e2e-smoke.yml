@@ -210,8 +210,8 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "Running E2E smoke tests..."
-          # 使用本地安装的playwright，避免workspace解析问题（参考成功的Dockerfile.test）
-          ./node_modules/.bin/playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
+          # 模块解析问题已修复，使用npx（更可靠的调用方式）
+          npx playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
           echo "Smoke tests completed"
         env:
           CI: true
