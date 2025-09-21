@@ -194,12 +194,30 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
-          # 数据库已通过第一次验证，跳过冗余检查避免连接池抖动
-          echo "✅ 数据库已验证，开始API兼容性测试..."
+          # 🔧 第27轮修复：API Compatibility Tests启动前再次确认数据库可用性
+          echo "🔧 第27轮修复：再次验证数据库连接，确保Django能正常启动..."
+
+          # 验证bravo_test数据库完全可用，避免Django启动时连接失败
+          MAX_DB_ATTEMPTS=10
+          DB_ATTEMPT=0
+          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" >/dev/null 2>&1; do
+            DB_ATTEMPT=$((DB_ATTEMPT + 1))
+            if [ $DB_ATTEMPT -gt $MAX_DB_ATTEMPTS ]; then
+              echo "❌ 数据库bravo_test验证失败 (${MAX_DB_ATTEMPTS}次尝试)"
+              echo "🔍 诊断信息："
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
+              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';" || true
+              exit 1
+            fi
+            echo "数据库bravo_test验证中... (尝试 ${DB_ATTEMPT}/${MAX_DB_ATTEMPTS})"
+            sleep 1
+          done
+          echo "✅ 数据库bravo_test验证成功，Django可以安全启动"
 
           # 启动后端服务器
           cd backend
           source .venv/bin/activate
+          echo "🚀 启动Django服务器..."
           python manage.py runserver 8000 --settings=bravo.settings.test &
           BACKEND_PID=$!
           cd ..
