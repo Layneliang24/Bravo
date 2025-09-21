@@ -79,15 +79,20 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
-          # E2E - 禁用workspace解析，强制本地安装（参考成功的Dockerfile.test）
-          if [ ! -d "e2e/node_modules" ]; then
-            echo "Installing E2E dependencies with workspace disabled..."
-            cd e2e
-            echo 'workspace-root=false' > .npmrc
-            echo 'legacy-peer-deps=true' >> .npmrc
-            npm install --prefer-offline --no-audit
-            cd ..
-          fi
+              # Root level - 安装@playwright/test以支持配置文件加载
+              echo "Installing root level @playwright/test for config file support..."
+              npm install @playwright/test --prefer-offline --no-audit --no-save
+              echo "✅ Root @playwright/test installed"
+
+              # E2E - 禁用workspace解析，强制本地安装（参考成功的Dockerfile.test）
+              if [ ! -d "e2e/node_modules" ]; then
+                echo "Installing E2E dependencies with workspace disabled..."
+                cd e2e
+                echo 'workspace-root=false' > .npmrc
+                echo 'legacy-peer-deps=true' >> .npmrc
+                npm install --prefer-offline --no-audit
+                cd ..
+              fi
 
           # Backend
           if [ ! -d "backend/.venv" ]; then
