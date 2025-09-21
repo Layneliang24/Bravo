@@ -728,3 +728,60 @@
   - **所有服务持续运行，无意外退出**
   - **PR和post-merge环境行为完全一致**
   - **第19+20+21轮组合修复彻底解决所有CI问题**
+
+---
+
+## 记录项 26 - Fast-Validation容器ID获取逻辑彻底修复
+
+- 北京时间：2025-09-21 10:50:00 CST
+- 第几次推送到 feature：7 (第26轮容器ID获取逻辑修复)
+- 第几次 PR：1 (继续PR #83)
+- 第几次 dev post merge：26
+- 关联提交/分支/Run 链接：
+  - commit: 待提交 (fix: 第26轮修复fast-validation.yml中相同的容器ID获取逻辑错误)
+  - branch: feature/fix-bash-syntax-round25
+  - PR: #83 https://github.com/Layneliang24/Bravo/pull/83
+  - 基于：第25轮bash语法修复成功，发现新的容器ID获取问题
+- **🎯 震惊发现：E2E测试100%成功，但脚本虚假报告失败的根本原因**
+- 详细问题分析：
+
+  ```
+  第25轮bash语法修复100%成功：
+  ✅ PR #83全部验证通过，E2E Smoke Tests (Docker) PASS (3m39s)
+  ✅ 史诗级胜利：20个成功，0个失败
+
+  但发现新问题：post-merge工作流依然失败
+  ❌ E2E容器ID: (空)
+  ❌ E2E测试真实退出码: 1
+  ✅ e2e-tests-1 exited with code 0  (真实退出码是0！)
+  ```
+
+- **根本原因定位**：
+  1. **✅ 第25轮bash语法修复100%成功** - on-pr.yml脚本bug已修复
+  2. **❌ fast-validation.yml存在相同问题** - 容器ID获取逻辑错误
+  3. **时序问题**：脚本在`logs -f`完成后才获取容器ID，此时容器已被移除
+  4. **环境差异**：PR使用on-pr.yml(已修复)，post-merge使用fast-validation.yml(未修复)
+- **技术修复方案**：
+  - **修复fast-validation.yml两个分支的相同Bug**
+  - **第一个分支(docker-compose)**：在`docker compose up -d`后立即获取`E2E_CID`
+  - **第二个分支(docker compose)**：在`docker compose up -d`后立即获取`E2E_CID`
+  - **统一逻辑**：使用`docker wait`等待容器完成并获取真实退出码
+  - **移除重复代码**：清理多余的echo和错误分支
+- **本地验证100%成功**：
+  - **✅ 容器ID正确获取**：`E2E容器ID: aba498850c23...`
+  - **✅ 退出码正确**：`E2E测试真实退出码: 0`
+  - **✅ E2E测试通过**：`2 passed (3.6s)`
+  - **✅ 修复逻辑验证**：在容器启动后立即获取ID，避免被清理后无法获取
+- **用户质疑完全正确**：
+  - **本地验证优先**：每次修复必须先本地docker验证通过
+  - **不浪费时间**：避免未验证就推送导致的失败循环
+  - **记录自我进化**：详细记录修复过程和根本原因
+- **技术成就总结**：
+  1. **第23轮**：修复on-pr.yml中的容器ID获取逻辑
+  2. **第25轮**：修复bash语法错误，PR验证史诗级成功
+  3. **第26轮**：修复fast-validation.yml中相同的容器ID获取逻辑
+- **预期最终结果**：
+  - **PR和post-merge环境完全一致**：两个工作流文件使用相同的正确逻辑
+  - **彻底解决容器ID获取时序问题**
+  - **E2E测试成功时脚本正确报告成功**
+  - **第23+25+26轮组合修复彻底解决GitHub Actions脚本层面所有问题**
