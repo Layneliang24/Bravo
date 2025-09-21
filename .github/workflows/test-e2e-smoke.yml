@@ -79,20 +79,28 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
-              # Root level - 安装@playwright/test以支持配置文件加载
-              echo "Installing root level @playwright/test for config file support..."
-              npm install @playwright/test --prefer-offline --no-audit --no-save
-              echo "✅ Root @playwright/test installed"
+              # 🔧 第5轮修复：确保配置文件模块解析正确
+              echo "🎯 Step 1: Installing E2E dependencies with workspace disabled..."
+              cd e2e
+              echo 'workspace-root=false' > .npmrc
+              echo 'legacy-peer-deps=true' >> .npmrc
+              npm install --prefer-offline --no-audit
 
-              # E2E - 禁用workspace解析，强制本地安装（参考成功的Dockerfile.test）
-              if [ ! -d "e2e/node_modules" ]; then
-                echo "Installing E2E dependencies with workspace disabled..."
-                cd e2e
-                echo 'workspace-root=false' > .npmrc
-                echo 'legacy-peer-deps=true' >> .npmrc
-                npm install --prefer-offline --no-audit
-                cd ..
+              echo "🔍 Step 2: Verifying @playwright/test installation..."
+              if [ ! -f "node_modules/@playwright/test/package.json" ]; then
+                echo "❌ @playwright/test not found in e2e/node_modules, forcing installation..."
+                npm install @playwright/test --prefer-offline --no-audit
               fi
+
+              echo "🧪 Step 3: Testing module resolution..."
+              node -e "console.log('✅ @playwright/test resolved:', require.resolve('@playwright/test'))" || {
+                echo "❌ Module resolution failed, listing e2e dependencies..."
+                ls -la node_modules/ | head -10
+                npm list @playwright/test || echo "Package not in dependency tree"
+                exit 1
+              }
+
+              cd ..
 
           # Backend
           if [ ! -d "backend/.venv" ]; then
@@ -214,10 +222,26 @@ jobs:
       - name: Run Smoke Tests
         working-directory: ./e2e
         run: |
-          echo "Running E2E smoke tests..."
-          # 模块解析问题已修复，使用npx（更可靠的调用方式）
+          echo "🎭 Running E2E smoke tests..."
+
+          echo "🔍 Pre-flight checks:"
+          echo "Working directory: $(pwd)"
+          echo "@playwright/test location: $(npm list @playwright/test 2>/dev/null || echo 'Not found in npm list')"
+          echo "Available playwright binary: $(which playwright || echo 'playwright binary not in PATH')"
+
+          echo "🧪 Final module resolution test:"
+          node -e "console.log('✅ Config can load @playwright/test:', require.resolve('@playwright/test'))" || {
+            echo "❌ CRITICAL: playwright.config.ts will fail to load"
+            echo "Debug info:"
+            ls -la node_modules/@playwright/ 2>/dev/null || echo "No @playwright directory"
+            npm ls @playwright/test || echo "Not in dependency tree"
+            exit 1
+          }
+
+          echo "🚀 Executing smoke tests..."
+          # 使用npx确保使用本地安装的playwright
           npx playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
-          echo "Smoke tests completed"
+          echo "✅ Smoke tests completed successfully"
         env:
           CI: true
           TEST_BASE_URL: http://localhost:3001
