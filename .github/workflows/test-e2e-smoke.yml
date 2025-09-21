@@ -79,28 +79,11 @@ jobs:
             cd frontend && npm ci --prefer-offline --no-audit && cd ..
           fi
 
-              # 🔧 第5轮修复：确保配置文件模块解析正确
-              echo "🎯 Step 1: Installing E2E dependencies with workspace disabled..."
-              cd e2e
-              echo 'workspace-root=false' > .npmrc
-              echo 'legacy-peer-deps=true' >> .npmrc
-              npm install --prefer-offline --no-audit
-
-              echo "🔍 Step 2: Verifying @playwright/test installation..."
-              if [ ! -f "node_modules/@playwright/test/package.json" ]; then
-                echo "❌ @playwright/test not found in e2e/node_modules, forcing installation..."
-                npm install @playwright/test --prefer-offline --no-audit
-              fi
-
-              echo "🧪 Step 3: Testing module resolution..."
-              node -e "console.log('✅ @playwright/test resolved:', require.resolve('@playwright/test'))" || {
-                echo "❌ Module resolution failed, listing e2e dependencies..."
-                ls -la node_modules/ | head -10
-                npm list @playwright/test || echo "Package not in dependency tree"
-                exit 1
-              }
-
-              cd ..
+          # E2E dependencies (使用npm workspaces机制，依赖从根目录继承)
+          if [ ! -d "e2e/node_modules" ]; then
+            echo "Installing E2E dependencies..."
+            cd e2e && npm ci --prefer-offline --no-audit && cd ..
+          fi
 
           # Backend
           if [ ! -d "backend/.venv" ]; then
