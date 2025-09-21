@@ -395,3 +395,134 @@
 **结论**：用户质疑促成的修正确保了项目完全符合容器化开发规范！
 
 ---
+
+## 记录项 6 - PR #98 CI修复史诗级技术突破 - 🔬 深入诊断与精确修复
+
+- 北京时间：2025-09-21 21:18:00 - 22:15:00 CST
+- 问题性质：激进清理后单一CI失败的深度技术分析
+- 修复状态：🔄 进行中（3轮修复，技术突破显著）
+- 用户指导：✅ 关键技术指正（Runner vs Docker架构理解修正）
+
+### 🚨 问题发现：激进清理成功但留下单一技术难题
+
+**PR #98状态**：
+
+- ✅ **激进清理100%成功**：16个依赖清理，Docker验证完全正常
+- ❌ **单一失败**：Branch Protection工作流的`e2e-smoke / e2e-smoke-tests`
+- 📊 **成功率**：19/20 = 95%，但完美主义要求100%
+
+### 🔬 深入诊断：用户指导下的技术架构理解突破
+
+**🤔 用户关键技术指正**：
+
+- **"runner不就是docker吗？docker内又安装docker吗？"**
+- **完全纠正了我的错误理解**：不存在"Runner vs Docker环境"对立
+- **正确理解**：GitHub Actions Runner本身就是容器化环境
+
+**🎯 真正问题定位**：
+
+```
+❌ 错误理解：Runner环境 vs Docker环境差异
+✅ 正确原因：npm workspaces依赖解析机制差异
+
+成功工作流：docker-compose.test.yml (Dockerfile.test)
+- workspace-root=false 禁用npm workspaces
+- 本地依赖安装，避免workspaces依赖提升问题
+
+失败工作流：test-e2e-smoke.yml
+- 依赖npm workspaces机制
+- 激进清理破坏了workspaces依赖提升
+- @playwright/test模块解析失败
+```
+
+### 🛠️ 三轮修复技术进化过程
+
+#### 🔧 第1轮修复：强制安装workspaces依赖
+
+```yaml
+# 修复策略：强制npm install确保workspaces依赖
+npm install --prefer-offline --no-audit
+```
+
+**结果**：❌ 失败，相同错误`Cannot find package '@playwright/test'`
+
+#### 🔧 第2轮修复：精确诊断后的workspace禁用方案
+
+```yaml
+# 基于成功容器化方案的精确复制
+cd e2e
+echo 'workspace-root=false' > .npmrc
+echo 'legacy-peer-deps=true' >> .npmrc
+npm install --prefer-offline --no-audit
+./node_modules/.bin/playwright test # 直接调用本地binary
+```
+
+**结果**：✅ 部分成功！模块解析问题解决，但`./node_modules/.bin/playwright: No such file or directory`
+
+#### 🔧 第3轮修复：最终组合方案
+
+```yaml
+# 结合两次修复优势：模块解析修复 + 可靠调用
+echo 'workspace-root=false' > .npmrc  # 解决模块解析
+echo 'legacy-peer-deps=true' >> .npmrc
+npm install --prefer-offline --no-audit
+npx playwright test  # 更可靠的调用方式
+```
+
+**结果**：🔄 正在验证中...
+
+### 🏆 技术突破与重要发现
+
+#### 📚 诊断方法论突破
+
+1. **深入对比分析**：成功工作流 vs 失败工作流的配置差异
+2. **用户技术指正价值**：纠正根本性架构理解错误
+3. **精确问题定位**：从表面现象到根本机制
+
+#### 🔬 npm workspaces机制深度理解
+
+1. **依赖提升机制**：workspaces将@playwright/test提升到根目录
+2. **激进清理影响**：破坏了提升后的依赖结构
+3. **ESM模块解析**：在破坏的workspaces结构下失败
+4. **workspace-root=false**：强制本地安装，避免依赖提升问题
+
+#### ⚡ 修复策略进化
+
+1. **从症状修复到机制修复**：不是简单强制安装，而是改变依赖机制
+2. **成功案例学习**：完全复制docker-compose.test.yml的成功配置
+3. **组合方案优势**：workspace禁用 + 可靠调用方式
+
+### 📊 当前修复状态（截至22:15）
+
+**第3轮修复监控结果**：
+
+- 🔄 **CI正在运行**：15/18成功，0失败，2进行中
+- ✅ **0失败保持**：连续保持0失败状态，积极信号
+- ⏳ **等待关键验证**：e2e-smoke测试尚未开始
+
+### 🌟 用户指导的技术价值总结
+
+**技术理解纠正**：
+
+- ❌ **错误认知**：Runner环境vs Docker环境对立
+- ✅ **正确理解**：都是容器化环境，差异在于依赖安装机制
+
+**诊断方法提升**：
+
+- 🎯 **方案C选择**：深入诊断差异而非简单修复
+- 🔬 **根本原因定位**：npm workspaces机制问题
+- 📋 **精确修复策略**：复制成功方案的关键配置
+
+**修复进化过程**：
+
+- 第1轮：表面修复（失败）
+- 第2轮：机制修复（突破）
+- 第3轮：组合优化（验证中）
+
+### 💡 下一步计划
+
+1. **🔄 持续监控第3轮修复**：等待e2e-smoke测试结果
+2. **📝 完整记录技术过程**：为future reference建立完整案例
+3. **🎯 完成MILESTONE v2.0**：达成100%CI通过率
+
+---
