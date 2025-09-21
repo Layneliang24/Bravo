@@ -240,25 +240,39 @@ jobs:
         run: |
           echo "Running API compatibility tests..."
 
-          # 🔧 第27轮修复：API Compatibility Tests启动前再次确认数据库可用性
-          echo "🔧 第27轮修复：再次验证数据库连接，确保Django能正常启动..."
+          # 🔧 第32轮修复：API Compatibility Tests启动前重新确保数据库完全可用
+          echo "🔧 第32轮修复：重新确认并修复数据库状态，确保API测试可以正常进行..."
 
-          # 验证bravo_test数据库完全可用，避免Django启动时连接失败
-          MAX_DB_ATTEMPTS=10
-          DB_ATTEMPT=0
-          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" >/dev/null 2>&1; do
-            DB_ATTEMPT=$((DB_ATTEMPT + 1))
-            if [ $DB_ATTEMPT -gt $MAX_DB_ATTEMPTS ]; then
-              echo "❌ 数据库bravo_test验证失败 (${MAX_DB_ATTEMPTS}次尝试)"
-              echo "🔍 诊断信息："
-              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
-              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';" || true
-              exit 1
-            fi
-            echo "数据库bravo_test验证中... (尝试 ${DB_ATTEMPT}/${MAX_DB_ATTEMPTS})"
-            sleep 1
-          done
-          echo "✅ 数据库bravo_test验证成功，Django可以安全启动"
+          # 先检查MySQL服务是否正常
+          echo "🔍 检查MySQL服务状态..."
+          mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent || {
+            echo "❌ MySQL服务不可用！"
+            exit 1
+          }
+
+          # 检查并重新确保数据库和用户状态
+          echo "🔍 检查并确保bravo_test数据库和用户状态..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password << 'EOF'
+          -- 确保数据库存在
+          CREATE DATABASE IF NOT EXISTS bravo_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+          -- 确保用户存在并有正确权限
+          CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+          GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+          FLUSH PRIVILEGES;
+          EOF
+
+          # 验证bravo_user可以访问bravo_test数据库
+          echo "🔍 验证bravo_user数据库访问..."
+          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 'API tests ready!' as status;" || {
+            echo "❌ bravo_user无法访问bravo_test数据库！"
+            echo "🔍 诊断信息："
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';" || true
+            exit 1
+          }
+
+          echo "✅ 数据库状态完全就绪，Django可以安全启动进行API测试"
 
           # 启动后端服务器
           cd backend
