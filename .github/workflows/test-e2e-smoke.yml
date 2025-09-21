@@ -68,11 +68,10 @@ jobs:
 
       - name: Install Dependencies (fallback)
         run: |
-          # 🔧 修复：先安装根目录workspaces依赖（解决@playwright/test模块解析问题）
-          if [ ! -d "node_modules" ]; then
-            echo "Installing root workspace dependencies (for @playwright/test)..."
-            npm install --prefer-offline --no-audit
-          fi
+          # 🔧 修复：强制安装根目录workspaces依赖（解决@playwright/test模块解析问题）
+          echo "Ensuring root workspace dependencies are installed (for @playwright/test)..."
+          npm install --prefer-offline --no-audit
+          echo "✅ Root workspace dependencies installed"
 
           # Frontend
           if [ ! -d "frontend/node_modules" ]; then
