@@ -148,3 +148,60 @@
 4. **建立依赖关系文档**：记录哪些文件不能删除及原因
 
 ---
+
+## 记录项 2 - 阶段1B：安全内容清理（修正版）- 🎆 完全成功！
+
+- 北京时间：2025-09-21 19:38:00 CST
+- 清理阶段：第1B阶段 - 修正版安全清理
+- 清理目标：基于失败分析的修正清理策略
+- 清理前大小：1.2GB
+- 清理后大小：1.2GB (实际清理~18MB)
+- 节省空间：~18MB
+- 清理项目：
+  - ✅ .mypy_cache/ - 完全重置为空目录（避免大文件问题）
+  - ✅ backend/htmlcov/ - 确保目录存在（GitHub Actions缓存依赖）
+  - ✅ backend/test-results/ - 确保目录存在（E2E工作流依赖）
+  - ✅ e2e/test-results/ - 确保目录存在（E2E工作流依赖）
+  - ✅ frontend/test-results/ - 确保目录存在
+  - ✅ logs/ - 确保目录存在
+  - ✅ bandit-report.json - 删除（会重新生成）
+- 验证状态：CI验证完全成功（✓ Checks passing）
+- 回滚状态：无需回滚
+- 问题记录：无
+
+### 🎆🎆🎆 史诗级技术成就总结
+
+#### 🔍 **根本问题发现**：
+
+通过系统性搜索发现GitHub Actions工作流对这些"缓存"文件的隐性依赖：
+
+- `fast-validation.yml`第174行和206行：`docker cp "$E2E_CID:/app/test-results"`
+- `cache-setup.yml`将`backend/htmlcov`列为缓存路径
+- 这些目录不仅是输出，更是工作流基础设施的一部分
+
+#### 🛠️ **修正策略的技术突破**：
+
+- **保留目录结构，只清理内容**：满足GitHub Actions的目录存在性要求
+- **完全重置.mypy_cache**：避免500KB+大文件限制问题
+- **环境差异识别**：PR环境vs post-merge环境使用不同配置
+
+#### 🏆 **验证结果**：
+
+- **PR #96**：https://github.com/Layneliang24/Bravo/pull/96
+- **CI检查结果**：全部成功 ✓ Checks passing
+- **成功检查数量**：10+个检查全部通过
+- **失败检查数量**：0个
+- **合并状态**：✓ Squashed and merged
+
+#### 📚 **项目清理方法论建立**：
+
+1. **依赖关系分析优先**：系统性搜索文件引用(`grep -r`)
+2. **GitHub Actions工作流影响评估**：检查所有`.github/workflows/`文件
+3. **保守清理策略**：保留结构，只清理内容
+4. **多层验证**：本地验证 + PR验证 + post-merge验证
+
+### 🚀 下一步：进入阶段2
+
+基于阶段1B的成功经验，开始规划阶段2：依赖和包清理
+
+---
