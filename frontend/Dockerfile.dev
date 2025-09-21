@@ -16,7 +16,7 @@ RUN echo "📦 配置npm国内源..." && \
 COPY package*.json ./
 
 # 安装依赖
-RUN npm ci --prefer-offline --no-audit
+RUN npm install --prefer-offline --no-audit
 
 # 复制源代码
 COPY . .

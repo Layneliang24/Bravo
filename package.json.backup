@@ -1,0 +1,106 @@
+{
+  "name": "bravo-workspace",
+  "version": "1.0.0",
+  "description": "Bravo项目工作区 - 包含前端、后端和E2E测试",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "e2e"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python manage.py runserver",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend && npm run test:e2e",
+    "test:all": "bash test_all.sh",
+    "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && pytest",
+    "test:e2e": "cd e2e && npm run test",
+    "test:coverage": "npm run test:coverage:frontend && npm run test:coverage:backend",
+    "test:coverage:frontend": "cd frontend && npm run test:coverage",
+    "test:coverage:backend": "cd backend && pytest --cov=. --cov-report=xml --cov-report=html",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && pylint apps/ --rcfile=.pylintrc",
+    "format": "npm run format:frontend && npm run format:backend",
+    "format:frontend": "cd frontend && npm run format",
+    "format:backend": "cd backend && black . && isort .",
+    "lighthouse": "cd e2e && npm run lighthouse",
+    "e2e:install": "cd e2e && npm install && npx playwright install --with-deps",
+    "e2e:ui": "cd e2e && npx playwright test --ui",
+    "e2e:headed": "cd e2e && npx playwright test --headed",
+    "e2e:debug": "cd e2e && npx playwright test --debug",
+    "security:scan": "trivy fs .",
+    "deps:check": "npm audit && cd frontend && npm audit && cd ../e2e && npm audit",
+    "deps:update": "npm update && cd frontend && npm update && cd ../e2e && npm update",
+    "clean": "npm run clean:frontend && npm run clean:backend && npm run clean:e2e",
+    "clean:frontend": "cd frontend && rm -rf node_modules dist .vite",
+    "clean:backend": "cd backend && find . -name '*.pyc' -delete && find . -name '__pycache__' -delete",
+    "clean:e2e": "cd e2e && rm -rf node_modules playwright-report test-results lighthouse-report",
+    "install:all": "npm install && cd frontend && npm install && cd ../e2e && npm install",
+    "postinstall:disabled": "npm run e2e:install",
+    "prepare": "node -e \"if (process.env.CI) process.exit(0); try { require('child_process').execSync('npx husky install', {stdio: 'inherit'}); } catch (e) { console.log('Husky install skipped'); }\"",
+    "check:syntax": "node scripts/check-syntax.js"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^2.1.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "@vue/shared": "^3.5.21",
+    "@vue/test-utils": "^2.4.6",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "husky": "^9.1.7",
+    "is-ci": "^3.0.1",
+    "jsdom": "^26.1.0",
+    "lint-staged": "^16.1.6",
+    "pinia": "^3.0.3",
+    "uri-js": "^4.4.1",
+    "vitest": "^3.2.4",
+    "vue-router": "^4.5.1"
+  },
+  "lint-staged": {
+    "tests-golden/**/*": [
+      "bash -c 'if ! git log -1 --pretty=%B | grep -q \\[GOLDEN-TEST\\]; then echo \"❌ 错误：不允许修改黄金测试文件！\" && echo \"请联系项目维护者或在提交消息中添加 [GOLDEN-TEST] 标签说明修改原因\" && exit 1; fi'"
+    ],
+    "backend/**/*.py": [
+      "python -m flake8 --select=N --config=backend/.flake8",
+      "python -m pylint --rcfile=backend/.pylintrc.naming --disable=all --enable=invalid-name"
+    ],
+    "frontend/src/**/*.{ts,tsx,js,jsx,vue}": [
+      "npx eslint --config frontend/eslint.config.js --fix"
+    ],
+    "**/*.{ts,tsx,js,jsx,vue}": [
+      "npm run check:syntax"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/bravo.git"
+  },
+  "keywords": [
+    "blog",
+    "django",
+    "vue",
+    "typescript",
+    "postgresql",
+    "e2e-testing",
+    "ci-cd"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/bravo/issues"
+  },
+  "homepage": "https://github.com/your-username/bravo#readme",
+  "dependencies": {
+    "eslint": "^8.57.1",
+    "eslint-scope": "^8.4.0"
+  }
+}
