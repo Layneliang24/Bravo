@@ -187,19 +187,6 @@ jobs:
             docker compose -f docker-compose.test.yml down
 
             exit $E2E_EXIT_CODE
-            else
-              echo "Docker Compose日志获取失败，使用传统方法..."
-              docker compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests || true
-              echo "📦 收集E2E测试产物(传统路径)..."
-              mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-              if [ -n "$E2E_CID" ]; then
-                docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-                docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-                docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
-              fi
-              docker compose -f docker-compose.test.yml down
-            fi
           else
             echo "docker-compose not found, using 'docker compose' instead..."
             # 🎯 最优方案：移除环境变量传递，容器自给自足
@@ -239,19 +226,6 @@ jobs:
             docker compose -f docker-compose.test.yml down
 
             exit $E2E_EXIT_CODE
-          else
-              echo "Docker Compose日志获取失败，使用传统方法..."
-              docker compose -f docker-compose.test.yml up --build --exit-code-from e2e-tests || true
-              echo "📦 收集E2E测试产物(传统路径)..."
-              mkdir -p e2e-artifacts || true
-              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-              if [ -n "$E2E_CID" ]; then
-                docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-                docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-                docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
-              fi
-              docker compose -f docker-compose.test.yml down
-            fi
           fi
 
       - name: Upload E2E Artifacts (fast-validation)
