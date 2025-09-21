@@ -154,26 +154,19 @@ jobs:
             docker compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
-            # 🎯 彻底修复：使用直接的容器退出码检测
-
-            # 等待e2e-tests容器完成，获取其退出码
-            echo "等待E2E容器完成..."
-            docker compose -f docker-compose.test.yml logs -f e2e-tests || true
-
-            # 直接获取容器退出码，不依赖if分支
+            # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
+            sleep 2 # 等待容器完全启动
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
             echo "E2E容器ID: $E2E_CID"
 
             if [ -n "$E2E_CID" ]; then
-              # 等待容器完全停止
-              docker wait "$E2E_CID" > /dev/null 2>&1 || true
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+              # 等待容器完全停止并获取退出码
+              E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
+              echo "E2E测试真实退出码: $E2E_EXIT_CODE"
             else
-              echo "❌ 无法获取E2E容器ID"
+              echo "❌ 无法获取E2E容器ID，可能容器启动失败或过早退出。"
               E2E_EXIT_CODE=1
             fi
-
-            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
 
             echo "📦 收集E2E测试产物..."
             mkdir -p e2e-artifacts || true
@@ -193,26 +186,19 @@ jobs:
             docker compose -f docker-compose.test.yml up --build -d
 
             echo "等待E2E测试完成..."
-            # 🎯 彻底修复：使用直接的容器退出码检测
-
-            # 等待e2e-tests容器完成，获取其退出码
-            echo "等待E2E容器完成..."
-            docker compose -f docker-compose.test.yml logs -f e2e-tests || true
-
-            # 直接获取容器退出码，不依赖if分支
+            # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
+            sleep 2 # 等待容器完全启动
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
             echo "E2E容器ID: $E2E_CID"
 
             if [ -n "$E2E_CID" ]; then
-              # 等待容器完全停止
-              docker wait "$E2E_CID" > /dev/null 2>&1 || true
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
+              # 等待容器完全停止并获取退出码
+              E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
+              echo "E2E测试真实退出码: $E2E_EXIT_CODE"
             else
-              echo "❌ 无法获取E2E容器ID"
+              echo "❌ 无法获取E2E容器ID，可能容器启动失败或过早退出。"
               E2E_EXIT_CODE=1
             fi
-
-            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
 
             echo "📦 收集E2E测试产物..."
             mkdir -p e2e-artifacts || true
