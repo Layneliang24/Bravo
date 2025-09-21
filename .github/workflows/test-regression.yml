@@ -33,7 +33,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e 'SELECT 1'" --health-interval=5s --health-timeout=10s --health-retries=20
+        options: --health-cmd="mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e 'SELECT 1'" --health-interval=10s --health-timeout=15s --health-retries=30
         ports:
           - 3306:3306
 
@@ -87,47 +87,75 @@ jobs:
 
       - name: Setup Test Database
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
-            CREATE DATABASE IF NOT EXISTS bravo_test;
-            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
-            FLUSH PRIVILEGES;
-          "
+          echo "🔧 第29轮修复：增强数据库创建逻辑，确保bravo_test数据库正确创建"
+
+          # 等待MySQL完全启动
+          echo "⏳ 等待MySQL服务完全启动..."
+          sleep 10
+
+          # 检查MySQL基本连接
+          echo "🔍 验证MySQL基本连接..."
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
+            echo "MySQL尚未准备就绪，继续等待..."
+            sleep 2
+          done
+          echo "✅ MySQL基本连接已建立"
+
+          # 显示当前数据库状态（调试用）
+          echo "🔍 显示当前数据库和用户状态..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user;" || true
+
+          # 强制创建数据库和用户（即使已存在）
+          echo "🛠️ 创建/确认bravo_test数据库和用户..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password << 'EOF'
+          -- 删除现有数据库和用户（如果存在）
+          DROP DATABASE IF EXISTS bravo_test;
+          DROP USER IF EXISTS 'bravo_user'@'%';
+
+          -- 重新创建数据库
+          CREATE DATABASE bravo_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+          -- 重新创建用户并授权
+          CREATE USER 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
+          GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+          FLUSH PRIVILEGES;
+          EOF
+
+          # 验证创建结果
+          echo "✅ 验证数据库和用户创建结果..."
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" | grep bravo_test || {
+            echo "❌ bravo_test数据库创建失败！"
+            exit 1
+          }
+
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';" | grep bravo_user || {
+            echo "❌ bravo_user用户创建失败！"
+            exit 1
+          }
+
+          # 测试用户数据库访问
+          echo "🔍 测试bravo_user访问bravo_test数据库..."
+          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" || {
+            echo "❌ bravo_user无法访问bravo_test数据库！"
+            exit 1
+          }
+
+          echo "🎉 数据库设置完全成功！bravo_test数据库和bravo_user用户已就绪"
 
       - name: Wait for MySQL to be ready
         run: |
-          echo "Waiting for MySQL to be ready..."
-          MAX_ATTEMPTS=40
-          ATTEMPT=0
+          echo "🔧 第29轮修复：MySQL和数据库已在Setup Test Database步骤中验证完成"
+          echo "🔍 最终确认bravo_test数据库状态..."
 
-          # 等待MySQL基本连接
-          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
-            ATTEMPT=$((ATTEMPT + 1))
-            if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
-              echo "❌ MySQL基本连接超时 (${MAX_ATTEMPTS}次尝试)"
-              exit 1
-            fi
-            echo "MySQL基本连接不可用 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
-            sleep 2
-          done
-          echo "✅ MySQL基本连接建立成功"
+          # 快速验证数据库仍然可用
+          mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 'Database ready!' as status;" || {
+            echo "❌ bravo_test数据库状态异常！"
+            mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;"
+            exit 1
+          }
 
-          # 验证bravo_test数据库存在并可用
-          ATTEMPT=0
-          until mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" >/dev/null 2>&1; do
-            ATTEMPT=$((ATTEMPT + 1))
-            if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
-              echo "❌ bravo_test数据库验证超时 (${MAX_ATTEMPTS}次尝试)"
-              echo "🔍 当前数据库状态："
-              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;"
-              mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user WHERE user='bravo_user';"
-              exit 1
-            fi
-            echo "bravo_test数据库尚未就绪 - 等待中 (尝试 ${ATTEMPT}/${MAX_ATTEMPTS})"
-            sleep 2
-          done
-
-          # 最终确认
-          echo "✅ MySQL和bravo_test数据库完全准备就绪！"
+          echo "✅ MySQL和bravo_test数据库确认就绪！"
 
       - name: Run Database Migrations
         working-directory: ./backend
