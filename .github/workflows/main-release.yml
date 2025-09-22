@@ -90,7 +90,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "📦 安装生产环境依赖..."
-          npm ci --workspace=frontend
+          npm ci --prefer-offline --no-audit  # Root npm ci handles all workspaces
           cd backend && pip install -r requirements/base.txt
 
       - name: Production Environment Check
@@ -157,7 +157,7 @@ jobs:
       - name: Install Dependencies
         run: |
           npm ci --prefer-offline --no-audit
-          npm ci --workspace=frontend
+          # Frontend dependencies already managed by root npm ci via workspaces
 
       - name: Build for Production
         working-directory: ./frontend
