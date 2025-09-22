@@ -69,8 +69,21 @@ jobs:
       - name: Install Dependencies (fallback)
         run: |
           # 🔧 修复：强制安装根目录workspaces依赖（解决@playwright/test模块解析问题）
+          echo "🔍 Debug: Checking root package.json for @playwright/test..."
+          grep -n "@playwright/test" package.json || echo "❌ @playwright/test not found in root package.json!"
+
+          echo "🔍 Debug: Root node_modules before install..."
+          ls -la node_modules/@playwright/ 2>/dev/null || echo "No @playwright directory found"
+
           echo "Ensuring root workspace dependencies are installed (for @playwright/test)..."
           npm install --prefer-offline --no-audit
+
+          echo "🔍 Debug: Root node_modules after install..."
+          ls -la node_modules/@playwright/ 2>/dev/null || echo "❌ Still no @playwright directory found!"
+
+          echo "🔍 Debug: npm list @playwright/test from root..."
+          npm list @playwright/test 2>/dev/null || echo "❌ @playwright/test not in dependency tree"
+
           echo "✅ Root workspace dependencies installed"
 
           # Frontend
