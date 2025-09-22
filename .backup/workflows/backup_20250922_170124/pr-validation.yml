@@ -1,0 +1,69 @@
+name: 🚨 DEPRECATED - PR Validation (Use on-pr.yml instead)
+
+# DEPRECATED: 此workflow已被 on-pr.yml 替代
+# 保留用于向后兼容，但不再触发
+on:
+  workflow_dispatch: # 仅允许手动触发
+
+# 并发控制，避免重复运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 并行运行基础测试
+  backend-tests:
+    name: Backend Tests
+    uses: ./.github/workflows/test-backend.yml
+    with:
+      test-type: "all"
+
+  frontend-tests:
+    name: Frontend Tests
+    uses: ./.github/workflows/test-frontend.yml
+    with:
+      test-type: "all"
+
+  # E2E测试依赖前面的测试
+  e2e-tests:
+    name: E2E Tests
+    needs: [backend-tests, frontend-tests]
+    uses: ./.github/workflows/test-e2e.yml
+    with:
+      test-type: "smoke"
+      browser: "chromium"
+
+  # 目录保护检查
+  dir-guard:
+    name: Directory Guard
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check directory changes
+        run: echo "Directory guard check passed"
+
+  # 汇总结果
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, e2e-tests, dir-guard]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Validation Results:"
+          echo "Backend Tests: ${{ needs.backend-tests.result }}"
+          echo "Frontend Tests: ${{ needs.frontend-tests.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Directory Guard: ${{ needs.dir-guard.result }}"
+
+          if [[ "${{ needs.backend-tests.result }}" == "success" && \
+                "${{ needs.frontend-tests.result }}" == "success" && \
+                "${{ needs.e2e-tests.result }}" == "success" && \
+                "${{ needs.dir-guard.result }}" == "success" ]]; then
+            echo "All validations passed! PR is ready for review."
+          else
+            echo "Some validations failed. Please check the logs above."
+            exit 1
+          fi
