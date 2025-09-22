@@ -66,18 +66,18 @@ jobs:
             e2e-deps-v2-${{ runner.os }}-
             backend-deps-v2-${{ runner.os }}-
 
-      - name: Skip Dependencies (Self-Sufficient Container Architecture)
+      - name: Install Dependencies (Host Architecture)
         run: |
-          # 🎆 应用FUCKING_CI.md第19-21轮历史验证的解决方案
-          # 🏆 "自给自足容器架构" - 容器内部完全自主，无外部依赖
-          echo "📚 应用历史记录第19-21轮解决方案：自给自足容器架构"
-          echo "✅ 跳过宿主机依赖安装 - 让Docker容器内部自己处理所有依赖"
-          echo "✅ 避免npm workspaces版本冲突问题"
-          echo "✅ 消除本地vs远程环境差异"
+          echo "🎯 基于历史成功案例：GitHub Actions宿主机架构"
+          echo "📚 安装依赖到宿主机，直接运行E2E测试"
+
+          # 🏆 第7轮修复：根目录添加@playwright/test，利用npm workspaces
+          echo "安装根目录依赖（包含@playwright/test）..."
+          npm install --prefer-offline --no-audit
 
           # Backend
+          echo "安装后端依赖..."
           if [ ! -d "backend/.venv" ]; then
-            echo "Installing backend dependencies..."
             cd backend
             python -m venv .venv
             source .venv/bin/activate
@@ -85,6 +85,21 @@ jobs:
             pip install -r requirements/base.txt
             cd ..
           fi
+
+          # Frontend
+          echo "安装前端依赖..."
+          cd frontend && npm ci --prefer-offline --no-audit && cd ..
+
+          # E2E (利用npm workspaces，@playwright/test应该从根目录解析)
+          echo "验证E2E依赖..."
+          cd e2e
+          echo "Working directory: $(pwd)"
+          echo "检查@playwright/test解析："
+          node -e "console.log('✅ @playwright/test resolved:', require.resolve('@playwright/test'))" || {
+            echo "⚠️ @playwright/test无法解析，尝试本地安装..."
+            npm ci --prefer-offline --no-audit
+          }
+          cd ..
 
       # 使用统一的缓存设置（包含Playwright浏览器缓存）
       - name: Setup E2E Cache
@@ -192,27 +207,34 @@ jobs:
 
           echo "🎉 All servers are ready!"
 
-      - name: Run Smoke Tests (Self-Sufficient Container)
+      - name: Run Smoke Tests
+        working-directory: ./e2e
         run: |
-          echo "🎆 执行自给自足容器架构E2E测试"
-          echo "📚 应用FUCKING_CI.md历史验证的解决方案"
+          echo "🎯 执行E2E烟雾测试（基于历史成功案例的宿主机架构）"
+          echo "📚 回到历史验证成功的解决方案：GitHub Actions宿主机直接运行"
 
-          # 🏆 使用docker-compose.test.yml的自给自足架构
-          echo "🐳 启动自给自足E2E测试容器..."
-          docker compose -f docker-compose.test.yml up --build e2e-tests --abort-on-container-exit
+          echo "🔍 Pre-flight checks:"
+          echo "Working directory: $(pwd)"
+          echo "Available playwright binary: $(which playwright || echo 'playwright binary not in PATH')"
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
 
-          # 获取退出码
-          E2E_EXIT_CODE=$?
-          echo "🔍 E2E测试退出码: $E2E_EXIT_CODE"
+          echo "🧪 Module resolution test:"
+          node -e "console.log('✅ Config can load @playwright/test:', require.resolve('@playwright/test'))" || {
+            echo "❌ CRITICAL: playwright.config.ts will fail to load"
+            echo "Debug info:"
+            npm ls @playwright/test || echo "Not in dependency tree"
+            exit 1
+          }
 
-          if [ $E2E_EXIT_CODE -eq 0 ]; then
-            echo "🎉 E2E测试成功！"
-          else
-            echo "❌ E2E测试失败，退出码: $E2E_EXIT_CODE"
-            echo "📋 容器日志："
-            docker compose -f docker-compose.test.yml logs e2e-tests
-            exit $E2E_EXIT_CODE
-          fi
+          echo "🎭 Running E2E smoke tests..."
+          # 使用npx确保使用本地安装的playwright
+          npx playwright test --grep "@smoke" --project=chromium --max-failures=3
+          echo "✅ Smoke tests completed successfully"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+          API_URL: http://localhost:8000
 
       - name: Upload Test Results
         if: always()
