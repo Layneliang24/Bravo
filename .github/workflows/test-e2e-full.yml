@@ -81,7 +81,7 @@ jobs:
           fi
 
           # Frontend
-          # Frontend依赖已通过根目录npm workspaces统一管理
+          # Frontend dependencies already managed by root npm workspaces
           echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E

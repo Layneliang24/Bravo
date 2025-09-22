@@ -87,9 +87,8 @@ jobs:
             cd ..
           fi
 
-          # Frontend
-          echo "安装前端依赖..."
-          cd frontend && npm ci --prefer-offline --no-audit && cd ..
+          # Frontend依赖已通过根目录npm workspaces自动管理
+          echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E (利用npm workspaces，@playwright/test应该从根目录解析)
           echo "验证E2E依赖..."

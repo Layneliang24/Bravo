@@ -150,7 +150,7 @@ jobs:
               npm ci --prefer-offline --no-audit
             fi
             # 确保frontend子项目依赖已安装
-            # Frontend依赖已通过根目录npm workspaces统一管理
+            # Frontend dependencies already managed by root npm workspaces
             echo "✅ Frontend dependencies managed via root npm workspaces"
             # 在frontend目录内执行构建，确保vue-tsc等工具在PATH中
             echo "Building frontend..."

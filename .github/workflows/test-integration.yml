@@ -171,9 +171,8 @@ jobs:
       - name: Install Frontend Dependencies for Integration
         working-directory: ./frontend
         run: |
-          echo "Installing frontend dependencies in frontend directory..."
-          npm ci
-          echo "Frontend dependencies installed"
+          echo "Using frontend dependencies from root npm workspaces..."
+          echo "Frontend dependencies already available via npm workspaces"
 
       - name: Build Frontend for Integration
         working-directory: ./frontend
