@@ -199,7 +199,7 @@ jobs:
 
           # 🏆 使用docker-compose.test.yml的自给自足架构
           echo "🐳 启动自给自足E2E测试容器..."
-          docker-compose -f docker-compose.test.yml up --build e2e-tests --abort-on-container-exit
+          docker compose -f docker-compose.test.yml up --build e2e-tests --abort-on-container-exit
 
           # 获取退出码
           E2E_EXIT_CODE=$?
@@ -210,7 +210,7 @@ jobs:
           else
             echo "❌ E2E测试失败，退出码: $E2E_EXIT_CODE"
             echo "📋 容器日志："
-            docker-compose -f docker-compose.test.yml logs e2e-tests
+            docker compose -f docker-compose.test.yml logs e2e-tests
             exit $E2E_EXIT_CODE
           fi
 
