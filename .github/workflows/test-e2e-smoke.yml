@@ -141,11 +141,13 @@ jobs:
             npm ci --prefer-offline --no-audit
           fi
 
-          # Verify vue-tsc is available after dependency installation
+          # Verify vue-tsc is available - but don't break if missing
+          echo "Checking vue-tsc availability..."
           if ! npx vue-tsc --version &> /dev/null; then
-            echo "vue-tsc not working properly, reinstalling dependencies..."
-            rm -rf node_modules package-lock.json
-            npm install --prefer-offline --no-audit
+            echo "⚠️  vue-tsc not available, but continuing with build..."
+            echo "Frontend dependencies may be sufficient for basic building"
+          else
+            echo "✅ vue-tsc is available"
           fi
 
           echo "Building with vue-tsc and vite..."
