@@ -66,37 +66,14 @@ jobs:
             e2e-deps-v2-${{ runner.os }}-
             backend-deps-v2-${{ runner.os }}-
 
-      - name: Install Dependencies (fallback)
+      - name: Skip Dependencies (Self-Sufficient Container Architecture)
         run: |
-          # 🔧 修复：强制安装根目录workspaces依赖（解决@playwright/test模块解析问题）
-          echo "🔍 Debug: Checking root package.json for @playwright/test..."
-          grep -n "@playwright/test" package.json || echo "❌ @playwright/test not found in root package.json!"
-
-          echo "🔍 Debug: Root node_modules before install..."
-          ls -la node_modules/@playwright/ 2>/dev/null || echo "No @playwright directory found"
-
-          echo "Ensuring root workspace dependencies are installed (for @playwright/test)..."
-          npm install --prefer-offline --no-audit
-
-          echo "🔍 Debug: Root node_modules after install..."
-          ls -la node_modules/@playwright/ 2>/dev/null || echo "❌ Still no @playwright directory found!"
-
-          echo "🔍 Debug: npm list @playwright/test from root..."
-          npm list @playwright/test 2>/dev/null || echo "❌ @playwright/test not in dependency tree"
-
-          echo "✅ Root workspace dependencies installed"
-
-          # Frontend
-          if [ ! -d "frontend/node_modules" ]; then
-            echo "Installing frontend dependencies..."
-            cd frontend && npm ci --prefer-offline --no-audit && cd ..
-          fi
-
-          # E2E dependencies (使用npm workspaces机制，依赖从根目录继承)
-          if [ ! -d "e2e/node_modules" ]; then
-            echo "Installing E2E dependencies..."
-            cd e2e && npm ci --prefer-offline --no-audit && cd ..
-          fi
+          # 🎆 应用FUCKING_CI.md第19-21轮历史验证的解决方案
+          # 🏆 "自给自足容器架构" - 容器内部完全自主，无外部依赖
+          echo "📚 应用历史记录第19-21轮解决方案：自给自足容器架构"
+          echo "✅ 跳过宿主机依赖安装 - 让Docker容器内部自己处理所有依赖"
+          echo "✅ 避免npm workspaces版本冲突问题"
+          echo "✅ 消除本地vs远程环境差异"
 
           # Backend
           if [ ! -d "backend/.venv" ]; then
@@ -215,33 +192,27 @@ jobs:
 
           echo "🎉 All servers are ready!"
 
-      - name: Run Smoke Tests
-        working-directory: ./e2e
+      - name: Run Smoke Tests (Self-Sufficient Container)
         run: |
-          echo "🎭 Running E2E smoke tests..."
+          echo "🎆 执行自给自足容器架构E2E测试"
+          echo "📚 应用FUCKING_CI.md历史验证的解决方案"
 
-          echo "🔍 Pre-flight checks:"
-          echo "Working directory: $(pwd)"
-          echo "@playwright/test location: $(npm list @playwright/test 2>/dev/null || echo 'Not found in npm list')"
-          echo "Available playwright binary: $(which playwright || echo 'playwright binary not in PATH')"
+          # 🏆 使用docker-compose.test.yml的自给自足架构
+          echo "🐳 启动自给自足E2E测试容器..."
+          docker-compose -f docker-compose.test.yml up --build e2e-tests --abort-on-container-exit
 
-          echo "🧪 Final module resolution test:"
-          node -e "console.log('✅ Config can load @playwright/test:', require.resolve('@playwright/test'))" || {
-            echo "❌ CRITICAL: playwright.config.ts will fail to load"
-            echo "Debug info:"
-            ls -la node_modules/@playwright/ 2>/dev/null || echo "No @playwright directory"
-            npm ls @playwright/test || echo "Not in dependency tree"
-            exit 1
-          }
+          # 获取退出码
+          E2E_EXIT_CODE=$?
+          echo "🔍 E2E测试退出码: $E2E_EXIT_CODE"
 
-          echo "🚀 Executing smoke tests..."
-          # 使用npx确保使用本地安装的playwright
-          npx playwright test --grep "@smoke" --project=${{ inputs.browser }} --max-failures=3
-          echo "✅ Smoke tests completed successfully"
-        env:
-          CI: true
-          TEST_BASE_URL: http://localhost:3001
-          API_URL: http://localhost:8000
+          if [ $E2E_EXIT_CODE -eq 0 ]; then
+            echo "🎉 E2E测试成功！"
+          else
+            echo "❌ E2E测试失败，退出码: $E2E_EXIT_CODE"
+            echo "📋 容器日志："
+            docker-compose -f docker-compose.test.yml logs e2e-tests
+            exit $E2E_EXIT_CODE
+          fi
 
       - name: Upload Test Results
         if: always()
