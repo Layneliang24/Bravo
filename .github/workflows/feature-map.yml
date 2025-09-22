@@ -40,7 +40,7 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           cd frontend
-          npm install
+          npm ci
 
       - name: Install Python dependencies
         run: |

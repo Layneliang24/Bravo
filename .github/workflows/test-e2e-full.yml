@@ -83,7 +83,7 @@ jobs:
           # E2E
           if [ ! -d "e2e/node_modules" ]; then
             echo "Installing E2E dependencies..."
-            cd e2e && npm install --prefer-offline --no-audit && cd ..
+            cd e2e && npm ci --prefer-offline --no-audit && cd ..
           fi
 
           # Backend
