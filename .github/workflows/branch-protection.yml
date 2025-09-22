@@ -181,17 +181,13 @@ jobs:
         uses: ./.github/actions/configure-china-mirrors
 
       - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build for performance testing
-        working-directory: ./frontend
-        run: npm run build:skip-check || npm run build
+        run: npm run build:frontend
 
       - name: Run frontend tests with coverage
-        run: |
-          cd frontend
-          npm run test:coverage
+        run: npm run test:coverage:frontend
           npm run test:ci
 
       - name: Validate feature mapping
@@ -206,7 +202,7 @@ jobs:
           echo "⚡ Running Lighthouse performance audit"
 
           # Ensure frontend is built
-          cd frontend && npm run build && cd ..
+          npm run build:frontend
 
           # Create lighthouse test page for reliable testing
           cat > frontend/dist/lighthouse-test.html << 'HTML_EOF'

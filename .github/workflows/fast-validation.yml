@@ -43,13 +43,13 @@ jobs:
         run: |
           case "${{ matrix.check }}" in
           "lint-frontend")
-            cd frontend && npm run lint
+            npm run lint:frontend
             ;;
           "lint-backend")
             cd backend && source .venv/bin/activate && python -m flake8 . --select=E9,F63,F7,F82 --exclude=migrations,__pycache__,.venv
             ;;
           "type-check")
-            cd frontend && npm run type-check
+            npm run test:frontend
             ;;
           "security-scan")
             npm audit --audit-level=high --production
@@ -100,7 +100,7 @@ jobs:
               python -m pytest tests/unit/ --maxfail=5 -x
               ;;
             "frontend-unit")
-              cd frontend && npm run test:unit:fast
+              npm run test:frontend
               ;;
             "integration-smoke")
               # 等待数据库准备就绪
