@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-09-22T02:40:59.873Z",
+  "timestamp": "2025-09-22T03:06:50.730Z",
   "summary": {
     "totalFeatures": 15,
-    "totalTestFiles": 17,
+    "totalTestFiles": 20,
     "coveredFeatures": 3,
     "coveragePercentage": 20
   },
@@ -13,10 +13,10 @@
       "category": "english",
       "priority": "high",
       "tests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "staticTests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "runtimeTests": [],
       "covered": true,
@@ -28,10 +28,10 @@
       "category": "english",
       "priority": "high",
       "tests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "staticTests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "runtimeTests": [],
       "covered": true,
@@ -164,10 +164,10 @@
       "category": "performance",
       "priority": "medium",
       "tests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "staticTests": [
-        "frontend\\tests\\examples\\feature-mapping-demo.test.js"
+        "frontend/tests/examples/feature-mapping-demo.test.js"
       ],
       "runtimeTests": [],
       "covered": true,
@@ -187,7 +187,22 @@
   ],
   "testFiles": [
     {
-      "file": "frontend\\tests\\examples\\feature-mapping-demo.test.js",
+      "file": "frontend/node_modules/cssstyle/lib/CSSStyleDeclaration.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend/node_modules/cssstyle/lib/parsers.test.js",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend/src/components/HelloWorld.test.ts",
+      "features": [],
+      "featureCount": 0
+    },
+    {
+      "file": "frontend/tests/examples/feature-mapping-demo.test.js",
       "features": [
         "ENG-001",
         "INVALID-ID",
@@ -197,82 +212,82 @@
       "featureCount": 4
     },
     {
-      "file": "frontend\\src\\components\\HelloWorld.test.ts",
+      "file": "frontend/node_modules/@bcoe/v8-coverage/src/test/merge.spec.ts",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "frontend\\src\\views\\Login.spec.ts",
+      "file": "frontend/src/router/index.spec.ts",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "frontend\\src\\views\\Home.spec.ts",
+      "file": "frontend/src/views/Home.spec.ts",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "frontend\\src\\router\\index.spec.ts",
+      "file": "frontend/src/views/Login.spec.ts",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\test_urls.py",
+      "file": "backend/bravo/settings/test_simple.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\test_regression.py",
+      "file": "backend/bravo/settings/test_sqlite.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\test_apps_urls.py",
+      "file": "backend/tests/integration/test_simple_integration.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\unit\\test_users_models.py",
+      "file": "backend/tests/test_apps_urls.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\unit\\test_common_views.py",
+      "file": "backend/tests/test_regression.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\unit\\test_common_pagination.py",
+      "file": "backend/tests/test_urls.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\tests\\integration\\test_simple_integration.py",
+      "file": "backend/tests/unit/test_common_pagination.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\bravo\\settings\\test_sqlite.py",
+      "file": "backend/tests/unit/test_common_views.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "backend\\bravo\\settings\\test_simple.py",
+      "file": "backend/tests/unit/test_users_models.py",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "tests\\regression\\ui\\ui-regression.test.js",
+      "file": "tests/regression/api/api-regression.test.js",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "tests\\regression\\data\\db-regression.test.js",
+      "file": "tests/regression/data/db-regression.test.js",
       "features": [],
       "featureCount": 0
     },
     {
-      "file": "tests\\regression\\api\\api-regression.test.js",
+      "file": "tests/regression/ui/ui-regression.test.js",
       "features": [],
       "featureCount": 0
     }
