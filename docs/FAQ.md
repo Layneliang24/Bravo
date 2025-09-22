@@ -365,43 +365,84 @@ frontend-build-1 exited with code 0
 - ❌ GitHub Actions中E2E测试失败：`ERR_MODULE_NOT_FOUND: Cannot find package '@playwright/test'`
 - ❌ `npm list @playwright/test`显示`└── (empty)`
 
-#### 根本原因
+#### 根本原因 (架构级深度洞察)
 
-**npm workspaces deduped机制意外删除依赖**：
+**npm workspaces依赖管理冲突的技术本质**：
 
-1. 根目录`npm install`成功安装@playwright/test
-2. frontend目录`npm ci`触发npm workspaces重新计算依赖
-3. workspaces deduped机制尝试优化依赖结构时误删@playwright/test
-4. E2E测试执行时找不到依赖模块
+这是npm workspaces的**固有行为特性**，不是配置问题！
 
-#### 技术原理
+1. **npm workspaces设计原则**: 只应在根目录运行依赖管理命令
+2. **破坏机制**: 任何子目录的`npm ci`都会重新评估整个workspace依赖树
+3. **全局视角冲突**: npm基于当前感知需求重新分配依赖位置
+4. **deduped机制破坏**: 导致共享依赖被错误移除或重新定位
+
+#### 技术原理 (深层机制解析)
 
 ```bash
-# 问题复现步骤
-npm install                      # ✅ 根目录安装成功，@playwright/test存在
-cd frontend && npm ci           # ⚠️ 触发workspaces依赖重算
+# 正常状态（根目录npm ci后）
+bravo-workspace@1.0.0
+├── @playwright/test@1.55.0          # 根目录安装，供全局共享
+└─┬ bravo-e2e-tests@1.0.0 -> ./e2e
+  └── @playwright/test@1.55.0 deduped # 通过deduped机制共享
+
+# frontend npm ci 触发的破坏过程
+cd frontend && npm ci               # ⚠️ 重新评估整个workspace
+# → npm发现@playwright/test只被e2e需要，frontend不需要
+# → 决定将@playwright/test从根目录移除
+# → 破坏已建立的deduped共享机制
+
+# 破坏后的状态
+bravo-workspace@1.0.0
+└── (empty)                         # @playwright/test被完全删除！
 cd .. && npm list @playwright/test  # ❌ 显示 └── (empty)
 ```
 
-**关键线索**：`npm list`输出中的`deduped`标记表示依赖被去重处理
+**为什么会发生？**
 
-#### 解决方案
+- npm workspaces使用**全局视角**管理所有依赖
+- 子目录的`npm ci`触发**全局重新计算**
+- npm可能认为某些依赖不再需要deduped共享
+- 导致关键依赖被**意外删除**
 
-在可能破坏依赖的步骤后立即恢复：
+**关键线索**：`npm list`输出中的`deduped`标记表示依赖被去重处理，这是问题的根源信号
+
+#### 解决方案 (架构级根本修复)
+
+**✅ 正确的架构设计原则**：
+
+1. **严格遵循npm workspaces设计原理**：
+
+   ```bash
+   # ✅ 正确做法：只在根目录运行依赖管理
+   npm ci --prefer-offline --no-audit  # 安装所有workspace依赖
+
+   # ✅ 构建时不重新安装依赖
+   cd frontend && npm run build        # 只构建，不安装
+   cd e2e && npm run test              # 只测试，不安装
+   ```
+
+2. **CI工作流修复**：
+
+   ```yaml
+   # ❌ 错误做法（会破坏workspace结构）
+   - name: Install Frontend Dependencies
+     run: cd frontend && npm ci
+
+   # ✅ 正确做法（使用workspace依赖管理）
+   - name: Install All Dependencies
+     run: npm ci --prefer-offline --no-audit # 根目录统一管理
+   ```
+
+3. **依赖架构调整**：
+   - 保持@playwright/test在根目录（正确的共享位置）
+   - 完全移除所有子目录的独立npm ci调用
+   - 依托npm workspaces的自动依赖管理
+
+**🚫 废弃的临时方案（治标不治本）**：
 
 ```yaml
-# 在frontend构建完成后，立即恢复@playwright/test依赖
-- name: Build Frontend
-  working-directory: ./frontend
-  run: |
-    npm ci --prefer-offline --no-audit
-    npm run build
-
-    # 🔧 修复：恢复被npm ci意外删除的@playwright/test依赖
-    echo "🔧 修复：恢复根目录@playwright/test依赖（被frontend npm ci意外删除）"
-    cd ..
-    npm install @playwright/test@^1.55.0 --no-save --prefer-offline --no-audit
-    echo "✅ @playwright/test依赖已恢复"
+# ❌ 过时的补丁修复
+npm install @playwright/test@^1.55.0 --no-save # 不再需要此类补丁
 ```
 
 #### 预防措施
