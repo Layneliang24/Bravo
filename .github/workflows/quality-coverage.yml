@@ -58,7 +58,7 @@ jobs:
           echo "Installing coverage analysis tools..."
           sudo apt-get update && sudo apt-get install -y bc
           pip install coverage
-          npm install -g nyc
+          npm ci --prefer-offline --no-audit
           echo "Coverage tools installed"
 
       - name: Analyze Backend Coverage

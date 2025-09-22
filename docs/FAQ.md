@@ -1,5 +1,112 @@
 # 常见问题解答 (FAQ)
 
+## CI/CD 依赖管理问题
+
+### Q: 为什么CI环境必须使用npm ci而不是npm install？
+
+#### 核心问题：npm install滥用导致的依赖漂移灾难
+
+**历史教训**：本项目经历了30轮CI修复的惨痛教训，根本原因就是CI环境中滥用npm install导致的依赖漂移问题。
+
+#### 技术原理差异
+
+| 命令          | 使用场景  | 行为特点                                | 问题风险                |
+| ------------- | --------- | --------------------------------------- | ----------------------- |
+| `npm install` | 本地开发  | 更新package-lock.json，依赖版本可能漂移 | ❌ CI中会导致版本不一致 |
+| `npm ci`      | CI/CD环境 | 严格按照package-lock.json安装，不会修改 | ✅ 确保版本严格一致     |
+
+#### npm workspaces环境的关键要求
+
+**正确的安装顺序**：
+
+```yaml
+# 1. 根目录workspaces依赖优先安装
+- run: npm ci --prefer-offline --no-audit
+
+# 2. 子目录依赖后安装
+- working-directory: ./frontend
+  run: npm ci --prefer-offline --no-audit
+```
+
+**错误的安装顺序**会导致：
+
+- workspaces依赖解析失败
+- 子模块找不到依赖包
+- deduped机制错误删除依赖
+
+#### 30轮修复血泪史的恶性循环
+
+```
+npm workspaces正常状态
+→ CI中使用npm install
+→ 依赖版本漂移/解析失败
+→ E2E测试失败
+→ 用npm install强制修复
+→ 破坏workspaces结构
+→ 更多依赖解析问题
+→ 第N轮修复...
+```
+
+#### ⚠️ 过时观点纠正：全局工具也必须版本锁定
+
+**❌ 错误观点**：全局工具可以使用`npm install -g`
+**✅ 正确做法**：所有工具都必须版本锁定，使用npm ci + npx
+
+**版本漂移风险**：
+
+- npm install -g会安装最新版本：今天5.3.2，明天5.4.0
+- 同一份workflow在不同时间运行结果不一致
+- 工具API变化可能破坏CI流水线
+
+**正确的工具管理方式**：
+
+```yaml
+# ✅ 正确：将工具添加到package.json devDependencies
+# package.json
+"devDependencies": {
+  "@lhci/cli": "^0.14.0",
+  "jscpd": "^4.0.5",
+  "audit-ci": "^7.1.0"
+}
+
+# ✅ 正确：CI中使用npm ci + npx执行
+- run: npm ci --prefer-offline --no-audit
+- run: npx lhci autorun
+
+# ❌ 错误：全局安装和直接执行
+- run: npm install -g @lhci/cli
+- run: lhci autorun
+```
+
+**技术原理**：
+
+- npm官方文档明确："CI环境请用npm ci"，未区分业务依赖和工具依赖
+- Google、GitHub开源项目全部将CLI工具写进lock文件
+- CI环境的最高原则是**完全可重现性**
+
+#### 项目规范要求
+
+1. **CI工作流**：必须使用`npm ci`
+2. **本地开发**：可以使用`npm install`
+3. **依赖安装顺序**：根目录优先，子目录其次
+4. **异常修复**：绝不使用npm install作为CI修复方案
+
+### Q: 如何识别和修复依赖漂移问题？
+
+#### 识别信号
+
+- E2E测试中模块解析失败
+- `npm list`显示依赖树为空
+- workspaces子模块找不到共享依赖
+- CI中依赖安装后立即失效
+
+#### 修复策略
+
+1. **检查npm workspaces依赖安装顺序**
+2. **确保CI中严格使用npm ci**
+3. **移除所有依赖漂移补丁代码**
+4. **恢复正确的workspaces机制**
+
 ## 代码格式问题
 
 ### Q: 代码格式问题有什么影响？

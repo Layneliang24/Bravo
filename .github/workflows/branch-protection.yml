@@ -202,7 +202,7 @@ jobs:
 
       - name: Run Lighthouse CI
         run: |
-          npm install -g @lhci/cli
+          npm ci --prefer-offline --no-audit
           echo "⚡ Running Lighthouse performance audit"
 
           # Ensure frontend is built
@@ -351,7 +351,7 @@ jobs:
           }
           EOF
 
-          lhci autorun
+          npx lhci autorun
           echo "✅ Performance audit completed"
 
   # Job 10: Final approval gate (原子化架构)

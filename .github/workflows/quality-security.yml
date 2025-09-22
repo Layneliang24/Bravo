@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "Installing security scanning tools..."
           pip install bandit safety semgrep
-          npm install -g audit-ci
+          npm ci --prefer-offline --no-audit
           echo "Security tools installed"
 
       - name: Python Security Scan (Bandit)

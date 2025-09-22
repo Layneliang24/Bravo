@@ -52,7 +52,7 @@ jobs:
       - name: Install Lighthouse CI
         run: |
           echo "Installing Lighthouse CI..."
-          npm install -g @lhci/cli
+          npm ci --prefer-offline --no-audit
           echo "Lighthouse CI installed"
 
       - name: Build Frontend for Performance Testing
@@ -223,7 +223,7 @@ jobs:
           echo "Running Lighthouse performance audit..."
           echo "Target performance score: ${{ inputs.min-performance-score }}"
 
-          lhci autorun --config=lighthouserc.json
+          npx lhci autorun --config=lighthouserc.json
 
           echo "Performance audit completed"
 

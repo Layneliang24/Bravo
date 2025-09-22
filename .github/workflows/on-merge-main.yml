@@ -156,8 +156,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          npm ci --prefer-offline --no-audit
           npm ci --workspace=frontend
-          npm install -g @lhci/cli
 
       - name: Build for Production
         working-directory: ./frontend
@@ -204,7 +204,7 @@ jobs:
           }
           EOF
 
-          lhci autorun --config=lighthouserc.production.json
+          npx lhci autorun --config=lighthouserc.production.json
           echo "✅ 性能基准测试完成"
 
   # 回滚准备

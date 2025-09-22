@@ -48,9 +48,8 @@ jobs:
           pip install -r requirements/base.txt
           pip install -r requirements/test.txt
 
-      - name: Install mapping script dependencies
-        run: |
-          npm install -g glob
+      - name: Ensure root dependencies installed
+        run: npm ci --prefer-offline --no-audit
 
       - name: Validate features.json
         run: |
