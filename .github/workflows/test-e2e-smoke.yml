@@ -154,6 +154,13 @@ jobs:
           npm run build
           echo "Frontend build completed"
 
+          # 🔧 第13轮修复：frontend npm ci破坏了根目录npm workspaces依赖
+          # 原因：frontend npm ci触发workspaces deduped机制，删除了根目录的@playwright/test
+          echo "🔧 修复：恢复根目录@playwright/test依赖（被frontend npm ci意外删除）"
+          cd ..
+          npm install @playwright/test@^1.55.0 --no-save --prefer-offline --no-audit
+          echo "✅ @playwright/test依赖已恢复"
+
       - name: Start Backend Server
         working-directory: ./backend
         run: |
