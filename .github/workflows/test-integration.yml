@@ -174,7 +174,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Installing frontend dependencies in frontend directory..."
-          npm install
+          npm ci
           echo "Frontend dependencies installed"
 
       - name: Build Frontend for Integration

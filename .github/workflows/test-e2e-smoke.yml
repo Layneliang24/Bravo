@@ -73,7 +73,7 @@ jobs:
 
           # 🏆 第7轮修复：根目录添加@playwright/test，利用npm workspaces
           echo "安装根目录依赖（包含@playwright/test）..."
-          npm install --prefer-offline --no-audit
+          npm ci --prefer-offline --no-audit
 
           # Backend
           echo "安装后端依赖..."

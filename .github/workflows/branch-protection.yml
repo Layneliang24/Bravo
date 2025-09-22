@@ -182,7 +182,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       - name: Build for performance testing
         working-directory: ./frontend

@@ -105,7 +105,7 @@ jobs:
         working-directory: ./e2e
         run: |
           echo "🧪 安装E2E测试依赖 (缓存未命中)..."
-          npm install --prefer-offline --no-audit
+          npm ci --prefer-offline --no-audit
           echo "✅ E2E依赖安装完成"
 
       # 智能后端依赖缓存
