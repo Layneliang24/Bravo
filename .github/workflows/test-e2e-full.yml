@@ -81,10 +81,8 @@ jobs:
           fi
 
           # Frontend
-          if [ ! -d "frontend/node_modules" ]; then
-            echo "Installing frontend dependencies..."
-            cd frontend && npm ci --prefer-offline --no-audit && cd ..
-          fi
+          # Frontend依赖已通过根目录npm workspaces统一管理
+          echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E
           if [ ! -d "e2e/node_modules" ]; then

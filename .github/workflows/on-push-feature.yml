@@ -110,8 +110,7 @@ jobs:
         run: |
           echo "安装根依赖..."
           npm ci --prefer-offline --no-audit
-          echo "安装前端依赖..."
-          cd frontend && npm ci --prefer-offline --no-audit
+          echo "✅ 前端依赖已通过根目录npm workspaces统一管理"
 
       - name: Run Quick Frontend Tests
         run: |

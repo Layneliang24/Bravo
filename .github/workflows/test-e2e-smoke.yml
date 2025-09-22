@@ -135,6 +135,7 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Building frontend for E2E tests..."
+
           # Always ensure dependencies are fully installed before building
           echo "Verifying frontend dependencies..."
           if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ]; then
