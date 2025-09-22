@@ -72,9 +72,8 @@ jobs:
           echo "📚 安装依赖到宿主机，直接运行E2E测试"
 
           # 🏆 第7轮修复：根目录添加@playwright/test，利用npm workspaces
-          # 📋 npm workspaces依赖安装顺序修复：必须先安装根目录依赖
           echo "安装根目录依赖（包含@playwright/test）..."
-          npm ci --prefer-offline --no-audit
+          npm install --prefer-offline --no-audit
 
           # Backend
           echo "安装后端依赖..."

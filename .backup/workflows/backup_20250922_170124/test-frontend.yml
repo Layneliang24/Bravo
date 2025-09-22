@@ -1,0 +1,87 @@
+name: Frontend Tests
+
+on:
+  workflow_call:
+    inputs:
+      test-type:
+        description: "Test type: unit, component, integration, all"
+        type: string
+        default: "all"
+      node-version:
+        description: "Node.js version"
+        type: string
+        default: "20"
+
+env:
+  NODE_VERSION: ${{ inputs.node-version }}
+
+jobs:
+  frontend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure China Mirrors
+        uses: ./.github/actions/configure-china-mirrors
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Run linting
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./frontend
+        run: |
+          case "${{ inputs.test-type }}" in
+            "unit")
+              echo "🧪 Running unit tests..."
+              npm run test:ci
+              ;;
+            "component")
+              echo "🔧 Running component tests..."
+              npm run test:coverage
+              ;;
+            "integration")
+              echo "🔗 Running integration tests..."
+              npm run test:integration -- --coverage
+              ;;
+            *)
+              echo "🚀 Running all frontend tests..."
+              npm run test:coverage
+              ;;
+          esac
+
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload coverage to Codecov
+        if: inputs.test-type == 'all' || inputs.test-type == 'unit'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results-${{ inputs.test-type }}
+          path: |
+            frontend/coverage/
+            frontend/dist/
+            frontend/test-results/
