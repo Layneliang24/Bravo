@@ -140,7 +140,7 @@ class LocalGitHubActions:
             "bravo-frontend-builder",
             "sh",
             "-c",
-            "cd /workspace/frontend && npm ci --prefer-offline",
+            "npm run build:frontend",
         ]
         result = subprocess.run(frontend_cmd)
         if result.returncode != 0:
@@ -182,7 +182,7 @@ class LocalGitHubActions:
             "bravo-e2e-tester",
             "sh",
             "-c",
-            "cd /workspace/e2e && npm ci && npx playwright install",
+            "npx playwright install --with-deps",
         ]
         result = subprocess.run(e2e_cmd)
         return result.returncode == 0

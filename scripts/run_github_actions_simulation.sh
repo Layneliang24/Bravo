@@ -69,7 +69,7 @@ docker-compose run --rm frontend sh -c "
     npm config set maxsockets 20
     npm config set fetch-retries 3
     echo '📦 安装前端依赖...'
-    cd /app && npm install
+    npm ci --prefer-offline --no-audit
     echo '✅ 前端依赖安装完成'
 "
 
