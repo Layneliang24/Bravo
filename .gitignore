@@ -113,3 +113,4 @@ celerybeat.pid
 
 # Temporary files archive
 temp_files_archive/
+.mypy_cache/

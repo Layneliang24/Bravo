@@ -1,6 +1,6 @@
 # 功能-测试覆盖地图
 
-生成时间: 2025/9/12 15:45:06
+生成时间: 2025/9/22 11:23:48
 
 ## 📊 覆盖率统计
 
@@ -23,8 +23,8 @@
 
 | 功能ID     | 描述                                   | 分类        | 优先级   | 测试文件                                               | 状态          |
 | ---------- | -------------------------------------- | ----------- | -------- | ------------------------------------------------------ | ------------- |
-| ENG-001    | 英语新闻列表页显示标题和摘要           | english     | high     | `frontend\tests\examples\feature-mapping-demo.test.js` | ✅            |
-| ENG-002    | 英语新闻详情页点击翻译按钮出现中文翻译 | english     | high     | `frontend\tests\examples\feature-mapping-demo.test.js` | ✅            |
+| ENG-001    | 英语新闻列表页显示标题和摘要           | english     | high     | `frontend/tests/examples/feature-mapping-demo.test.js` | ✅            |
+| ENG-002    | 英语新闻详情页点击翻译按钮出现中文翻译 | english     | high     | `frontend/tests/examples/feature-mapping-demo.test.js` | ✅            |
 | ENG-003    | 打字练习页面统计正确率和速度           | english     | medium   | —                                                      | ❌ **无测试** |
 | ENG-004    | 英语单词收藏和复习功能                 | english     | medium   | —                                                      | ❌ **无测试** |
 | BLOG-001   | 博客列表页展示3篇最新博客              | blog        | high     | —                                                      | ❌ **无测试** |
@@ -36,7 +36,7 @@
 | COMMON-001 | 响应式导航栏和菜单                     | common      | high     | —                                                      | ❌ **无测试** |
 | COMMON-002 | 全局错误处理和提示                     | common      | high     | —                                                      | ❌ **无测试** |
 | COMMON-003 | 多语言国际化支持                       | common      | medium   | —                                                      | ❌ **无测试** |
-| PERF-001   | 页面加载性能优化                       | performance | medium   | `frontend\tests\examples\feature-mapping-demo.test.js` | ✅            |
+| PERF-001   | 页面加载性能优化                       | performance | medium   | `frontend/tests/examples/feature-mapping-demo.test.js` | ✅            |
 | PERF-002   | 图片懒加载和压缩                       | performance | medium   | —                                                      | ❌ **无测试** |
 
 ## ❌ 未覆盖功能

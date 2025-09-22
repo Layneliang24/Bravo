@@ -28,7 +28,7 @@ RUN apt-get update --fix-missing || apt-get update --fix-missing || apt-get upda
 
 # 配置pip国内源
 RUN echo "🐍 配置pip国内源..." && \
-    pip config set global.index-url https://pypi.org/simple/ && \
+    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ && \
     pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn && \
     pip config set global.timeout 60
 

@@ -246,3 +246,69 @@ frontend-build-1 exited with code 0
 - ⚠️ 需要优化容器编排和测试配置
 
 **时间**: 2025-09-17
+
+## npm workspaces依赖问题
+
+### Q: GitHub Actions中E2E测试出现`Cannot find module '@playwright/test'`错误，但package.json中有该依赖，本地也能正常运行？
+
+#### 问题现象
+
+- ✅ 根目录package.json中包含`@playwright/test`依赖
+- ✅ 本地Docker环境运行正常
+- ❌ GitHub Actions中E2E测试失败：`ERR_MODULE_NOT_FOUND: Cannot find package '@playwright/test'`
+- ❌ `npm list @playwright/test`显示`└── (empty)`
+
+#### 根本原因
+
+**npm workspaces deduped机制意外删除依赖**：
+
+1. 根目录`npm install`成功安装@playwright/test
+2. frontend目录`npm ci`触发npm workspaces重新计算依赖
+3. workspaces deduped机制尝试优化依赖结构时误删@playwright/test
+4. E2E测试执行时找不到依赖模块
+
+#### 技术原理
+
+```bash
+# 问题复现步骤
+npm install                      # ✅ 根目录安装成功，@playwright/test存在
+cd frontend && npm ci           # ⚠️ 触发workspaces依赖重算
+cd .. && npm list @playwright/test  # ❌ 显示 └── (empty)
+```
+
+**关键线索**：`npm list`输出中的`deduped`标记表示依赖被去重处理
+
+#### 解决方案
+
+在可能破坏依赖的步骤后立即恢复：
+
+```yaml
+# 在frontend构建完成后，立即恢复@playwright/test依赖
+- name: Build Frontend
+  working-directory: ./frontend
+  run: |
+    npm ci --prefer-offline --no-audit
+    npm run build
+
+    # 🔧 修复：恢复被npm ci意外删除的@playwright/test依赖
+    echo "🔧 修复：恢复根目录@playwright/test依赖（被frontend npm ci意外删除）"
+    cd ..
+    npm install @playwright/test@^1.55.0 --no-save --prefer-offline --no-audit
+    echo "✅ @playwright/test依赖已恢复"
+```
+
+#### 预防措施
+
+1. **监控依赖树变化**：在关键步骤后检查`npm list`输出
+2. **本地完整验证**：使用act工具模拟完整的GitHub Actions流程
+3. **注意workspaces交互**：理解workspace子目录操作对根目录的影响
+
+#### 调试技巧
+
+- **关键词敏感度**：注意日志中的`deduped`、`empty`等关键信息
+- **逐步验证**：模拟每个CI步骤，检查依赖状态变化
+- **工具组合**：结合本地Docker和act工具进行多维验证
+
+**解决时间**: 13轮修复后成功 (2025-09-22)
+**成功率**: 100% (所有GitHub Actions测试通过)
+**关键贡献**: 用户敏锐观察"deduped"关键词直接定位问题根因

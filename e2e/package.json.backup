@@ -1,0 +1,168 @@
+{
+  "name": "bravo-e2e-tests",
+  "version": "1.0.0",
+  "description": "Bravo项目的端到端测试套件",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:blog": "playwright test blog.spec.ts",
+    "test:smoke": "playwright test --grep='@smoke'",
+    "test:regression": "playwright test --grep='@regression'",
+    "test:parallel": "playwright test --workers=4",
+    "test:serial": "playwright test --workers=1",
+    "test:retry": "playwright test --retries=3",
+    "test:timeout": "playwright test --timeout=60000",
+    "test:reporter": "playwright test --reporter=html,json,junit",
+    "test:trace": "playwright test --trace=on",
+    "test:video": "playwright test --video=on",
+    "test:screenshot": "playwright test --screenshot=on",
+    "show-report": "playwright show-report",
+    "show-trace": "playwright show-trace",
+    "codegen": "playwright codegen",
+    "codegen:blog": "playwright codegen http://localhost:3000/blog",
+    "playwright-install": "playwright install",
+    "install:deps": "playwright install-deps",
+    "playwright:install": "playwright install",
+    "playwright:install-deps": "playwright install-deps",
+    "doctor": "playwright doctor",
+    "clean": "rimraf test-results playwright-report coverage screenshots",
+    "clean:all": "npm run clean && rimraf node_modules package-lock.json",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run lint && npm run type-check && npm run format:check",
+    "lighthouse": "../scripts/lighthouse.sh",
+    "lighthouse:blog": "../scripts/lighthouse.sh http://localhost:3000/blog",
+    "selenium:test": "node selenium-runner.js",
+    "performance": "npm run lighthouse && npm run test:performance",
+    "test:performance": "playwright test --grep='性能测试'",
+    "test:accessibility": "playwright test --grep='可访问性测试'",
+    "test:visual": "playwright test --grep='视觉回归'",
+    "test:api": "playwright test --grep='API测试'",
+    "test:security": "playwright test --grep='安全测试'",
+    "test:cross-browser": "playwright test --project=chromium --project=firefox --project=webkit",
+    "test:mobile-only": "playwright test --project='Mobile Chrome' --project='Mobile Safari' --project='iPad'",
+    "test:desktop-only": "playwright test --project=chromium --project=firefox --project=webkit --project='Microsoft Edge'",
+    "ci": "npm run validate && npm run test",
+    "ci:full": "npm run validate && npm run test:cross-browser && npm run lighthouse",
+    "dev": "playwright test --ui --headed",
+    "start": "npm run test:ui"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.55.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.19.13",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "archiver": "^6.0.2",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-playwright": "^0.18.0",
+    "glob": "^10.4.5",
+    "lighthouse": "^11.4.0",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "selenium-webdriver": "^4.15.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "e2e",
+    "testing",
+    "playwright",
+    "selenium",
+    "lighthouse",
+    "automation",
+    "qa",
+    "browser-testing",
+    "end-to-end"
+  ],
+  "author": "Bravo Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/bravo.git",
+    "directory": "e2e"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/bravo/issues"
+  },
+  "homepage": "https://github.com/your-org/bravo#readme",
+  "config": {
+    "playwright": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ]
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended",
+      "prettier",
+      "plugin:playwright/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint",
+      "playwright"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "playwright/missing-playwright-await": "error",
+      "playwright/no-page-pause": "warn",
+      "playwright/no-element-handle": "error",
+      "playwright/no-eval": "error",
+      "playwright/no-focused-test": "error",
+      "playwright/no-skipped-test": "warn",
+      "playwright/valid-expect": "error"
+    },
+    "env": {
+      "node": true,
+      "es2022": true
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "bracketSpacing": true,
+    "arrowParens": "avoid"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
+  "volta": {
+    "node": "20.10.0",
+    "npm": "10.2.0"
+  }
+}
