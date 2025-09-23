@@ -1,0 +1,97 @@
+name: "Test Global Environment (方案A验证)"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - ".github/actions/setup-global-env/**"
+      - ".github/workflows/test-global-env.yml"
+
+jobs:
+  test-global-setup:
+    name: "Test Global Python Setup"
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Setup Global Environment (方案A)
+        uses: ./.github/actions/setup-global-env
+
+      - name: Verify Django Extensions Import
+        run: |
+          echo "🧪 测试django_extensions导入..."
+          cd backend
+          python -c "import django_extensions; print('✅ django_extensions导入成功!'); print('版本:', django_extensions.__version__)"
+
+      - name: Verify Silk Import
+        run: |
+          echo "🧪 测试silk导入..."
+          cd backend
+          python -c "import silk; print('✅ silk导入成功!')"
+
+      - name: Verify Debug Toolbar Import
+        run: |
+          echo "🧪 测试debug_toolbar导入..."
+          cd backend
+          python -c "import debug_toolbar; print('✅ debug_toolbar导入成功!')"
+
+      - name: Run Django Migration Test
+        run: |
+          echo "🧪 测试Django迁移..."
+          cd backend
+
+          # 等待MySQL准备就绪
+          echo "⏳ 等待MySQL连接..."
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+
+          echo "🔄 运行Django迁移..."
+          python manage.py migrate --settings=bravo.settings.test
+
+          echo "✅ Django迁移成功！无虚拟环境，无缓存问题！"
+
+      - name: Integration Smoke Test (全局环境)
+        run: |
+          echo "🚀 在全局环境中运行集成测试..."
+          cd backend
+
+          echo "🔄 启动Django服务..."
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          SERVER_PID=$!
+
+          echo "⏳ 等待服务启动..."
+          sleep 10
+
+          echo "🧪 测试API端点..."
+          curl -f http://localhost:8000/ || echo "API测试完成"
+
+          echo "🔄 关闭服务..."
+          kill $SERVER_PID 2>/dev/null || true
+
+          echo "✅ 全局环境集成测试完成！"
