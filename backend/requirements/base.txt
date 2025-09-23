@@ -1,45 +1,45 @@
-# Django 基础依赖模板
+# Django base dependencies template
 
-# Web 框架
+# Web framework
 Django==4.2.7
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.3
 
-# 数据库
+# Database
 mysqlclient==2.2.0
 django-environ==0.11.2
 
-# 缓存
+# Cache
 redis==5.0.1
 django-redis==5.4.0
 
-# 任务队列
+# Task queue
 celery==5.3.4
 django-celery-beat==2.5.0
 
-# 认证和权限
+# Authentication and permissions
 djangorestframework-simplejwt==5.3.0
 django-allauth==0.57.0
 
-# API 文档
+# API documentation
 drf-spectacular==0.26.5
 
-# 数据验证
+# Data validation
 marshmallow==3.20.1
 
-# 工具库
+# Utility libraries
 python-decouple==3.8
 requests==2.31.0
 Pillow==10.1.0
 whitenoise==6.6.0
 
-# 健康检查
+# Health check
 django-health-check==3.17.0
 
-# 日志
+# Logging
 structlog==23.2.0
 
-# 监控
+# Monitoring
 sentry-sdk==1.38.0
 newrelic==9.2.0
