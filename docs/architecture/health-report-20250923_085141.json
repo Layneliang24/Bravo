@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-09-23T08:51:39.218468",
+  "summary": {
+    "overall_status": "HEALTHY",
+    "npm_workspaces_compliance": "100%",
+    "violations_count": 0,
+    "complexity_level": "VERY_HIGH",
+    "recommendations_count": 1
+  },
+  "violations": [],
+  "metrics": {
+    "npm_workspaces": {
+      "total_files_checked": 0,
+      "violation_files": 0,
+      "compliance_rate": 100,
+      "target_compliance_rate": 100.0
+    },
+    "complexity": {
+      "code_lines": 0,
+      "workflows_count": 29,
+      "docker_configs": 5,
+      "package_jsons": 3,
+      "complexity_score": 92,
+      "complexity_level": "VERY_HIGH"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "Complexity Reduction",
+      "description": "工具链复杂度过高 (评分: 92)",
+      "action": "考虑合并工作流文件，减少docker配置数量"
+    }
+  ]
+}

@@ -214,3 +214,12 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # 🛡️ NPM WORKSPACES 架构保护，防止依赖管理违规
+      - id: npm-workspaces-guard
+        name: NPM Workspaces Architecture Guard
+        entry: scripts/check_npm_workspaces.py
+        language: python
+        files: '\.(yml|yaml|py|js|json|sh|Makefile)$'
+        pass_filenames: true
+        description: "检查npm workspaces架构违规，防止子目录npm ci/install调用"
