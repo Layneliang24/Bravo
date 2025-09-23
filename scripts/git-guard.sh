@@ -6,8 +6,8 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_FILE="$PROJECT_ROOT/logs/git-no-verify-attempts.log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
-# 检测--no-verify参数
-if [[ "$1" == "commit" ]] && echo "$*" | grep -q -E "\-\-no-verify|\-n[^a-z]"; then
+# 检测--no-verify参数 (更精确的匹配)
+if [[ "$1" == "commit" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$) || "$*" =~ (^|[[:space:]])-n([[:space:]]|$) ]]; then
     echo ""
     echo "🚨🚨🚨 Cursor的--no-verify被拦截！🚨🚨🚨"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
