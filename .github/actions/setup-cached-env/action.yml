@@ -28,10 +28,9 @@ runs:
           node_modules
           ~/.cache/pip
           backend/.venv
-        key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+        key: full-deps-v4-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
         restore-keys: |
-          full-deps-v3-${{ runner.os }}-
-          full-deps-v2-${{ runner.os }}-
+          full-deps-v4-${{ runner.os }}-
 
     - name: Install Missing Dependencies
       shell: bash
@@ -68,4 +67,4 @@ runs:
           node_modules
           ~/.cache/pip
           backend/.venv
-        key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+        key: full-deps-v4-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
