@@ -1,0 +1,36 @@
+name: "Setup Global Environment (No Virtual Env)"
+description: "全局安装Python依赖，避免虚拟环境缓存问题"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Global Python Dependencies
+      shell: bash
+      run: |
+        echo "🌍 方案A：全局安装Python依赖（无虚拟环境）"
+        echo "🎯 目标：验证虚拟环境是否是问题根源"
+        echo ""
+
+        # 安装前端依赖（如果需要）
+        if [ -f "package.json" ]; then
+          echo "📦 安装前端依赖..."
+          npm ci --prefer-offline --no-audit
+        fi
+
+        # 全局安装Python依赖
+        echo "🐍 全局安装Python依赖..."
+        echo "⬇️ 升级pip..."
+        python -m pip install --upgrade pip wheel
+
+        echo "📦 安装基础依赖..."
+        cd backend
+        pip install -r requirements/base.txt
+
+        echo "📦 安装测试依赖..."
+        pip install -r requirements/test.txt
+
+        echo "🧪 验证关键依赖安装..."
+        python -c "import django_extensions, silk, debug_toolbar; print('✅ 所有关键依赖验证成功！')"
+
+        cd ..
+        echo "✅ 全局环境设置完成！无虚拟环境，无缓存问题！"
