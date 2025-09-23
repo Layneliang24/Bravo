@@ -27,15 +27,15 @@ if [[ "$1" == "commit" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$
     echo "   • docs/architecture/ADR-001-npm-workspaces.md"
     echo "   • docs/architecture/cursor-git-no-verify-fix.md"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | BLOCKED_BY_GUARD | $*" >> "$LOG_FILE"
-    
+
     echo ""
     echo "⚠️  如果您确实需要跳过检查（极度不推荐）："
     echo "请输入完整确认码: I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS"
     read -p "确认码: " response
-    
+
     if [[ "$response" == "I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS" ]]; then
         echo "⚠️  强制继续，违规行为已记录到日志"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | FORCED_BYPASS | $*" >> "$LOG_FILE"

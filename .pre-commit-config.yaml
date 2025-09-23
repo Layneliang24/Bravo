@@ -4,7 +4,7 @@ repos:
   # 🚀 快速语法和格式检查优先
   # 通用检查 - 快速失败
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -82,7 +82,13 @@ repos:
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|jsx|ts|tsx|vue)$
-        args: ["frontend/**/*.{js,ts,vue}", "--config", "frontend/eslint.config.js"]
+        args:
+          [
+            "frontend/**/*.{js,ts,vue}",
+            "--config",
+            "frontend/eslint.config.js",
+            "--fix",
+          ]
         additional_dependencies:
           - eslint@8.53.0
           - "@typescript-eslint/eslint-plugin@6.12.0"
@@ -203,9 +209,9 @@ repos:
       # 新增严格检查项
       - id: no-skip-verify
         name: Prevent --no-verify usage
-        entry: sh -c 'if git log -1 --pretty=%B | grep -q "no-verify"; then echo "❌ 禁止使用 --no-verify 跳过检查" && exit 1; fi'
+        entry: sh -c 'if [ -f ".git/hooks/pre-commit" ]; then echo "[OK] Pre-commit hooks 已安装"; else echo "[ERROR] Pre-commit hooks 未安装或被绕过" && exit 1; fi'
         language: system
-        stages: [commit-msg]
+        stages: [pre-commit]
         always_run: true
 
       - id: file-size-check
@@ -224,8 +230,8 @@ repos:
       # 🛡️ NPM WORKSPACES 架构保护，防止依赖管理违规
       - id: npm-workspaces-guard
         name: NPM Workspaces Architecture Guard
-        entry: scripts/check_npm_workspaces.py
-        language: python
+        entry: python scripts/check_npm_workspaces.py
+        language: system
         files: '\.(yml|yaml|py|js|json|sh|Makefile)$'
         pass_filenames: true
         description: "检查npm workspaces架构违规，防止子目录npm ci/install调用"

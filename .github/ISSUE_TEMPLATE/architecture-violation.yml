@@ -9,9 +9,9 @@ body:
     attributes:
       value: |
         ## 🚨 架构违规报告
-        
+
         感谢您发现架构违规问题！基于30轮修复的血泪教训，及时发现和修复架构违规比忽略它们更节省时间。
-        
+
   - type: dropdown
     id: violation-type
     attributes:
@@ -38,9 +38,9 @@ body:
         - 违规代码: cd frontend && npm ci
         - 发现方式: CI失败 / pre-commit检查 / 代码审查
       value: |
-        **文件路径**: 
-        **违规代码**: 
-        **发现方式**: 
+        **文件路径**:
+        **违规代码**:
+        **发现方式**:
     validations:
       required: true
 
@@ -85,18 +85,18 @@ body:
       description: 其他有助于理解问题的信息
       placeholder: |
         - 相关的错误日志
-        - 历史类似问题链接  
+        - 历史类似问题链接
         - 相关PR或文档链接
 
   - type: markdown
     attributes:
       value: |
         ## 📚 相关资源
-        
+
         - [npm workspaces架构规范](docs/architecture/ADR-001-npm-workspaces.md)
         - [架构违规检查脚本](scripts/check_npm_workspaces.py)
         - [30轮修复教训总结](docs/FAQ.md#30轮修复血泪史)
-        
+
         ---
-        
+
         💡 **提示**: 架构治理不是为了限制开发，而是为了避免重复踩坑，提高整体效率！

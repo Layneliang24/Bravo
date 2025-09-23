@@ -20,15 +20,17 @@
 **最有效的防线**
 
 #### GitHub Branch Protection Rules
+
 ```yaml
 # 在GitHub仓库设置中启用：
 - Require status checks to pass before merging
-- Require branches to be up to date before merging  
+- Require branches to be up to date before merging
 - Include administrators (重要！)
 - Restrict pushes that create files
 ```
 
 #### GitHub Actions 强制检查
+
 - 所有PR必须通过CI检查
 - CI失败时无法合并
 - 即使使用了`--no-verify`，推送到远程时仍会被检查
@@ -53,7 +55,7 @@
 // .vscode/settings.json
 {
   "git.allowNoVerifyCommit": false,
-  "git.confirmNoVerifyCommit": true,
+  "git.confirmNoVerifyCommit": true
   // 其他限制设置...
 }
 ```
@@ -76,11 +78,13 @@
 **最重要的长期解决方案**
 
 #### 团队教育
+
 - 解释为什么不应该使用`--no-verify`
 - 展示30轮修复的血泪教训
 - 建立代码质量文化
 
 #### 流程设计
+
 - 让正常提交流程更快速、流畅
 - 减少false positive检查
 - 提供快速修复常见问题的工具
@@ -89,13 +93,13 @@
 
 ### 当前已实现的保护层级：
 
-| 保护层级 | 效果评分 | 绕过难度 | 适用场景 |
-|---------|----------|----------|----------|
-| **GitHub Actions CI** | ⭐⭐⭐⭐⭐ | 很难 | 所有PR和push |
-| **Branch Protection** | ⭐⭐⭐⭐⭐ | 极难 | 保护main/dev分支 |
-| **Pre-commit hooks** | ⭐⭐⭐ | 容易 | 正常开发流程 |
-| **IDE配置** | ⭐⭐⭐ | 容易 | Cursor IDE内操作 |
-| **Shell别名** | ⭐⭐ | 非常容易 | 当前终端会话 |
+| 保护层级              | 效果评分   | 绕过难度 | 适用场景         |
+| --------------------- | ---------- | -------- | ---------------- |
+| **GitHub Actions CI** | ⭐⭐⭐⭐⭐ | 很难     | 所有PR和push     |
+| **Branch Protection** | ⭐⭐⭐⭐⭐ | 极难     | 保护main/dev分支 |
+| **Pre-commit hooks**  | ⭐⭐⭐     | 容易     | 正常开发流程     |
+| **IDE配置**           | ⭐⭐⭐     | 容易     | Cursor IDE内操作 |
+| **Shell别名**         | ⭐⭐       | 非常容易 | 当前终端会话     |
 
 ### 核心防护逻辑：
 
@@ -136,6 +140,7 @@ echo "修复检查问题: $(git log -1 --pretty=format:'%h %s')" >> TODO.md
 ## 📊 监控和审计
 
 ### 检查绕过情况：
+
 ```bash
 # 搜索可能的绕过提交
 git log --grep="no.verify\|skip.*hook\|bypass.*check" --oneline
@@ -145,18 +150,21 @@ gh pr list --state=closed --json number,title | grep -i "ci.*fail"
 ```
 
 ### 日志记录：
+
 - 所有尝试的绕过行为记录在 `logs/git-no-verify-attempts.log`
 - 定期审查和分析违规模式
 
 ## 🎓 经验教训
 
 ### 技术教训：
+
 1. **不要试图完全阻止Git的内置功能**
 2. **服务端保护比客户端保护更可靠**
 3. **多层防护比单点拦截更有效**
 4. **教育比技术限制更重要**
 
 ### 架构教训：
+
 1. **理解工具的设计意图再实施方案**
 2. **不要对抗工具的基本设计原理**
 3. **现实主义比完美主义更有价值**

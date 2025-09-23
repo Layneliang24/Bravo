@@ -121,7 +121,7 @@ cat > "$PROJECT_ROOT/docs/git-protection-setup.md" << 'EOF'
 ## 🛡️ 多层防护体系
 
 ### 1. Git Hooks 保护（核心层）
-- **文件**: `.git/hooks/pre-commit`, `.git/hooks/commit-msg`  
+- **文件**: `.git/hooks/pre-commit`, `.git/hooks/commit-msg`
 - **特点**: 跟随项目，无法简单绕过
 - **覆盖**: 所有git commit操作
 
@@ -161,7 +161,7 @@ source ~/.bashrc
 # 测试--no-verify拦截
 git commit --no-verify -m "should be blocked"
 
-# 测试-n短参数拦截  
+# 测试-n短参数拦截
 git commit -n -m "should also be blocked"
 
 # 查看拦截日志
@@ -198,7 +198,7 @@ echo ""
 echo "🎉 Git --no-verify 多层保护系统安装完成！"
 echo ""
 echo "📋 后续步骤："
-echo "1. 重启终端或执行: source ~/.bashrc"  
+echo "1. 重启终端或执行: source ~/.bashrc"
 echo "2. 运行测试: ./test-git-protection.sh"
 echo "3. 查看文档: docs/git-protection-setup.md"
 echo ""

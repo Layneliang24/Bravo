@@ -39,7 +39,7 @@ echo "测试1: 直接--no-verify (应被拦截)"
 git commit --no-verify -m "test protection" 2>&1
 
 echo ""
-echo "测试2: -n 简写形式 (应被拦截)" 
+echo "测试2: -n 简写形式 (应被拦截)"
 git commit -n -m "test protection" 2>&1
 
 echo ""

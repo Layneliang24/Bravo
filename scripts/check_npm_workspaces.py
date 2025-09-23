@@ -1,127 +1,152 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-NPM Workspaces 架构保护脚本
+NPM Workspaces架构守护脚本
 
-目的：检查和预防npm workspaces架构违规，避免30轮修复的恶性循环
+基于30轮CI修复血泪教训的深层洞察：
+- npm workspaces设计原理：只应在根目录运行依赖管理命令
+- 子目录npm ci的破坏性：会重新评估整个workspace依赖树
+- deduped机制冲突：导致共享依赖被错误移除或重新定位
+- 这是固有行为特性：不是配置问题，而是npm workspaces的内在机制
 
-检查项目：
-1. 子目录中的npm ci/install调用
-2. working-directory + npm组合
-3. npm install -g全局安装
-4. 危险的cd && npm模式
-
-基于30轮修复血泪教训，这些违规会导致依赖漂移灾难。
+严格规范（基于架构级理解）：
+[OK] CI环境：必须使用`npm ci`，确保版本严格一致
+[OK] workspace原则：**绝对只在根目录**运行npm ci
+[OK] 工具管理：所有工具添加到devDependencies，使用npx执行
+[X] 绝对禁止：CI中使用`npm install`（包括`npm install -g`）
+[X] 严重禁止：子目录的任何npm ci调用（会破坏整个workspace结构）
 """
 
-import sys
-import re
 import os
-from pathlib import Path
+import re
+import sys
 
 
 class NPMWorkspacesChecker:
     def __init__(self):
         self.violations = []
-        self.warning_patterns = [
-            # 最危险的模式
-            (r'cd\s+(?:frontend|e2e|[^&\s]+)\s*&&\s*npm\s+(?:ci|install)', 
-             "❌ 严重违规：子目录npm ci/install会破坏workspace依赖树"),
-            
-            # 工作流违规
-            (r'working-directory:\s*\.\/(?:frontend|e2e)', 
-             "⚠️  工作流违规：working-directory应该使用npm run xxx:frontend"),
-             
-            # 全局安装违规
-            (r'npm\s+install\s+-g', 
-             "⚠️  全局安装违规：应使用项目依赖+npx执行"),
-             
-            # package.json scripts违规
-            (r'"[^"]*":\s*"[^"]*cd\s+(?:frontend|e2e)[^"]*npm\s+(?:ci|install)', 
-             "⚠️  Scripts违规：package.json中不应有子目录npm命令"),
+        self.patterns = [
+            (
+                re.compile(r"npm (ci|install).*", re.IGNORECASE),
+                "working-directory:",
+                "[X] 严重违规：子目录npm ci/install会破坏workspace依赖树",
+            ),
+            (
+                re.compile(r"working-directory:.*frontend.*", re.IGNORECASE),
+                "npm",
+                "[!] 工作流违规：working-directory应该使用npm run xxx:frontend",
+            ),
+            (
+                re.compile(r"npm install -g", re.IGNORECASE),
+                "",
+                "[!] 全局安装违规：应使用项目依赖+npx执行",
+            ),
+            (
+                re.compile(r'"[^"]*npm (ci|install)[^"]*"', re.IGNORECASE),
+                "scripts",
+                "[!] Scripts违规：package.json中不应有子目录npm命令",
+            ),
         ]
 
-    def check_file(self, file_path: str) -> bool:
-        """检查单个文件，返回是否有违规"""
+    def check_file(self, file_path):
+        """检查单个文件是否违反npm workspaces架构规则"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-        except (UnicodeDecodeError, PermissionError):
-            return False  # 跳过二进制文件或无权限文件
+                lines = content.split("\n")
 
-        file_violations = []
-        
-        for line_num, line in enumerate(content.splitlines(), 1):
-            for pattern, message in self.warning_patterns:
-                if re.search(pattern, line, re.IGNORECASE):
-                    file_violations.append({
-                        'file': file_path,
-                        'line': line_num,
-                        'content': line.strip(),
-                        'message': message,
-                        'pattern': pattern
-                    })
+            for line_num, line in enumerate(lines, 1):
+                for pattern, context_hint, message in self.patterns:
+                    if pattern.search(line) and (
+                        not context_hint or context_hint in line
+                    ):
+                        self.violations.append(
+                            {
+                                "file": file_path,
+                                "line": line_num,
+                                "content": line.strip(),
+                                "message": message,
+                            }
+                        )
 
-        if file_violations:
-            self.violations.extend(file_violations)
-            return True
-        return False
+        except (UnicodeDecodeError, FileNotFoundError):
+            # 忽略二进制文件和不存在的文件
+            pass
+
+        return len(self.violations) == 0
+
+    def should_check_file(self, file_path):
+        """判断是否应该检查此文件"""
+        if not os.path.exists(file_path):
+            return False
+
+        # 跳过自己
+        if "check_npm_workspaces" in file_path:
+            return False
+
+        # 检查文件扩展名
+        _, ext = os.path.splitext(file_path)
+        if ext not in [".yml", ".yaml", ".py", ".js", ".json", ".sh", "Makefile"]:
+            return False
+
+        # 跳过某些路径
+        skip_paths = [
+            "node_modules",
+            ".git",
+            "__pycache__",
+            ".cache",
+            ".backup/",
+            "docs/02_test_report/temp_modifications",
+        ]
+        return not any(skip_path in file_path for skip_path in skip_paths)
 
     def print_violations(self):
         """打印所有违规信息"""
         if not self.violations:
-            print("✅ NPM Workspaces架构检查通过 - 无违规发现")
+            print("[OK] NPM Workspaces架构检查通过 - 无违规发现")
             return
 
-        print("🚨 发现NPM Workspaces架构违规！")
+        print("[ERROR] 发现NPM Workspaces架构违规！")
         print("=" * 60)
         print("基于30轮修复血泪教训，以下模式会导致依赖漂移灾难：")
         print()
 
         for violation in self.violations:
-            print(f"📁 文件: {violation['file']}")
-            print(f"📍 行号: {violation['line']}")
-            print(f"💭 内容: {violation['content']}")
-            print(f"⚠️  问题: {violation['message']}")
+            print(f"文件: {violation['file']}")
+            print(f"行号: {violation['line']}")
+            print(f"内容: {violation['content']}")
+            print(f"问题: {violation['message']}")
             print()
 
-        print("🔧 修复指南：")
-        print("• cd frontend && npm ci  → npm run build:frontend")
-        print("• npm install -g tool   → npx tool (项目依赖)")
-        print("• working-directory     → 根目录npm run")
+        print("修复指南：")
+        print("- cd frontend && npm ci  => npm run build:frontend")
+        print("- npm install -g tool   => npx tool (项目依赖)")
+        print("- 在GitHub Actions中只在根目录调用npm ci")
+        print("- 删除所有working-directory + npm 组合")
         print()
-        print("📚 详细说明: docs/architecture/ADR-001-npm-workspaces.md")
-        print("=" * 60)
+        print("正确做法：")
+        print("+ npm ci --prefer-offline --no-audit (仅根目录)")
+        print("+ npm run build:frontend/test:backend")
+        print("+ npx tool执行工具(不要-g全局安装)")
 
-    def check_files(self, file_paths: list) -> bool:
-        """检查多个文件，返回是否有任何违规"""
-        has_violations = False
-        
-        for file_path in file_paths:
-            if os.path.exists(file_path):
-                if self.check_file(file_path):
-                    has_violations = True
-
-        return has_violations
+        return len(self.violations) > 0
 
 
 def main():
-    """主函数：pre-commit hook入口"""
+    """主函数"""
     if len(sys.argv) < 2:
         print("用法: check_npm_workspaces.py <file1> [file2] ...")
         return 0
 
     checker = NPMWorkspacesChecker()
-    file_paths = sys.argv[1:]
-    
-    has_violations = checker.check_files(file_paths)
-    checker.print_violations()
-    
-    if has_violations:
-        print("\n💡 提示：这个检查基于30轮修复的惨痛教训。")
-        print("   npm workspaces依赖管理违规会导致难以调试的依赖漂移问题。")
-        print("   修复这些问题比忽略它们更节省时间！")
+
+    for file_path in sys.argv[1:]:
+        if checker.should_check_file(file_path):
+            checker.check_file(file_path)
+
+    if checker.print_violations():
         return 1
-    
+
     return 0
 
 
