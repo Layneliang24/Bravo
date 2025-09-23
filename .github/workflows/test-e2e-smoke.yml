@@ -87,9 +87,8 @@ jobs:
             cd ..
           fi
 
-          # Frontend
-          echo "安装前端依赖..."
-          cd frontend && npm ci --prefer-offline --no-audit && cd ..
+          # Frontend依赖已通过根目录npm workspaces自动管理
+          echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E (利用npm workspaces，@playwright/test应该从根目录解析)
           echo "验证E2E依赖..."
@@ -132,15 +131,11 @@ jobs:
           "
 
       - name: Build Frontend
-        working-directory: ./frontend
         run: |
           echo "Building frontend for E2E tests..."
-          # Always ensure dependencies are fully installed before building
-          echo "Verifying frontend dependencies..."
-          if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ]; then
-            echo "Installing frontend dependencies..."
-            npm ci --prefer-offline --no-audit
-          fi
+
+          # Root npm workspaces dependencies handled by cache
+          echo "✅ Dependencies managed via root npm workspaces"
 
           # Verify vue-tsc is available - but don't break if missing
           echo "Checking vue-tsc availability..."
@@ -152,15 +147,8 @@ jobs:
           fi
 
           echo "Building with vue-tsc and vite..."
-          npm run build
+          npm run build:frontend
           echo "Frontend build completed"
-
-          # 🔧 第13轮修复：frontend npm ci破坏了根目录npm workspaces依赖
-          # 原因：frontend npm ci触发workspaces deduped机制，删除了根目录的@playwright/test
-          echo "🔧 修复：恢复根目录@playwright/test依赖（被frontend npm ci意外删除）"
-          cd ..
-          npm install @playwright/test@^1.55.0 --no-save --prefer-offline --no-audit
-          echo "✅ @playwright/test依赖已恢复"
 
       - name: Start Backend Server
         working-directory: ./backend
@@ -175,10 +163,9 @@ jobs:
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Start Frontend Server
-        working-directory: ./frontend
         run: |
           echo "Starting frontend preview server on port 3001..."
-          npm run preview -- --port 3001 --host 0.0.0.0 &
+          cd frontend && npm run preview -- --port 3001 --host 0.0.0.0 &
           echo $! > frontend.pid
           echo "Frontend server started on port 3001"
 

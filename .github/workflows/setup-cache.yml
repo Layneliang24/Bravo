@@ -107,11 +107,13 @@ jobs:
 
       - name: Install E2E Dependencies
         if: steps.e2e-cache.outputs.cache-hit != 'true'
-        working-directory: ./e2e
         run: |
           echo "Installing E2E dependencies (cache miss)..."
-          npm ci --prefer-offline --no-audit
-          echo "E2E dependencies installed"
+          # E2E dependencies managed via root npm workspaces
+          if [ ! -d "node_modules" ]; then
+            npm ci --prefer-offline --no-audit
+          fi
+          echo "✅ E2E dependencies managed via root npm workspaces"
 
       # Level 1B: Playwright Browsers Cache (CRITICAL for performance)
       - name: Cache Playwright Browsers
@@ -125,10 +127,9 @@ jobs:
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: ./e2e
         run: |
           echo "Installing Playwright browsers (cache miss) - ~280MB download..."
-          npx playwright install --with-deps
+          cd e2e && npx playwright install --with-deps
           echo "✅ Playwright browsers installed and cached"
 
       # Level 2: Build Cache (Frontend)
@@ -150,13 +151,11 @@ jobs:
               npm ci --prefer-offline --no-audit
             fi
             # 确保frontend子项目依赖已安装
-            if [ ! -d "frontend/node_modules" ]; then
-              echo "Installing frontend dependencies..."
-              cd frontend && npm ci --prefer-offline --no-audit && cd ..
-            fi
+            # Frontend dependencies already managed by root npm workspaces
+            echo "✅ Frontend dependencies managed via root npm workspaces"
             # 在frontend目录内执行构建，确保vue-tsc等工具在PATH中
             echo "Building frontend..."
-            cd frontend && npm run build && cd ..
+            npm run build:frontend
             echo "Frontend build completed"
           else
             echo "Frontend build exists, skipping"

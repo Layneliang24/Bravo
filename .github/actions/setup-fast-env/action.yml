@@ -18,7 +18,8 @@ runs:
       shell: bash
       run: |
         echo "⚡ 快速工具安装..."
-        # 只安装最必要的工具
+        # 只安装最必要的工具，使用版本锁定
         pip install flake8 || echo "flake8 install failed"
-        npm install -g eslint || echo "eslint install failed"
+        # eslint通过项目依赖管理，使用npx执行
+        echo "✅ Tools managed via project dependencies"
         echo "✅ 快速环境设置完成"

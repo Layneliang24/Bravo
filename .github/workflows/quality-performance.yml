@@ -40,19 +40,19 @@ jobs:
             frontend-deps-v2-${{ runner.os }}-
 
       - name: Install Dependencies (fallback)
-        working-directory: ./frontend
         run: |
+          # Root npm workspaces dependencies (MUST be first)
           if [ ! -d "node_modules" ]; then
-            echo "Installing frontend dependencies..."
+            echo "Installing root npm workspaces dependencies..."
             npm ci --prefer-offline --no-audit
           else
-            echo "Using cached frontend dependencies"
+            echo "✅ Using cached npm workspaces dependencies"
           fi
 
       - name: Install Lighthouse CI
         run: |
           echo "Installing Lighthouse CI..."
-          npm install -g @lhci/cli
+          npm ci --prefer-offline --no-audit
           echo "Lighthouse CI installed"
 
       - name: Build Frontend for Performance Testing
@@ -223,7 +223,7 @@ jobs:
           echo "Running Lighthouse performance audit..."
           echo "Target performance score: ${{ inputs.min-performance-score }}"
 
-          lhci autorun --config=lighthouserc.json
+          npx lhci autorun --config=lighthouserc.json
 
           echo "Performance audit completed"
 

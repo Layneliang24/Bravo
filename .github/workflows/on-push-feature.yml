@@ -110,8 +110,7 @@ jobs:
         run: |
           echo "安装根依赖..."
           npm ci --prefer-offline --no-audit
-          echo "安装前端依赖..."
-          cd frontend && npm ci --prefer-offline --no-audit
+          echo "✅ 前端依赖已通过根目录npm workspaces统一管理"
 
       - name: Run Quick Frontend Tests
         run: |
@@ -140,7 +139,7 @@ jobs:
 
           # 检查JavaScript代码风格
           if [ -f "frontend/.eslintrc.js" ]; then
-            cd frontend && npm run lint || echo "⚠️ 前端代码风格问题，建议修复"
+            npm run lint:frontend || echo "⚠️ 前端代码风格问题，建议修复"
           fi
 
       - name: Check for Common Issues

@@ -81,15 +81,14 @@ jobs:
           fi
 
           # Frontend
-          if [ ! -d "frontend/node_modules" ]; then
-            echo "Installing frontend dependencies..."
-            cd frontend && npm ci --prefer-offline --no-audit && cd ..
-          fi
+          # Frontend dependencies already managed by root npm workspaces
+          echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E
           if [ ! -d "e2e/node_modules" ]; then
             echo "Installing E2E dependencies..."
-            cd e2e && npm ci --prefer-offline --no-audit && cd ..
+            # E2E dependencies managed via root npm workspaces
+            echo "✅ E2E dependencies managed via root npm workspaces"
           fi
 
           # Backend
@@ -128,25 +127,16 @@ jobs:
           "
 
       - name: Build Frontend
-        working-directory: ./frontend
         run: |
           echo "Building frontend for E2E tests..."
           echo "Node version: $(node --version)"
           echo "npm version: $(npm --version)"
-          echo "Checking if node_modules exists..."
-          if [ ! -d "node_modules" ]; then
-            echo "node_modules not found, installing dependencies..."
-            npm ci --prefer-offline --no-audit
-          else
-            echo "node_modules found, ensuring TypeScript tools are available..."
-            # Check if vue-tsc is available, if not install it
-            if ! npm list vue-tsc >/dev/null 2>&1; then
-              echo "vue-tsc not found, installing missing dev dependencies..."
-              npm ci --prefer-offline --no-audit
-            fi
-          fi
-          echo "Running build..."
-          npm run build
+
+          # Root npm workspaces dependencies handled by cache
+          echo "✅ Dependencies managed via root npm workspaces"
+
+          echo "Building frontend..."
+          npm run build:frontend
           echo "Frontend build completed"
 
       - name: Setup Test Data
@@ -180,10 +170,9 @@ jobs:
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Start Frontend Server
-        working-directory: ./frontend
         run: |
           echo "Starting frontend server for E2E tests..."
-          npm run preview -- --port 3001 --host 0.0.0.0 &
+          cd frontend && npm run preview -- --port 3001 --host 0.0.0.0 &
           echo $! > frontend.pid
           echo "Frontend server started on port 3001"
 

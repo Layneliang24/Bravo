@@ -57,17 +57,24 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            node_modules
             frontend/node_modules
             backend/.venv
             ~/.cache/pip
             ~/.npm
-          key: all-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'backend/requirements/*.txt') }}
+          key: all-deps-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'frontend/package-lock.json', 'backend/requirements/*.txt') }}
           restore-keys: |
             frontend-deps-v2-${{ runner.os }}-
             backend-deps-v2-${{ runner.os }}-
 
       - name: Install Dependencies (fallback)
         run: |
+          # Root npm workspaces dependencies (MUST be first)
+          if [ ! -d "node_modules" ]; then
+            echo "Installing root npm workspaces dependencies..."
+            npm ci --prefer-offline --no-audit
+          fi
+
           # Backend dependencies
           if [ ! -d "backend/.venv" ]; then
             echo "Installing backend dependencies..."
@@ -80,11 +87,7 @@ jobs:
             cd ..
           fi
 
-          # Frontend dependencies
-          if [ ! -d "frontend/node_modules" ]; then
-            echo "Installing frontend dependencies..."
-            cd frontend && npm ci --prefer-offline --no-audit && cd ..
-          fi
+          echo "✅ All dependencies managed via npm workspaces architecture"
 
       - name: Install MySQL Client and Redis Client
         run: |
@@ -171,31 +174,22 @@ jobs:
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
       - name: Install Frontend Dependencies for Integration
-        working-directory: ./frontend
         run: |
-          echo "Installing frontend dependencies in frontend directory..."
-          npm ci
-          echo "Frontend dependencies installed"
+          echo "Using frontend dependencies from root npm workspaces..."
+          echo "✅ Frontend dependencies already available via npm workspaces"
 
       - name: Build Frontend for Integration
-        working-directory: ./frontend
         run: |
           echo "Building frontend for integration tests..."
-          npm run build
+          npm run build:frontend
           echo "Frontend build completed"
 
       - name: Run Frontend Integration Tests
-        working-directory: ./frontend
         run: |
           echo "Running frontend integration tests..."
 
-          # 如果有集成测试脚本
-          if npm run | grep -q "test:integration"; then
-            npm run test:integration
-          else
-            echo "No frontend integration tests defined, running component tests instead"
-            npm run test:ci
-          fi
+          # 使用根目录npm scripts执行frontend测试
+          npm run test:frontend
 
           echo "Frontend integration tests completed"
 

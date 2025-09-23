@@ -26,8 +26,6 @@ runs:
       with:
         path: |
           node_modules
-          frontend/node_modules
-          e2e/node_modules
           ~/.cache/pip
           backend/.venv
         key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
@@ -46,11 +44,8 @@ runs:
           npm ci --prefer-offline --no-audit
         fi
 
-        # 检查前端依赖
-        if [ ! -d "frontend/node_modules" ]; then
-          echo "安装前端依赖..."
-          cd frontend && npm ci --prefer-offline --no-audit && cd ..
-        fi
+        # 前端依赖通过根目录npm workspaces管理
+        echo "✅ Frontend dependencies managed via root npm workspaces"
 
         # 检查后端依赖
         if [ ! -d "backend/.venv" ]; then
@@ -71,8 +66,6 @@ runs:
       with:
         path: |
           node_modules
-          frontend/node_modules
-          e2e/node_modules
           ~/.cache/pip
           backend/.venv
         key: full-deps-v3-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}

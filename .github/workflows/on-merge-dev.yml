@@ -225,7 +225,7 @@ jobs:
 
       - name: Setup Analysis Tools
         run: |
-          npm install -g jscpd # 代码重复检测
+          npm ci --prefer-offline --no-audit
           pip install flake8 pylint # Python代码质量
 
       - name: Code Duplication Check
@@ -233,7 +233,7 @@ jobs:
           echo "🔍 检查代码重复..."
 
           # 检查前端代码重复
-          jscpd frontend/src --threshold 5 --format html --output ./duplication-report.html
+          npx jscpd frontend/src --threshold 5 --format html --output ./duplication-report.html
 
           # 检查后端代码重复
           # Python重复检测可以用其他工具

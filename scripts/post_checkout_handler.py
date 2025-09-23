@@ -106,7 +106,7 @@ class PostCheckoutHandler:
         # 检查前端依赖
         if (self.project_root / "frontend" / "package.json").exists():
             if not (self.project_root / "frontend" / "node_modules").exists():
-                print("前端依赖未安装，建议运行: cd frontend && npm install")
+                print("前端依赖未安装，建议运行: npm ci --prefer-offline --no-audit")
                 return False
 
         # 检查后端依赖

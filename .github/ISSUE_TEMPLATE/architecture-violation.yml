@@ -1,0 +1,102 @@
+name: 🛡️ 架构违规报告
+description: 报告npm workspaces或其他架构规范违规问题
+title: "[ARCH] 架构违规: "
+labels: ["architecture", "technical-debt", "priority:high"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🚨 架构违规报告
+
+        感谢您发现架构违规问题！基于30轮修复的血泪教训，及时发现和修复架构违规比忽略它们更节省时间。
+
+  - type: dropdown
+    id: violation-type
+    attributes:
+      label: 违规类型
+      description: 选择违规的具体类型
+      options:
+        - npm workspaces违规 (子目录npm ci/install)
+        - GitHub Actions工作流违规 (working-directory + npm)
+        - 全局安装违规 (npm install -g)
+        - package.json scripts违规 (cd && npm模式)
+        - 工具链标准违规 (使用禁用工具)
+        - 其他架构规范违规
+    validations:
+      required: true
+
+  - type: textarea
+    id: violation-details
+    attributes:
+      label: 违规详情
+      description: 详细描述发现的违规内容
+      placeholder: |
+        例如：
+        - 文件路径: .github/workflows/test.yml
+        - 违规代码: cd frontend && npm ci
+        - 发现方式: CI失败 / pre-commit检查 / 代码审查
+      value: |
+        **文件路径**:
+        **违规代码**:
+        **发现方式**:
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact-assessment
+    attributes:
+      label: 影响评估
+      description: 这个违规造成了什么问题？
+      placeholder: |
+        例如：
+        - CI失败30轮修复
+        - 依赖漂移导致构建错误
+        - 新人onboarding困难
+        - 生产环境部署失败
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: 建议修复方案
+      description: 如果有修复建议请填写
+      placeholder: |
+        例如：
+        - 将 "cd frontend && npm ci" 改为 "npm run build:frontend"
+        - 添加 pre-commit hook 检查
+        - 更新相关文档
+
+  - type: checkboxes
+    id: urgency-level
+    attributes:
+      label: 紧急程度
+      description: 评估修复的紧急程度
+      options:
+        - label: 🚨 紧急 - 已导致CI/生产故障
+        - label: ⚠️ 高 - 可能导致问题扩散
+        - label: 📝 中 - 技术债务，应尽快修复
+        - label: 💡 低 - 改进建议
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 补充信息
+      description: 其他有助于理解问题的信息
+      placeholder: |
+        - 相关的错误日志
+        - 历史类似问题链接
+        - 相关PR或文档链接
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📚 相关资源
+
+        - [npm workspaces架构规范](docs/architecture/ADR-001-npm-workspaces.md)
+        - [架构违规检查脚本](scripts/check_npm_workspaces.py)
+        - [30轮修复教训总结](docs/FAQ.md#30轮修复血泪史)
+
+        ---
+
+        💡 **提示**: 架构治理不是为了限制开发，而是为了避免重复踩坑，提高整体效率！
