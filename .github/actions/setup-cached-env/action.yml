@@ -46,11 +46,27 @@ runs:
         # 前端依赖通过根目录npm workspaces管理
         echo "✅ Frontend dependencies managed via root npm workspaces"
 
-        # 检查后端依赖
-        if [ ! -d "backend/.venv" ]; then
-          echo "安装后端依赖..."
-          cd backend
+        # 检查后端依赖 - 修复缓存问题：检查关键包是否存在
+        cd backend
+        if [ ! -d ".venv" ]; then
+          echo "🆕 创建虚拟环境..."
           python -m venv .venv
+          NEED_INSTALL=true
+        else
+          echo "🔍 检查现有虚拟环境中的关键依赖..."
+          source .venv/bin/activate
+          # 检查django_extensions是否存在（这是最常失败的包）
+          if ! python -c "import django_extensions" 2>/dev/null; then
+            echo "❌ django_extensions缺失，需要重新安装依赖"
+            NEED_INSTALL=true
+          else
+            echo "✅ 关键依赖存在，跳过安装"
+            NEED_INSTALL=false
+          fi
+        fi
+
+        if [ "$NEED_INSTALL" = "true" ]; then
+          echo "📦 安装/更新后端依赖..."
           source .venv/bin/activate
           pip install --upgrade pip wheel
 
@@ -61,8 +77,8 @@ runs:
 
           echo "📦 安装requirements（强制UTF-8编码）..."
           pip install -r requirements/base.txt -r requirements/test.txt
-          cd ..
         fi
+        cd ..
 
         echo "✅ 依赖检查完成"
 
