@@ -28,10 +28,22 @@ runs:
           echo "✅ 虚拟环境已存在"
         fi
 
-        # 激活虚拟环境并安装依赖
-        source .venv/bin/activate
-        echo "📥 安装必要的Python依赖..."
-        pip install --upgrade pip wheel
-        pip install flake8==6.0.0 django-debug-toolbar==4.2.0 django-extensions==3.2.3 || echo "部分依赖安装失败，继续执行"
+          # 激活虚拟环境并安装依赖
+          source .venv/bin/activate
+          echo "📥 安装必要的Python依赖..."
+          pip install --upgrade pip wheel
+
+          # 🔧 修复编码问题：强制使用UTF-8编码
+          export PYTHONIOENCODING=utf-8
+          export LC_ALL=C.UTF-8
+          export LANG=C.UTF-8
+
+          # 尝试从requirements文件安装，如果失败则直接安装关键包
+          if pip install -r requirements/test.txt; then
+            echo "✅ 从requirements文件安装成功"
+          else
+            echo "⚠️ requirements文件安装失败，直接安装关键包..."
+            pip install flake8==6.0.0 django-debug-toolbar==4.2.0 django-extensions==3.2.3 celery==5.3.4 Django==4.2.13 mysqlclient || echo "部分依赖安装失败，继续执行"
+          fi
 
         echo "✅ 虚拟环境设置完成"
