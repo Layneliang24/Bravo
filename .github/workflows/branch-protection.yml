@@ -188,7 +188,6 @@ jobs:
 
       - name: Run frontend tests with coverage
         run: npm run test:coverage:frontend
-          npm run test:ci
 
       - name: Validate feature mapping
         run: |
