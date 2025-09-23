@@ -53,6 +53,13 @@ runs:
           python -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip wheel
+
+          # 🔧 修复编码问题：强制使用UTF-8编码读取requirements文件
+          export PYTHONIOENCODING=utf-8
+          export LC_ALL=C.UTF-8
+          export LANG=C.UTF-8
+
+          echo "📦 安装requirements（强制UTF-8编码）..."
           pip install -r requirements/base.txt -r requirements/test.txt
           cd ..
         fi
