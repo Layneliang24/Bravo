@@ -146,7 +146,7 @@ repos:
 
       - id: typescript-syntax-check
         name: TypeScript Syntax Check
-        entry: sh -c 'echo "检查E2E TypeScript..." && cd e2e && npm run type-check && echo "E2E TypeScript语法检查通过"'
+        entry: bash -c 'echo "检查E2E TypeScript..." && cd e2e && npm run type-check && echo "E2E TypeScript语法检查通过"'
         language: system
         files: \.(ts|tsx|vue|json)$
         exclude: node_modules
@@ -154,7 +154,7 @@ repos:
 
       - id: github-actions-syntax-check
         name: GitHub Actions Workflow Syntax Check
-        entry: sh -c 'echo "检查workflow语法..." && find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs -I {} python -c "import yaml; yaml.safe_load(open(\"{}\", \"r\", encoding=\"utf-8\"))" && echo "语法检查通过"'
+        entry: bash -c 'echo "检查workflow语法..." && find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs -I {} python -c "import yaml; yaml.safe_load(open(\"{}\", \"r\", encoding=\"utf-8\"))" && echo "语法检查通过"'
         language: system
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
@@ -162,20 +162,20 @@ repos:
       # TypeScript和Vue命名检查 - 暂时禁用，ESLint依赖问题
       - id: typescript-naming-check
         name: TypeScript Naming Convention Check
-        entry: sh -c 'echo "✅ TypeScript检查通过"'
+        entry: bash -c 'echo "✅ TypeScript检查通过"'
         language: system
         files: \.(ts|tsx)$
-      #   entry: sh -c 'cd frontend && npx eslint'
+      #   entry: bash -c 'cd frontend && npx eslint'
       #   language: system
       #   files: ^frontend/src/.*\.(js|ts|vue)$
       #   pass_filenames: true
 
       - id: vue-naming-check
         name: Vue Naming Convention Check
-        entry: sh -c 'echo "✅ Vue检查通过"'
+        entry: bash -c 'echo "✅ Vue检查通过"'
         language: system
         files: \.vue$
-      #   entry: sh -c 'cd frontend && npx eslint'
+      #   entry: bash -c 'cd frontend && npx eslint'
       #   language: system
       #   files: ^frontend/src/.*\.vue$
       #   pass_filenames: true
@@ -185,7 +185,7 @@ repos:
     hooks:
       - id: root-clutter
         name: Root Clutter Guard (strict)
-        entry: sh -c 'git diff --cached --name-status | grep "^[AM]" | cut -f2- | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example|\.backup|\.old|\.tmp|\.temp)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "❌ 禁止在根目录添加临时文件，请放入 docs/ 或对应目录" && exit 1 || exit 0'
+        entry: bash -c 'git diff --cached --name-status | grep "^[AM]" | cut -f2- | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example|\.backup|\.old|\.tmp|\.temp)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "❌ 禁止在根目录添加临时文件，请放入 docs/ 或对应目录" && exit 1 || exit 0'
         language: system
         always_run: true
         fail_fast: true
@@ -195,7 +195,7 @@ repos:
     hooks:
       - id: branch-protection
         name: Branch Protection Check
-        entry: sh scripts/branch_protection.sh
+        entry: bash scripts/branch_protection.sh
         language: system
         stages: [pre-push]
         always_run: true
@@ -203,14 +203,14 @@ repos:
       # 新增严格检查项
       - id: no-skip-verify
         name: Prevent --no-verify usage
-        entry: sh -c 'if git log -1 --pretty=%B | grep -q "no-verify"; then echo "❌ 禁止使用 --no-verify 跳过检查" && exit 1; fi'
+        entry: bash -c 'if git log -1 --pretty=%B | grep -q "no-verify"; then echo "❌ 禁止使用 --no-verify 跳过检查" && exit 1; fi'
         language: system
         stages: [commit-msg]
         always_run: true
 
       - id: file-size-check
         name: Large file check (strict)
-        entry: sh -c 'git diff --cached --name-only | xargs -I {} find {} -type f -size +5M 2>/dev/null | head -1 | grep . && echo "❌ 文件超过5MB，请使用Git LFS" && exit 1 || exit 0'
+        entry: bash -c 'git diff --cached --name-only | xargs -I {} find {} -type f -size +5M 2>/dev/null | head -1 | grep . && echo "❌ 文件超过5MB，请使用Git LFS" && exit 1 || exit 0'
         language: system
         always_run: true
 
