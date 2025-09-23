@@ -55,12 +55,30 @@ runs:
         else
           echo "🔍 检查现有虚拟环境中的关键依赖..."
           source .venv/bin/activate
-          # 检查django_extensions是否存在（这是最常失败的包）
+          # 检查多个关键依赖包
+          MISSING_PACKAGES=""
+
+          # 检查django_extensions
           if ! python -c "import django_extensions" 2>/dev/null; then
-            echo "❌ django_extensions缺失，需要重新安装依赖"
+            MISSING_PACKAGES="$MISSING_PACKAGES django_extensions"
+          fi
+
+          # 检查silk (性能分析工具)
+          if ! python -c "import silk" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES silk"
+          fi
+
+          # 检查debug_toolbar
+          if ! python -c "import debug_toolbar" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES debug_toolbar"
+          fi
+
+          if [ -n "$MISSING_PACKAGES" ]; then
+            echo "❌ 关键依赖缺失:$MISSING_PACKAGES"
+            echo "需要重新安装依赖确保环境完整"
             NEED_INSTALL=true
           else
-            echo "✅ 关键依赖存在，跳过安装"
+            echo "✅ 所有关键依赖存在，跳过安装"
             NEED_INSTALL=false
           fi
         fi
