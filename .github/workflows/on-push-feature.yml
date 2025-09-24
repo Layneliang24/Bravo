@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 第一步：快速环境设置（使用统一缓存）
+  # 第一步：快速环境设置（环境验证，不使用缓存）
   quick-setup:
     name: Quick Environment Setup
     runs-on: ubuntu-latest
@@ -28,8 +28,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          cache: "pip"
-          cache-dependency-path: "backend/requirements/*.txt"
 
       - name: Environment Ready
         run: echo "✅ 开发环境准备完成"
