@@ -32,7 +32,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=8
         ports:
           - 3306:3306
 
@@ -47,14 +47,16 @@ jobs:
           cache: "pip"
           cache-dependency-path: "backend/requirements/*.txt"
 
-      - name: Restore Backend Dependencies
+      - name: Restore Backend Dependencies (Phase 3)
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
             backend/.venv
-          key: backend-deps-v2-${{ runner.os }}-${{ hashFiles('backend/requirements/*.txt') }}
+          key: backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements/*.txt') }}
           restore-keys: |
+            backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+            backend-deps-v3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
             backend-deps-v2-${{ runner.os }}-
 
       - name: Install Dependencies (fallback)
@@ -71,49 +73,72 @@ jobs:
             echo "Using cached backend dependencies"
           fi
 
-      - name: Install MySQL Client
+      - name: Cache MySQL Client
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: mysql-client-${{ runner.os }}-v1
+          restore-keys: |
+            mysql-client-${{ runner.os }}-
+
+      - name: Install MySQL Client (Cached)
         run: |
-          echo "Installing MySQL client tools..."
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
-          echo "MySQL client installed successfully"
+          echo "Installing MySQL client tools (with caching)..."
+          # 检查是否已安装
+          if ! command -v mysql &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y mysql-client
+            echo "MySQL client installed successfully"
+          else
+            echo "MySQL client already available"
+          fi
 
       - name: Wait for MySQL
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {1..30}; do
+          for i in {1..20}; do
             if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "MySQL not ready, waiting... ($i/30)"
-            sleep 2
+            echo "MySQL not ready, waiting... ($i/20)"
+            sleep 1
           done
 
-      - name: Setup Test Database
+      - name: Setup Test Database (pytest-xdist compatible)
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
             CREATE DATABASE IF NOT EXISTS bravo_test;
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+
+            /* 🚀 Phase 3: 为pytest-xdist并行测试授权 */
+            /* 给bravo_user创建数据库的权限，支持gw0, gw1等worker数据库 */
+            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test_%\`.* TO 'bravo_user'@'%';
+
             FLUSH PRIVILEGES;
           "
+          echo "✅ 数据库权限配置完成，支持pytest-xdist并行测试"
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests (Parallel)
         working-directory: ./backend
         run: |
           source .venv/bin/activate
-          echo "Running backend unit tests..."
+          echo "Running backend unit tests in parallel..."
 
+          # 🚀 Phase 3: 使用pytest-xdist并行执行测试
           if [ "${{ inputs.coverage }}" == "true" ]; then
             python -m pytest tests/ \
               --cov=. --cov-report=xml --cov-report=html \
-              --maxfail=5 -v --tb=short
+              --numprocesses=auto --dist=worksteal \
+              --maxfail=3 -v --tb=short
           else
             python -m pytest tests/ \
-              --maxfail=5 -v --tb=short
+              --numprocesses=auto --dist=worksteal \
+              --maxfail=3 -v --tb=short
           fi
 
-          echo "Backend unit tests completed"
+          echo "Backend unit tests completed (parallel execution)"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
