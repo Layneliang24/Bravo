@@ -66,9 +66,9 @@ jobs:
   integration-tests:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: [unit-tests-backend, unit-tests-frontend]
-    uses: ./.github/workflows/test-integration.yml
+    uses: ./.github/workflows/test-integration-optimized.yml
     with:
-      timeout: 15
+      timeout: 8 # 🚀 Phase 2优化：15分钟 → 8分钟
 
   # Job 5: Security and quality checks (并行执行)
   security-scan:
