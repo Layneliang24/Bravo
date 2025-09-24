@@ -71,7 +71,7 @@ services:
       retries: 12
       start_period: 30s
 
-  # E2E测试服务 - 自给自足架构
+  # E2E测试服务 - 🚀 Phase 5.2缓存优化架构
   e2e-tests:
     build:
       context: ./e2e
@@ -81,9 +81,14 @@ services:
         condition: service_healthy
       frontend-test:
         condition: service_healthy
-    # 🎯 最优方案：移除所有volumes和environment，容器完全自给自足
-    # volumes:  # 移除：不依赖外部挂载
-    # environment:  # 移除：环境变量已在Dockerfile中设置
+    # 🚀 Phase 5.2: 挂载Playwright浏览器缓存 (关键优化)
+    volumes:
+      - ~/.cache/ms-playwright:/root/.cache/ms-playwright:ro
+    # 🚀 Phase 5.2: 配置Playwright使用挂载的缓存
+    environment:
+      - PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+      - CI=true
+      - NODE_ENV=test
     command:
       - /bin/sh
       - -c

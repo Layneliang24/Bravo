@@ -74,22 +74,27 @@ RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 10000 && \
     npm ci --verbose
 
-# 🎯 最优方案3：安装浏览器并验证安装
-RUN npx playwright install --with-deps && \
-    npx playwright --version && \
+# 🚀 Phase 5.2: 移除浏览器下载，依赖挂载的缓存 (关键优化)
+# 注释掉浏览器下载：将通过Docker volume挂载宿主机缓存
+# RUN npx playwright install --with-deps  # 移除：节省4-5分钟下载时间
+RUN npx playwright --version && \
     npm list @playwright/test && \
-    ls -la node_modules/.bin/ | grep playwright
+    ls -la node_modules/.bin/ | grep playwright && \
+    echo "🚀 Playwright将使用挂载的浏览器缓存，跳过下载以节省时间"
 
-# 🎯 最优方案4：创建自给自足的启动脚本
+# 🚀 Phase 5.2: 创建缓存优化的启动脚本
 RUN echo '#!/bin/bash' > /app/e2e/run-tests.sh && \
     echo 'set -e' >> /app/e2e/run-tests.sh && \
-    echo 'echo "🔍 E2E环境自检..."' >> /app/e2e/run-tests.sh && \
+    echo 'echo "🚀 Phase 5.2: E2E环境自检 (缓存优化版)..."' >> /app/e2e/run-tests.sh && \
     echo 'echo "工作目录: $(pwd)"' >> /app/e2e/run-tests.sh && \
     echo 'echo "环境变量: TEST_BASE_URL=$TEST_BASE_URL, FRONTEND_URL=$FRONTEND_URL"' >> /app/e2e/run-tests.sh && \
     echo 'echo "Playwright版本: $(npx playwright --version)"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "🚀 缓存优化检查: PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"' >> /app/e2e/run-tests.sh && \
+    echo 'echo "挂载的浏览器缓存:"' >> /app/e2e/run-tests.sh && \
+    echo 'ls -la $PLAYWRIGHT_BROWSERS_PATH/ 2>/dev/null || echo "⚠️ 缓存路径未找到，将使用默认位置"' >> /app/e2e/run-tests.sh && \
     echo 'echo "可用配置文件:"' >> /app/e2e/run-tests.sh && \
     echo 'ls -la *.config.* || echo "未找到配置文件"' >> /app/e2e/run-tests.sh && \
-    echo 'echo "🧪 开始执行E2E测试..."' >> /app/e2e/run-tests.sh && \
+    echo 'echo "🧪 开始执行E2E测试 (缓存优化，无需下载)..."' >> /app/e2e/run-tests.sh && \
     echo 'exec ./node_modules/.bin/playwright test --grep "@critical" --project=chromium --reporter=list' >> /app/e2e/run-tests.sh && \
     chmod +x /app/e2e/run-tests.sh
 
