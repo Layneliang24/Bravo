@@ -132,18 +132,27 @@ jobs:
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
 
-  # 第三步：条件性E2E（仅在需要时运行） - 🚀 Phase 5优化
+  # 第三步：条件性E2E（仅在需要时运行） - 🚀 Phase 5.2缓存优化
   e2e-critical:
     if: ${{ !inputs.skip-e2e }}
     needs: [quick-checks, core-tests]
     runs-on: ubuntu-latest
-    timeout-minutes: 6 # 🚀 Phase 5: 10min → 6min (进一步压缩)
+    timeout-minutes: 8 # 🚀 Phase 5.2: 恢复合理时间，架构优化消除下载
 
     steps:
       - uses: actions/checkout@v4
 
-      # 使用预构建的Docker容器
-      - name: Run E2E with Container
+      # 🚀 Phase 5.2: 恢复Playwright浏览器缓存 (关键优化)
+      - name: Restore Playwright Browsers Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v3-${{ runner.os }}-
+
+      # 🚀 Phase 5.2: 使用缓存优化的Docker容器
+      - name: Run E2E with Container (Cache Optimized)
         run: |
           echo "🚀 使用容器化E2E测试..."
 
