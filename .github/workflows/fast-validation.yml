@@ -34,7 +34,7 @@ jobs:
             node_modules
             frontend/node_modules
             ~/.cache/pip
-          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+          key: deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
 
       - name: Setup Environment
         uses: ./.github/actions/setup-cached-env
