@@ -105,13 +105,20 @@ jobs:
             sleep 1
           done
 
-      - name: Setup Test Database
+      - name: Setup Test Database (pytest-xdist compatible)
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
             CREATE DATABASE IF NOT EXISTS bravo_test;
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+
+            /* 🚀 Phase 3: 为pytest-xdist并行测试授权 */
+            /* 给bravo_user创建数据库的权限，支持gw0, gw1等worker数据库 */
+            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test_%\`.* TO 'bravo_user'@'%';
+
             FLUSH PRIVILEGES;
           "
+          echo "✅ 数据库权限配置完成，支持pytest-xdist并行测试"
 
       - name: Run Unit Tests (Parallel)
         working-directory: ./backend
