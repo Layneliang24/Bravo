@@ -18,9 +18,10 @@ env:
 
 jobs:
   # 🚀 Phase 2 优化：共享服务启动
+  # 🚀 Phase 4 优化：极速服务启动
   setup-services:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 1 # Phase 4: 减少超时时间
     outputs:
       services-ready: ${{ steps.services.outputs.ready }}
 
@@ -32,21 +33,21 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=20
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=2s --health-timeout=2s --health-retries=15
         ports:
           - 3306:3306
 
       redis:
         image: redis:7-alpine
-        options: --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=3s --health-retries=10
+        options: --health-cmd="redis-cli ping" --health-interval=2s --health-timeout=1s --health-retries=8
         ports:
           - 6379:6379
 
     steps:
-      - name: Verify Services
+      - name: Verify Services (Phase 4 Optimized)
         id: services
         run: |
-          echo "Services are ready via health checks!"
+          echo "🚀 Phase 4: 服务通过优化健康检查就绪！"
           echo "ready=true" >> $GITHUB_OUTPUT
 
   # 🚀 Phase 2 优化：并行执行Backend集成测试
@@ -205,11 +206,11 @@ jobs:
             frontend-results.json
           retention-days: 3
 
-  # 🚀 Phase 2 优化：轻量化API测试
+  # 🚀 Phase 4 优化：极致轻量化API测试
   api-integration:
     needs: [backend-integration, frontend-integration]
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2 # Phase 4: 减少超时时间
 
     services:
       mysql:
@@ -219,7 +220,7 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=3s --health-timeout=2s --health-retries=6
         ports:
           - 3306:3306
 
@@ -240,35 +241,35 @@ jobs:
             ~/.cache/pip
           key: backend-deps-v3-${{ runner.os }}-${{ hashFiles('backend/requirements/*.txt') }}
 
-      - name: Quick API Health Test
+      - name: Ultra-Fast API Health Test (Phase 4)
         working-directory: ./backend
         run: |
           source .venv/bin/activate
 
-          # 复用之前的数据库状态，只运行必要的迁移
-          python manage.py migrate --settings=bravo.settings.test --fake-initial
+          # 🚀 Phase 4: 极简迁移，复用现有状态
+          python manage.py migrate --settings=bravo.settings.test --fake-initial --verbosity=0
 
-          # 启动服务器用于API测试
-          python manage.py runserver 8000 --settings=bravo.settings.test &
+          # 🚀 Phase 4: 轻量级服务器启动
+          python manage.py runserver 8000 --settings=bravo.settings.test --verbosity=0 &
           SERVER_PID=$!
 
-          # 等待服务器启动 (优化等待策略)
-          for i in {1..15}; do
-            if curl -s http://localhost:8000/health/ > /dev/null; then
-              echo "✅ Server is ready after ${i} attempts"
+          # 🚀 Phase 4: 优化等待策略 - 减少等待时间
+          for i in {1..10}; do
+            if curl -s -f http://localhost:8000/health/ > /dev/null 2>&1; then
+              echo "✅ API服务器就绪 (${i}次尝试)"
               break
             fi
-            sleep 1
+            sleep 0.5  # 减少等待间隔
           done
 
-          # 运行核心API测试
-          echo "Running essential API integration tests..."
-          curl -f http://localhost:8000/health/ || exit 1
-          curl -f http://localhost:8000/api-info/ || echo "API-info endpoint not available"
+          # 🚀 Phase 4: 极简API验证 - 只测试核心端点
+          echo "执行极简API集成测试..."
+          curl -s -f http://localhost:8000/health/ > /dev/null || exit 1
+          echo "✅ 核心API健康检查通过"
 
           # 清理
           kill $SERVER_PID 2>/dev/null || true
-          echo "✅ API integration tests completed"
+          echo "✅ 极简API集成测试完成 (Phase 4优化)"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test
