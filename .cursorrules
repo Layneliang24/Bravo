@@ -1,3 +1,35 @@
+# 🐳 DOCKER开发项目 - 重要提醒 🐳
+
+## ⚠️ 核心开发模式：纯Docker容器化开发 ⚠️
+
+**🚨 关键信息 - 请务必遵守：**
+
+- **开发模式**：纯Docker容器化开发，无需本地安装Python/Node.js/MySQL
+- **启动命令**：`docker-compose up` (不是 npm run dev)
+- **服务架构**：MySQL + Redis + Django + Vue + Celery (全在容器内)
+- **代码编辑**：宿主机编辑，容器内运行
+- **依赖管理**：容器内自动处理，宿主机只保留开发工具
+
+**🛑 绝对禁止的操作：**
+- ❌ 建议安装本地Python虚拟环境
+- ❌ 建议安装本地MySQL/Redis
+- ❌ 建议pip install或python manage.py等本地命令
+- ❌ 建议npm install在frontend/e2e目录（除非是开发工具需要）
+
+**✅ 正确的开发操作：**
+- ✅ 使用docker-compose up启动全部服务
+- ✅ 容器内执行Python/Django命令
+- ✅ 使用docker-compose logs查看日志
+- ✅ 如需进入容器：docker-compose exec [service] bash
+
+**📋 服务端口映射：**
+- Frontend (Vue): http://localhost:3000
+- Backend (Django): http://localhost:8000
+- MySQL: localhost:3306
+- Redis: localhost:6379
+
+---
+
 # Bravo项目开发规范
 
 ## 核心原则
