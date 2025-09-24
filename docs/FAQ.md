@@ -1,5 +1,51 @@
 # 常见问题解答 (FAQ)
 
+## 架构级编码兼容性问题
+
+### Q: 为什么requirements文件中的中文注释会导致CI失败？
+
+**A: 架构级编码兼容性问题**
+
+**根因**：Windows + Git Bash + pip虚拟环境 + UTF-8中文注释不兼容
+
+**技术细节**：
+
+- 中文注释使用UTF-8编码：`e6b5 8be8 af95...` (测试环境依赖)
+- pip在Windows虚拟环境中默认使用GBK解码
+- 导致 `UnicodeDecodeError: 'gbk' codec can't decode byte 0xaf`
+
+**为什么之前没问题**：
+
+- 虚拟环境是最近才引入的 (2025-09-23)
+- 之前CI直接在系统环境安装，无编码冲突
+- 新的虚拟环境优化触发了这个潜在的编码兼容性问题
+
+**解决方案**：
+
+- 将所有requirements文件中的中文注释替换为英文注释
+- 确保跨平台兼容性
+
+**验证方法**：
+
+```bash
+# 复现问题
+cat > test_chinese.txt << 'EOF'
+# 测试环境依赖模板
+Django==4.2.7
+EOF
+python -m venv test_venv
+source test_venv/Scripts/activate
+pip install -r test_chinese.txt  # 会出现编码错误
+```
+
+**技术证据**：
+
+```bash
+# 编码对比
+xxd requirements/test.txt.backup  # 中文UTF-8编码
+xxd requirements/test.txt         # 英文ASCII编码
+```
+
 ## CI/CD 依赖管理问题
 
 ### Q: 为什么CI环境必须使用npm ci而不是npm install？
