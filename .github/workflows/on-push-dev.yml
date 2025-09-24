@@ -32,13 +32,13 @@ jobs:
       coverage: true
       timeout: 10
 
-  # 第三步：完整集成测试
+  # 第三步：完整集成测试 - 🚀 Phase 2优化版本
   integration-tests:
-    name: Integration Tests (Full)
+    name: Integration Tests (Optimized)
     needs: [unit-tests-backend, unit-tests-frontend]
-    uses: ./.github/workflows/test-integration.yml
+    uses: ./.github/workflows/test-integration-optimized.yml
     with:
-      timeout: 15
+      timeout: 8 # 🚀 Phase 2优化：15分钟 → 8分钟
 
   # 第四步：完整E2E测试
   e2e-full:

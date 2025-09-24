@@ -38,13 +38,13 @@ jobs:
       coverage: true
       timeout: 8
 
-  # 第三步：集成测试 (依赖单元测试)
+  # 第三步：集成测试 (依赖单元测试) - 🚀 Phase 2优化版本
   integration-tests:
-    name: Integration Tests
+    name: Integration Tests (Optimized)
     needs: [unit-tests-backend, unit-tests-frontend]
-    uses: ./.github/workflows/test-integration.yml
+    uses: ./.github/workflows/test-integration-optimized.yml
     with:
-      timeout: 12
+      timeout: 6 # 🎯 目标减少50%时间：12分钟 → 6分钟
 
   # 🎯 CI速度优化：移除E2E测试，交由branch-protection.yml处理完整验证
 
