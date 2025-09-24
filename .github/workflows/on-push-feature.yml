@@ -29,6 +29,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+          cache-dependency-path: "backend/requirements/*.txt"
 
       - name: Environment Ready
         run: echo "✅ 开发环境准备完成"
@@ -66,22 +67,19 @@ jobs:
         working-directory: ./backend
         run: |
           echo "🧪 运行快速后端测试..."
-          # 调试信息
           echo "Debug: 当前目录: $(pwd)"
-          echo "Debug: .venv目录是否存在: $(ls -la | grep venv || echo '不存在')"
+          echo "Debug: Python版本: $(python --version)"
 
-          # 检查并创建虚拟环境（如果不存在）
-          if [ ! -d ".venv" ]; then
-            echo "⚠️ .venv不存在，创建虚拟环境..."
-            python -m venv .venv
-            source .venv/bin/activate
-            pip install --upgrade pip wheel
-            pip install -r requirements/base.txt -r requirements/test.txt
-          else
-            echo "✅ .venv已存在，激活虚拟环境..."
-            source .venv/bin/activate
-          fi
+          # CI环境：直接创建虚拟环境（每次都是全新环境）
+          echo "🔧 CI环境：创建虚拟环境..."
+          python -m venv .venv
+          source .venv/bin/activate
 
+          echo "📦 安装依赖..."
+          pip install --upgrade pip wheel
+          pip install -r requirements/base.txt -r requirements/test.txt
+
+          echo "🧪 执行测试..."
           python -m pytest tests/ -v --maxfail=5 --tb=short
         env:
           DB_HOST: 127.0.0.1
