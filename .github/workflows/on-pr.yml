@@ -1,12 +1,12 @@
 name: PR Validation - Fast Track
 
-# 原子化架构 - 快速反馈workflow
-# 🔥 紧急修复：必须对所有PR进行验证，确保代码质量
+# 🚀 CI速度优化 - 快速PR验证工作流
+# 专门处理 feature → dev 的PR，提供快速反馈
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [dev] # 只处理向dev分支的PR (通常来自feature分支)
     types: [opened, synchronize, reopened]
-    # 🚨 重要：所有PR都必须通过这些检查才能合并
+    # 🎯 优化：轻量级验证，确保基础代码质量
   workflow_dispatch: # 手动触发用于调试
 
 # 并发控制，避免重复运行
@@ -46,106 +46,7 @@ jobs:
     with:
       timeout: 12
 
-  # 第四步：烟雾E2E测试 (依赖集成测试) - 使用统一的Docker环境
-  e2e-smoke:
-    name: E2E Smoke Tests (Docker)
-    needs: integration-tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-
-      # 使用与post-merge相同的Docker容器环境
-      - name: Run E2E with Docker Container
-        run: |
-          echo "🚀 PR验证使用统一的Docker容器环境..."
-
-          # 🎯 最优方案：使用自给自足容器架构，与post-merge完全相同
-          if command -v docker-compose >/dev/null 2>&1; then
-            echo "启动Docker服务..."
-            # 🎯 移除环境变量传递，容器自给自足
-            docker-compose -f docker-compose.test.yml up --build -d
-
-            echo "等待E2E测试完成..."
-            # 🎯 彻底修复：使用直接的容器退出码检测
-            echo "等待E2E容器完成..."
-            docker-compose -f docker-compose.test.yml logs -f e2e-tests || true
-
-            # 直接获取容器退出码，不依赖if分支
-            E2E_CID=$(docker-compose -f docker-compose.test.yml ps -q e2e-tests)
-            echo "E2E容器ID: $E2E_CID"
-
-            if [ -n "$E2E_CID" ]; then
-              # 等待容器完全停止
-              docker wait "$E2E_CID" > /dev/null 2>&1 || true
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
-            else
-              echo "❌ 无法获取E2E容器ID"
-              E2E_EXIT_CODE=1
-            fi
-
-            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
-
-            echo "📦 收集E2E测试产物..."
-            mkdir -p e2e-artifacts || true
-            if [ -n "$E2E_CID" ]; then
-              docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-              docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-            fi
-
-            echo "清理Docker服务..."
-            docker-compose -f docker-compose.test.yml down
-
-            exit $E2E_EXIT_CODE
-          else
-            echo "docker-compose not found, using 'docker compose' instead..."
-            # 🎯 移除环境变量传递，容器自给自足
-            docker compose -f docker-compose.test.yml up --build -d
-
-            echo "等待E2E测试完成..."
-            # 🎯 第23轮修复：在容器启动后立即获取ID，避免被清理后无法获取
-            sleep 2 # 等待容器完全启动
-            E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-            echo "E2E容器ID: $E2E_CID"
-
-            if [ -n "$E2E_CID" ]; then
-              echo "等待E2E容器完成..."
-              # 等待容器完全停止并获取退出码
-              docker wait "$E2E_CID" > /dev/null 2>&1 || true
-              E2E_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$E2E_CID" 2>/dev/null || echo "1")
-              echo "📋 显示E2E测试日志..."
-              docker compose -f docker-compose.test.yml logs e2e-tests || true
-            else
-              echo "❌ 无法获取E2E容器ID，回退到日志等待模式"
-              docker compose -f docker-compose.test.yml logs -f e2e-tests || true
-              E2E_EXIT_CODE=1
-            fi
-
-            echo "E2E测试真实退出码: $E2E_EXIT_CODE"
-
-            echo "📦 收集E2E测试产物..."
-            mkdir -p e2e-artifacts || true
-            if [ -n "$E2E_CID" ]; then
-              docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
-              docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/playwright-report 2>/dev/null || true
-              docker cp "$E2E_CID:/app/e2e-results.xml" e2e-artifacts/e2e-results.xml 2>/dev/null || true
-            fi
-
-            echo "清理Docker服务..."
-            docker compose -f docker-compose.test.yml down
-
-            exit $E2E_EXIT_CODE
-          fi
-
-      - name: Upload E2E Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-smoke-results-chromium
-          path: |
-            e2e-artifacts/test-results/
-            e2e-artifacts/playwright-report/
-          retention-days: 3
+  # 🎯 CI速度优化：移除E2E测试，交由branch-protection.yml处理完整验证
 
   # 第五步：质量门禁 (并行)
   directory-guard:
@@ -181,7 +82,6 @@ jobs:
         unit-tests-backend,
         unit-tests-frontend,
         integration-tests,
-        e2e-smoke,
         directory-guard,
       ]
     steps:
@@ -194,7 +94,6 @@ jobs:
           BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
           FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
-          E2E_STATUS="${{ needs.e2e-smoke.result }}"
           DIRECTORY_STATUS="${{ needs.directory-guard.result }}"
 
           echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
@@ -202,7 +101,6 @@ jobs:
           echo "| Backend Unit Tests | $BACKEND_STATUS |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Unit Tests | $FRONTEND_STATUS |" >> $GITHUB_STEP_SUMMARY
           echo "| Integration Tests | $INTEGRATION_STATUS |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Smoke Tests | $E2E_STATUS |" >> $GITHUB_STEP_SUMMARY
           echo "| Directory Guard | $DIRECTORY_STATUS |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -210,7 +108,6 @@ jobs:
           if [[ "$BACKEND_STATUS" == "success" && \
                 "$FRONTEND_STATUS" == "success" && \
                 "$INTEGRATION_STATUS" == "success" && \
-                "$E2E_STATUS" == "success" && \
                 "$DIRECTORY_STATUS" == "success" ]]; then
             echo "✅ **All PR validations passed!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

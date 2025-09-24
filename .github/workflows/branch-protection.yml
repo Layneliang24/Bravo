@@ -1,13 +1,16 @@
 name: Branch Protection - Double Key System
 
+# 🚀 CI速度优化 - 完整分支保护工作流
+# 专门处理 dev → main 的PR，提供完整的安全验证
 # This workflow enforces the "Double Key" system:
 # Key A: Cursor can only push to 'dev' branch
 # Key B: GitHub Actions enforces full testing on dev -> main PR
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main] # 只处理向main分支的PR (通常来自dev分支)
     types: [opened, synchronize, reopened]
+    # 🎯 优化：完整验证，包括E2E和安全扫描
   push:
     branches: [main, dev]
 
