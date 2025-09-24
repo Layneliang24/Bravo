@@ -132,12 +132,12 @@ jobs:
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
 
-  # 第三步：条件性E2E（仅在需要时运行）
+  # 第三步：条件性E2E（仅在需要时运行） - 🚀 Phase 5优化
   e2e-critical:
     if: ${{ !inputs.skip-e2e }}
     needs: [quick-checks, core-tests]
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # 大幅减少超时时间
+    timeout-minutes: 6 # 🚀 Phase 5: 10min → 6min (进一步压缩)
 
     steps:
       - uses: actions/checkout@v4
@@ -155,7 +155,7 @@ jobs:
 
             echo "等待E2E测试完成..."
             # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
-            sleep 2 # 等待容器完全启动
+            sleep 1 # 🚀 Phase 5: 减少等待时间 2s → 1s
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
             echo "E2E容器ID: $E2E_CID"
 
@@ -187,7 +187,7 @@ jobs:
 
             echo "等待E2E测试完成..."
             # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
-            sleep 2 # 等待容器完全启动
+            sleep 1 # 🚀 Phase 5: 减少等待时间 2s → 1s
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
             echo "E2E容器ID: $E2E_CID"
 

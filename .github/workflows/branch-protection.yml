@@ -85,7 +85,7 @@ jobs:
     needs: integration-tests
     uses: ./.github/workflows/test-e2e-smoke.yml
     with:
-      timeout: 20
+      timeout: 8 # 🚀 Phase 5: 减少超时 20min → 8min
 
   # Job 7: Protected files validation (特殊安全检查)
   protected-files-check:
