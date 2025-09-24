@@ -55,7 +55,7 @@ jobs:
             node_modules
             frontend/node_modules
             ~/.npm
-          key: frontend-deps-v4-phase4-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'frontend/package.json') }}
+          key: frontend-deps-v4-phase4-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'frontend/package-lock.json') }}
           restore-keys: |
             frontend-deps-v4-phase4-${{ runner.os }}-${{ env.NODE_VERSION }}-
             frontend-deps-v4-${{ runner.os }}-${{ env.NODE_VERSION }}-
@@ -77,10 +77,10 @@ jobs:
           path: |
             ~/.cache/pip
             backend/.venv
-          key: backend-deps-v4-phase4-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements/*.txt') }}
+          key: backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements/*.txt') }}
           restore-keys: |
-            backend-deps-v4-phase4-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
             backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+            backend-deps-v3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
             backend-deps-v2-${{ runner.os }}-
 
       - name: Install Backend Dependencies (Phase 4 Optimized)
