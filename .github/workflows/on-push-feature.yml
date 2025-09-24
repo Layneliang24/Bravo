@@ -60,8 +60,32 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements/*.txt"
 
-      # 依赖已由setup-cached-env action安装，无需重复安装
+      - name: Restore Backend Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: backend-deps-v2-${{ runner.os }}-${{ hashFiles('backend/requirements/*.txt') }}
+          restore-keys: |
+            backend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (if needed)
+        working-directory: ./backend
+        run: |
+          if [ ! -d ".venv" ]; then
+            echo "📦 安装后端依赖（缓存未命中）..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt -r requirements/test.txt
+            echo "✅ 后端依赖安装完成"
+          else
+            echo "✅ 使用缓存的后端依赖"
+          fi
 
       - name: Run Quick Backend Tests
         working-directory: ./backend
@@ -70,14 +94,9 @@ jobs:
           echo "Debug: 当前目录: $(pwd)"
           echo "Debug: Python版本: $(python --version)"
 
-          # CI环境：直接创建虚拟环境（每次都是全新环境）
-          echo "🔧 CI环境：创建虚拟环境..."
-          python -m venv .venv
+          # 激活虚拟环境
           source .venv/bin/activate
-
-          echo "📦 安装依赖..."
-          pip install --upgrade pip wheel
-          pip install -r requirements/base.txt -r requirements/test.txt
+          echo "Debug: 虚拟环境已激活"
 
           echo "🧪 执行测试..."
           python -m pytest tests/ -v --maxfail=5 --tb=short
