@@ -191,7 +191,20 @@ repos:
     hooks:
       - id: root-clutter
         name: Root Clutter Guard (strict)
-        entry: sh -c 'git diff --cached --name-status | grep "^[AM]" | cut -f2- | grep -E "^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example|\.backup|\.old|\.tmp|\.temp)$" | grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$" && echo "❌ 禁止在根目录添加临时文件，请放入 docs/ 或对应目录" && exit 1 || exit 0'
+        entry: >
+          sh -c '
+          FILES=$(git diff --cached --name-status | grep "^[AM]" | cut -f2- |
+                  grep -E "^[^/]+\." |
+                  grep -v -E "^\.|^(package|docker-compose|Dockerfile)" |
+                  grep -v -E "^(setup|install|configure|build|deploy)\.(sh|py|js)$" |
+                  grep -v -E "^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|CHANGELOG|LICENSE)\.md$");
+          if [ -n "$FILES" ]; then
+            echo "❌ 禁止在根目录添加文件，只允许标准文档和安装脚本";
+            echo "$FILES";
+            echo "💡 允许的安装脚本: setup.sh, install.sh, configure.sh, build.sh, deploy.sh";
+            exit 1;
+          fi
+          '
         language: system
         always_run: true
         fail_fast: true
