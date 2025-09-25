@@ -1,0 +1,26 @@
+name: 'Configure China Mirrors'
+description: 'Configure npm and pip to use China mirrors for faster downloads'
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure npm China mirror
+      shell: bash
+      run: |
+        echo "Configuring npm to use China mirrors..."
+        npm config set registry https://registry.npmmirror.com/
+        npm config set electron_mirror https://npmmirror.com/mirrors/electron/
+        npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
+        echo "npm registry configured"
+        
+    - name: Configure pip China mirror  
+      shell: bash
+      run: |
+        echo "Configuring pip to use China mirrors..."
+        mkdir -p ~/.pip
+        cat > ~/.pip/pip.conf << EOF
+        [global]
+        index-url = https://pypi.tuna.tsinghua.edu.cn/simple/
+        trusted-host = pypi.tuna.tsinghua.edu.cn
+        timeout = 120
+        EOF
+        echo "pip mirror configured"

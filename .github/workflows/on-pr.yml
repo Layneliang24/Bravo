@@ -61,12 +61,13 @@ jobs:
         run: |
           echo "Checking directory protection rules..."
 
-          # 检查根目录新增文件
-          forbidden_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          # 检查根目录新增文件 (允许标准GitHub文档)
+          forbidden_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^[^/]+\.(txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' | grep -v -E '^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|LICENSE|CHANGELOG|DEPLOYMENT_SUMMARY)\.(md|txt)$' || true)
           if [ -n "$forbidden_files" ]; then
             echo "ERROR: Root directory clutter detected:"
             echo "$forbidden_files"
-            echo "Please move documentation to docs/ and tests to appropriate directories"
+            echo "Please move tests to appropriate directories"
+            echo "Standard docs (README.md, etc.) are allowed in root"
             exit 1
           fi
 

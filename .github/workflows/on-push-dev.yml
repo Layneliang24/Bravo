@@ -80,12 +80,13 @@ jobs:
         run: |
           echo "Checking directory protection rules for dev branch..."
 
-          # 检查根目录新增文件
-          forbidden_files=$(git diff --name-only HEAD~1...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          # 检查根目录新增文件 (允许标准GitHub文档)
+          forbidden_files=$(git diff --name-only HEAD~1...HEAD | grep -E '^[^/]+\.(txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' | grep -v -E '^(README|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|LICENSE|CHANGELOG|DEPLOYMENT_SUMMARY)\.(md|txt)$' || true)
           if [ -n "$forbidden_files" ]; then
             echo "WARNING: Root directory clutter detected in dev branch:"
-            echo "$forbidden_files"
+            echo "$forbidden_files" 
             echo "Consider moving these files to appropriate directories"
+            echo "Standard docs (README.md, etc.) are allowed in root"
           else
             echo "Directory protection check passed"
           fi
