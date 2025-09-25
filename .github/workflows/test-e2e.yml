@@ -82,9 +82,31 @@ jobs:
         working-directory: ./e2e
         run: |
           npm ci
-          echo "🎭 Installing Playwright browser: ${{ inputs.browser }}..."
+
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v3-${{ runner.os }}-
+
+      - name: Install Playwright Browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "🎭 Installing Playwright browser: ${{ inputs.browser }} (cache miss)..."
           npx playwright install ${{ inputs.browser }}
           echo "✅ Browser installation completed"
+
+      - name: Playwright Cache Status
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Playwright缓存命中，跳过${{ inputs.browser }}浏览器下载"
+          else
+            echo "⬇️ Playwright缓存未命中，正在下载${{ inputs.browser }}浏览器"
+          fi
 
       - name: Setup test database
         run: |
