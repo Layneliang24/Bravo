@@ -1,0 +1,2 @@
+a84209ad2b6631a7ce7313dcad971c323457ddd547c8a83a0033a88ad14f2989 */s/WorkShop/cursor/Bravo/scripts/git-guard.sh
+ed3519299c375a7355610a0ed9847dede42578f736b7c079582d66aaff4966bb */s/WorkShop/cursor/Bravo/scripts/git-protection-monitor.sh

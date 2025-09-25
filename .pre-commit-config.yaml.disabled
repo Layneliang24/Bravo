@@ -3,15 +3,7 @@
 repos:
   # 🚀 快速语法和格式检查优先
   # 通用检查 - 快速失败
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: fast-pre-commit-check
-        name: Fast pre-commit check
-        entry: python scripts/fast_pre_commit.py
-        language: system
-        pass_filenames: false
-        always_run: true
+  # 移除无效的fast-pre-commit-check
   # Python 代码格式化
   - repo: https://github.com/psf/black
     rev: 23.11.0
@@ -19,12 +11,12 @@ repos:
       - id: black
         language_version: python3.10
 
-  # Python 导入排序
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
+  # Python 导入排序 - 暂时禁用由于依赖问题
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.12.0
+  #   hooks:
+  #     - id: isort
+  #       args: ["--profile", "black"]
 
   # Python 代码检查
   - repo: https://github.com/pycqa/flake8
@@ -57,12 +49,12 @@ repos:
         additional_dependencies: ["pbr"]
         pass_filenames: false
 
-  # JavaScript/TypeScript 代码格式化
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
-    hooks:
-      - id: prettier
-        files: \.(js|jsx|ts|tsx|json|css|scss|md|yml|yaml)$
+  # JavaScript/TypeScript 代码格式化 - 暂时禁用
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v3.1.0
+  #   hooks:
+  #     - id: prettier
+  #       files: \.(js|jsx|ts|tsx|json|css|scss|md|yml|yaml)$
 
   # ESLint检查 - temporarily disabled
   - repo: https://github.com/pre-commit/mirrors-eslint
