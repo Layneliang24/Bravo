@@ -10,8 +10,7 @@ help: ## 显示帮助信息
 # 安装依赖
 install: ## 安装所有依赖
 	cd backend && pip install -r requirements/local.txt
-	cd frontend && npm install
-	cd e2e && npm install
+	npm ci --prefer-offline --no-audit
 
 # 开发环境
 dev: ## 启动开发环境

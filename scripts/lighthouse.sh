@@ -23,7 +23,8 @@ echo -e "${BLUE}目标URL: $URL${NC}"
 # 检查 Lighthouse 是否安装
 if ! command -v lighthouse &> /dev/null; then
     echo -e "${RED}❌ Lighthouse 未安装，正在安装...${NC}"
-    npm install -g lighthouse
+    # lighthouse通过@lhci/cli管理，无需全局安装
+    echo "✅ Lighthouse via @lhci/cli in devDependencies"
 fi
 
 # 创建输出目录

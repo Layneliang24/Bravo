@@ -1,0 +1,270 @@
+name: E2E Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      browser:
+        description: "Browser to run tests on"
+        type: string
+        default: "chromium"
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 15
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  e2e-smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=8
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore All Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            e2e/node_modules
+            backend/.venv
+            ~/.cache/pip
+            ~/.npm
+          key: all-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'e2e/package-lock.json', 'backend/requirements/*.txt') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+            e2e-deps-v2-${{ runner.os }}-
+            backend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (Host Architecture)
+        run: |
+          echo "🎯 基于历史成功案例：GitHub Actions宿主机架构"
+          echo "📚 安装依赖到宿主机，直接运行E2E测试"
+
+          # 🏆 第7轮修复：根目录添加@playwright/test，利用npm workspaces
+          # 📋 npm workspaces依赖安装顺序修复：必须先安装根目录依赖
+          echo "安装根目录依赖（包含@playwright/test）..."
+          npm ci --prefer-offline --no-audit
+
+          # Backend
+          echo "安装后端依赖..."
+          if [ ! -d "backend/.venv" ]; then
+            cd backend
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt
+            cd ..
+          fi
+
+          # Frontend依赖已通过根目录npm workspaces自动管理
+          echo "✅ Frontend dependencies managed via root npm workspaces"
+
+          # E2E (利用npm workspaces，@playwright/test应该从根目录解析)
+          echo "验证E2E依赖..."
+          cd e2e
+          echo "Working directory: $(pwd)"
+          echo "检查@playwright/test解析："
+          node -e "console.log('✅ @playwright/test resolved:', require.resolve('@playwright/test'))" || {
+            echo "⚠️ @playwright/test无法解析，尝试本地安装..."
+            npm ci --prefer-offline --no-audit
+          }
+          cd ..
+
+      # 使用统一的缓存设置（包含Playwright浏览器缓存）
+      - name: Setup E2E Cache
+        uses: ./.github/actions/cache-setup
+        with:
+          cache-type: e2e
+          cache-key-suffix: ${{ inputs.browser }}
+
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v3-${{ runner.os }}-
+
+      - name: Install Playwright Browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "🎭 Installing Playwright browser: ${{ inputs.browser }} (cache miss)..."
+          npx playwright install ${{ inputs.browser }} --with-deps
+          echo "✅ Browser installation completed"
+
+      - name: Playwright Cache Status
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Playwright缓存命中，跳过280MB浏览器下载"
+          else
+            echo "⬇️ Playwright缓存未命中，需要下载浏览器文件"
+          fi
+
+      - name: Install MySQL Client
+        run: |
+          echo "Installing MySQL client tools..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          echo "MySQL client installed successfully"
+
+      - name: Setup Test Database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Build Frontend
+        run: |
+          echo "Building frontend for E2E tests..."
+
+          # Root npm workspaces dependencies handled by cache
+          echo "✅ Dependencies managed via root npm workspaces"
+
+          # Verify vue-tsc is available - but don't break if missing
+          echo "Checking vue-tsc availability..."
+          if ! npx vue-tsc --version &> /dev/null; then
+            echo "⚠️  vue-tsc not available, but continuing with build..."
+            echo "Frontend dependencies may be sufficient for basic building"
+          else
+            echo "✅ vue-tsc is available"
+          fi
+
+          echo "Building with vue-tsc and vite..."
+          npm run build:frontend
+          echo "Frontend build completed"
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          python manage.py migrate --settings=bravo.settings.test
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          echo $! > backend.pid
+          echo "Backend server started"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Start Frontend Server
+        run: |
+          echo "Starting frontend preview server on port 3001..."
+          cd frontend && npm run preview -- --port 3001 --host 0.0.0.0 &
+          echo $! > frontend.pid
+          echo "Frontend server started on port 3001"
+
+      - name: Wait for Servers
+        run: |
+          echo "Waiting for servers to be ready..."
+
+          # Check backend server
+          echo "Checking backend server (http://localhost:8000/health/)..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do
+            echo "Backend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Backend server failed to start within 60 seconds"
+            echo "Backend process status:"
+            ps aux | grep python || true
+            echo "Backend logs (if available):"
+            [ -f backend/backend.pid ] && kill -0 $(cat backend/backend.pid) 2>/dev/null || echo "Backend process not running"
+            exit 1
+          }
+          echo "✅ Backend server is ready"
+
+          # Check frontend server
+          echo "Checking frontend server (http://localhost:3001)..."
+          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do
+            echo "Frontend not ready, waiting...";
+            sleep 2;
+          done' || {
+            echo "❌ Frontend server failed to start within 60 seconds"
+            echo "Frontend process status:"
+            ps aux | grep vite || true
+            [ -f frontend/frontend.pid ] && kill -0 $(cat frontend/frontend.pid) 2>/dev/null || echo "Frontend process not running"
+            exit 1
+          }
+          echo "✅ Frontend server is ready"
+
+          echo "🎉 All servers are ready!"
+
+      - name: Run Smoke Tests
+        working-directory: ./e2e
+        run: |
+          echo "🎯 执行E2E烟雾测试（基于历史成功案例的宿主机架构）"
+          echo "📚 回到历史验证成功的解决方案：GitHub Actions宿主机直接运行"
+
+          echo "🔍 Pre-flight checks:"
+          echo "Working directory: $(pwd)"
+          echo "Available playwright binary: $(which playwright || echo 'playwright binary not in PATH')"
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+
+          echo "🧪 Module resolution test:"
+          node -e "console.log('✅ Config can load @playwright/test:', require.resolve('@playwright/test'))" || {
+            echo "❌ CRITICAL: playwright.config.ts will fail to load"
+            echo "Debug info:"
+            npm ls @playwright/test || echo "Not in dependency tree"
+            exit 1
+          }
+
+          echo "🎭 Running E2E smoke tests..."
+          # 使用npx确保使用本地安装的playwright
+          npx playwright test --grep "@smoke" --project=chromium --max-failures=3
+          echo "✅ Smoke tests completed successfully"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+          API_URL: http://localhost:8000
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-results-${{ inputs.browser }}
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 3
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "Cleaning up processes..."
+          [ -f backend/backend.pid ] && kill $(cat backend/backend.pid) 2>/dev/null || true
+          [ -f frontend/frontend.pid ] && kill $(cat frontend/frontend.pid) 2>/dev/null || true
+          echo "Cleanup completed"

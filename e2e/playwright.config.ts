@@ -32,10 +32,7 @@ export default defineConfig({
 
   // 全局设置
   use: {
-    // 基础URL
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
-
-    // 浏览器上下文选项
+    baseURL: process.env.TEST_BASE_URL || process.env.FRONTEND_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

@@ -95,6 +95,7 @@ coverage.xml
 test-results/
 playwright-report/
 test-results.xml
+_gha_artifacts/
 
 # Docker
 .dockerignore
@@ -109,3 +110,7 @@ celerybeat.pid
 # Temporary files
 *.tmp
 *.temp
+
+# Temporary files archive
+temp_files_archive/
+.mypy_cache/

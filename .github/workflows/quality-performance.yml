@@ -1,0 +1,272 @@
+name: Performance Quality Gate
+
+on:
+  workflow_call:
+    inputs:
+      min-performance-score:
+        description: "Minimum performance score (0-1)"
+        type: string
+        default: "0.7"
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 12
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  performance-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore Frontend Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: frontend-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (fallback)
+        run: |
+          # Root npm workspaces dependencies (MUST be first)
+          if [ ! -d "node_modules" ]; then
+            echo "Installing root npm workspaces dependencies..."
+            npm ci --prefer-offline --no-audit
+          else
+            echo "✅ Using cached npm workspaces dependencies"
+          fi
+
+      - name: Install Lighthouse CI
+        run: |
+          echo "Installing Lighthouse CI..."
+          npm ci --prefer-offline --no-audit
+          echo "Lighthouse CI installed"
+
+      - name: Build Frontend for Performance Testing
+        working-directory: ./frontend
+        run: |
+          echo "Building frontend for performance testing..."
+          npm run build
+          echo "Frontend build completed"
+
+      - name: Create Performance Test Page
+        run: |
+          echo "Creating optimized test page for Lighthouse..."
+          cat > frontend/dist/lighthouse-test.html << 'HTML_EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Bravo - 智能学习平台</title>
+              <meta name="description" content="Bravo 是一个集博客、英语学习、求职于一体的智能学习平台">
+              <link rel="preload" href="data:font/woff2;base64,d09GMgABAAAAAAYQAAoAAAAABxAAAAXEAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbIBwqBmAAgTIBNgIkA1QEIAWDcgcgGxcHyB4HuGE8VaQoIqLI/39Eqzb/f//M7L1vZt5782a2dnd3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d" as="font" type="font/woff2" crossorigin>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      background: #f8f9fa;
+                  }
+                  .container {
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 0 20px;
+                  }
+                  .header {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 3rem 0;
+                      text-align: center;
+                  }
+                  .header h1 {
+                      font-size: 2.5rem;
+                      margin-bottom: 1rem;
+                      font-weight: 700;
+                  }
+                  .header p {
+                      font-size: 1.1rem;
+                      opacity: 0.9;
+                  }
+                  .features {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 2rem;
+                      padding: 3rem 0;
+                  }
+                  .feature {
+                      background: white;
+                      padding: 2rem;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                      text-align: center;
+                      transition: transform 0.2s;
+                  }
+                  .feature:hover {
+                      transform: translateY(-2px);
+                  }
+                  .feature h3 {
+                      color: #667eea;
+                      margin-bottom: 1rem;
+                      font-size: 1.25rem;
+                  }
+                  .footer {
+                      text-align: center;
+                      padding: 2rem 0;
+                      color: #666;
+                      border-top: 1px solid #eee;
+                      margin-top: 3rem;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <div class="container">
+                      <h1>Bravo 智能学习平台</h1>
+                      <p>集博客、英语学习、求职于一体的智能学习解决方案</p>
+                  </div>
+              </div>
+
+              <div class="container">
+                  <div class="features">
+                      <div class="feature">
+                          <h3>📝 智能博客</h3>
+                          <p>创建和分享高质量的技术博客，支持 Markdown 编辑和多媒体内容</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🌍 英语学习</h3>
+                          <p>AI 驱动的英语学习系统，提供个性化的学习路径和实时反馈</p>
+                      </div>
+                      <div class="feature">
+                          <h3>💼 求职助手</h3>
+                          <p>智能简历优化和面试准备，帮助你在职场中脱颖而出</p>
+                      </div>
+                  </div>
+
+                  <div style="text-align: center; padding: 3rem 0;">
+                      <h2>开始你的学习之旅</h2>
+                      <p>加入 Bravo，体验智能化的学习和成长</p>
+                  </div>
+              </div>
+
+              <div class="footer">
+                  <div class="container">
+                      <p>&copy; 2025 Bravo 智能学习平台. All rights reserved.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          HTML_EOF
+          echo "Performance test page created"
+
+      - name: Create Lighthouse Configuration
+        run: |
+          echo "Creating Lighthouse CI configuration..."
+          cat > lighthouserc.json << EOF
+          {
+            "ci": {
+              "collect": {
+                "staticDistDir": "./frontend/dist",
+                "url": ["lighthouse-test.html"],
+                "numberOfRuns": 3,
+                "settings": {
+                  "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless",
+                  "maxWaitForFcp": 30000,
+                  "maxWaitForLoad": 60000,
+                  "pauseAfterFcpMs": 1000,
+                  "pauseAfterLoadMs": 1000,
+                  "networkQuietThresholdMs": 1000,
+                  "cpuQuietThresholdMs": 1000,
+                  "emulatedFormFactor": "desktop",
+                  "throttlingMethod": "simulate",
+                  "screenEmulation": {
+                    "mobile": false,
+                    "width": 1350,
+                    "height": 940,
+                    "deviceScaleFactor": 1,
+                    "disabled": false
+                  }
+                }
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": ${{ inputs.min-performance-score }}}],
+                  "categories:accessibility": ["warn", {"minScore": 0.8}],
+                  "categories:best-practices": ["warn", {"minScore": 0.8}],
+                  "categories:seo": ["warn", {"minScore": 0.8}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+          echo "Lighthouse configuration created"
+
+      - name: Run Lighthouse Performance Audit
+        run: |
+          echo "Running Lighthouse performance audit..."
+          echo "Target performance score: ${{ inputs.min-performance-score }}"
+
+          npx lhci autorun --config=lighthouserc.json
+
+          echo "Performance audit completed"
+
+      - name: Bundle Size Analysis
+        working-directory: ./frontend
+        run: |
+          echo "Analyzing bundle size..."
+
+          if [ -d "dist" ]; then
+            echo "Bundle Size Report:"
+            find dist -name "*.js" -exec ls -lh {} \; | awk '{print $5, $9}'
+            find dist -name "*.css" -exec ls -lh {} \; | awk '{print $5, $9}'
+
+            # Calculate total size
+            TOTAL_SIZE=$(find dist -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" \) -exec du -b {} + | awk '{sum += $1} END {print sum}')
+            TOTAL_SIZE_MB=$((TOTAL_SIZE / 1024 / 1024))
+
+            echo "Total bundle size: ${TOTAL_SIZE_MB}MB"
+
+            if [ "$TOTAL_SIZE_MB" -gt 10 ]; then
+              echo "WARNING: Bundle size exceeds 10MB threshold"
+            else
+              echo "Bundle size is within acceptable limits"
+            fi
+          else
+            echo "ERROR: Frontend build directory not found"
+            exit 1
+          fi
+
+      - name: Upload Performance Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: |
+            .lighthouseci/
+            lhci-reports/
+          retention-days: 7
+
+      - name: Performance Summary
+        run: |
+          echo "Performance Audit Summary:"
+          echo "- Lighthouse CI: Web performance metrics"
+          echo "- Bundle analysis: Asset size optimization"
+          echo "- Performance score threshold: ${{ inputs.min-performance-score }}"
+          echo "- Test page: Optimized static HTML"

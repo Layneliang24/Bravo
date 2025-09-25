@@ -1,0 +1,305 @@
+name: E2E Full Test Suite
+
+on:
+  workflow_call:
+    inputs:
+      browser:
+        description: "Browser to run tests on"
+        type: string
+        default: "chromium"
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 25
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  e2e-full-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=10
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:7-alpine
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore All Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            e2e/node_modules
+            backend/.venv
+            ~/.cache/pip
+            ~/.npm
+          key: all-deps-v2-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json', 'e2e/package-lock.json', 'backend/requirements/*.txt') }}
+          restore-keys: |
+            frontend-deps-v2-${{ runner.os }}-
+            e2e-deps-v2-${{ runner.os }}-
+            backend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (fallback)
+        run: |
+          # Root workspaces (must install first for npm workspaces to work correctly)
+          if [ ! -d "node_modules" ]; then
+            echo "Installing root workspaces dependencies..."
+            npm ci --prefer-offline --no-audit
+          fi
+
+          # Frontend
+          # Frontend dependencies already managed by root npm workspaces
+          echo "✅ Frontend dependencies managed via root npm workspaces"
+
+          # E2E
+          if [ ! -d "e2e/node_modules" ]; then
+            echo "Installing E2E dependencies..."
+            # E2E dependencies managed via root npm workspaces
+            echo "✅ E2E dependencies managed via root npm workspaces"
+          fi
+
+          # Backend
+          if [ ! -d "backend/.venv" ]; then
+            echo "Installing backend dependencies..."
+            cd backend
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt
+            pip install -r requirements/test.txt
+            cd ..
+          fi
+
+      # 使用统一的缓存设置（包含Playwright浏览器缓存）
+      - name: Setup E2E Cache
+        uses: ./.github/actions/cache-setup
+        with:
+          cache-type: e2e
+          cache-key-suffix: ${{ inputs.browser }}
+
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v3-${{ runner.os }}-
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: |
+          echo "🎭 Installing Playwright browsers (cache miss)..."
+          npm run playwright:install -- ${{ inputs.browser }} --with-deps || npx playwright install ${{ inputs.browser }} --with-deps
+          npm run playwright:install-deps || npx playwright install-deps
+          echo "✅ Browser installation completed"
+
+      - name: Playwright Cache Status
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Playwright缓存命中，跳过浏览器下载和依赖安装"
+          else
+            echo "⬇️ Playwright缓存未命中，正在安装浏览器和依赖"
+          fi
+
+      - name: Setup Test Database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Build Frontend
+        run: |
+          echo "Building frontend for E2E tests..."
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+
+          # Root npm workspaces dependencies handled by cache
+          echo "✅ Dependencies managed via root npm workspaces"
+
+          echo "Building frontend..."
+          npm run build:frontend
+          echo "Frontend build completed"
+
+      - name: Setup Test Data
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          echo "Setting up test data..."
+          python manage.py migrate --settings=bravo.settings.test
+
+          # 创建测试数据 (如果有fixture)
+          if [ -f "fixtures/test_data.json" ]; then
+            python manage.py loaddata fixtures/test_data.json --settings=bravo.settings.test
+          fi
+
+          echo "Test data setup completed"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          REDIS_URL: redis://127.0.0.1:6379/0
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          python manage.py runserver 8000 --settings=bravo.settings.test &
+          echo $! > backend.pid
+          echo "Backend server started"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          REDIS_URL: redis://127.0.0.1:6379/0
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Start Frontend Server
+        run: |
+          echo "Starting frontend server for E2E tests..."
+          cd frontend && npm run preview -- --port 3001 --host 0.0.0.0 &
+          echo $! > frontend.pid
+          echo "Frontend server started on port 3001"
+
+      - name: Wait for Servers
+        run: |
+          echo "Waiting for servers to be ready..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/health/ > /dev/null; do sleep 1; done' || exit 1
+          timeout 60 bash -c 'until curl -s http://localhost:3001 > /dev/null; do sleep 1; done' || exit 1
+          echo "All servers are ready!"
+
+      - name: Run Full E2E Test Suite
+        working-directory: ./e2e
+        run: |
+          echo "Running complete E2E test suite..."
+          echo "Browser: ${{ inputs.browser }}"
+
+          # 运行完整的E2E测试套件 - 使用npm run test确保包一致性
+          npm run test -- \
+            --project=${{ inputs.browser }} \
+            --max-failures=5 \
+            --reporter=html,junit
+
+          echo "Full E2E test suite completed"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-results.xml
+
+      - name: Run Regression E2E Tests
+        working-directory: ./e2e
+        run: |
+          echo "Running regression E2E tests..."
+
+          # 运行标记为回归测试的E2E测试 - 使用npm run test
+          npm run test -- \
+            --grep "@regression" \
+            --project=${{ inputs.browser }} \
+            --max-failures=3 \
+            --reporter=line
+
+          echo "Regression E2E tests completed"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+
+      - name: Run Cross-Browser Compatibility (if not chromium)
+        if: inputs.browser != 'chromium'
+        working-directory: ./e2e
+        run: |
+          echo "Running cross-browser compatibility tests..."
+
+          # 运行关键路径的跨浏览器测试 - 使用npm run test
+          npm run test -- \
+            --grep "@critical" \
+            --project=${{ inputs.browser }} \
+            --max-failures=2
+
+          echo "Cross-browser tests completed"
+        env:
+          CI: true
+          TEST_BASE_URL: http://localhost:3001
+
+      - name: Generate E2E Test Report
+        if: always()
+        working-directory: ./e2e
+        run: |
+          echo "Generating E2E test report..."
+
+          if [ -f "test-results/results.json" ]; then
+            echo "Test results found, generating summary..."
+            # 这里可以添加测试结果分析脚本
+          fi
+
+          echo "E2E test report generated"
+
+      - name: Upload E2E Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-full-results-${{ inputs.browser }}
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+            e2e/e2e-results.xml
+          retention-days: 7
+
+      - name: Upload Screenshots and Videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-artifacts-${{ inputs.browser }}
+          path: |
+            e2e/test-results/**/*.png
+            e2e/test-results/**/*.webm
+          retention-days: 5
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "Cleaning up processes..."
+          [ -f backend/backend.pid ] && kill $(cat backend/backend.pid) 2>/dev/null || true
+          [ -f frontend/frontend.pid ] && kill $(cat frontend/frontend.pid) 2>/dev/null || true
+          echo "Cleanup completed"
+
+      - name: E2E Test Summary
+        run: |
+          echo "E2E Full Test Suite Summary:"
+          echo "- Browser: ${{ inputs.browser }}"
+          echo "- Full test suite execution"
+          echo "- Regression test validation"
+          echo "- Cross-browser compatibility (if applicable)"
+          echo "- Screenshot and video capture on failures"

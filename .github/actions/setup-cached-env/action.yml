@@ -1,0 +1,111 @@
+name: Setup Cached Environment
+description: "Fast environment setup with aggressive caching"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js with Cache
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: |
+          package-lock.json
+          frontend/package-lock.json
+          e2e/package-lock.json
+
+    - name: Setup Python with Cache
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: "pip"
+        cache-dependency-path: "backend/requirements/*.txt"
+
+    - name: Restore Full Dependency Cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          node_modules
+          ~/.cache/pip
+          backend/.venv
+        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+        restore-keys: |
+          full-deps-v5-${{ runner.os }}-
+
+    - name: Install Missing Dependencies
+      shell: bash
+      run: |
+        echo "🚀 检查并安装缺失依赖..."
+
+        # 检查根依赖
+        if [ ! -d "node_modules" ]; then
+          echo "安装根依赖..."
+          npm ci --prefer-offline --no-audit
+        fi
+
+        # 前端依赖通过根目录npm workspaces管理
+        echo "✅ Frontend dependencies managed via root npm workspaces"
+
+        # 检查后端依赖 - 修复缓存问题：检查关键包是否存在
+        cd backend
+        if [ ! -d ".venv" ]; then
+          echo "🆕 创建虚拟环境..."
+          python -m venv .venv
+          NEED_INSTALL=true
+        else
+          echo "🔍 检查现有虚拟环境中的关键依赖..."
+          source .venv/bin/activate
+          # 检查多个关键依赖包
+          MISSING_PACKAGES=""
+
+          # 检查django_extensions
+          if ! python -c "import django_extensions" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES django_extensions"
+          fi
+
+          # 检查silk (性能分析工具)
+          if ! python -c "import silk" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES silk"
+          fi
+
+          # 检查debug_toolbar
+          if ! python -c "import debug_toolbar" 2>/dev/null; then
+            MISSING_PACKAGES="$MISSING_PACKAGES debug_toolbar"
+          fi
+
+          if [ -n "$MISSING_PACKAGES" ]; then
+            echo "❌ 关键依赖缺失:$MISSING_PACKAGES"
+            echo "需要重新安装依赖确保环境完整"
+            NEED_INSTALL=true
+          else
+            echo "✅ 所有关键依赖存在，跳过安装"
+            NEED_INSTALL=false
+          fi
+        fi
+
+        if [ "$NEED_INSTALL" = "true" ]; then
+          echo "📦 安装/更新后端依赖..."
+          source .venv/bin/activate
+          pip install --upgrade pip wheel
+
+          # 🔧 修复编码问题：强制使用UTF-8编码读取requirements文件
+          export PYTHONIOENCODING=utf-8
+          export LC_ALL=C.UTF-8
+          export LANG=C.UTF-8
+
+          echo "📦 安装requirements（强制UTF-8编码）..."
+          pip install -r requirements/base.txt -r requirements/test.txt
+        fi
+        cd ..
+
+        echo "✅ 依赖检查完成"
+
+    - name: Save Full Dependency Cache
+      uses: actions/cache/save@v4
+      if: always()
+      with:
+        path: |
+          node_modules
+          ~/.cache/pip
+          backend/.venv
+        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}

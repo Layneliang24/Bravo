@@ -19,6 +19,12 @@ RUN apt-get update \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
+# 配置pip国内源
+RUN echo "🐍 配置pip国内源..." && \
+    pip config set global.index-url https://pypi.org/simple/ && \
+    pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn && \
+    pip config set global.timeout 60
+
 # 安装 Python 依赖（开发环境）
 COPY requirements/ requirements/
 RUN pip install --no-cache-dir -r requirements/local.txt

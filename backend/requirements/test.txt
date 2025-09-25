@@ -1,37 +1,43 @@
-# 测试环境依赖模板
+# Test environment dependencies
 
-# 继承基础依赖
+# Inherit base dependencies
 -r base.txt
 
-# 测试框架
+# Testing frameworks
 pytest==7.4.3
 pytest-django==4.7.0
 pytest-cov==4.1.0
 pytest-mock==3.12.0
 pytest-xdist==3.5.0
 
-# 测试数据
+# Test data
 factory-boy==3.3.0
 faker==20.1.0
 freezegun==1.2.2
 
-# 测试工具
+# Testing tools
 coverage==7.3.2
 pytest-html==4.1.1
 pytest-json-report==1.5.0
 
-# 性能测试
+# Performance testing
 locust==2.17.0
 
-# 安全测试
+# Security testing
 bandit==1.7.5
-safety==2.3.5
+safety>=3.0.0
 
-# 代码质量
-pylint==3.0.3
-black==23.11.0
-isort==5.12.0
-mypy==1.7.1
+# Code quality tools (for CI and local development)
+flake8==6.0.0
 
-# 数据库测试
-pytest-postgresql==5.0.0
+# Debug tools (prevent CI import errors)
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3
+
+# Performance analysis tools (consistent with local.txt/prod.txt)
+django-silk==5.0.4
+
+# Force cache refresh - ensure venv contains django-extensions (2025-09-23)
+
+# Database configuration
+dj-database-url==2.1.0

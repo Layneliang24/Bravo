@@ -1,0 +1,162 @@
+name: Backend Unit Tests
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        description: "Generate coverage report"
+        type: boolean
+        default: false
+      timeout:
+        description: "Job timeout in minutes"
+        type: number
+        default: 10
+
+env:
+  PYTHON_VERSION: "3.11"
+  MYSQL_DATABASE: bravo_test
+  MYSQL_USER: bravo_user
+  MYSQL_PASSWORD: bravo_password
+  MYSQL_ROOT_PASSWORD: root_password
+
+jobs:
+  backend-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=8
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: "backend/requirements/*.txt"
+
+      - name: Restore Backend Dependencies (Phase 3)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements/*.txt') }}
+          restore-keys: |
+            backend-deps-v3-phase3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+            backend-deps-v3-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+            backend-deps-v2-${{ runner.os }}-
+
+      - name: Install Dependencies (fallback)
+        working-directory: ./backend
+        run: |
+          if [ ! -d ".venv" ]; then
+            echo "Installing backend dependencies (cache miss)..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/base.txt
+            pip install -r requirements/test.txt
+          else
+            echo "Using cached backend dependencies"
+          fi
+
+      - name: Cache MySQL Client
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: mysql-client-${{ runner.os }}-v1
+          restore-keys: |
+            mysql-client-${{ runner.os }}-
+
+      - name: Install MySQL Client (Cached)
+        run: |
+          echo "Installing MySQL client tools (with caching)..."
+          # 检查是否已安装
+          if ! command -v mysql &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y mysql-client
+            echo "MySQL client installed successfully"
+          else
+            echo "MySQL client already available"
+          fi
+
+      - name: Wait for MySQL
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..20}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready, waiting... ($i/20)"
+            sleep 1
+          done
+
+      - name: Setup Test Database (pytest-xdist compatible)
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
+            CREATE DATABASE IF NOT EXISTS bravo_test;
+            GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
+
+            /* 🚀 Phase 3: 为pytest-xdist并行测试授权 */
+            /* 给bravo_user创建数据库的权限，支持gw0, gw1等worker数据库 */
+            GRANT CREATE ON *.* TO 'bravo_user'@'%';
+            GRANT ALL PRIVILEGES ON \`bravo_test_%\`.* TO 'bravo_user'@'%';
+
+            FLUSH PRIVILEGES;
+          "
+          echo "✅ 数据库权限配置完成，支持pytest-xdist并行测试"
+
+      - name: Run Unit Tests (Parallel)
+        working-directory: ./backend
+        run: |
+          source .venv/bin/activate
+          echo "Running backend unit tests in parallel..."
+
+          # 🚀 Phase 3: 使用pytest-xdist并行执行测试
+          if [ "${{ inputs.coverage }}" == "true" ]; then
+            python -m pytest tests/ \
+              --cov=. --cov-report=xml --cov-report=html \
+              --numprocesses=auto --dist=worksteal \
+              --maxfail=3 -v --tb=short
+          else
+            python -m pytest tests/ \
+              --numprocesses=auto --dist=worksteal \
+              --maxfail=3 -v --tb=short
+          fi
+
+          echo "Backend unit tests completed (parallel execution)"
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Upload Coverage Report
+        if: inputs.coverage && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-coverage
+          path: |
+            backend/coverage.xml
+            backend/htmlcov/
+          retention-days: 7
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-results
+          path: backend/test-results/
+          retention-days: 3

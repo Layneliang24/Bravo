@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "playwright test",
+    "test": "npx playwright test",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
@@ -28,8 +28,10 @@
     "show-trace": "playwright show-trace",
     "codegen": "playwright codegen",
     "codegen:blog": "playwright codegen http://localhost:3000/blog",
-    "install": "playwright install",
+    "playwright-install": "playwright install",
     "install:deps": "playwright install-deps",
+    "playwright:install": "playwright install",
+    "playwright:install-deps": "playwright install-deps",
     "doctor": "playwright doctor",
     "clean": "rimraf test-results playwright-report coverage screenshots",
     "clean:all": "npm run clean && rimraf node_modules package-lock.json",
@@ -57,7 +59,7 @@
     "start": "npm run test:ui"
   },
   "dependencies": {
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.55.0"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.3",

@@ -1,0 +1,113 @@
+version: "3.8"
+
+services:
+  # 预配置的MySQL服务
+  mysql-test:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: bravo_test
+      MYSQL_USER: bravo_user
+      MYSQL_PASSWORD: bravo_password
+      MYSQL_ROOT_PASSWORD: root_password
+    tmpfs:
+      - /var/lib/mysql # 使用内存存储，加速测试
+    command: --default-authentication-plugin=mysql_native_password --skip-log-bin
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bash",
+          "-c",
+          "mysqladmin ping -h localhost && mysql -u root -proot_password -e 'USE bravo_test; SELECT 1;'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # 后端测试服务
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql-test
+      DB_NAME: bravo_test
+      DB_USER: bravo_user
+      DB_PASSWORD: bravo_password
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+
+  # 前端测试服务 - 第21轮修复：移除frontend-build依赖，自给自足
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    # 移除对frontend-build的依赖，消除一次性任务导致的Docker Compose终止问题
+    ports:
+      - "3001:3000"
+    environment:
+      VITE_API_URL: http://backend-test:8000
+      PORT: 3000
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "echo '🚀 启动前端测试服务...' && echo '🔧 容器内独立构建前端项目...' && npm run build && echo '📁 检查构建文件目录...' && ls -la /app/dist/ || echo '⚠️ 构建目录检查失败' && if [ -d '/app/dist' ] && [ -f '/app/dist/index.html' ]; then echo '✅ 找到构建文件，使用 Vite preview 模式' && npm run preview -- --host 0.0.0.0 --port 3000; else echo '❌ 构建失败，回退到开发模式' && npm run dev -- --host 0.0.0.0 --port 3000; fi",
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # E2E测试服务 - 🚀 Phase 5.2缓存优化架构
+  e2e-tests:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile.test
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      frontend-test:
+        condition: service_healthy
+    # 🚀 Phase 5.2: 挂载Playwright浏览器缓存 (关键优化)
+    volumes:
+      - ~/.cache/ms-playwright:/root/.cache/ms-playwright:ro
+    # 🚀 Phase 5.2: 配置Playwright使用挂载的缓存
+    environment:
+      - PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+      - CI=true
+      - NODE_ENV=test
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo '⏳ 等待所有服务就绪...'
+        echo '🔗 测试服务连通性...'
+        until curl -s http://backend-test:8000/health/; do
+          echo "等待后端服务..."; sleep 3
+        done
+        echo '✅ 后端服务已就绪'
+        until curl -s http://frontend-test:3000/; do
+          echo "等待前端服务..."; sleep 3
+        done
+        echo '✅ 前端服务已就绪'
+        echo '🔍 详细服务状态验证...'
+        echo "后端健康检查: $(curl -s http://backend-test:8000/health/)"
+        echo "前端首页响应: $(curl -s http://frontend-test:3000/ | head -c 200)"
+        echo "环境变量: TEST_BASE_URL=$$TEST_BASE_URL, FRONTEND_URL=$$FRONTEND_URL"
+        echo "当前工作目录: $(pwd)"
+        echo "Playwright配置: $(cat playwright.config.ts | grep baseURL || echo '未找到baseURL配置')"
+        echo '🧪 执行自给自足E2E测试...'
+        ./run-tests.sh
