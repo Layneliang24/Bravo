@@ -110,13 +110,31 @@ jobs:
           cache-type: e2e
           cache-key-suffix: ${{ inputs.browser }}
 
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-browsers-v3-${{ runner.os }}-
+
       - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: ./e2e
         run: |
-          echo "🎭 Installing Playwright browsers..."
+          echo "🎭 Installing Playwright browsers (cache miss)..."
           npm run playwright:install -- ${{ inputs.browser }} --with-deps || npx playwright install ${{ inputs.browser }} --with-deps
           npm run playwright:install-deps || npx playwright install-deps
           echo "✅ Browser installation completed"
+
+      - name: Playwright Cache Status
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Playwright缓存命中，跳过浏览器下载和依赖安装"
+          else
+            echo "⬇️ Playwright缓存未命中，正在安装浏览器和依赖"
+          fi
 
       - name: Setup Test Database
         run: |
