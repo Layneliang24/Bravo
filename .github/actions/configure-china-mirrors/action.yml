@@ -8,8 +8,9 @@ runs:
       run: |
         echo "Configuring npm to use China mirrors..."
         npm config set registry https://registry.npmmirror.com/
-        npm config set electron_mirror https://npmmirror.com/mirrors/electron/
-        npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
+        # Set Electron mirror via environment variables instead of npm config
+        echo "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/" >> $GITHUB_ENV
+        echo "ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/" >> $GITHUB_ENV
         echo "npm registry configured"
         
     - name: Configure pip China mirror  
