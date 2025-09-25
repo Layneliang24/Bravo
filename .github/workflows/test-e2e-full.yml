@@ -131,9 +131,9 @@ jobs:
       - name: Playwright Cache Status
         run: |
           if [ "${{ steps.playwright-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "✅ Playwright缓存命中，跳过浏览器下载和依赖安装"
+            echo "✅ Playwright缓存命中，跳过浏览器下载和依赖install"
           else
-            echo "⬇️ Playwright缓存未命中，正在安装浏览器和依赖"
+            echo "⬇️ Playwright缓存未命中，正在install浏览器和依赖"
           fi
 
       - name: Setup Test Database
@@ -164,7 +164,7 @@ jobs:
           echo "Setting up test data..."
           python manage.py migrate --settings=bravo.settings.test
 
-          # 创建测试数据 (如果有fixture)
+          # 创建test数据 (如果有fixture)
           if [ -f "fixtures/test_data.json" ]; then
             python manage.py loaddata fixtures/test_data.json --settings=bravo.settings.test
           fi
@@ -207,7 +207,7 @@ jobs:
           echo "Running complete E2E test suite..."
           echo "Browser: ${{ inputs.browser }}"
 
-          # 运行完整的E2E测试套件 - 使用npm run test确保包一致性
+          # 运行完整的E2Etest套件 - 使用npm run test确保包一致性
           npm run test -- \
             --project=${{ inputs.browser }} \
             --max-failures=5 \
@@ -224,7 +224,7 @@ jobs:
         run: |
           echo "Running regression E2E tests..."
 
-          # 运行标记为回归测试的E2E测试 - 使用npm run test
+          # 运行标记为回归test的E2Etest - 使用npm run test
           npm run test -- \
             --grep "@regression" \
             --project=${{ inputs.browser }} \
@@ -242,7 +242,7 @@ jobs:
         run: |
           echo "Running cross-browser compatibility tests..."
 
-          # 运行关键路径的跨浏览器测试 - 使用npm run test
+          # 运行关键路径的跨浏览器test - 使用npm run test
           npm run test -- \
             --grep "@critical" \
             --project=${{ inputs.browser }} \
@@ -261,7 +261,7 @@ jobs:
 
           if [ -f "test-results/results.json" ]; then
             echo "Test results found, generating summary..."
-            # 这里可以添加测试结果分析脚本
+            # 这里可以添加test结果分析脚本
           fi
 
           echo "E2E test report generated"

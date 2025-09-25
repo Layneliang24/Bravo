@@ -1,12 +1,12 @@
 name: PR Validation - Fast Track
 
-# 🚀 CI速度优化 - 快速PR验证工作流
+# 🚀 CI速度优化 - 快速PRvalidate工作流
 # 专门处理 feature → dev 的PR，提供快速反馈
 on:
   pull_request:
-    branches: [dev] # 只处理向dev分支的PR (通常来自feature分支)
+    branches: [dev] # 只处理向devbranch的PR (通常来自featurebranch)
     types: [opened, synchronize, reopened]
-    # 🎯 优化：轻量级验证，确保基础代码质量
+    # 🎯 优化：轻量级validate，确保基础代码质量
   workflow_dispatch: # 手动触发用于调试
 
 # 并发控制，避免重复运行
@@ -18,10 +18,10 @@ jobs:
   # 第一步：设置缓存 (并行基础)
   setup:
     name: Setup Cache & Environment
-    # 快速反馈模式，为所有PR提供轻量级验证
+    # 快速反馈模式，为所有PR提供轻量级validate
     uses: ./.github/workflows/setup-cache.yml
 
-  # 第二步：快速并行测试 (依赖setup)
+  # 第二步：快速并行test (依赖setup)
   unit-tests-backend:
     name: Backend Unit Tests
     needs: setup
@@ -38,7 +38,7 @@ jobs:
       coverage: true
       timeout: 8
 
-  # 第三步：集成测试 (依赖单元测试) - 🚀 Phase 2优化版本
+  # 第三步：集成test (依赖单元test) - 🚀 Phase 2优化版本
   integration-tests:
     name: Integration Tests (Optimized)
     needs: [unit-tests-backend, unit-tests-frontend]
@@ -46,7 +46,7 @@ jobs:
     with:
       timeout: 6 # 🎯 目标减少50%时间：12分钟 → 6分钟
 
-  # 🎯 CI速度优化：移除E2E测试，交由branch-protection.yml处理完整验证
+  # 🎯 CI速度优化：移除E2Etest，交由branch-protection.yml处理完整validate
 
   # 第五步：质量门禁 (并行)
   directory-guard:
@@ -72,10 +72,10 @@ jobs:
 
           echo "Directory protection check passed"
 
-  # 第六步：PR验证汇总 - 🔥 紧急修复：所有PR都必须验证！
+  # 第六步：PRvalidate汇总 - 🔥 紧急修复：所有PR都必须validate！
   pr-validation-summary:
     name: PR Validation Summary
-    if: always() # 移除draft限制 - 所有PR都必须通过验证！
+    if: always() # 移除draft限制 - 所有PR都必须通过validate！
     runs-on: ubuntu-latest
     needs:
       [
@@ -90,7 +90,7 @@ jobs:
           echo "## PR Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 检查各个测试结果
+          # 检查各个test结果
           BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
           FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.result }}"

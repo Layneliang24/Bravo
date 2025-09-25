@@ -81,7 +81,7 @@ jobs:
         run: |
           echo "Installing MySQL client tools..."
           sudo apt-get update
-          # 仅安装客户端核心工具，避免拉起本机 MySQL Server 与服务容器端口冲突
+          # 仅install客户端核心工具，避免拉起本机 MySQL Server 与服务容器端口冲突
           sudo apt-get install -y --no-install-recommends mysql-client-core-8.0
           echo "MySQL client installed successfully"
 
@@ -94,7 +94,7 @@ jobs:
           sleep 10
 
           # 检查MySQL基本连接
-          echo "🔍 验证MySQL基本连接..."
+          echo "🔍 validateMySQL基本连接..."
           until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password --silent; do
             echo "MySQL尚未准备就绪，继续等待..."
             sleep 2
@@ -106,8 +106,8 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" || true
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SELECT user, host FROM mysql.user;" || true
 
-          # 🔧 第30轮修复：智能验证和修复数据库，而非强制重建
-          echo "🛠️ 智能验证bravo_test数据库和用户状态..."
+          # 🔧 第30轮修复：智能validate和修复数据库，而非强制重建
+          echo "🛠️ 智能validatebravo_test数据库和用户状态..."
 
           # 检查数据库是否存在
           if mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "USE bravo_test; SELECT 1;" >/dev/null 2>&1; then
@@ -140,8 +140,8 @@ jobs:
             echo "✅ 数据库和用户创建完成"
           fi
 
-          # 验证创建结果
-          echo "✅ 验证数据库和用户创建结果..."
+          # validate创建结果
+          echo "✅ validate数据库和用户创建结果..."
           mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;" | grep bravo_test || {
             echo "❌ bravo_test数据库创建失败！"
             exit 1
@@ -152,8 +152,8 @@ jobs:
             exit 1
           }
 
-          # 测试用户数据库访问
-          echo "🔍 测试bravo_user访问bravo_test数据库..."
+          # test用户数据库访问
+          echo "🔍 testbravo_user访问bravo_test数据库..."
           mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 1 as test;" || {
             echo "❌ bravo_user无法访问bravo_test数据库！"
             exit 1
@@ -163,10 +163,10 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          echo "🔧 第29轮修复：MySQL和数据库已在Setup Test Database步骤中验证完成"
+          echo "🔧 第29轮修复：MySQL和数据库已在Setup Test Database步骤中validate完成"
           echo "🔍 最终确认bravo_test数据库状态..."
 
-          # 快速验证数据库仍然可用
+          # 快速validate数据库仍然可用
           mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 'Database ready!' as status;" || {
             echo "❌ bravo_test数据库状态异常！"
             mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "SHOW DATABASES;"
@@ -216,12 +216,12 @@ jobs:
           echo "Available test files: $(ls tests/)"
 
           if [ "${{ inputs.scope }}" == "light" ]; then
-            # 轻量级回归测试 - 运行核心功能测试
+            # 轻量级回归test - 运行核心功能test
             python -m pytest tests/test_regression.py \
               -k "test_user or test_auth or test_basic" \
               --maxfail=5 -v --tb=long
           else
-            # 完整回归测试
+            # 完整回归test
             python -m pytest tests/test_regression.py \
               --maxfail=10 -v --tb=short
           fi
@@ -241,7 +241,7 @@ jobs:
           echo "Running API compatibility tests..."
 
           # 🔧 第32轮修复：API Compatibility Tests启动前重新确保数据库完全可用
-          echo "🔧 第32轮修复：重新确认并修复数据库状态，确保API测试可以正常进行..."
+          echo "🔧 第32轮修复：重新确认并修复数据库状态，确保APItest可以正常进行..."
 
           # 先检查MySQL服务是否正常
           echo "🔍 检查MySQL服务状态..."
@@ -262,8 +262,8 @@ jobs:
           FLUSH PRIVILEGES;
           EOF
 
-          # 验证bravo_user可以访问bravo_test数据库
-          echo "🔍 验证bravo_user数据库访问..."
+          # validatebravo_user可以访问bravo_test数据库
+          echo "🔍 validatebravo_user数据库访问..."
           mysql -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password -e "USE bravo_test; SELECT 'API tests ready!' as status;" || {
             echo "❌ bravo_user无法访问bravo_test数据库！"
             echo "🔍 诊断信息："
@@ -272,7 +272,7 @@ jobs:
             exit 1
           }
 
-          echo "✅ 数据库状态完全就绪，Django可以安全启动进行API测试"
+          echo "✅ 数据库状态完全就绪，Django可以安全启动进行APItest"
 
           # 启动后端服务器
           cd backend
@@ -291,7 +291,7 @@ jobs:
             exit 1
           fi
 
-          # 测试API兼容性
+          # testAPI兼容性
           echo "Testing critical API endpoints..."
 
           # 健康检查
@@ -359,8 +359,8 @@ jobs:
         run: |
           echo "Running performance regression checks..."
 
-          # 这里可以添加性能基准测试
-          # 比如测试关键API的响应时间
+          # 这里可以添加性能基准test
+          # 比如test关键API的响应时间
 
           echo "Performance regression check completed"
 
@@ -371,10 +371,10 @@ jobs:
           source .venv/bin/activate
           echo "Testing data migrations..."
 
-          # 测试向前和向后迁移
+          # test向前和向后迁移
           python manage.py migrate --settings=bravo.settings.test
 
-          # 如果有特定的数据迁移测试
+          # 如果有特定的数据迁移test
           if [ -f "tests/test_migrations.py" ]; then
             python -m pytest tests/test_migrations.py -v
           fi

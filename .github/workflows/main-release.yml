@@ -3,16 +3,16 @@ name: Main Branch - Production Merge Validation
 on:
   push:
     branches: [main]
-    # 只在合并提交时触发
+    # Only trigger on merge commits
   workflow_dispatch:
 
-# 并发控制
+# Concurrency control
 concurrency:
   group: main-merge-${{ github.ref }}
-  cancel-in-progress: false # 生产合并后验证不应该被取消
+  cancel-in-progress: false # Production merge validation should not be cancelled
 
 jobs:
-  # 检测是否是合并提交
+  # Detect if it's a merge commit
   detect-merge:
     name: Detect Production Merge
     runs-on: ubuntu-latest
@@ -24,48 +24,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 10 # 获取足够的历史记录
+          fetch-depth: 10 # Get sufficient history
 
       - name: Check if Production Merge Commit
         id: check
         run: |
-          echo "🔍 检测生产合并提交..."
+          echo "Detecting production merge commit..."
 
-          # 检查最新提交是否是合并提交
+          # Check if latest commit is a merge commit
           if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
-            echo "✅ 检测到生产合并提交"
+            echo "Production merge commit detected"
             echo "is-merge=true" >> $GITHUB_OUTPUT
 
-            # 尝试获取合并信息
+            # Extract merge information
             COMMIT_MSG=$(git log -1 --pretty=%B)
-            echo "提交信息: $COMMIT_MSG"
+            echo "Commit message: $COMMIT_MSG"
 
-            # 提取PR编号
+            # Extract PR number
             if [[ "$COMMIT_MSG" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
               PR_NUMBER="${BASH_REMATCH[1]}"
               echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
-              echo "✅ 检测到生产PR #$PR_NUMBER"
+              echo "Production PR #$PR_NUMBER detected"
             fi
 
-            # 提取源分支 (应该是dev分支)
+            # Extract source branch (should be dev branch)
             if [[ "$COMMIT_MSG" =~ from\ .*/(.+) ]]; then
               SOURCE_BRANCH="${BASH_REMATCH[1]}"
               echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
-              echo "✅ 源分支: $SOURCE_BRANCH"
+              echo "Source branch: $SOURCE_BRANCH"
 
-              # 验证只能从dev分支合并到main
+              # Validate only dev branch can merge to main
               if [[ "$SOURCE_BRANCH" != "dev" ]]; then
-                echo "❌ 错误: 只能从dev分支合并到main分支"
-                echo "   实际源分支: $SOURCE_BRANCH"
+                echo "ERROR: Only dev branch can merge to main branch"
+                echo "   Actual source branch: $SOURCE_BRANCH"
                 exit 1
               fi
             fi
           else
-            echo "ℹ️ 非合并提交，跳过生产合并验证"
+            echo "Non-merge commit, skipping production merge validation"
             echo "is-merge=false" >> $GITHUB_OUTPUT
           fi
 
-  # 生产就绪检查
+  # Production readiness check
   production-readiness:
     name: Production Readiness Check
     needs: detect-merge
@@ -89,56 +89,56 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          echo "📦 安装生产环境依赖..."
+          echo "Installing production dependencies..."
           npm ci --prefer-offline --no-audit  # Root npm ci handles all workspaces
           cd backend && pip install -r requirements/base.txt
 
       - name: Production Environment Check
         run: |
-          echo "🏭 检查生产环境配置..."
+          echo "Checking production environment configuration..."
 
-          # 检查生产环境变量配置文件
+          # Check production environment config file
           if [ ! -f "backend/bravo/settings/production.py" ]; then
-            echo "❌ 缺少生产环境配置文件"
+            echo "ERROR: Missing production environment config file"
             exit 1
           fi
 
-          # 检查前端生产构建配置
+          # Check frontend production build config
           if [ ! -f "frontend/vite.config.ts" ]; then
-            echo "❌ 缺少前端构建配置"
+            echo "ERROR: Missing frontend build configuration"
             exit 1
           fi
 
-          echo "✅ 生产环境配置检查通过"
+          echo "Production environment configuration check passed"
 
       - name: Security Configuration Check
         run: |
-          echo "🔒 检查生产安全配置..."
+          echo "Checking production security configuration..."
 
-          # 检查是否有敏感信息暴露
+          # Check for sensitive information exposure
           if grep -r "DEBUG.*=.*True" backend/bravo/settings/production.py; then
-            echo "❌ 生产环境不应启用DEBUG"
+            echo "ERROR: Production environment should not enable DEBUG"
             exit 1
           fi
 
-          # 检查是否有测试密钥
+          # Check for test keys
           if grep -r "django-insecure" backend/bravo/settings/; then
-            echo "⚠️ 发现测试密钥，请使用生产密钥"
+            echo "WARNING: Test keys found, please use production keys"
           fi
 
-          echo "✅ 安全配置检查通过"
+          echo "Security configuration check passed"
 
       - name: Database Migration Check
         working-directory: ./backend
         run: |
-          echo "🗄️ 检查数据库迁移..."
+          echo "Checking database migrations..."
 
-          # 检查是否有未应用的迁移
+          # Check for unapplied migrations
           python manage.py makemigrations --check --settings=bravo.settings.test
 
-          echo "✅ 数据库迁移检查通过"
+          echo "Database migration check passed"
 
-  # 性能基准测试
+  # Performance benchmark test
   performance-benchmark:
     name: Performance Benchmark
     needs: detect-merge
@@ -162,14 +162,14 @@ jobs:
       - name: Build for Production
         working-directory: ./frontend
         run: |
-          echo "🔨 构建生产版本..."
+          echo "Building production version..."
           npm run build
 
       - name: Run Lighthouse Performance Test
         run: |
-          echo "⚡ 运行Lighthouse性能测试..."
+          echo "Running Lighthouse performance test..."
 
-          # 创建生产级别的lighthouse配置
+          # 创建production级别的lighthouse配置
           cat > lighthouserc.production.json << EOF
           {
             "ci": {
@@ -205,9 +205,9 @@ jobs:
           EOF
 
           npx lhci autorun --config=lighthouserc.production.json
-          echo "✅ 性能基准测试完成"
+          echo "Performance benchmark test completed"
 
-  # 回滚准备
+  # Rollback preparation
   rollback-preparation:
     name: Rollback Preparation
     needs: detect-merge
@@ -221,37 +221,37 @@ jobs:
 
       - name: Generate Rollback Script
         run: |
-          echo "🔄 生成回滚脚本..."
+          echo "Generating rollback script..."
 
-          # 获取上一个main分支提交
+          # Get previous main branch commit
           PREVIOUS_COMMIT=$(git log --format="%H" -n 2 HEAD | tail -n 1)
 
-          # 创建回滚脚本
+          # Create rollback script
           cat > rollback-script.sh << EOF
           #!/bin/bash
-          # 生产环境紧急回滚脚本
-          # 生成时间: $(date)
-          # 当前提交: ${{ github.sha }}
-          # 回滚目标: $PREVIOUS_COMMIT
+          # Production environment emergency rollback script
+          # Generated time: $(date)
+          # Current commit: ${{ github.sha }}
+          # Rollback target: $PREVIOUS_COMMIT
 
-          echo "🚨 执行生产环境紧急回滚..."
-          echo "当前提交: ${{ github.sha }}"
-          echo "回滚到: $PREVIOUS_COMMIT"
+          echo "Executing production environment emergency rollback..."
+          echo "Current commit: ${{ github.sha }}"
+          echo "Rolling back to: $PREVIOUS_COMMIT"
 
-          # 创建紧急分支
+          # Create emergency branch
           git checkout -b emergency/rollback-$(date +%Y%m%d-%H%M%S)
           git reset --hard $PREVIOUS_COMMIT
 
-          # 推送紧急分支
+          # Push emergency branch
           git push origin emergency/rollback-$(date +%Y%m%d-%H%M%S)
 
-          echo "✅ 紧急回滚分支已创建"
-          echo "请立即创建PR将此分支合并到main"
+          echo "Emergency rollback branch created"
+          echo "Please immediately create PR to merge this branch to main"
           EOF
 
           chmod +x rollback-script.sh
 
-          echo "✅ 回滚脚本已生成"
+          echo "Rollback script generated"
 
       - name: Upload Rollback Artifacts
         uses: actions/upload-artifact@v4
@@ -261,7 +261,7 @@ jobs:
             rollback-script.sh
           retention-days: 30
 
-  # 创建发布标签
+  # Create release tag
   create-release-tag:
     name: Create Release Tag
     needs: [detect-merge, production-readiness, performance-benchmark]
@@ -273,12 +273,12 @@ jobs:
 
       - name: Generate Release Tag
         run: |
-          echo "🏷️ 创建发布标签..."
+          echo "Creating release tag..."
 
-          # 生成版本号 (使用日期和提交短hash)
+          # Generate version number (using date and commit short hash)
           VERSION="v$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)"
 
-          # 创建标签
+          # Create tag
           git tag -a "$VERSION" -m "Production Release $VERSION
 
           Source PR: #${{ needs.detect-merge.outputs.pr-number }}
@@ -286,19 +286,19 @@ jobs:
           Commit: ${{ github.sha }}
           Release Date: $(date)
 
-          ✅ Production Readiness: Passed
-          ⚡ Performance Benchmark: Passed
-          🔄 Rollback Kit: Generated
+          Production Readiness: Passed
+          Performance Benchmark: Passed
+          Rollback Kit: Generated
           "
 
-          # 推送标签
+          # Push tag
           git push origin "$VERSION"
 
-          echo "✅ 发布标签 $VERSION 已创建"
+          echo "Release tag $VERSION created"
           echo "release-tag=$VERSION" >> $GITHUB_OUTPUT
         id: release
 
-  # 生产合并汇总报告
+  # Production merge summary report
   production-merge-summary:
     name: Production Merge Summary
     runs-on: ubuntu-latest
@@ -314,7 +314,7 @@ jobs:
     steps:
       - name: Generate Production Report
         run: |
-          echo "## 🏭 Production Merge Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Production Merge Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release Tag:** ${{ needs.create-release-tag.outputs.release-tag }}" >> $GITHUB_STEP_SUMMARY
           echo "**Merge Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
@@ -324,7 +324,7 @@ jobs:
           echo "**Release Date:** $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 收集验证结果
+          # Collect validation results
           READINESS_STATUS="${{ needs.production-readiness.result }}"
           PERFORMANCE_STATUS="${{ needs.performance-benchmark.result }}"
           ROLLBACK_STATUS="${{ needs.rollback-preparation.result }}"
@@ -332,42 +332,42 @@ jobs:
 
           echo "| Production Check | Status | Impact |" >> $GITHUB_STEP_SUMMARY
           echo "|------------------|---------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Production Readiness | $READINESS_STATUS | 🔥 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Performance Benchmark | $PERFORMANCE_STATUS | 📊 Critical |" >> $GITHUB_STEP_SUMMARY
-          echo "| Rollback Preparation | $ROLLBACK_STATUS | 🔄 Essential |" >> $GITHUB_STEP_SUMMARY
-          echo "| Release Tag Creation | $RELEASE_STATUS | 🏷️ Important |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production Readiness | $READINESS_STATUS | Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance Benchmark | $PERFORMANCE_STATUS | Critical |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rollback Preparation | $ROLLBACK_STATUS | Essential |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release Tag Creation | $RELEASE_STATUS | Important |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 判断生产部署结果
+          # Determine production deployment result
           if [[ "$READINESS_STATUS" == "success" && "$PERFORMANCE_STATUS" == "success" ]]; then
-            echo "✅ **Production deployment READY!**" >> $GITHUB_STEP_SUMMARY
+            echo "**Production deployment READY!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 生产环境部署验证通过" >> $GITHUB_STEP_SUMMARY
-            echo "🚀 系统已准备好服务生产流量" >> $GITHUB_STEP_SUMMARY
-            echo "🔄 紧急回滚工具包已准备就绪" >> $GITHUB_STEP_SUMMARY
+            echo "Production environment deployment validation passed" >> $GITHUB_STEP_SUMMARY
+            echo "System is ready to serve production traffic" >> $GITHUB_STEP_SUMMARY
+            echo "Emergency rollback toolkit is ready" >> $GITHUB_STEP_SUMMARY
 
             if [[ "$ROLLBACK_STATUS" != "success" ]]; then
-              echo "⚠️ 回滚准备有问题，请手动检查" >> $GITHUB_STEP_SUMMARY
+              echo "WARNING: Rollback preparation has issues, please check manually" >> $GITHUB_STEP_SUMMARY
             fi
 
             if [[ "$RELEASE_STATUS" != "success" ]]; then
-              echo "⚠️ 发布标签创建失败，请手动创建" >> $GITHUB_STEP_SUMMARY
+              echo "WARNING: Release tag creation failed, please create manually" >> $GITHUB_STEP_SUMMARY
             fi
 
             echo "Production merge validation completed successfully"
           else
-            echo "❌ **Production deployment FAILED!**" >> $GITHUB_STEP_SUMMARY
+            echo "**Production deployment FAILED!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🚨 生产环境部署验证失败" >> $GITHUB_STEP_SUMMARY
-            echo "💥 不要部署到生产环境" >> $GITHUB_STEP_SUMMARY
-            echo "🔧 需要立即创建修复PR" >> $GITHUB_STEP_SUMMARY
+            echo "Production environment deployment validation failed" >> $GITHUB_STEP_SUMMARY
+            echo "Do not deploy to production environment" >> $GITHUB_STEP_SUMMARY
+            echo "Need to create fix PR immediately" >> $GITHUB_STEP_SUMMARY
             echo "Production merge validation failed"
             exit 1
           fi
 
       - name: Production Status Notification
         run: |
-          echo "📍 Production Merge Summary:"
+          echo "Production Merge Summary:"
           echo "   - Release Tag: ${{ needs.create-release-tag.outputs.release-tag }}"
           echo "   - Merge Commit: ${{ github.sha }}"
           echo "   - Source: ${{ needs.detect-merge.outputs.source-branch }}"

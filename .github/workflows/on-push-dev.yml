@@ -15,7 +15,7 @@ jobs:
     name: Setup Cache & Environment
     uses: ./.github/workflows/setup-cache.yml
 
-  # 第二步：完整单元测试 (并行)
+  # 第二步：完整单元test (并行)
   unit-tests-backend:
     name: Backend Unit Tests (Full)
     needs: setup
@@ -32,7 +32,7 @@ jobs:
       coverage: true
       timeout: 10
 
-  # 第三步：完整集成测试 - 🚀 Phase 2优化版本
+  # 第三步：完整集成test - 🚀 Phase 2优化版本
   integration-tests:
     name: Integration Tests (Optimized)
     needs: [unit-tests-backend, unit-tests-frontend]
@@ -40,7 +40,7 @@ jobs:
     with:
       timeout: 8 # 🚀 Phase 2优化：15分钟 → 8分钟
 
-  # 第四步：完整E2E测试
+  # 第四步：完整E2Etest
   e2e-full:
     name: E2E Tests (Full Suite)
     needs: integration-tests
@@ -49,7 +49,7 @@ jobs:
       browser: "chromium"
       timeout: 25
 
-  # 第五步：轻量级回归测试 (并行)
+  # 第五步：轻量级回归test (并行)
   regression-light:
     name: Regression Tests (Light)
     needs: integration-tests
@@ -90,7 +90,7 @@ jobs:
             echo "Directory protection check passed"
           fi
 
-  # 第八步：Dev分支验证汇总
+  # 第八步：Devbranchvalidate汇总
   dev-validation-summary:
     name: Dev Validation Summary
     runs-on: ubuntu-latest
@@ -115,7 +115,7 @@ jobs:
           echo "**Message:** $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 检查各个测试结果
+          # 检查各个test结果
           BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
           FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.result }}"

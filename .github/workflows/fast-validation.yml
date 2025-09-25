@@ -56,7 +56,7 @@ jobs:
             ;;
           esac
 
-  # 第二步：并行的核心测试
+  # 第二步：并行的核心test
   core-tests:
     needs: quick-checks
     strategy:
@@ -109,7 +109,7 @@ jobs:
                 sleep 2
               done
 
-              # 授予bravo_user创建测试数据库的权限
+              # 授予bravo_user创建test数据库的权限
               mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "
                 CREATE DATABASE IF NOT EXISTS bravo_test;
                 CREATE USER IF NOT EXISTS 'bravo_user'@'%' IDENTIFIED BY 'bravo_password';
@@ -117,9 +117,9 @@ jobs:
                 GRANT ALL PRIVILEGES ON *.* TO 'bravo_user'@'%';
                 FLUSH PRIVILEGES;
               "
-              echo "✅ 已授予bravo_user创建测试数据库的权限"
+              echo "✅ 已授予bravo_user创建test数据库的权限"
 
-              # 最小集成测试
+              # 最小集成test
               cd backend && source .venv/bin/activate
               python manage.py migrate --noinput --settings=bravo.settings.test
               python manage.py test tests.quick --parallel 4
@@ -154,7 +154,7 @@ jobs:
       # 🚀 Phase 5.2: 使用缓存优化的Docker容器
       - name: Run E2E with Container (Cache Optimized)
         run: |
-          echo "🚀 使用容器化E2E测试..."
+          echo "🚀 使用容器化E2Etest..."
 
           # 启动所有服务
           if command -v docker-compose >/dev/null 2>&1; then
@@ -162,7 +162,7 @@ jobs:
             # 🎯 最优方案：移除环境变量传递，容器自给自足
             docker compose -f docker-compose.test.yml up --build -d
 
-            echo "等待E2E测试完成..."
+            echo "等待E2Etest完成..."
             # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
             sleep 1 # 🚀 Phase 5: 减少等待时间 2s → 1s
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
@@ -171,13 +171,13 @@ jobs:
             if [ -n "$E2E_CID" ]; then
               # 等待容器完全停止并获取退出码
               E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
-              echo "E2E测试真实退出码: $E2E_EXIT_CODE"
+              echo "E2Etest真实退出码: $E2E_EXIT_CODE"
             else
               echo "❌ 无法获取E2E容器ID，可能容器启动失败或过早退出。"
               E2E_EXIT_CODE=1
             fi
 
-            echo "📦 收集E2E测试产物..."
+            echo "📦 收集E2Etest产物..."
             mkdir -p e2e-artifacts || true
             if [ -n "$E2E_CID" ]; then
               docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true
@@ -194,7 +194,7 @@ jobs:
             # 🎯 最优方案：移除环境变量传递，容器自给自足
             docker compose -f docker-compose.test.yml up --build -d
 
-            echo "等待E2E测试完成..."
+            echo "等待E2Etest完成..."
             # 🎯 第26轮修复：在容器启动后立即获取ID，避免被清理后无法获取
             sleep 1 # 🚀 Phase 5: 减少等待时间 2s → 1s
             E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
@@ -203,13 +203,13 @@ jobs:
             if [ -n "$E2E_CID" ]; then
               # 等待容器完全停止并获取退出码
               E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
-              echo "E2E测试真实退出码: $E2E_EXIT_CODE"
+              echo "E2Etest真实退出码: $E2E_EXIT_CODE"
             else
               echo "❌ 无法获取E2E容器ID，可能容器启动失败或过早退出。"
               E2E_EXIT_CODE=1
             fi
 
-            echo "📦 收集E2E测试产物..."
+            echo "📦 收集E2Etest产物..."
             mkdir -p e2e-artifacts || true
             if [ -n "$E2E_CID" ]; then
               docker cp "$E2E_CID:/app/test-results" e2e-artifacts/test-results 2>/dev/null || true

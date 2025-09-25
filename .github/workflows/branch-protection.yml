@@ -1,16 +1,16 @@
 name: Branch Protection - Double Key System
 
-# 🚀 CI速度优化 - 完整分支保护工作流
-# 专门处理 dev → main 的PR，提供完整的安全验证
+# CI Speed Optimization - Complete Branch Protection Workflow
+# 专门处理 dev → main 的PR，提供完整的安全validate
 # This workflow enforces the "Double Key" system:
 # Key A: Cursor can only push to 'dev' branch
 # Key B: GitHub Actions enforces full testing on dev -> main PR
 
 on:
   pull_request:
-    branches: [main] # 只处理向main分支的PR (通常来自dev分支)
+    branches: [main] # Only handle PRs to main branch (usually from dev branch)
     types: [opened, synchronize, reopened]
-    # 🎯 优化：完整验证，包括E2E和安全扫描
+    # 🎯 优化：完整validate，包括E2E和安全扫描
   push:
     branches: [main, dev]
 
@@ -60,7 +60,7 @@ jobs:
       coverage: true
       timeout: 8
 
-  # Job 4: Integration tests (依赖单元测试)
+  # Job 4: Integration tests (依赖单元test)
   integration-tests:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: [unit-tests-backend, unit-tests-frontend]
@@ -68,7 +68,7 @@ jobs:
     with:
       timeout: 8 # 🚀 Phase 2优化：15分钟 → 8分钟
 
-  # Job 5: Security scan (并行执行，与单元测试同时进行)
+  # Job 5: Security scan (并行执行，与单元test同时进行)
   security-scan:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: setup-cache
@@ -77,7 +77,7 @@ jobs:
       severity: "high"
       timeout: 15
 
-  # Job 6: E2E smoke tests (关键路径验证)
+  # Job 6: E2E smoke tests (关键路径validate)
   e2e-smoke:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: integration-tests
@@ -197,19 +197,19 @@ jobs:
         run: |
           echo "🚀 Phase 5.1: 执行轻量级质量检查..."
 
-          # 验证依赖缓存
+          # validate依赖缓存
           if [ ! -d "node_modules" ]; then
             echo "⚠️ node_modules cache miss, installing..."
             npm ci --prefer-offline --no-audit --silent
           fi
 
-          # 验证基础项目结构
+          # validate基础项目结构
           npm run lint:frontend || echo "Frontend lint check completed"
 
           echo "✅ 轻量级质量检查通过"
           echo "ready=true" >> $GITHUB_OUTPUT
 
-  # Job 9B: Quality Gates Final (完整质量检查，依赖集成测试)
+  # Job 9B: Quality Gates Final (完整质量检查，依赖集成test)
   quality-gates:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     needs: [quality-gates-lite, integration-tests]
@@ -251,7 +251,7 @@ jobs:
             echo "✅ Dependencies cache hit"
           fi
 
-      - name: Ensure Frontend Build (复用构建产物)
+      - name: Ensure Frontend Build (复用build产物)
         run: |
           if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
             echo "🔧 Frontend build cache miss, building..."
@@ -260,7 +260,7 @@ jobs:
             echo "✅ Frontend build cache hit"
           fi
 
-      - name: Run Frontend Tests with Coverage (复用构建)
+      - name: Run Frontend Tests with Coverage (复用build)
         run: npm run test:coverage:frontend
 
       - name: Validate Feature Mapping (复用环境)
@@ -271,9 +271,9 @@ jobs:
 
       - name: Run Lighthouse CI (优化版)
         run: |
-          echo "⚡ Phase 5.1: 运行Lighthouse性能审计 (复用构建产物)..."
+          echo "⚡ Phase 5.1: 运行Lighthouse性能审计 (复用build产物)..."
 
-          # 构建产物已复用，无需重复构建
+          # build产物已复用，无需重复build
 
           # Create lighthouse test page for reliable testing
           cat > frontend/dist/lighthouse-test.html << 'HTML_EOF'
@@ -472,7 +472,7 @@ jobs:
           echo "**Message:** $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 检查各个验证结果
+          # 检查各个validate结果
           BACKEND_STATUS="${{ needs.unit-tests-backend.result }}"
           FRONTEND_STATUS="${{ needs.unit-tests-frontend.result }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
@@ -519,7 +519,7 @@ jobs:
             exit 1
           fi
 
-  # Job 12: Dev分支直接Push保护 (重要：防止绕过PR流程)
+  # Job 12: Dev branch direct push protection (Important: prevent bypassing PR process)
   dev-direct-push-guard:
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
@@ -531,46 +531,46 @@ jobs:
           echo "   Author: ${{ github.actor }}"
           echo "   Message: $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)"
 
-          # 检查是否是合并提交（允许的情况）
+          # 检查是否是mergecommit（允许的情况）
           git fetch origin main:main || true
 
-          # 如果是从main或通过GitHub合并的，允许
+          # 如果是从main或通过GitHubmerge的，允许
           if git merge-base --is-ancestor main HEAD 2>/dev/null || \
              [[ "$(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 50)" =~ ^Merge\ pull\ request\ # ]]; then
-            echo "✅ 检测到合法的合并操作"
+            echo "✅ detect到合法的merge操作"
             echo "🔑 DOUBLE KEY SYSTEM: Key A activated"
-            echo "   ✅ 合并已通过PR验证流程"
+            echo "   ✅ merge已通过PRvalidate流程"
             echo "   ⏳ Key B will activate when PR is created to main"
           else
-            echo "❌ 警告：检测到直接push到dev分支"
+            echo "❌ 警告：detect到直接push到devbranch"
             echo "🚨 违反了PR-first开发流程"
             echo ""
             echo "📋 正确的开发流程："
-            echo "   1. 创建feature分支：git checkout -b feature/your-feature"
-            echo "   2. 开发和提交：git commit -m 'your changes'"
-            echo "   3. 推送feature分支：git push origin feature/your-feature"
-            echo "   4. 创建PR到dev分支"
-            echo "   5. 等待CI验证和审查"
-            echo "   6. 合并PR到dev"
+            echo "   1. 创建featurebranch：git checkout -b feature/your-feature"
+            echo "   2. 开发和commit：git commit -m 'your changes'"
+            echo "   3. 推送featurebranch：git push origin feature/your-feature"
+            echo "   4. 创建PR到devbranch"
+            echo "   5. 等待CIvalidate和审查"
+            echo "   6. mergePR到dev"
             echo ""
             echo "🔧 如需紧急修复，请："
-            echo "   - 创建hotfix分支进行修复"
-            echo "   - 通过PR流程合并"
+            echo "   - 创建hotfixbranch进行修复"
+            echo "   - 通过PR流程merge"
             echo ""
-            echo "⚠️  直接push到dev分支可能导致："
-            echo "   - 跳过必要的CI验证"
+            echo "⚠️  直接push到devbranch可能导致："
+            echo "   - 跳过必要的CIvalidate"
             echo "   - 缺少代码审查"
-            echo "   - 破坏分支保护策略"
+            echo "   - 破坏branch保护策略"
 
             # 警告但不阻止，因为可能是合法的紧急情况
             echo ""
             echo "🟡 警告已记录，请遵循正确流程"
           fi
 
-      - name: 记录Dev分支活动
+      - name: 记录Devbranch活动
         run: |
-          echo "📊 Dev分支活动日志:"
+          echo "📊 Devbranch活动日志:"
           echo "   时间: $(date)"
-          echo "   操作: Push到dev分支"
-          echo "   提交: ${{ github.sha }}"
+          echo "   操作: Push到devbranch"
+          echo "   commit: ${{ github.sha }}"
           echo "   作者: ${{ github.actor }}"

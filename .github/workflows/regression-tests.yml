@@ -6,12 +6,12 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    # 每天凌晨2点运行回归测试
+    # 每天凌晨2点运行回归test
     - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       test_type:
-        description: "测试类型"
+        description: "test类型"
         required: false
         default: "all"
         type: choice
@@ -180,22 +180,22 @@ jobs:
               const report = JSON.parse(fs.readFileSync(path, 'utf8'));
               const summary = report.summary;
 
-              const body = `## 🧪 回归测试结果
+              const body = `## 🧪 回归test结果
 
-              **测试环境**: Node.js ${{ matrix.node-version }}
-              **测试时间**: ${report.timestamp}
+              **test环境**: Node.js ${{ matrix.node-version }}
+              **test时间**: ${report.timestamp}
 
-              ### 📊 测试统计
+              ### 📊 test统计
               - ✅ **通过**: ${summary.passed}
               - ❌ **失败**: ${summary.failed}
-              - ⚠️ **错误**: ${summary.errors}
+              - ⚠️ **error**: ${summary.errors}
               - 📸 **新基线**: ${summary.baselines}
               - 📈 **总计**: ${summary.total}
 
-              ### 📋 测试详情
+              ### 📋 test详情
               ${summary.failed > 0 || summary.errors > 0 ?
-                '⚠️ **存在失败的测试，请查看详细报告**' :
-                '🎉 **所有回归测试通过！**'
+                '⚠️ **存在失败的test，请查看详细报告**' :
+                '🎉 **所有回归test通过！**'
               }
 
               [查看完整报告](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})

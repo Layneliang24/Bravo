@@ -1,5 +1,5 @@
-# 🔒 黄金测试保护工作流
-# 此工作流确保黄金测试目录不被意外修改
+# 🔒 黄金test保护工作流
+# 此工作流确保黄金test目录不被意外修改
 
 name: 🔒 Golden Test Protection
 
@@ -15,7 +15,7 @@ on:
 
 jobs:
   golden-test-guard:
-    name: 🛡️ 黄金测试保护检查
+    name: 🛡️ 黄金test保护检查
     runs-on: ubuntu-latest
 
     steps:
@@ -24,9 +24,9 @@ jobs:
         with:
           fetch-depth: 0 # 获取完整历史以进行差异比较
 
-      - name: 🔍 检查黄金测试修改
+      - name: 🔍 检查黄金test修改
         run: |
-          echo "🔍 检查黄金测试目录的修改..."
+          echo "🔍 检查黄金test目录的修改..."
 
           # 获取修改的文件列表
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -38,15 +38,15 @@ jobs:
           echo "修改的文件："
           echo "$CHANGED_FILES"
 
-          # 检查是否有对黄金测试的修改
+          # 检查是否有对黄金test的修改
           GOLDEN_CHANGES=$(echo "$CHANGED_FILES" | grep "^tests-golden/" || true)
 
           if [ -n "$GOLDEN_CHANGES" ]; then
-            echo "❌ 检测到对黄金测试目录的修改！"
+            echo "❌ detect到对黄金test目录的修改！"
             echo ""
-            echo "🔒 黄金测试目录受到保护，不允许通过自动化流程修改。"
+            echo "🔒 黄金test目录受到保护，不允许通过自动化流程修改。"
             echo ""
-            echo "被修改的黄金测试文件："
+            echo "被修改的黄金test文件："
             echo "$GOLDEN_CHANGES" | sed 's/^/  - /'
             echo ""
             echo "如果这是必要的修改，请："
@@ -55,27 +55,27 @@ jobs:
             echo "3. 获得项目维护者的明确批准"
             echo ""
 
-            # 检查 PR 描述是否包含黄金测试修改说明
+            # 检查 PR 描述是否包含黄金test修改说明
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               PR_BODY="${{ github.event.pull_request.body }}"
-              if [[ "$PR_BODY" == *"[GOLDEN-TEST]"* ]] || [[ "$PR_BODY" == *"黄金测试"* ]]; then
-                echo "✅ PR 描述中包含黄金测试修改说明"
+              if [[ "$PR_BODY" == *"[GOLDEN-TEST]"* ]] || [[ "$PR_BODY" == *"黄金test"* ]]; then
+                echo "✅ PR 描述中包含黄金test修改说明"
                 echo "⚠️  请确保已获得维护者批准"
               else
-                echo "❌ PR 描述中缺少黄金测试修改说明"
+                echo "❌ PR 描述中缺少黄金test修改说明"
                 echo "请在 PR 描述中添加 [GOLDEN-TEST] 标签并说明修改原因"
                 exit 1
               fi
             fi
           else
-            echo "✅ 未检测到对黄金测试的修改"
+            echo "✅ 未detect到对黄金test的修改"
           fi
 
-      - name: 🧪 验证黄金测试完整性
+      - name: 🧪 validate黄金test完整性
         run: |
-          echo "🧪 验证黄金测试文件完整性..."
+          echo "🧪 validate黄金test文件完整性..."
 
-          # 检查必需的黄金测试文件是否存在
+          # 检查必需的黄金test文件是否存在
           REQUIRED_FILES=(
             "tests-golden/README.md"
             "tests-golden/config/playwright.config.ts"
@@ -92,38 +92,38 @@ jobs:
           done
 
           if [ ${#MISSING_FILES[@]} -gt 0 ]; then
-            echo "❌ 检测到缺失的黄金测试文件："
+            echo "❌ detect到缺失的黄金test文件："
             printf '  - %s\n' "${MISSING_FILES[@]}"
             echo ""
-            echo "黄金测试文件不能被删除！"
+            echo "黄金test文件不能被删除！"
             exit 1
           fi
 
-          echo "✅ 黄金测试文件完整性验证通过"
+          echo "✅ 黄金test文件完整性validate通过"
 
-      - name: 📊 生成黄金测试报告
+      - name: 📊 生成黄金test报告
         if: github.event_name == 'pull_request'
         run: |
-          echo "📊 生成黄金测试保护报告..."
+          echo "📊 生成黄金test保护报告..."
 
-          # 统计黄金测试文件数量
+          # 统计黄金test文件数量
           TOTAL_FILES=$(find tests-golden -type f -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.js" | wc -l)
           E2E_FILES=$(find tests-golden/e2e -type f -name "*.spec.ts" 2>/dev/null | wc -l || echo 0)
           BACKEND_FILES=$(find tests-golden/backend -type f -name "*.py" 2>/dev/null | wc -l || echo 0)
           FRONTEND_FILES=$(find tests-golden/frontend -type f -name "*.test.*" 2>/dev/null | wc -l || echo 0)
 
-          echo "## 🔒 黄金测试保护报告" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 黄金test保护报告" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| 类型 | 文件数量 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| 总计 | $TOTAL_FILES |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E测试 | $E2E_FILES |" >> $GITHUB_STEP_SUMMARY
-          echo "| 后端测试 | $BACKEND_FILES |" >> $GITHUB_STEP_SUMMARY
-          echo "| 前端测试 | $FRONTEND_FILES |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2Etest | $E2E_FILES |" >> $GITHUB_STEP_SUMMARY
+          echo "| 后端test | $BACKEND_FILES |" >> $GITHUB_STEP_SUMMARY
+          echo "| 前端test | $FRONTEND_FILES |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ 黄金测试保护检查通过" >> $GITHUB_STEP_SUMMARY
+          echo "✅ 黄金test保护检查通过" >> $GITHUB_STEP_SUMMARY
 
-  # 如果有黄金测试修改，需要额外的审查
+  # 如果有黄金test修改，需要额外的审查
   require-approval:
     name: 🔐 需要特殊审批
     runs-on: ubuntu-latest
@@ -142,7 +142,7 @@ jobs:
           GOLDEN_CHANGES=$(echo "$CHANGED_FILES" | grep "^tests-golden/" || true)
 
           if [ -n "$GOLDEN_CHANGES" ]; then
-            echo "⚠️  此 PR 修改了黄金测试，需要项目维护者的特殊审批"
+            echo "⚠️  此 PR 修改了黄金test，需要项目维护者的特殊审批"
             echo "请确保："
             echo "1. 修改已经过充分的代码审查"
             echo "2. 修改原因已在 PR 中详细说明"
@@ -151,5 +151,5 @@ jobs:
             # 这里可以添加自动请求审查者的逻辑
             # 或者设置特定的标签
           else
-            echo "✅ 此 PR 未修改黄金测试，无需特殊审批"
+            echo "✅ 此 PR 未修改黄金test，无需特殊审批"
           fi

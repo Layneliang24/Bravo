@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Dependencies (Optimized)
         run: |
-          echo "🚀 Phase 4: 优化依赖安装..."
+          echo "🚀 Phase 4: 优化依赖install..."
           if [ ! -d "node_modules" ] || [ ! -d "frontend/node_modules" ]; then
             echo "Installing workspace dependencies (cache miss)..."
             npm ci --prefer-offline --no-audit --ignore-scripts
@@ -59,9 +59,9 @@ jobs:
       - name: Run Unit Tests (Phase 4 Optimized)
         working-directory: ./frontend
         run: |
-          echo "🚀 Phase 4: 运行优化的前端单元测试..."
+          echo "🚀 Phase 4: 运行优化的前端单元test..."
 
-          # 🎯 Phase 4优化：智能测试模式选择
+          # 🎯 Phase 4优化：智能test模式选择
           if [ "${{ inputs.coverage }}" == "true" ]; then
             echo "Running tests with coverage (optimized)..."
             # 使用vitest的优化配置，启用并发和缓存
@@ -72,7 +72,7 @@ jobs:
             npm run test:unit:fast -- --reporter=dot --threads --no-watch
           fi
 
-          echo "✅ 前端单元测试完成 (Phase 4优化)"
+          echo "✅ 前端单元test完成 (Phase 4优化)"
 
       - name: Upload Coverage Report (Phase 4 Optimized)
         if: inputs.coverage && always()

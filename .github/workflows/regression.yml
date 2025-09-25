@@ -1,7 +1,7 @@
 name: Regression Gate
 
-# 回归测试门禁 - 确保新功能不会破坏已有功能
-# 任何PR都必须通过回归测试才能合并
+# 回归test门禁 - 确保新功能不会破坏已有功能
+# 任何PR都必须通过回归test才能merge
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [main, develop]
-  # 每天凌晨2点运行回归测试
+  # 每天凌晨2点运行回归test
   schedule:
     - cron: "0 2 * * *"
 
@@ -20,7 +20,7 @@ env:
   POSTGRES_DB: bravo_test
 
 jobs:
-  # 后端回归测试 - 核心功能保护
+  # 后端回归test - 核心功能保护
   backend-regression:
     name: 🔒 Backend Regression Tests
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
           echo "🚨 Running REGRESSION TESTS - Core functionality protection"
           echo "📋 These tests MUST pass for PR to be merged"
 
-          # 只运行回归测试文件
+          # 只运行回归test文件
           python -m pytest tests/test_regression.py -v \
             --tb=short \
             --strict-markers \
@@ -96,7 +96,7 @@ jobs:
           name: backend-regression-results
           path: backend/regression-results.xml
 
-  # 前端回归测试
+  # 前端回归test
   frontend-regression:
     name: 🔒 Frontend Regression Tests
     runs-on: ubuntu-latest
@@ -122,7 +122,7 @@ jobs:
           echo "🚨 Running FRONTEND REGRESSION TESTS"
           echo "📋 Testing core UI functionality"
 
-          # 运行标记为回归测试的用例
+          # 运行标记为回归test的用例
           npm run test -- --reporter=junit --outputFile=regression-results.xml --testNamePattern="regression|核心|core"
 
           echo "✅ Frontend regression tests passed!"
@@ -134,7 +134,7 @@ jobs:
           name: frontend-regression-results
           path: frontend/regression-results.xml
 
-  # E2E回归测试
+  # E2E回归test
   e2e-regression:
     name: 🔒 E2E Regression Tests
     runs-on: ubuntu-latest
@@ -204,7 +204,7 @@ jobs:
           echo "🚨 Running E2E REGRESSION TESTS"
           echo "📋 Testing critical user journeys"
 
-          # 只运行标记为回归测试的E2E用例
+          # 只运行标记为回归test的E2E用例
           npx playwright test --grep="@regression|核心|critical" \
             --reporter=junit \
             --output-dir=test-results
@@ -218,7 +218,7 @@ jobs:
           name: e2e-regression-results
           path: e2e/test-results/
 
-  # 回归测试结果汇总
+  # 回归test结果汇总
   regression-summary:
     name: 📋 Regression Test Summary
     runs-on: ubuntu-latest
@@ -231,36 +231,36 @@ jobs:
 
       - name: 📊 Generate regression summary
         run: |
-          echo "# 🔒 回归测试门禁结果" > regression-summary.md
+          echo "# 🔒 回归test门禁结果" > regression-summary.md
           echo "" >> regression-summary.md
-          echo "## 测试结果概览" >> regression-summary.md
+          echo "## test结果概览" >> regression-summary.md
           echo "" >> regression-summary.md
 
-          # 检查各个测试结果
+          # 检查各个test结果
           if [ -f "backend-regression-results/regression-results.xml" ]; then
-            echo "- ✅ 后端回归测试：通过" >> regression-summary.md
+            echo "- ✅ 后端回归test：通过" >> regression-summary.md
           else
-            echo "- ❌ 后端回归测试：失败" >> regression-summary.md
+            echo "- ❌ 后端回归test：失败" >> regression-summary.md
           fi
 
           if [ -f "frontend-regression-results/regression-results.xml" ]; then
-            echo "- ✅ 前端回归测试：通过" >> regression-summary.md
+            echo "- ✅ 前端回归test：通过" >> regression-summary.md
           else
-            echo "- ❌ 前端回归测试：失败" >> regression-summary.md
+            echo "- ❌ 前端回归test：失败" >> regression-summary.md
           fi
 
           if [ -d "e2e-regression-results" ]; then
-            echo "- ✅ E2E回归测试：通过" >> regression-summary.md
+            echo "- ✅ E2E回归test：通过" >> regression-summary.md
           else
-            echo "- ❌ E2E回归测试：失败" >> regression-summary.md
+            echo "- ❌ E2E回归test：失败" >> regression-summary.md
           fi
 
           echo "" >> regression-summary.md
           echo "## 🚨 重要提醒" >> regression-summary.md
           echo "" >> regression-summary.md
-          echo "- 回归测试失败意味着新代码可能破坏了现有功能" >> regression-summary.md
-          echo "- 请检查测试结果，修复问题后重新提交" >> regression-summary.md
-          echo "- 禁止修改回归测试文件来"通过"测试" >> regression-summary.md
+          echo "- 回归test失败意味着新代码可能破坏了现有功能" >> regression-summary.md
+          echo "- 请检查test结果，修复问题后重新commit" >> regression-summary.md
+          echo "- 禁止修改回归test文件来"通过"test" >> regression-summary.md
 
           cat regression-summary.md
 
@@ -281,7 +281,7 @@ jobs:
 
       - name: ❌ Fail if any regression test failed
         run: |
-          # 检查是否有任何回归测试失败
+          # 检查是否有任何回归test失败
           FAILED=0
 
           if [ ! -f "backend-regression-results/regression-results.xml" ]; then
@@ -300,9 +300,9 @@ jobs:
           fi
 
           if [ $FAILED -eq 1 ]; then
-            echo "💥 回归测试失败 - PR不能合并！"
-            echo "请修复问题后重新提交，禁止修改回归测试文件"
+            echo "💥 回归test失败 - PR不能merge！"
+            echo "请修复问题后重新commit，禁止修改回归test文件"
             exit 1
           else
-            echo "🎉 所有回归测试通过 - PR可以合并！"
+            echo "🎉 所有回归test通过 - PR可以merge！"
           fi

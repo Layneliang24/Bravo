@@ -69,15 +69,15 @@ jobs:
       - name: Install Dependencies (Host Architecture)
         run: |
           echo "🎯 基于历史成功案例：GitHub Actions宿主机架构"
-          echo "📚 安装依赖到宿主机，直接运行E2E测试"
+          echo "📚 install依赖到宿主机，直接运行E2Etest"
 
           # 🏆 第7轮修复：根目录添加@playwright/test，利用npm workspaces
-          # 📋 npm workspaces依赖安装顺序修复：必须先安装根目录依赖
-          echo "安装根目录依赖（包含@playwright/test）..."
+          # 📋 npm workspaces依赖install顺序修复：必须先install根目录依赖
+          echo "install根目录依赖（包含@playwright/test）..."
           npm ci --prefer-offline --no-audit
 
           # Backend
-          echo "安装后端依赖..."
+          echo "install后端依赖..."
           if [ ! -d "backend/.venv" ]; then
             cd backend
             python -m venv .venv
@@ -91,12 +91,12 @@ jobs:
           echo "✅ Frontend dependencies managed via root npm workspaces"
 
           # E2E (利用npm workspaces，@playwright/test应该从根目录解析)
-          echo "验证E2E依赖..."
+          echo "validateE2E依赖..."
           cd e2e
           echo "Working directory: $(pwd)"
           echo "检查@playwright/test解析："
           node -e "console.log('✅ @playwright/test resolved:', require.resolve('@playwright/test'))" || {
-            echo "⚠️ @playwright/test无法解析，尝试本地安装..."
+            echo "⚠️ @playwright/test无法解析，尝试本地install..."
             npm ci --prefer-offline --no-audit
           }
           cd ..
@@ -225,8 +225,8 @@ jobs:
       - name: Run Smoke Tests
         working-directory: ./e2e
         run: |
-          echo "🎯 执行E2E烟雾测试（基于历史成功案例的宿主机架构）"
-          echo "📚 回到历史验证成功的解决方案：GitHub Actions宿主机直接运行"
+          echo "🎯 执行E2E烟雾test（基于历史成功案例的宿主机架构）"
+          echo "📚 回到历史validate成功的解决方案：GitHub Actions宿主机直接运行"
 
           echo "🔍 Pre-flight checks:"
           echo "Working directory: $(pwd)"
@@ -243,7 +243,7 @@ jobs:
           }
 
           echo "🎭 Running E2E smoke tests..."
-          # 使用npx确保使用本地安装的playwright
+          # 使用npx确保使用本地install的playwright
           npx playwright test --grep "@smoke" --project=chromium --max-failures=3
           echo "✅ Smoke tests completed successfully"
         env:

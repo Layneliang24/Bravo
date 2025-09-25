@@ -20,7 +20,7 @@ env:
 jobs:
   setup-cache:
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # 🚀 Phase 4: 减少超时时间以加快失败检测
+    timeout-minutes: 5 # 🚀 Phase 4: 减少超时时间以加快失败detect
 
     outputs:
       frontend-cache-hit: ${{ steps.frontend-cache.outputs.cache-hit }}
@@ -64,10 +64,10 @@ jobs:
       - name: Install Frontend Dependencies (Phase 4 Optimized)
         if: steps.frontend-cache.outputs.cache-hit != 'true'
         run: |
-          echo "🚀 Phase 4: 安装前端依赖 (缓存未命中)..."
-          # 优化npm安装：跳过脚本，使用缓存，忽略审计
+          echo "🚀 Phase 4: install前端依赖 (缓存未命中)..."
+          # 优化npminstall：跳过脚本，使用缓存，忽略审计
           npm ci --prefer-offline --no-audit --ignore-scripts --silent
-          echo "✅ 前端依赖安装完成 (Phase 4优化)"
+          echo "✅ 前端依赖install完成 (Phase 4优化)"
 
       # Level 1: Backend Dependencies Cache (Phase 4 Optimized)
       - name: Cache Backend Dependencies (Phase 4)
@@ -87,13 +87,13 @@ jobs:
         if: steps.backend-cache.outputs.cache-hit != 'true'
         working-directory: ./backend
         run: |
-          echo "🚀 Phase 4: 安装后端依赖 (缓存未命中)..."
+          echo "🚀 Phase 4: install后端依赖 (缓存未命中)..."
           python -m venv .venv
           source .venv/bin/activate
-          # 优化pip安装：使用缓存，禁用进度条，批量安装
+          # 优化pipinstall：使用缓存，禁用进度条，批量install
           pip install --upgrade pip wheel --quiet
           pip install -r requirements/base.txt -r requirements/test.txt --prefer-binary --quiet
-          echo "✅ 后端依赖安装完成 (Phase 4优化)"
+          echo "✅ 后端依赖install完成 (Phase 4优化)"
 
       # Level 1A: E2E NPM Dependencies Cache
       - name: Cache E2E Dependencies
@@ -147,19 +147,19 @@ jobs:
       - name: Build Frontend (Phase 4 Optimized)
         run: |
           if [ ! -d "frontend/dist" ] || [ -z "$(ls -A frontend/dist 2>/dev/null)" ]; then
-            echo "🚀 Phase 4: 构建前端 (缓存未命中)..."
-            # 确保workspace根依赖已安装
+            echo "🚀 Phase 4: build前端 (缓存未命中)..."
+            # 确保workspace根依赖已install
             if [ ! -d "node_modules" ]; then
-              echo "安装workspace依赖..."
+              echo "installworkspace依赖..."
               npm ci --prefer-offline --no-audit --ignore-scripts --silent
             fi
             echo "✅ 前端依赖通过npm workspaces管理"
-            # 优化构建：跳过类型检查以加快速度
-            echo "构建前端 (跳过类型检查以加速)..."
+            # 优化build：跳过类型检查以加快速度
+            echo "build前端 (跳过类型检查以加速)..."
             npm run build:frontend:fast 2>/dev/null || npm run build:skip-check
-            echo "✅ 前端构建完成 (Phase 4优化)"
+            echo "✅ 前端build完成 (Phase 4优化)"
           else
-            echo "✅ 前端构建已存在，跳过"
+            echo "✅ 前端build已存在，跳过"
           fi
 
       - name: Cache Summary

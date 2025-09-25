@@ -84,7 +84,7 @@ jobs:
       - name: Install MySQL Client (Cached)
         run: |
           echo "Installing MySQL client tools (with caching)..."
-          # 检查是否已安装
+          # 检查是否已install
           if ! command -v mysql &> /dev/null; then
             sudo apt-get update
             sudo apt-get install -y mysql-client
@@ -111,14 +111,14 @@ jobs:
             CREATE DATABASE IF NOT EXISTS bravo_test;
             GRANT ALL PRIVILEGES ON bravo_test.* TO 'bravo_user'@'%';
 
-            /* 🚀 Phase 3: 为pytest-xdist并行测试授权 */
+            /* 🚀 Phase 3: 为pytest-xdist并行test授权 */
             /* 给bravo_user创建数据库的权限，支持gw0, gw1等worker数据库 */
             GRANT CREATE ON *.* TO 'bravo_user'@'%';
             GRANT ALL PRIVILEGES ON \`bravo_test_%\`.* TO 'bravo_user'@'%';
 
             FLUSH PRIVILEGES;
           "
-          echo "✅ 数据库权限配置完成，支持pytest-xdist并行测试"
+          echo "✅ 数据库权限配置完成，支持pytest-xdist并行test"
 
       - name: Run Unit Tests (Parallel)
         working-directory: ./backend
@@ -126,7 +126,7 @@ jobs:
           source .venv/bin/activate
           echo "Running backend unit tests in parallel..."
 
-          # 🚀 Phase 3: 使用pytest-xdist并行执行测试
+          # 🚀 Phase 3: 使用pytest-xdist并行执行test
           if [ "${{ inputs.coverage }}" == "true" ]; then
             python -m pytest tests/ \
               --cov=. --cov-report=xml --cov-report=html \

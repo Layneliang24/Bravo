@@ -55,7 +55,7 @@ jobs:
             const features = JSON.parse(fs.readFileSync('features.json', 'utf8'));
             console.log('✅ Features loaded:', features.length);
 
-            // 验证必需字段
+            // validate必需字段
             features.forEach((feature, index) => {
               if (!feature.id || !feature.desc) {
                 throw new Error(\`Feature at index \${index} missing required fields\`);

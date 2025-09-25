@@ -50,7 +50,7 @@ jobs:
           echo "🚀 Phase 4: 服务通过优化健康检查就绪！"
           echo "ready=true" >> $GITHUB_OUTPUT
 
-  # 🚀 Phase 2 优化：并行执行Backend集成测试
+  # 🚀 Phase 2 优化：并行执行Backend集成test
   backend-integration:
     needs: setup-services
     runs-on: ubuntu-latest
@@ -151,7 +151,7 @@ jobs:
             backend/htmlcov/
           retention-days: 3
 
-  # 🚀 Phase 2 优化：并行执行Frontend集成测试
+  # 🚀 Phase 2 优化：并行执行Frontend集成test
   frontend-integration:
     needs: setup-services
     runs-on: ubuntu-latest
@@ -206,7 +206,7 @@ jobs:
             frontend-results.json
           retention-days: 3
 
-  # 🚀 Phase 4 优化：极致轻量化API测试
+  # 🚀 Phase 4 优化：极致轻量化APItest
   api-integration:
     needs: [backend-integration, frontend-integration]
     runs-on: ubuntu-latest
@@ -262,14 +262,14 @@ jobs:
             sleep 0.5  # 减少等待间隔
           done
 
-          # 🚀 Phase 4: 极简API验证 - 只测试核心端点
-          echo "执行极简API集成测试..."
+          # 🚀 Phase 4: 极简APIvalidate - 只test核心端点
+          echo "执行极简API集成test..."
           curl -s -f http://localhost:8000/health/ > /dev/null || exit 1
           echo "✅ 核心API健康检查通过"
 
           # 清理
           kill $SERVER_PID 2>/dev/null || true
-          echo "✅ 极简API集成测试完成 (Phase 4优化)"
+          echo "✅ 极简API集成test完成 (Phase 4优化)"
         env:
           DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
           DJANGO_SETTINGS_MODULE: bravo.settings.test

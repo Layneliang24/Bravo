@@ -2,7 +2,7 @@ name: Feature Branch - Development Validation
 
 on:
   push:
-    branches: [feature/*] # 只对feature分支触发
+    branches: [feature/*] # 只对featurebranch触发
 
 # 并发控制
 concurrency:
@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 第一步：快速环境设置（环境验证，不使用缓存）
+  # 第一步：快速环境设置（环境validate，不使用缓存）
   quick-setup:
     name: Quick Environment Setup
     runs-on: ubuntu-latest
@@ -32,7 +32,7 @@ jobs:
       - name: Environment Ready
         run: echo "✅ 开发环境准备完成"
 
-  # 第二步：快速后端测试
+  # 第二步：快速后端test
   quick-backend-tests:
     name: Quick Backend Tests
     needs: quick-setup
@@ -75,12 +75,12 @@ jobs:
         working-directory: ./backend
         run: |
           if [ ! -d ".venv" ]; then
-            echo "📦 安装后端依赖（缓存未命中）..."
+            echo "📦 install后端依赖（缓存未命中）..."
             python -m venv .venv
             source .venv/bin/activate
             pip install --upgrade pip wheel
             pip install -r requirements/base.txt -r requirements/test.txt
-            echo "✅ 后端依赖安装完成"
+            echo "✅ 后端依赖install完成"
           else
             echo "✅ 使用缓存的后端依赖"
           fi
@@ -88,7 +88,7 @@ jobs:
       - name: Run Quick Backend Tests
         working-directory: ./backend
         run: |
-          echo "🧪 运行快速后端测试..."
+          echo "🧪 运行快速后端test..."
           echo "Debug: 当前目录: $(pwd)"
           echo "Debug: Python版本: $(python --version)"
 
@@ -96,7 +96,7 @@ jobs:
           source .venv/bin/activate
           echo "Debug: 虚拟环境已激活"
 
-          echo "🧪 执行测试..."
+          echo "🧪 执行test..."
           python -m pytest tests/ -v --maxfail=5 --tb=short
         env:
           DB_HOST: 127.0.0.1
@@ -106,7 +106,7 @@ jobs:
           DB_PASSWORD: bravo_password
           DJANGO_SETTINGS_MODULE: bravo.settings.test
 
-  # 第三步：快速前端测试
+  # 第三步：快速前端test
   quick-frontend-tests:
     name: Quick Frontend Tests
     needs: quick-setup
@@ -123,13 +123,13 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          echo "安装根依赖..."
+          echo "install根依赖..."
           npm ci --prefer-offline --no-audit
           echo "✅ 前端依赖已通过根目录npm workspaces统一管理"
 
       - name: Run Quick Frontend Tests
         run: |
-          echo "🧪 运行快速前端测试..."
+          echo "🧪 运行快速前端test..."
           npm run test:ci --workspace=frontend
 
   # 第四步：代码质量快速检查
@@ -188,7 +188,7 @@ jobs:
           echo "**Message:** $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 收集测试结果
+          # 收集test结果
           BACKEND_STATUS="${{ needs.quick-backend-tests.result }}"
           FRONTEND_STATUS="${{ needs.quick-frontend-tests.result }}"
           QUALITY_STATUS="${{ needs.quick-quality-check.result }}"
