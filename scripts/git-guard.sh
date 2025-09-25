@@ -2,12 +2,43 @@
 # Git --no-verify 终极拦截脚本
 # 这个脚本会放在PATH最前面，拦截所有git调用
 
+# 🛡️ 自我保护检查 - 防止被篡改或绕过
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# 每100次调用检查一次完整性（性能优化）
+INTEGRITY_CHECK_FILE="$PROJECT_ROOT/.git/git-guard-calls"
+if [[ ! -f "$INTEGRITY_CHECK_FILE" ]]; then
+    echo "0" > "$INTEGRITY_CHECK_FILE"
+fi
+
+CALL_COUNT=$(cat "$INTEGRITY_CHECK_FILE" 2>/dev/null || echo "0")
+CALL_COUNT=$((CALL_COUNT + 1))
+echo "$CALL_COUNT" > "$INTEGRITY_CHECK_FILE"
+
+# 每100次调用进行一次完整性检查
+if (( CALL_COUNT % 100 == 0 )); then
+    # 调用监控脚本进行检查
+    if [[ -f "$PROJECT_ROOT/scripts/git-protection-monitor.sh" ]]; then
+        bash "$PROJECT_ROOT/scripts/git-protection-monitor.sh" verify >/dev/null 2>&1 || true
+    fi
+fi
+
 LOG_FILE="$(pwd)/logs/git-no-verify-attempts.log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
 # 检查是否在保护分支上
 check_protected_branch() {
-    local current_branch=$(git branch --show-current 2>/dev/null)
+    # 直接调用真正的git，避免递归
+    local real_git="/mingw64/bin/git"
+    if [[ ! -x "$real_git" ]]; then
+        real_git="/usr/bin/git"
+    fi
+    if [[ ! -x "$real_git" ]]; then
+        real_git="$(command -v git)"
+    fi
+    
+    local current_branch=$($real_git branch --show-current 2>/dev/null)
     [[ "$current_branch" =~ ^(dev|main|master)$ ]]
 }
 
@@ -20,7 +51,7 @@ show_protected_branch_warning() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "❌ 检测到在保护分支上尝试修改操作！"
     echo ""
-    echo "📋 当前分支：$(git branch --show-current 2>/dev/null)"
+    echo "📋 当前分支：$($real_git branch --show-current 2>/dev/null || echo 'unknown')"
     echo "🚫 禁止操作：$operation"
     echo ""
     echo "✅ 正确的开发流程："
@@ -38,7 +69,7 @@ show_protected_branch_warning() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BRANCH | $(git branch --show-current) | $operation | $command_full" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BRANCH | $($real_git branch --show-current 2>/dev/null || echo 'unknown') | $operation | $command_full" >> "$LOG_FILE"
 
     # 检查环境变量绕过
     if [[ "$ALLOW_PROTECTED_BRANCH_OPERATIONS" == "true" ]]; then
