@@ -126,7 +126,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-browsers-v3-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
           restore-keys: |
-            playwright-browsers-v1-${{ runner.os }}-
+            playwright-browsers-v3-${{ runner.os }}-
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
