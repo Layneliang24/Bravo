@@ -178,13 +178,13 @@ jobs:
           # 等待服务准备就绪 - 添加超时保护
           echo "⏳ Waiting for services to be ready..."
           WAIT_COUNT=0
-          MAX_WAIT=30  # 最多等待30次，每次2秒 = 60秒
+          MAX_WAIT=15  # 最多等待15次，每次2秒 = 30秒
 
           # 等待MySQL
           while ! mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
             WAIT_COUNT=$((WAIT_COUNT + 1))
             if [ $WAIT_COUNT -gt $MAX_WAIT ]; then
-              echo "❌ MySQL startup timeout after 60 seconds"
+              echo "❌ MySQL startup timeout after 30 seconds"
               exit 1
             fi
             echo "⏳ Waiting for MySQL... ($WAIT_COUNT/$MAX_WAIT)"
@@ -192,12 +192,12 @@ jobs:
           done
           echo "✅ MySQL is ready"
 
-          # 等待Redis
+          # 等待Redis - 使用简单的TCP连接检查
           WAIT_COUNT=0
-          while ! redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; do
+          while ! timeout 1 bash -c 'echo > /dev/tcp/127.0.0.1/6379' 2>/dev/null; do
             WAIT_COUNT=$((WAIT_COUNT + 1))
             if [ $WAIT_COUNT -gt $MAX_WAIT ]; then
-              echo "❌ Redis startup timeout after 60 seconds"
+              echo "❌ Redis startup timeout after 30 seconds"
               exit 1
             fi
             echo "⏳ Waiting for Redis... ($WAIT_COUNT/$MAX_WAIT)"
@@ -208,6 +208,9 @@ jobs:
           # 运行迁移
           echo "🔄 Running migrations..."
           python manage.py migrate --noinput --settings=bravo.settings.test
+
+          # 创建测试结果目录
+          mkdir -p test-results
 
           # 运行集成测试
           echo "🧪 Running integration tests..."
