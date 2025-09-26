@@ -13,6 +13,10 @@ on:
 jobs:
   feature-coverage-map:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
 
     services:
       mysql:
