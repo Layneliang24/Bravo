@@ -24,6 +24,7 @@
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && pylint apps/ --rcfile=.pylintrc",
+    "type-check": "cd frontend && npm run type-check",
     "format": "npm run format:frontend && npm run format:backend",
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && black . && isort .",
