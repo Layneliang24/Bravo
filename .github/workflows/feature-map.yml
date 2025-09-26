@@ -14,6 +14,18 @@ jobs:
   feature-coverage-map:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=5s --health-timeout=3s --health-retries=8
+        ports:
+          - 3306:3306
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,11 +99,22 @@ jobs:
           npm run test:coverage
         continue-on-error: true
 
+      - name: Run Django migrations
+        run: |
+          cd backend
+          python manage.py migrate --settings=bravo.settings.test
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
       - name: Run backend tests with feature mapping
         run: |
           cd backend
           export VALIDATE_FEATURE_COVERAGE=true
           python -m pytest --cov=. --cov-report=json --cov-report=html --maxfail=0
+        env:
+          DATABASE_URL: mysql://bravo_user:bravo_password@127.0.0.1:3306/bravo_test
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
         continue-on-error: true
 
       - name: Build feature-test mapping
