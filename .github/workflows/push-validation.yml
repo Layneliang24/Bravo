@@ -1,0 +1,463 @@
+name: "Push Validation Pipeline"
+
+on:
+  push:
+    branches: [feature/*, dev, main]
+  workflow_dispatch:
+    inputs:
+      force-full-validation:
+        description: "Force full validation regardless of branch"
+        type: boolean
+        default: false
+
+concurrency:
+  group: push-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # 智能分支检测和验证级别确定
+  detect-branch-context:
+    name: "Detect Branch & Validation Context"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      branch-type: ${{ steps.detect.outputs.branch-type }}
+      validation-level: ${{ steps.detect.outputs.validation-level }}
+      test-level: ${{ steps.detect.outputs.test-level }}
+      quality-level: ${{ steps.detect.outputs.quality-level }}
+      coverage-required: ${{ steps.detect.outputs.coverage-required }}
+      is-merge-commit: ${{ steps.detect.outputs.is-merge-commit }}
+      skip-validation: ${{ steps.detect.outputs.skip-validation }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: Analyze Branch and Commit Context
+        id: detect
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          FORCE_FULL="${{ github.event.inputs.force-full-validation }}"
+
+          echo "🔍 Analyzing push context:"
+          echo "  Branch: $BRANCH_NAME"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  Author: ${{ github.event.head_commit.author.name }}"
+          echo "  Message: $(echo "$COMMIT_MSG" | head -c 100)"
+
+          # 检查是否是合并提交
+          IS_MERGE="false"
+          if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
+            IS_MERGE="true"
+            echo "  Type: Merge commit detected"
+          else
+            echo "  Type: Regular commit"
+          fi
+          echo "is-merge-commit=$IS_MERGE" >> $GITHUB_OUTPUT
+
+          # 根据分支类型确定验证策略
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "branch-type=main" >> $GITHUB_OUTPUT
+            echo "validation-level=production" >> $GITHUB_OUTPUT
+            echo "test-level=full" >> $GITHUB_OUTPUT
+            echo "quality-level=strict" >> $GITHUB_OUTPUT
+            echo "coverage-required=90" >> $GITHUB_OUTPUT
+            echo "skip-validation=false" >> $GITHUB_OUTPUT
+            echo "🏭 MAIN branch push detected - PRODUCTION validation"
+
+          elif [[ "$BRANCH_NAME" == "dev" ]]; then
+            if [[ "$IS_MERGE" == "true" ]]; then
+              echo "branch-type=dev-merge" >> $GITHUB_OUTPUT
+              echo "validation-level=integration" >> $GITHUB_OUTPUT
+              echo "test-level=medium" >> $GITHUB_OUTPUT
+              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "coverage-required=85" >> $GITHUB_OUTPUT
+              echo "skip-validation=false" >> $GITHUB_OUTPUT
+              echo "🔄 DEV branch merge detected - INTEGRATION validation"
+            else
+              echo "branch-type=dev-direct" >> $GITHUB_OUTPUT
+              echo "validation-level=warning" >> $GITHUB_OUTPUT
+              echo "test-level=fast" >> $GITHUB_OUTPUT
+              echo "quality-level=basic" >> $GITHUB_OUTPUT
+              echo "coverage-required=75" >> $GITHUB_OUTPUT
+              echo "skip-validation=false" >> $GITHUB_OUTPUT
+              echo "⚠️ DEV branch direct push detected - WARNING validation"
+            fi
+
+          elif [[ "$BRANCH_NAME" =~ ^feature/ ]]; then
+            if [[ "$COMMIT_MSG" =~ (WIP|wip|work in progress) ]]; then
+              echo "branch-type=feature-wip" >> $GITHUB_OUTPUT
+              echo "validation-level=minimal" >> $GITHUB_OUTPUT
+              echo "test-level=fast" >> $GITHUB_OUTPUT
+              echo "quality-level=basic" >> $GITHUB_OUTPUT
+              echo "coverage-required=70" >> $GITHUB_OUTPUT
+              echo "skip-validation=false" >> $GITHUB_OUTPUT
+              echo "🚧 FEATURE WIP push detected - MINIMAL validation"
+            else
+              echo "branch-type=feature-ready" >> $GITHUB_OUTPUT
+              echo "validation-level=development" >> $GITHUB_OUTPUT
+              echo "test-level=medium" >> $GITHUB_OUTPUT
+              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "coverage-required=80" >> $GITHUB_OUTPUT
+              echo "skip-validation=false" >> $GITHUB_OUTPUT
+              echo "🚀 FEATURE ready push detected - DEVELOPMENT validation"
+            fi
+          else
+            echo "branch-type=other" >> $GITHUB_OUTPUT
+            echo "validation-level=basic" >> $GITHUB_OUTPUT
+            echo "test-level=fast" >> $GITHUB_OUTPUT
+            echo "quality-level=basic" >> $GITHUB_OUTPUT
+            echo "coverage-required=70" >> $GITHUB_OUTPUT
+            echo "skip-validation=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ OTHER branch push detected - BASIC validation"
+          fi
+
+          # 强制完整验证选项
+          if [[ "$FORCE_FULL" == "true" ]]; then
+            echo "validation-level=forced-full" >> $GITHUB_OUTPUT
+            echo "test-level=full" >> $GITHUB_OUTPUT
+            echo "quality-level=strict" >> $GITHUB_OUTPUT
+            echo "coverage-required=90" >> $GITHUB_OUTPUT
+            echo "🔧 FORCED full validation requested"
+          fi
+
+  # 分支保护和工作流验证
+  branch-protection-check:
+    name: "Branch Protection & Workflow Validation"
+    needs: detect-branch-context
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Branch Rules
+        run: |
+          echo "🔒 Validating branch protection and workflow rules..."
+
+          BRANCH_TYPE="${{ needs.detect-branch-context.outputs.branch-type }}"
+          IS_MERGE="${{ needs.detect-branch-context.outputs.is-merge-commit }}"
+
+          case "$BRANCH_TYPE" in
+            "main")
+              echo "🏭 Main branch validation:"
+              if [[ "$IS_MERGE" != "true" ]]; then
+                echo "❌ CRITICAL: Direct push to main branch detected!"
+                echo "   Only merge commits should appear on main branch"
+                echo "   This indicates a bypass of the PR process"
+                echo ""
+                echo "🔑 DOUBLE KEY SYSTEM VIOLATION:"
+                echo "   - Key A: Only dev branch should merge to main"
+                echo "   - Key B: Only through approved PRs"
+                echo ""
+                echo "📋 Correct process:"
+                echo "   1. Create feature branch"
+                echo "   2. PR to dev branch"
+                echo "   3. PR from dev to main"
+                exit 1
+              fi
+              echo "✅ Main branch merge commit validated"
+              ;;
+
+            "dev-direct")
+              echo "⚠️ Dev branch direct push warning:"
+              echo "   Direct pushes to dev branch discourage PR workflow"
+              echo "   Consider using feature branches for better collaboration"
+              echo ""
+              echo "📋 Recommended workflow:"
+              echo "   1. git checkout -b feature/your-feature"
+              echo "   2. Make changes and commit"
+              echo "   3. git push origin feature/your-feature"
+              echo "   4. Create PR to dev branch"
+              echo ""
+              echo "🟡 Proceeding with validation but workflow is not optimal"
+              ;;
+
+            "dev-merge")
+              echo "✅ Dev branch merge detected - this is the expected workflow"
+              ;;
+
+            "feature-"*)
+              echo "✅ Feature branch push - development workflow"
+              ;;
+
+            *)
+              echo "ℹ️ Other branch type - basic validation"
+              ;;
+          esac
+
+      - name: Check for Sensitive Changes
+        run: |
+          echo "🔍 Checking for sensitive file changes..."
+
+          # 检查关键配置文件
+          SENSITIVE_FILES=$(git diff --name-only HEAD~1 2>/dev/null | grep -E '\.(env|key|pem|p12|pfx|jks)$|secrets|passwords' || true)
+          if [ -n "$SENSITIVE_FILES" ]; then
+            echo "⚠️ Sensitive files detected in commit:"
+            echo "$SENSITIVE_FILES"
+            echo "Please verify these changes are intentional and secure"
+          fi
+
+          # 检查关键工作流文件变更
+          WORKFLOW_FILES=$(git diff --name-only HEAD~1 2>/dev/null | grep -E '^\.github/workflows/' || true)
+          if [ -n "$WORKFLOW_FILES" ]; then
+            echo "🔧 Workflow files changed:"
+            echo "$WORKFLOW_FILES"
+            echo "These changes will be extra scrutinized in validation"
+          fi
+
+          echo "✅ Sensitive file check completed"
+
+  # 快速健康检查 (所有分支)
+  quick-health-check:
+    name: "Quick Health Check"
+    needs: [detect-branch-context, branch-protection-check]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Basic Health Validation
+        run: |
+          echo "⚡ Running quick health check..."
+          echo "Branch: ${{ needs.detect-branch-context.outputs.branch-type }}"
+          echo "Validation: ${{ needs.detect-branch-context.outputs.validation-level }}"
+
+          # 检查基本语法
+          echo "Checking basic syntax..."
+          npm run lint:frontend -- --quiet || echo "⚠️ Frontend syntax issues"
+
+          cd backend && source .venv/bin/activate
+          flake8 . --select=E9,F63,F7,F82 --exclude=migrations,__pycache__,.venv || echo "⚠️ Backend syntax issues"
+
+          echo "✅ Quick health check completed"
+
+  # 条件测试执行 (基于分支类型)
+  conditional-test-execution:
+    name: "Conditional Test Execution"
+    needs: [detect-branch-context, quick-health-check]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    uses: ./.github/workflows/test-suite.yml
+    with:
+      test-level: ${{ needs.detect-branch-context.outputs.test-level }}
+      target-branch: ${{ github.ref_name }}
+      coverage-required: ${{ needs.detect-branch-context.outputs.coverage-required }}
+
+  # 条件质量检查 (基于分支类型)
+  conditional-quality-check:
+    name: "Conditional Quality Check"
+    needs: [detect-branch-context, quick-health-check]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    uses: ./.github/workflows/quality-gates.yml
+    with:
+      quality-level: ${{ needs.detect-branch-context.outputs.quality-level }}
+      min-coverage: ${{ needs.detect-branch-context.outputs.coverage-required }}
+      target-branch: ${{ github.ref_name }}
+
+  # 分支特定的额外检查
+  branch-specific-checks:
+    name: "Branch-Specific Additional Checks"
+    needs: [detect-branch-context, conditional-test-execution]
+    if: needs.detect-branch-context.outputs.branch-type == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Production Readiness Check
+        run: |
+          echo "🏭 Running production readiness checks..."
+
+          # 检查版本标签
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          echo "Latest tag: $LATEST_TAG"
+
+          # 检查生产配置
+          if [ ! -f "backend/bravo/settings/production.py" ]; then
+            echo "❌ Production settings file missing"
+            exit 1
+          fi
+
+          # 检查数据库迁移
+          echo "Checking for pending migrations..."
+          cd backend && source .venv/bin/activate
+          python manage.py makemigrations --check --settings=bravo.settings.test || {
+            echo "❌ Pending migrations detected"
+            exit 1
+          }
+
+          echo "✅ Production readiness checks passed"
+
+      - name: Generate Release Notes
+        run: |
+          echo "📝 Generating release notes..."
+
+          # 获取上次发布以来的提交
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~10")
+          COMMITS=$(git log --oneline --no-merges $LAST_TAG..HEAD)
+
+          echo "## Release Notes (Auto-generated)" > release-notes.md
+          echo "**Date**: $(date)" >> release-notes.md
+          echo "**Commit**: ${{ github.sha }}" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "### Changes since $LAST_TAG:" >> release-notes.md
+          echo "$COMMITS" | while read line; do
+            echo "- $line" >> release-notes.md
+          done
+
+          cat release-notes.md
+
+      - name: Upload Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          retention-days: 30
+
+  # 推送验证汇总
+  push-validation-summary:
+    name: "Push Validation Summary"
+    needs:
+      [
+        detect-branch-context,
+        conditional-test-execution,
+        conditional-quality-check,
+        branch-specific-checks,
+      ]
+    if: always() && needs.detect-branch-context.outputs.skip-validation != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Push Summary
+        run: |
+          echo "## 🚀 Push Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Push Information:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }} (${{ needs.detect-branch-context.outputs.branch-type }})" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Author: ${{ github.event.head_commit.author.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Message: $(echo '${{ github.event.head_commit.message }}' | head -c 100)" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge Commit: ${{ needs.detect-branch-context.outputs.is-merge-commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "**Validation Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Level: ${{ needs.detect-branch-context.outputs.validation-level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Level: ${{ needs.detect-branch-context.outputs.test-level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Quality Level: ${{ needs.detect-branch-context.outputs.quality-level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage Required: ${{ needs.detect-branch-context.outputs.coverage-required }}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 收集验证结果
+          TEST_RESULT="${{ needs.conditional-test-execution.result }}"
+          TEST_OUTPUT="${{ needs.conditional-test-execution.outputs.test-results }}"
+          QUALITY_RESULT="${{ needs.conditional-quality-check.result }}"
+          QUALITY_SCORE="${{ needs.conditional-quality-check.outputs.quality-score }}"
+          BRANCH_CHECKS_RESULT="${{ needs.branch-specific-checks.result }}"
+
+          echo "**Validation Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | $TEST_RESULT | ${{ needs.detect-branch-context.outputs.test-level }} level |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gates | $QUALITY_RESULT | Score: $QUALITY_SCORE/100 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch-Specific | $BRANCH_CHECKS_RESULT | Extra checks |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 判断总体结果
+          OVERALL_SUCCESS=true
+
+          if [[ "$TEST_RESULT" != "success" || "$TEST_OUTPUT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+          fi
+
+          if [[ "$QUALITY_RESULT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+          fi
+
+          if [[ "${{ needs.detect-branch-context.outputs.branch-type }}" == "main" && "$BRANCH_CHECKS_RESULT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+          fi
+
+          if [[ "$OVERALL_SUCCESS" == "true" ]]; then
+            echo "## ✅ Push Validation PASSED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            case "${{ needs.detect-branch-context.outputs.branch-type }}" in
+              "main")
+                echo "🏭 **PRODUCTION**: All production readiness checks passed" >> $GITHUB_STEP_SUMMARY
+                echo "🚀 Ready for deployment to production environment" >> $GITHUB_STEP_SUMMARY
+                ;;
+              "dev-merge")
+                echo "🔄 **INTEGRATION**: All integration tests passed" >> $GITHUB_STEP_SUMMARY
+                echo "✅ Dev branch is stable and ready for production promotion" >> $GITHUB_STEP_SUMMARY
+                ;;
+              "dev-direct")
+                echo "⚠️ **WARNING**: Direct dev push completed but not recommended" >> $GITHUB_STEP_SUMMARY
+                echo "📋 Consider using feature branches for better collaboration" >> $GITHUB_STEP_SUMMARY
+                ;;
+              "feature-ready")
+                echo "🚀 **FEATURE**: Ready for integration via PR to dev" >> $GITHUB_STEP_SUMMARY
+                echo "📝 Create PR to dev branch when ready" >> $GITHUB_STEP_SUMMARY
+                ;;
+              "feature-wip")
+                echo "🚧 **WIP**: Work in progress validation passed" >> $GITHUB_STEP_SUMMARY
+                echo "⚡ Minimal checks for development efficiency" >> $GITHUB_STEP_SUMMARY
+                ;;
+            esac
+          else
+            echo "## ❌ Push Validation FAILED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚫 Some validations failed. Please review and fix the issues." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "${{ needs.detect-branch-context.outputs.branch-type }}" == "main" ]]; then
+              echo "🚨 **CRITICAL**: Production validation failed!" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ **DO NOT DEPLOY** until issues are resolved" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            exit 1
+          fi
+
+  # 通知和后续处理
+  post-validation-actions:
+    name: "Post-Validation Actions"
+    needs: [detect-branch-context, push-validation-summary]
+    if: always() && needs.detect-branch-context.outputs.branch-type == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Deployment Readiness
+        if: needs.push-validation-summary.result == 'success'
+        run: |
+          echo "🎯 Main branch validation passed - triggering deployment readiness"
+          echo "This could trigger:"
+          echo "  - Docker image build"
+          echo "  - Staging deployment"
+          echo "  - Release tag creation"
+          echo "  - Notification to operations team"
+
+      - name: Alert on Production Issues
+        if: needs.push-validation-summary.result == 'failure'
+        run: |
+          echo "🚨 PRODUCTION VALIDATION FAILED!"
+          echo "Immediate actions required:"
+          echo "  - Investigate validation failures"
+          echo "  - Consider emergency rollback if needed"
+          echo "  - Alert operations team"
+          echo "  - Block production deployment"

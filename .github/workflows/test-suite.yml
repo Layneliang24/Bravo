@@ -1,0 +1,342 @@
+name: "Test Suite Component"
+
+on:
+  workflow_call:
+    inputs:
+      test-level:
+        description: "Test execution level: fast, medium, full"
+        type: string
+        required: true
+      target-branch:
+        description: "Target branch for testing"
+        type: string
+        required: false
+        default: "dev"
+      coverage-required:
+        description: "Minimum coverage percentage"
+        type: string
+        required: false
+        default: "80"
+    outputs:
+      test-results:
+        description: "Test execution results"
+        value: ${{ jobs.test-summary.outputs.results }}
+      coverage-backend:
+        description: "Backend coverage percentage"
+        value: ${{ jobs.unit-tests.outputs.backend-coverage }}
+      coverage-frontend:
+        description: "Frontend coverage percentage"
+        value: ${{ jobs.unit-tests.outputs.frontend-coverage }}
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # 并行执行的单元测试
+  unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ["backend", "frontend"]
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      backend-coverage: ${{ steps.backend-test.outputs.coverage }}
+      frontend-coverage: ${{ steps.frontend-test.outputs.coverage }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Run Backend Unit Tests
+        if: matrix.component == 'backend'
+        id: backend-test
+        run: |
+          echo "🧪 Running backend unit tests..."
+          cd backend && source .venv/bin/activate
+
+          # 等待数据库准备就绪
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+
+          # 运行迁移
+          python manage.py migrate --noinput --settings=bravo.settings.test
+
+          # 运行测试with覆盖率
+          python -m pytest tests/unit/ \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-report=html \
+            --maxfail=5 \
+            --tb=short
+
+          # 提取覆盖率
+          COVERAGE=$(python -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          print(f\"{float(root.attrib['line-rate']) * 100:.1f}\")
+          " 2>/dev/null || echo "0")
+
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Backend coverage: $COVERAGE%"
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Run Frontend Unit Tests
+        if: matrix.component == 'frontend'
+        id: frontend-test
+        run: |
+          echo "🧪 Running frontend unit tests..."
+
+          # 运行前端测试with覆盖率
+          npm run test:ci --workspace=frontend
+
+          # 提取覆盖率 (从vitest覆盖率报告)
+          COVERAGE=$(node -e "
+          try {
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('frontend/coverage/coverage-summary.json', 'utf8'));
+            console.log(coverage.total.lines.pct);
+          } catch (e) {
+            console.log('0');
+          }
+          " 2>/dev/null || echo "0")
+
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Frontend coverage: $COVERAGE%"
+
+      - name: Upload Coverage to CodeCov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml,./frontend/coverage/lcov.info
+          flags: ${{ matrix.component }}
+          name: ${{ matrix.component }}-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # 条件执行的集成测试
+  integration-tests:
+    if: inputs.test-level != 'fast'
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:7-alpine
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Run Integration Tests
+        run: |
+          echo "🔗 Running integration tests..."
+          cd backend && source .venv/bin/activate
+
+          # 等待服务准备就绪
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+
+          until redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; do
+            echo "等待Redis启动..."
+            sleep 2
+          done
+
+          # 运行迁移
+          python manage.py migrate --noinput --settings=bravo.settings.test
+
+          # 运行集成测试
+          python -m pytest tests/integration/ \
+            --maxfail=3 \
+            --tb=short \
+            --junit-xml=test-results/integration-results.xml
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          REDIS_URL: redis://127.0.0.1:6379
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: backend/test-results/
+          retention-days: 7
+
+  # 智能E2E测试 (仅在full模式)
+  e2e-tests:
+    if: inputs.test-level == 'full'
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Run E2E Tests
+        run: |
+          echo "🎭 Running E2E tests..."
+
+          # 启动完整测试环境
+          docker compose -f docker-compose.test.yml up --build -d
+
+          # 等待服务启动
+          sleep 10
+
+          # 获取E2E容器ID
+          E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
+          echo "E2E Container ID: $E2E_CID"
+
+          if [ -n "$E2E_CID" ]; then
+            # 等待E2E测试完成
+            E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
+            echo "E2E exit code: $E2E_EXIT_CODE"
+
+            # 收集测试产物
+            mkdir -p e2e-artifacts
+            docker cp "$E2E_CID:/app/test-results" e2e-artifacts/ 2>/dev/null || true
+            docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/ 2>/dev/null || true
+          else
+            echo "❌ E2E container not found"
+            E2E_EXIT_CODE=1
+          fi
+
+          # 清理容器
+          docker compose -f docker-compose.test.yml down
+
+          exit $E2E_EXIT_CODE
+
+      - name: Upload E2E Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-artifacts
+          path: e2e-artifacts/
+          retention-days: 7
+
+  # 测试结果汇总
+  test-summary:
+    if: always()
+    needs: [unit-tests, integration-tests, e2e-tests]
+    runs-on: ubuntu-latest
+    outputs:
+      results: ${{ steps.summary.outputs.results }}
+      total-coverage: ${{ steps.summary.outputs.total-coverage }}
+
+    steps:
+      - name: Generate Test Summary
+        id: summary
+        run: |
+          echo "## 🧪 Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 获取测试结果
+          UNIT_STATUS="${{ needs.unit-tests.result }}"
+          INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
+          E2E_STATUS="${{ needs.e2e-tests.result }}"
+
+          # 获取覆盖率
+          BACKEND_COV="${{ needs.unit-tests.outputs.backend-coverage }}"
+          FRONTEND_COV="${{ needs.unit-tests.outputs.frontend-coverage }}"
+
+          # 计算总覆盖率 (加权平均)
+          TOTAL_COV=$(echo "scale=1; ($BACKEND_COV * 0.6 + $FRONTEND_COV * 0.4)" | bc 2>/dev/null || echo "0")
+
+          echo "| Test Type | Status | Coverage | Level |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Unit | $UNIT_STATUS | ${BACKEND_COV}% | Always |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Unit | $UNIT_STATUS | ${FRONTEND_COV}% | Always |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration | $INTEGRATION_STATUS | - | Medium+ |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | $E2E_STATUS | - | Full Only |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Coverage**: ${TOTAL_COV}% (Target: ${{ inputs.coverage-required }}%)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 判断测试结果
+          TESTS_PASSED=true
+
+          if [[ "$UNIT_STATUS" != "success" ]]; then
+            TESTS_PASSED=false
+            echo "❌ Unit tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ inputs.test-level }}" != "fast" && "$INTEGRATION_STATUS" != "success" ]]; then
+            TESTS_PASSED=false
+            echo "❌ Integration tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ inputs.test-level }}" == "full" && "$E2E_STATUS" != "success" ]]; then
+            TESTS_PASSED=false
+            echo "❌ E2E tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # 检查覆盖率要求
+          if (( $(echo "$TOTAL_COV < ${{ inputs.coverage-required }}" | bc -l) )); then
+            TESTS_PASSED=false
+            echo "❌ Coverage below threshold: ${TOTAL_COV}% < ${{ inputs.coverage-required }}%" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # 输出结果
+          echo "total-coverage=$TOTAL_COV" >> $GITHUB_OUTPUT
+
+          if [[ "$TESTS_PASSED" == "true" ]]; then
+            echo "results=success" >> $GITHUB_OUTPUT
+            echo "✅ **All required tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "🎯 Test level: ${{ inputs.test-level }}" >> $GITHUB_STEP_SUMMARY
+            echo "📊 Coverage: ${TOTAL_COV}% (✅ meets ${COVERAGE_REQUIRED}% requirement)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "results=failure" >> $GITHUB_OUTPUT
+            echo "❌ **Some tests failed or coverage insufficient!**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
