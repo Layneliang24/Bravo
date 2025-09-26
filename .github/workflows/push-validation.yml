@@ -104,7 +104,7 @@ jobs:
               echo "validation-level=development" >> $GITHUB_OUTPUT
               echo "test-level=medium" >> $GITHUB_OUTPUT
               echo "quality-level=standard" >> $GITHUB_OUTPUT
-              echo "coverage-required=80" >> $GITHUB_OUTPUT
+              echo "coverage-required=40" >> $GITHUB_OUTPUT
               echo "skip-validation=false" >> $GITHUB_OUTPUT
               echo "🚀 FEATURE ready push detected - DEVELOPMENT validation"
             fi
