@@ -18,11 +18,11 @@ log_message() {
 check_alias_status() {
     local current_alias=$(alias git 2>/dev/null || echo "NOT_SET")
     local expected_alias="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
-    
+
     if [[ "$current_alias" == *"git-guard.sh"* ]]; then
         echo "PROTECTED"
     elif [[ "$current_alias" == "NOT_SET" ]]; then
-        echo "NOT_SET" 
+        echo "NOT_SET"
     else
         echo "COMPROMISED"
     fi
@@ -42,26 +42,56 @@ check_bashrc_config() {
 restore_protection() {
     local reason="$1"
     log_message "🔧 RESTORE | $reason - 正在恢复git保护..."
-    
+
     # 1. 恢复当前会话alias
     alias git="bash \"$PROJECT_ROOT/scripts/git-guard.sh\""
     log_message "✅ RESTORE | 当前会话alias已恢复"
-    
-    # 2. 检查并恢复bashrc配置
+
+    # 2. 恢复依赖管理拦截器alias
+    alias npm="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" npm"
+    alias yarn="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yarn"
+    alias pnpm="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pnpm"
+    alias pip="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip"
+    alias pip3="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip3"
+    alias apt="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt"
+    alias apt-get="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt-get"
+    alias yum="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yum"
+    alias dnf="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" dnf"
+    alias brew="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew"
+    alias composer="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer"
+    log_message "✅ RESTORE | 依赖管理拦截器已恢复"
+
+    # 3. 检查并恢复bashrc配置
     local bashrc_path="$HOME/.bashrc"
-    local expected_line="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
-    
+    local git_alias_line="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
+
     if [[ -f "$bashrc_path" ]]; then
+        # 恢复git保护alias
         if ! grep -q "git-guard.sh" "$bashrc_path"; then
             echo "# Git --no-verify 保护 (自动恢复)" >> "$bashrc_path"
-            echo "$expected_line" >> "$bashrc_path"
-            log_message "✅ RESTORE | ~/.bashrc配置已恢复"
+            echo "$git_alias_line" >> "$bashrc_path"
+            log_message "✅ RESTORE | ~/.bashrc Git保护配置已恢复"
+        fi
+
+        # 恢复依赖管理拦截器alias
+        if ! grep -q "dependency-guard.sh" "$bashrc_path"; then
+            echo "# 依赖管理拦截器 (纯Docker环境保护)" >> "$bashrc_path"
+            echo "alias npm='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" npm'" >> "$bashrc_path"
+            echo "alias yarn='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yarn'" >> "$bashrc_path"
+            echo "alias pnpm='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pnpm'" >> "$bashrc_path"
+            echo "alias pip='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip'" >> "$bashrc_path"
+            echo "alias pip3='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip3'" >> "$bashrc_path"
+            echo "alias apt='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt'" >> "$bashrc_path"
+            echo "alias apt-get='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt-get'" >> "$bashrc_path"
+            echo "alias brew='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew'" >> "$bashrc_path"
+            echo "alias composer='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer'" >> "$bashrc_path"
+            log_message "✅ RESTORE | ~/.bashrc 依赖管理拦截器配置已恢复"
         fi
     fi
-    
+
     # 3. 更新保护状态记录
     echo "$(date '+%Y-%m-%d %H:%M:%S') | RESTORED | $reason" > "$PROTECTION_CONFIG"
-    
+
     # 4. 发出警告
     echo ""
     echo "🚨🚨🚨 GIT保护已自动恢复 🚨🚨🚨"
@@ -78,7 +108,7 @@ restore_protection() {
 main_check() {
     local alias_status=$(check_alias_status)
     local bashrc_status=$(check_bashrc_config)
-    
+
     case "$alias_status" in
         "PROTECTED")
             log_message "✅ CHECK | Git保护正常工作"
@@ -93,7 +123,7 @@ main_check() {
             return 1
             ;;
     esac
-    
+
     if [[ "$bashrc_status" == "MISSING" ]]; then
         restore_protection "Bashrc配置丢失"
         return 1
@@ -104,7 +134,7 @@ main_check() {
 daemon_mode() {
     local check_interval=30  # 30秒检查一次
     log_message "🛡️ DAEMON | 启动git保护监控守护进程 (间隔: ${check_interval}s)"
-    
+
     while true; do
         main_check > /dev/null 2>&1
         sleep $check_interval
@@ -114,10 +144,10 @@ daemon_mode() {
 # 安装系统级保护
 install_system_protection() {
     log_message "🔧 INSTALL | 安装系统级保护..."
-    
+
     # 1. 创建定时检查的crontab任务
     local cron_job="* * * * * cd '$PROJECT_ROOT' && bash scripts/git-protection-monitor.sh check >> /dev/null 2>&1"
-    
+
     # 检查crontab是否已存在
     if ! crontab -l 2>/dev/null | grep -q "git-protection-monitor"; then
         (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
@@ -125,10 +155,10 @@ install_system_protection() {
     else
         log_message "⚠️  INSTALL | Crontab任务已存在"
     fi
-    
+
     # 2. 创建shell启动时的自动检查
     local shell_check_line="bash '$PROJECT_ROOT/scripts/git-protection-monitor.sh' check 2>/dev/null || true"
-    
+
     if [[ -f "$HOME/.bashrc" ]]; then
         if ! grep -q "git-protection-monitor" "$HOME/.bashrc"; then
             echo "# Git保护自动检查" >> "$HOME/.bashrc"
@@ -136,7 +166,7 @@ install_system_protection() {
             log_message "✅ INSTALL | Shell启动检查已安装"
         fi
     fi
-    
+
     # 3. 创建git pre-command hook
     cat > "$PROJECT_ROOT/.git/hooks/pre-command" << 'EOF'
 #!/bin/bash
@@ -147,7 +177,7 @@ if [[ -f "$PROJECT_ROOT/scripts/git-protection-monitor.sh" ]]; then
 fi
 EOF
     chmod +x "$PROJECT_ROOT/.git/hooks/pre-command" 2>/dev/null || true
-    
+
     log_message "🎉 INSTALL | 系统级保护安装完成"
 }
 
@@ -155,19 +185,19 @@ EOF
 create_immutable_backup() {
     local backup_dir="$PROJECT_ROOT/.git-protection-backup"
     mkdir -p "$backup_dir"
-    
+
     # 备份关键文件
     cp "$PROJECT_ROOT/scripts/git-guard.sh" "$backup_dir/git-guard.sh.backup"
     cp "$0" "$backup_dir/git-protection-monitor.sh.backup"
-    
+
     # 创建校验和
     sha256sum "$PROJECT_ROOT/scripts/git-guard.sh" > "$backup_dir/checksums.txt"
     sha256sum "$0" >> "$backup_dir/checksums.txt"
-    
+
     # 设置只读权限
     chmod 444 "$backup_dir"/*.backup 2>/dev/null || true
     chmod 444 "$backup_dir/checksums.txt" 2>/dev/null || true
-    
+
     log_message "💾 BACKUP | 不可变备份已创建"
 }
 
@@ -192,7 +222,7 @@ verify_integrity() {
 
 # 教育用户函数
 educate_user() {
-    cat << 'EOF'
+    cat << EOF
 
 📚 Git保护系统使用须知
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -200,24 +230,43 @@ educate_user() {
 🚨 为什么不能随意修改git alias:
 
 1. 🏗️ 架构保护: 防止破坏npm workspaces和依赖管理
-2. 🔍 质量控制: 确保pre-commit检查不被绕过  
+2. 🔍 质量控制: 确保pre-commit检查不被绕过
 3. 📊 审计需求: 记录所有git操作用于问题追踪
 4. 🛡️ 安全合规: 防止恶意代码注入
 
+🚨 为什么不能在宿主机安装依赖:
+
+1. 🐳 纯Docker环境: 项目严格遵循纯Docker开发原则
+2. 🔧 环境一致性: 确保开发、测试、生产环境完全一致
+3. 📦 依赖隔离: 防止宿主机环境污染和版本冲突
+4. 🚀 CI/CD保证: 保证流水线执行环境的可重现性
+
 ✅ 正确的开发流程:
 
+Git操作相关:
 • 如需临时禁用检查，使用环境变量:
   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true
-
 • 如需永久调整规则，修改配置文件:
   scripts/git-guard.sh 中的检查逻辑
 
-• 紧急情况联系架构负责人
+依赖管理相关:
+• 所有依赖操作必须在Docker容器内进行:
+  docker-compose exec frontend npm install [package]
+  docker-compose exec backend pip install [package]
+• 如需临时绕过依赖拦截:
+  export ALLOW_HOST_DEPENDENCY_INSTALL=true
+• 紧急确认码: DOCKER_NATIVE_BYPASS
 
 ⚠️  不要尝试绕过保护系统:
-• 不要修改 ~/.bashrc 中的git alias
-• 不要直接调用 /usr/bin/git 或 /mingw64/bin/git  
+• 不要修改 ~/.bashrc 中的alias
+• 不要直接调用 /usr/bin/npm 或系统包管理器
 • 不要删除或修改保护脚本
+• 不要在宿主机安装依赖，噗你阿母试试！！！
+
+🐳 纯Docker开发原则:
+• 宿主机只保留: Git, Docker, 代码编辑器
+• 所有开发工具: Node.js, Python, 依赖包都在容器内
+• 容器内开发，宿主机编辑
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EOF
@@ -249,7 +298,7 @@ case "${1:-check}" in
         echo "使用方法: $0 {check|daemon|install|restore|verify|educate}"
         echo ""
         echo "  check    - 检查并自动修复保护状态"
-        echo "  daemon   - 启动后台监控守护进程"  
+        echo "  daemon   - 启动后台监控守护进程"
         echo "  install  - 安装系统级保护机制"
         echo "  restore  - 强制恢复保护配置"
         echo "  verify   - 验证保护文件完整性"

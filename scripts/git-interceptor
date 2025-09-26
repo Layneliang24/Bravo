@@ -74,6 +74,7 @@ show_violation_warning() {
     echo "   • 代码质量检查被绕过"
     echo "   • 架构违规问题扩散"
     echo "   • 分支保护策略被绕过"
+    echo "   • 噗你阿母，你绕过试试！！！"
     echo ""
     echo "✅ 正确的解决方案："
     echo "   1. 修复检查发现的问题"
