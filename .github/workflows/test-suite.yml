@@ -144,7 +144,7 @@ jobs:
     if: inputs.test-level != 'fast'
     needs: unit-tests
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 6
 
     services:
       mysql:
@@ -154,13 +154,13 @@ jobs:
           MYSQL_USER: bravo_user
           MYSQL_PASSWORD: bravo_password
           MYSQL_ROOT_PASSWORD: root_password
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=3s --health-retries=6
         ports:
           - 3306:3306
 
       redis:
         image: redis:7-alpine
-        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=3s --health-retries=6
         ports:
           - 6379:6379
 
@@ -175,25 +175,47 @@ jobs:
           echo "🔗 Running integration tests..."
           cd backend && source .venv/bin/activate
 
-          # 等待服务准备就绪
-          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
-            echo "等待MySQL启动..."
-            sleep 2
-          done
+          # 等待服务准备就绪 - 添加超时保护
+          echo "⏳ Waiting for services to be ready..."
+          WAIT_COUNT=0
+          MAX_WAIT=30  # 最多等待30次，每次2秒 = 60秒
 
-          until redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; do
-            echo "等待Redis启动..."
+          # 等待MySQL
+          while ! mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ $WAIT_COUNT -gt $MAX_WAIT ]; then
+              echo "❌ MySQL startup timeout after 60 seconds"
+              exit 1
+            fi
+            echo "⏳ Waiting for MySQL... ($WAIT_COUNT/$MAX_WAIT)"
             sleep 2
           done
+          echo "✅ MySQL is ready"
+
+          # 等待Redis
+          WAIT_COUNT=0
+          while ! redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG; do
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ $WAIT_COUNT -gt $MAX_WAIT ]; then
+              echo "❌ Redis startup timeout after 60 seconds"
+              exit 1
+            fi
+            echo "⏳ Waiting for Redis... ($WAIT_COUNT/$MAX_WAIT)"
+            sleep 2
+          done
+          echo "✅ Redis is ready"
 
           # 运行迁移
+          echo "🔄 Running migrations..."
           python manage.py migrate --noinput --settings=bravo.settings.test
 
           # 运行集成测试
+          echo "🧪 Running integration tests..."
           python -m pytest tests/integration/ \
             --maxfail=3 \
             --tb=short \
-            --junit-xml=test-results/integration-results.xml
+            --junit-xml=test-results/integration-results.xml \
+            -v
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
