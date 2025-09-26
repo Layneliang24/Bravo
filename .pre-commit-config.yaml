@@ -107,24 +107,15 @@ repos:
         always_run: true
         fail_fast: true
 
-  # Docker 文件检查
-  # - repo: https://github.com/hadolint/hadolint
-  #   rev: v2.12.0
-  #   hooks:
-  #     - id: hadolint-docker
-  #       args:
-  #         [
-  #           --ignore,
-  #           DL3008,
-  #           --ignore,
-  #           DL3009,
-  #           --ignore,
-  #           DL3015,
-  #           --ignore,
-  #           DL3018,
-  #           --ignore,
-  #           DL3059,
-  #         ]
+  # Docker 文件检查 - 通过Docker镜像执行，符合纯Docker开发原则
+  - repo: local
+    hooks:
+      - id: hadolint-docker
+        name: Hadolint Docker file linter
+        entry: sh -c 'docker run --rm -i hadolint/hadolint:v2.12.0 --ignore DL3008 --ignore DL3009 --ignore DL3015 --ignore DL3018 --ignore DL3059 < "$1"' --
+        language: system
+        files: ^.*Dockerfile.*$
+        pass_filenames: true
 
   # 提交信息检查
   - repo: https://github.com/commitizen-tools/commitizen
@@ -165,26 +156,20 @@ repos:
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
 
-      # TypeScript和Vue命名检查 - 暂时禁用，ESLint依赖问题
+      # TypeScript命名检查 - 通过Docker容器执行
       - id: typescript-naming-check
         name: TypeScript Naming Convention Check
-        entry: sh -c 'echo "✅ TypeScript检查通过"'
+        entry: sh -c 'docker-compose exec -T frontend npx eslint --config eslint.config.js --no-fix'
         language: system
-        files: \.(ts|tsx)$
-      #   entry: sh -c 'cd frontend && npx eslint'
-      #   language: system
-      #   files: ^frontend/src/.*\.(js|ts|vue)$
-      #   pass_filenames: true
+        files: ^frontend/src/.*\.(ts|tsx)$
+        pass_filenames: true
 
       - id: vue-naming-check
         name: Vue Naming Convention Check
-        entry: sh -c 'echo "✅ Vue检查通过"'
+        entry: sh -c 'docker-compose exec -T frontend npx eslint --config eslint.config.js --no-fix'
         language: system
-        files: \.vue$
-      #   entry: sh -c 'cd frontend && npx eslint'
-      #   language: system
-      #   files: ^frontend/src/.*\.vue$
-      #   pass_filenames: true
+        files: ^frontend/src/.*\.vue$
+        pass_filenames: true
 
   # 本地目录守卫钩子
   - repo: local
