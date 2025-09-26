@@ -12,7 +12,7 @@ on:
     types: [opened, synchronize, reopened]
     # 🎯 优化：完整验证，包括E2E和安全扫描
   push:
-    branches: [main, dev]
+    branches: [main] # 只在push到main时触发，避免dev分支误触发
 
 jobs:
   # Job 1: Validate that changes come from dev branch

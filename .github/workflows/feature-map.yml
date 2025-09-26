@@ -2,9 +2,9 @@ name: Feature-Test Coverage Map
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main] # 只在push到main时触发，避免dev分支误触发
   pull_request:
-    branches: [main]
+    branches: [main, dev] # 支持PR到dev和main分支
   schedule:
     # 每天凌晨2点生成报告
     - cron: "0 2 * * *"
