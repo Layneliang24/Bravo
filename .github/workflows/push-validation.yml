@@ -102,11 +102,11 @@ jobs:
             else
               echo "branch-type=feature-ready" >> $GITHUB_OUTPUT
               echo "validation-level=development" >> $GITHUB_OUTPUT
-              echo "test-level=medium" >> $GITHUB_OUTPUT
-              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "test-level=full" >> $GITHUB_OUTPUT
+              echo "quality-level=strict" >> $GITHUB_OUTPUT
               echo "coverage-required=30" >> $GITHUB_OUTPUT
               echo "skip-validation=false" >> $GITHUB_OUTPUT
-              echo "🚀 FEATURE ready push detected - DEVELOPMENT validation"
+              echo "🚀 FEATURE ready push detected - ENHANCED validation (full tests + strict quality)"
             fi
           else
             echo "branch-type=other" >> $GITHUB_OUTPUT
