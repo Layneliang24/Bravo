@@ -93,6 +93,16 @@ case "$REAL_COMMAND" in
             show_host_dependency_warning "$command_full" "Python包管理违规"
         fi
         ;;
+    python|python3)
+        # 拦截所有python命令，引导到Docker容器
+        show_host_dependency_warning "$command_full" "Python执行环境违规"
+        ;;
+    source)
+        # 拦截source命令，避免激活宿主机虚拟环境
+        if [[ "$args" =~ (venv|virtualenv|\.venv|env/bin/activate) ]]; then
+            show_host_dependency_warning "$command_full" "虚拟环境激活违规"
+        fi
+        ;;
     apt|apt-get|yum|dnf|brew)
         if [[ "$args" =~ (^|[[:space:]])(install|update|upgrade)([[:space:]]|$) ]]; then
             show_host_dependency_warning "$command_full" "系统包管理违规"
@@ -105,6 +115,11 @@ case "$REAL_COMMAND" in
         ;;
 esac
 
+# 特殊处理 ./ 开头的脚本执行
+if [[ "$REAL_COMMAND" =~ ^\./.*$ ]]; then
+    show_host_dependency_warning "$command_full" "脚本直接执行违规"
+fi
+
 # 找到真正的命令并执行
 real_command_path=""
 case "$REAL_COMMAND" in
@@ -114,12 +129,22 @@ case "$REAL_COMMAND" in
     pip|pip3)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
         ;;
+    python|python3)
+        real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
+        ;;
+    source)
+        # source 是bash内建命令，不能通过command找到
+        real_command_path="source"
+        ;;
     *)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
         ;;
 esac
 
-if [[ -x "$real_command_path" ]]; then
+if [[ "$REAL_COMMAND" == "source" ]]; then
+    # source是bash内建命令，需要特殊处理
+    source "$@"
+elif [[ -x "$real_command_path" ]]; then
     exec "$real_command_path" "$@"
 else
     echo "❌ 真正的 $REAL_COMMAND 命令未找到"
