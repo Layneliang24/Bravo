@@ -73,6 +73,22 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Create and Setup Python Virtual Environment
+        if: matrix.component == 'backend'
+        run: |
+          cd backend
+          echo "🔍 检查虚拟环境..."
+          if [ ! -d ".venv" ]; then
+            echo "🆕 创建虚拟环境..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/test.txt
+            echo "✅ 虚拟环境创建完成"
+          else
+            echo "✅ 虚拟环境已存在"
+          fi
+
       - name: Run Backend Unit Tests
         if: matrix.component == 'backend'
         id: backend-test
@@ -205,6 +221,21 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+
+      - name: Create and Setup Python Virtual Environment
+        run: |
+          cd backend
+          echo "🔍 检查虚拟环境..."
+          if [ ! -d ".venv" ]; then
+            echo "🆕 创建虚拟环境..."
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip wheel
+            pip install -r requirements/test.txt
+            echo "✅ 虚拟环境创建完成"
+          else
+            echo "✅ 虚拟环境已存在"
+          fi
 
       - name: Run Integration Tests
         run: |
