@@ -619,15 +619,29 @@ if [[ "$1" == "push" ]]; then
 fi
 
 # 找到真正的git并执行
+# 🔧 修复pre-push hook参数传递bug
+real_git=""
 if [[ -x "/usr/bin/git" ]]; then
-    exec "/usr/bin/git" "$@"
+    real_git="/usr/bin/git"
 elif [[ -x "/usr/local/bin/git" ]]; then
-    exec "/usr/local/bin/git" "$@"
+    real_git="/usr/local/bin/git"
 elif [[ -x "/c/Program Files/Git/bin/git.exe" ]]; then
-    exec "/c/Program Files/Git/bin/git.exe" "$@"
+    real_git="/c/Program Files/Git/bin/git.exe"
 elif [[ -x "/mingw64/bin/git" ]]; then
-    exec "/mingw64/bin/git" "$@"
+    real_git="/mingw64/bin/git"
 else
-    # 使用command命令找到系统git
-    exec "$(command -v git)" "$@"
+    real_git="$(command -v git)"
+fi
+
+# 🔧 特殊处理pre-push hook调用的push命令
+if [[ "$1" == "push" ]]; then
+    # pre-push hook传递的参数格式：push remote_name remote_url
+    # 我们只需要 remote_name，忽略 remote_url
+    shift  # 移除 "push"
+    remote_name="$1"
+    # 重新构造正确的git push命令（不包含URL）
+    exec "$real_git" push "$remote_name"
+else
+    # 其他git命令正常处理
+    exec "$real_git" "$@"
 fi
