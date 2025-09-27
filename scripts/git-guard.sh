@@ -635,20 +635,29 @@ fi
 
 # 🔧 特殊处理pre-push hook调用的push命令
 if [[ "$1" == "push" ]]; then
-    # pre-push hook传递的参数格式：push remote_name remote_url
-    # 我们只需要 remote_name，忽略 remote_url
+    # pre-push hook从命令行传递：push remote_name remote_url
+    # 但由于参数传递机制的限制，我们需要使用fallback机制
     shift  # 移除 "push"
     remote_name="$1"
+    remote_url="$2"
+
+    # 如果remote_name为空，从git配置获取默认remote
+    if [[ -z "$remote_name" ]]; then
+        remote_name=$("$real_git" remote | head -1)
+    fi
 
     # 获取当前分支名
     current_branch=$("$real_git" branch --show-current 2>/dev/null)
 
-    if [[ -n "$current_branch" ]]; then
+    if [[ -n "$remote_name" && -n "$current_branch" ]]; then
         # 重新构造正确的git push命令
         exec "$real_git" push "$remote_name" "$current_branch"
-    else
-        # 如果无法获取分支名，使用默认push
+    elif [[ -n "$remote_name" ]]; then
+        # 只有remote_name
         exec "$real_git" push "$remote_name"
+    else
+        # 使用最基本的push
+        exec "$real_git" push
     fi
 else
     # 其他git命令正常处理
