@@ -1,0 +1,3 @@
+#!/bin/bash
+# 安全推送命令
+bash scripts/git-guard.sh push "$@"

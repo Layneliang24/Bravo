@@ -1,0 +1,3 @@
+#!/bin/bash
+# 便捷测试命令
+bash scripts/one_click_test.sh "$@"

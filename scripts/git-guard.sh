@@ -281,6 +281,88 @@ if [[ "$1" == "commit" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$
     show_violation_warning "commit --no-verify" "git $*"
 fi
 
+# 🎫 本地测试通行证验证函数
+check_local_test_passport() {
+    local passport_file="$PROJECT_ROOT/.git/local_test_passport.json"
+
+    # 检查通行证文件是否存在
+    if [[ ! -f "$passport_file" ]]; then
+        return 1
+    fi
+
+    # 使用Python脚本验证通行证
+    if [[ -f "$PROJECT_ROOT/scripts/local_test_passport.py" ]]; then
+        # 尝试python3，如果失败则使用python
+        if command -v python3 &> /dev/null; then
+            python3 "$PROJECT_ROOT/scripts/local_test_passport.py" --check >/dev/null 2>&1
+        else
+            python "$PROJECT_ROOT/scripts/local_test_passport.py" --check >/dev/null 2>&1
+        fi
+        return $?
+    fi
+
+    return 1
+}
+
+# 🎫 通行证验证失败处理函数
+show_passport_warning() {
+    local operation="$1"
+    local command_full="$2"
+
+    echo "🎫🎫🎫 本地测试通行证验证失败！🎫🎫🎫"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ 检测到推送操作，但未找到有效的本地测试通行证！"
+    echo ""
+    echo "📋 基于30轮修复血泪教训，强制本地测试机制："
+    echo "   • 防止Cursor跳过本地验证直接推送"
+    echo "   • 确保代码质量和CI兼容性"
+    echo "   • 避免反复的远程修复循环"
+    echo "   • 提高开发效率和代码稳定性"
+    echo ""
+    echo "🎯 获取推送通行证的步骤："
+    echo "   1. 运行本地测试：python3 scripts/local_test_passport.py"
+    echo "   2. 等待四层验证完成（语法→环境→功能→差异）"
+    echo "   3. 获取通行证后即可正常推送"
+    echo ""
+    echo "🚀 快捷命令："
+    echo "   # 生成通行证"
+    echo "   python3 scripts/local_test_passport.py"
+    echo "   "
+    echo "   # 检查通行证状态"
+    echo "   python3 scripts/local_test_passport.py --check"
+    echo "   "
+    echo "   # 强制重新生成"
+    echo "   python3 scripts/local_test_passport.py --force"
+    echo ""
+    echo "⚠️  紧急绕过（极度不推荐）："
+    echo "   export ALLOW_PUSH_WITHOUT_PASSPORT=true"
+    echo "   或输入紧急确认码：EMERGENCY_PUSH_BYPASS_2024"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 记录违规尝试
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | NO_PASSPORT | $operation | $command_full" >> "$LOG_FILE"
+
+    # 检查环境变量绕过
+    if [[ "$ALLOW_PUSH_WITHOUT_PASSPORT" == "true" ]]; then
+        echo "🟡 检测到环境变量绕过，允许推送"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_BYPASS_ENV | $operation | $command_full" >> "$LOG_FILE"
+        return 0
+    fi
+
+    # 询问紧急确认码
+    echo ""
+    read -p "紧急确认码: " response
+    if [[ "$response" == "EMERGENCY_PUSH_BYPASS_2024" ]]; then
+        echo "🟡 紧急绕过确认，允许推送"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
+        return 0
+    else
+        echo "❌ 推送被取消 - 请先运行本地测试获取通行证！"
+        echo "💡 推荐命令：python3 scripts/local_test_passport.py"
+        exit 1
+    fi
+}
+
 # 检测push --no-verify参数
 if [[ "$1" == "push" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$) || "$*" =~ (^|[[:space:]])-n([[:space:]]|$) ]]; then
     show_violation_warning "push --no-verify" "git $*"
@@ -328,8 +410,19 @@ if [[ "$1" == "tag" ]] && [[ "$*" =~ (^|[[:space:]])-d([[:space:]]|$) ]]; then
     show_violation_warning "分支破坏操作 (tag -d - 删除标签)" "git $*"
 fi
 
-# 检测直接推送到保护分支
+# 🎫 检测推送操作 - 本地测试通行证验证
 if [[ "$1" == "push" ]]; then
+    # 首先检查本地测试通行证（除非是紧急绕过）
+    if [[ "$ALLOW_PUSH_WITHOUT_PASSPORT" != "true" ]]; then
+        if ! check_local_test_passport; then
+            show_passport_warning "推送到远程仓库" "git $*"
+        else
+            echo "✅ 本地测试通行证验证通过，允许推送"
+            echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_VALID | push | $*" >> "$LOG_FILE"
+        fi
+    fi
+
+    # 检测直接推送到保护分支
     # 解析push命令参数
     for arg in "$@"; do
         case $arg in

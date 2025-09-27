@@ -1,0 +1,7 @@
+#!/bin/bash
+# 便捷通行证命令
+if command -v python3 &> /dev/null; then
+    python3 scripts/local_test_passport.py "$@"
+else
+    python scripts/local_test_passport.py "$@"
+fi
