@@ -73,6 +73,11 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Install Dependencies
+        run: |
+          echo "📦 Installing project dependencies..."
+          npm ci --prefer-offline --no-audit
+
       - name: Create and Setup Python Virtual Environment
         if: matrix.component == 'backend'
         run: |
@@ -221,6 +226,11 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          echo "📦 Installing project dependencies..."
+          npm ci --prefer-offline --no-audit
 
       - name: Create and Setup Python Virtual Environment
         run: |
@@ -405,6 +415,10 @@ jobs:
           # 获取覆盖率
           BACKEND_COV="${{ needs.unit-tests.outputs.backend-coverage }}"
           FRONTEND_COV="${{ needs.unit-tests.outputs.frontend-coverage }}"
+
+          # 确保覆盖率值非空，设置默认值
+          BACKEND_COV=${BACKEND_COV:-0}
+          FRONTEND_COV=${FRONTEND_COV:-0}
 
           # 计算总覆盖率 (加权平均)
           TOTAL_COV=$(echo "scale=1; ($BACKEND_COV * 0.6 + $FRONTEND_COV * 0.4)" | bc 2>/dev/null || echo "0")
