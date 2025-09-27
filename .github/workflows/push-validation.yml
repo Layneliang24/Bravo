@@ -40,13 +40,12 @@ jobs:
 
       - name: Analyze Branch and Commit Context
         id: detect
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-          # 使用heredoc安全处理多行提交消息
-          COMMIT_MSG=$(cat << 'EOF'
-          ${{ github.event.head_commit.message }}
-          EOF
-          )
+          # 使用环境变量安全处理多行提交消息
+          COMMIT_MSG="$COMMIT_MESSAGE"
           FORCE_FULL="${{ github.event.inputs.force-full-validation }}"
 
           echo "🔍 Analyzing push context:"
