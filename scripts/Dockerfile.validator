@@ -46,7 +46,7 @@ ENV PYTHON_CMD=python3
 
 # 创建便捷脚本
 RUN echo '#!/bin/bash' > /usr/local/bin/validate && \
-    echo 'cd /workspace && python3 scripts/local_test_passport.py "$@"' >> /usr/local/bin/validate && \
+    echo 'cd /workspace && python3 scripts-golden/local_test_passport.py "$@"' >> /usr/local/bin/validate && \
     chmod +x /usr/local/bin/validate
 
 RUN echo '#!/bin/bash' > /usr/local/bin/test-quick && \

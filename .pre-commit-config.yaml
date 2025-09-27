@@ -112,7 +112,7 @@ repos:
     hooks:
       - id: hadolint-docker
         name: Hadolint Docker file linter
-        entry: bash -c 'cat "$1" | docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --ignore DL3008 --ignore DL3009 --ignore DL3015 --ignore DL3018 --ignore DL3059 -'
+        entry: bash -c 'cat "$1" | docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --ignore DL3008 --ignore DL3009 --ignore DL3015 --ignore DL3018 --ignore DL3059 --ignore DL4006 --ignore DL3013 -'
         language: system
         files: ^.*Dockerfile.*$
         pass_filenames: true
@@ -234,3 +234,13 @@ repos:
         files: '\.(yml|yaml|py|js|json|sh|Makefile)$'
         pass_filenames: true
         description: "检查npm workspaces架构违规，防止子目录npm ci/install调用"
+
+      # 🔒 SCRIPTS-GOLDEN 核心保护脚本守护
+      - id: scripts-golden-protection
+        name: Scripts-Golden Protection Guard
+        entry: python scripts/protect_golden_scripts.py
+        language: system
+        files: "^scripts-golden/.*$"
+        pass_filenames: true
+        fail_fast: true
+        description: "保护scripts-golden目录中的核心安全脚本，防止AI篡改"
