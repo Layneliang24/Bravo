@@ -639,8 +639,17 @@ if [[ "$1" == "push" ]]; then
     # 我们只需要 remote_name，忽略 remote_url
     shift  # 移除 "push"
     remote_name="$1"
-    # 重新构造正确的git push命令（不包含URL）
-    exec "$real_git" push "$remote_name"
+
+    # 获取当前分支名
+    current_branch=$("$real_git" branch --show-current 2>/dev/null)
+
+    if [[ -n "$current_branch" ]]; then
+        # 重新构造正确的git push命令
+        exec "$real_git" push "$remote_name" "$current_branch"
+    else
+        # 如果无法获取分支名，使用默认push
+        exec "$real_git" push "$remote_name"
+    fi
 else
     # 其他git命令正常处理
     exec "$real_git" "$@"
