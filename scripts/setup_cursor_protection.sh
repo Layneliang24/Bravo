@@ -603,8 +603,179 @@ show_final_instructions() {
     log_success "Cursor再也不能跳过本地测试了！🎉"
 }
 
+# 安装Git钩子以支持团队协作
+install_git_hooks() {
+    log_title "安装Git钩子以支持团队协作"
+
+    # 确保脚本有执行权限
+    chmod +x scripts/auto_deploy_on_pull.sh scripts/new_user_onboarding.sh
+
+    # 安装post-merge钩子
+    cat > .git/hooks/post-merge << 'EOF'
+#!/bin/bash
+# 自动检测保护系统更新并部署
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+if [[ -f "$PROJECT_ROOT/scripts/auto_deploy_on_pull.sh" ]]; then
+    bash "$PROJECT_ROOT/scripts/auto_deploy_on_pull.sh"
+fi
+EOF
+
+    chmod +x .git/hooks/post-merge
+    log_success "Git post-merge钩子已安装"
+
+    # 安装post-checkout钩子（检测新用户）
+    cat > .git/hooks/post-checkout << 'EOF'
+#!/bin/bash
+# 检测新用户并引导安装
+# 参数：$1=前一个HEAD $2=当前HEAD $3=1(分支切换) 0(文件切换)
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
+# 只在分支切换时运行新用户检查
+if [[ "$3" = "1" ]] && [[ -f "$PROJECT_ROOT/scripts/new_user_onboarding.sh" ]]; then
+    # 检查是否为新用户
+    if bash "$PROJECT_ROOT/scripts/new_user_onboarding.sh" --check; then
+        echo ""
+        echo "🎉 欢迎！检测到这是您首次使用本项目的强制本地测试系统"
+        echo "🚀 运行以下命令开始快速设置："
+        echo "   bash scripts/new_user_onboarding.sh"
+        echo ""
+    fi
+fi
+EOF
+
+    chmod +x .git/hooks/post-checkout
+    log_success "Git post-checkout钩子已安装"
+
+    log_success "团队协作Git钩子安装完成"
+}
+
+# 检测新用户并引导
+check_new_user() {
+    if [[ -f "scripts/new_user_onboarding.sh" ]]; then
+        chmod +x scripts/new_user_onboarding.sh
+
+        # 检查是否为新用户
+        if bash scripts/new_user_onboarding.sh --check; then
+            log_info "检测到新用户，启动入职引导..."
+            if bash scripts/new_user_onboarding.sh; then
+                log_success "新用户入职完成"
+                return 0
+            else
+                log_warning "新用户入职过程中断"
+                return 1
+            fi
+        fi
+    fi
+    return 0
+}
+
+# 跨Windows环境适配
+adapt_for_windows() {
+    log_title "Windows环境适配"
+
+    # 检测Windows环境类型
+    local windows_env=""
+    if [[ -f "/proc/version" ]] && grep -q "Microsoft\|WSL" /proc/version; then
+        windows_env="WSL"
+    elif [[ "$OS" == "Windows_NT" ]]; then
+        windows_env="Native Windows"
+    elif command -v git.exe &> /dev/null; then
+        windows_env="Git Bash"
+    else
+        windows_env="Unknown"
+    fi
+
+    log_info "检测到Windows环境: $windows_env"
+
+    # 创建Windows特定的便捷命令
+    if [[ "$windows_env" != "WSL" ]]; then
+        # 创建.bat文件用于Windows直接执行
+        cat > test.bat << 'EOF'
+@echo off
+bash scripts/one_click_test.sh %*
+EOF
+
+        cat > passport.bat << 'EOF'
+@echo off
+if exist python3.exe (
+    python3 scripts/local_test_passport.py %*
+) else (
+    python scripts/local_test_passport.py %*
+)
+EOF
+
+        log_success "Windows批处理文件已创建"
+    fi
+
+    # 创建PowerShell脚本
+    cat > test.ps1 << 'EOF'
+param([string]$Mode = "")
+if ($Mode) {
+    & bash "scripts/one_click_test.sh" "--$Mode"
+} else {
+    & bash "scripts/one_click_test.sh"
+}
+EOF
+
+    cat > passport.ps1 << 'EOF'
+param([string]$Action = "")
+$pythonCmd = Get-Command python3 -ErrorAction SilentlyContinue
+if (-not $pythonCmd) { $pythonCmd = Get-Command python -ErrorAction SilentlyContinue }
+if ($pythonCmd) {
+    if ($Action) {
+        & $pythonCmd.Source "scripts/local_test_passport.py" "--$Action"
+    } else {
+        & $pythonCmd.Source "scripts/local_test_passport.py" "--check"
+    }
+} else {
+    Write-Error "Python not found. Please install Python 3.x"
+}
+EOF
+
+    log_success "PowerShell脚本已创建"
+}
+
 # 主函数
 main() {
+    local mode="${1:-install}"
+
+    # 处理命令行参数
+    case "$mode" in
+        --auto-update)
+            log_info "执行自动更新模式..."
+            adapt_for_windows
+            install_git_hooks
+            create_convenience_commands
+            update_makefile
+            create_cursor_config
+            test_protection_system
+            log_success "自动更新完成"
+            return 0
+            ;;
+        --new-user)
+            log_info "执行新用户安装模式..."
+            show_banner
+            check_new_user
+            ;;
+        --update)
+            log_info "执行手动更新模式..."
+            ;;
+        --install-hooks)
+            install_git_hooks
+            return 0
+            ;;
+        --merge-config)
+            log_info "合并配置文件..."
+            create_cursor_config
+            update_makefile
+            return 0
+            ;;
+        *)
+            # 默认完整安装流程
+            ;;
+    esac
+
     show_banner
 
     # 确保在正确的目录
@@ -622,6 +793,8 @@ main() {
     update_makefile
     create_cursor_config
     create_usage_guide
+    adapt_for_windows
+    install_git_hooks
     test_protection_system
     show_final_instructions
 
