@@ -112,11 +112,11 @@ git push origin feature/your-feature
 
 如果确实需要紧急推送（极度不推荐）：
 
-1. 环境变量绕过：
+1. ~~环境变量绕过（已禁用）：~~
 
    ```bash
-   export ALLOW_PUSH_WITHOUT_PASSPORT=true
-   git push origin your-branch
+   # 此方案已被移除 - AI可轻易通过环境变量绕过保护
+   # export ALLOW_PUSH_WITHOUT_PASSPORT=true
    ```
 
 2. 输入紧急确认码：`EMERGENCY_PUSH_BYPASS_2024`

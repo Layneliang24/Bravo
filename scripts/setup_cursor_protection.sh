@@ -443,7 +443,7 @@ git push origin feature/your-feature
 
 1. 环境变量绕过：
    ```bash
-   export ALLOW_PUSH_WITHOUT_PASSPORT=true
+   # 环境变量绕过已被禁用，仅支持确认码绕过
    git push origin your-branch
    ```
 

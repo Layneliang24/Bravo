@@ -751,10 +751,8 @@ EOF
 **临时绕过方案**:
 
 ```bash
-# 方案1: 环境变量绕过
-export ALLOW_PUSH_WITHOUT_PASSPORT=true
-git push origin hotfix/critical-fix
-unset ALLOW_PUSH_WITHOUT_PASSPORT
+# 方案1: 环境变量绕过已被禁用（安全风险）
+# 此方案已被移除，AI可通过设置环境变量轻易绕过保护
 
 # 方案2: 紧急确认码
 # 推送时输入: EMERGENCY_PUSH_BYPASS_2024

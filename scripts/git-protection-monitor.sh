@@ -38,6 +38,60 @@ check_bashrc_config() {
     fi
 }
 
+# 检查危险环境变量
+check_dangerous_env_vars() {
+    local dangerous_vars=(
+        "ALLOW_PUSH_WITHOUT_PASSPORT"
+        "SKIP_VALIDATION"
+        "DISABLE_VALIDATION"
+        "PRE_COMMIT_ALLOW_NO_CONFIG"
+        "BYPASS_PROTECTION"
+        "NO_GUARD"
+        "DISABLE_GUARD"
+    )
+
+    local found_vars=()
+    for var in "${dangerous_vars[@]}"; do
+        if [[ -n "${!var}" ]]; then
+            found_vars+=("$var=${!var}")
+        fi
+    done
+
+    if [[ ${#found_vars[@]} -gt 0 ]]; then
+        echo "COMPROMISED:${found_vars[*]}"
+    else
+        echo "SAFE"
+    fi
+}
+
+# 清理危险环境变量
+cleanup_dangerous_env_vars() {
+    local dangerous_vars=(
+        "ALLOW_PUSH_WITHOUT_PASSPORT"
+        "SKIP_VALIDATION"
+        "DISABLE_VALIDATION"
+        "PRE_COMMIT_ALLOW_NO_CONFIG"
+        "BYPASS_PROTECTION"
+        "NO_GUARD"
+        "DISABLE_GUARD"
+    )
+
+    local cleaned_vars=()
+    for var in "${dangerous_vars[@]}"; do
+        if [[ -n "${!var}" ]]; then
+            unset "$var"
+            cleaned_vars+=("$var")
+        fi
+    done
+
+    if [[ ${#cleaned_vars[@]} -gt 0 ]]; then
+        log_message "🧹 CLEANUP | 已清理危险环境变量: ${cleaned_vars[*]}"
+        return 0
+    else
+        return 1
+    fi
+}
+
 # 自动恢复保护
 restore_protection() {
     local reason="$1"
@@ -114,25 +168,57 @@ restore_protection() {
 main_check() {
     local alias_status=$(check_alias_status)
     local bashrc_status=$(check_bashrc_config)
+    local env_status=$(check_dangerous_env_vars)
+    local protection_compromised=false
 
+    # 检查环境变量安全
+    if [[ "$env_status" =~ ^COMPROMISED: ]]; then
+        local found_vars="${env_status#COMPROMISED:}"
+        log_message "🚨 SECURITY | 检测到危险环境变量: $found_vars"
+
+        # 立即清理危险环境变量
+        if cleanup_dangerous_env_vars; then
+            log_message "🔒 SECURITY | 环境变量已自动清理"
+            # 发送安全警告
+            echo ""
+            echo "🚨🚨🚨 安全威胁已阻止 🚨🚨🚨"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "⚠️  检测到AI尝试设置绕过环境变量: $found_vars"
+            echo "🧹 已自动清理所有危险环境变量"
+            echo "🔒 保护机制持续生效"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+        fi
+        protection_compromised=true
+    fi
+
+    # 检查alias保护
     case "$alias_status" in
         "PROTECTED")
-            log_message "✅ CHECK | Git保护正常工作"
-            return 0
+            if [[ "$protection_compromised" == "false" ]]; then
+                log_message "✅ CHECK | Git保护正常工作"
+            fi
             ;;
         "NOT_SET")
             restore_protection "Alias未设置"
-            return 1
+            protection_compromised=true
             ;;
         "COMPROMISED")
             restore_protection "Alias被修改为: $(alias git 2>/dev/null)"
-            return 1
+            protection_compromised=true
             ;;
     esac
 
+    # 检查bashrc配置
     if [[ "$bashrc_status" == "MISSING" ]]; then
         restore_protection "Bashrc配置丢失"
+        protection_compromised=true
+    fi
+
+    if [[ "$protection_compromised" == "true" ]]; then
         return 1
+    else
+        return 0
     fi
 }
 

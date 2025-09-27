@@ -468,19 +468,12 @@ show_passport_warning() {
     echo "   ./passport      # 检查状态"
     echo ""
     echo "⚠️  紧急绕过（极度不推荐）："
-    echo "   export ALLOW_PUSH_WITHOUT_PASSPORT=true"
-    echo "   或输入紧急确认码：EMERGENCY_PUSH_BYPASS_2024"
+    echo "   输入紧急确认码：EMERGENCY_PUSH_BYPASS_2024"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | NO_PASSPORT | $operation | $command_full" >> "$LOG_FILE"
 
-    # 检查环境变量绕过
-    if [[ "$ALLOW_PUSH_WITHOUT_PASSPORT" == "true" ]]; then
-        echo "🟡 检测到环境变量绕过，允许推送"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_BYPASS_ENV | $operation | $command_full" >> "$LOG_FILE"
-        return 0
-    fi
 
     # 询问紧急确认码
     echo ""
@@ -545,14 +538,12 @@ fi
 
 # 🎫 检测推送操作 - 本地测试通行证验证
 if [[ "$1" == "push" ]]; then
-    # 首先检查本地测试通行证（除非是紧急绕过）
-    if [[ "$ALLOW_PUSH_WITHOUT_PASSPORT" != "true" ]]; then
-        if ! check_local_test_passport; then
-            show_passport_warning "推送到远程仓库" "git $*"
-        else
-            echo "✅ 本地测试通行证验证通过，允许推送"
-            echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_VALID | push | $*" >> "$LOG_FILE"
-        fi
+    # 检查本地测试通行证
+    if ! check_local_test_passport; then
+        show_passport_warning "推送到远程仓库" "git $*"
+    else
+        echo "✅ 本地测试通行证验证通过，允许推送"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_VALID | push | $*" >> "$LOG_FILE"
     fi
 
     # 检测直接推送到保护分支
