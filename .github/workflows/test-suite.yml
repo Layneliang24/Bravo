@@ -271,32 +271,39 @@ jobs:
         run: |
           echo "🎭 Running E2E tests..."
 
-          # 启动完整测试环境
-          docker compose -f docker-compose.test.yml up --build -d
+          # 启动基础服务（不包含e2e-tests）
+          echo "🚀 启动基础服务..."
+          docker compose -f docker-compose.test.yml up --build -d mysql-test backend-test frontend-test
 
-          # 等待服务启动
-          sleep 10
+          # 等待基础服务启动
+          echo "⏳ 等待基础服务启动..."
+          sleep 15
 
-          # 获取E2E容器ID
-          E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-          echo "E2E Container ID: $E2E_CID"
+          # 检查服务状态
+          echo "📊 检查服务状态："
+          docker compose -f docker-compose.test.yml ps
 
-          if [ -n "$E2E_CID" ]; then
-            # 等待E2E测试完成
-            E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
-            echo "E2E exit code: $E2E_EXIT_CODE"
+          # 运行E2E测试（使用run而不是up，让容器自然运行并退出）
+          echo "🧪 启动E2E测试容器..."
+          E2E_EXIT_CODE=0
+          docker compose -f docker-compose.test.yml run --rm e2e-tests || E2E_EXIT_CODE=$?
 
-            # 收集测试产物
-            mkdir -p e2e-artifacts
-            docker cp "$E2E_CID:/app/test-results" e2e-artifacts/ 2>/dev/null || true
-            docker cp "$E2E_CID:/app/playwright-report" e2e-artifacts/ 2>/dev/null || true
-          else
-            echo "❌ E2E container not found"
-            E2E_EXIT_CODE=1
-          fi
+          echo "E2E test exit code: $E2E_EXIT_CODE"
+
+          # 收集日志作为测试产物
+          echo "📦 收集测试日志..."
+          mkdir -p e2e-artifacts
+          docker compose -f docker-compose.test.yml logs > e2e-artifacts/all-services.log 2>&1 || echo "获取日志失败"
 
           # 清理容器
           docker compose -f docker-compose.test.yml down
+
+          # 检查测试结果
+          if [ "$E2E_EXIT_CODE" -eq 0 ]; then
+            echo "✅ E2E tests passed"
+          else
+            echo "❌ E2E tests failed with exit code: $E2E_EXIT_CODE"
+          fi
 
           exit $E2E_EXIT_CODE
 

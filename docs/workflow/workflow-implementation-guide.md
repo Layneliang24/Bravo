@@ -60,8 +60,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+
+      - name: Setup Dependency Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            node_modules
+            backend/.venv
+          key: unit-deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+          restore-keys: |
+            unit-deps-${{ runner.os }}-
 
       - name: Run Unit Tests
         run: |
@@ -103,8 +112,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+
+      - name: Setup Integration Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            backend/.venv
+          key: integration-deps-${{ runner.os }}-${{ hashFiles('backend/requirements/*.txt') }}
+          restore-keys: |
+            integration-deps-${{ runner.os }}-
 
       - name: Run Integration Tests
         run: |
@@ -118,29 +135,66 @@ jobs:
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
 
-  # 智能E2E测试 (仅在full模式)
-  e2e-tests:
+  # 智能E2E测试缓存设置 (仅在full模式)
+  e2e-cache-setup:
     if: inputs.test-level == 'full'
     needs: integration-tests
+    uses: ./.github/workflows/cache-strategy.yml
+    with:
+      cache-type: playwright
+      cache-scope: e2e
+
+  # 智能E2E测试执行 (仅在full模式)
+  e2e-tests:
+    if: inputs.test-level == 'full'
+    needs: e2e-cache-setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run E2E Tests
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            e2e/node_modules
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Run E2E Tests with Cache Optimization
         run: |
-          docker compose -f docker-compose.test.yml up --build -d
-          sleep 5
-          E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
-          E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
+          echo "🎭 Running E2E tests with optimized cache strategy..."
+
+          # 启动基础服务
+          docker compose -f docker-compose.test.yml up --build -d mysql-test backend-test frontend-test
+
+          # 等待服务就绪
+          sleep 15
+
+          # 运行E2E测试（利用cache-strategy.yml + restore缓存）
+          E2E_EXIT_CODE=0
+          docker compose -f docker-compose.test.yml run --rm e2e-tests || E2E_EXIT_CODE=$?
+
+          # 清理
           docker compose -f docker-compose.test.yml down
+
           exit $E2E_EXIT_CODE
+
+      - name: Upload E2E Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-artifacts
+          path: e2e-artifacts/
+          retention-days: 7
 
   # 测试结果汇总
   test-summary:
     if: always()
-    needs: [unit-tests, integration-tests, e2e-tests]
+    needs: [unit-tests, integration-tests, e2e-cache-setup, e2e-tests]
     runs-on: ubuntu-latest
     outputs:
       results: ${{ steps.summary.outputs.results }}
@@ -221,8 +275,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+            node_modules
+            backend/.venv
+          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
 
       - name: Run Check
         run: |
@@ -250,8 +313,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+            node_modules
+            backend/.venv
+          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
 
       - name: Run Security Scan
         run: |
@@ -278,8 +350,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+            node_modules
+            backend/.venv
+          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
 
       - name: Build for Audit
         run: |
@@ -453,8 +534,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+            node_modules
+            backend/.venv
+          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
 
       - name: Quick Syntax Check
         run: |
@@ -486,6 +576,7 @@ jobs:
     with:
       quality-level: ${{ needs.detect-pr-type.outputs.quality-level }}
       min-coverage: "85"
+      target-branch: ${{ github.event.pull_request.base.ref || 'dev' }}
 
   # 最终审批门禁
   approval-gate:
@@ -521,5 +612,113 @@ jobs:
             exit 1
           fi
 ```
+
+## 🧹 **第三阶段：旧文件清理计划**
+
+### 3.1 清理策略
+
+重构后应保留的核心文件（6个）：
+
+```bash
+.github/workflows/
+├── pr-validation.yml      # PR验证流水线
+├── push-validation.yml    # Push验证流水线
+├── release-pipeline.yml   # 发布流水线
+├── scheduled-tasks.yml    # 定时任务
+├── test-suite.yml         # 测试组件
+├── quality-gates.yml      # 质量门禁
+└── cache-strategy.yml     # 缓存策略
+```
+
+### 3.2 待删除的旧文件（26个）
+
+**场景触发类（6个）**：
+
+- on-pr.yml
+- on-push-dev.yml
+- on-push-feature.yml
+- on-merge-dev-optimized.yml
+- main-release.yml
+- branch-protection.yml
+
+**测试执行类（10个）**：
+
+- test-unit-backend.yml
+- test-unit-frontend.yml
+- test-integration-optimized.yml
+- test-regression.yml
+- test-e2e.yml
+- test-e2e-smoke.yml
+- test-e2e-full.yml
+- test-backend.yml
+- test-frontend.yml
+- fast-validation.yml
+
+**质量保障类（4个）**：
+
+- quality-coverage.yml
+- quality-security.yml
+- quality-performance.yml
+- golden-test-protection.yml
+
+**基础设施类（4个）**：
+
+- setup-cache.yml
+- deploy-production.yml
+- feature-map.yml
+- dir_guard.yml
+
+**其他功能类（2个）**：
+
+- regression-scheduled.yml
+- temp_script.sh
+
+### 3.3 清理执行步骤
+
+```bash
+# 1. 验证新工作流正常运行
+git checkout feature/workflow-refactoring-validation
+git push origin feature/workflow-refactoring-validation
+# 观察GitHub Actions执行情况
+
+# 2. 创建备份分支
+git checkout -b backup/old-workflows-$(date +%Y%m%d)
+git push origin backup/old-workflows-$(date +%Y%m%d)
+
+# 3. 批量删除旧文件
+rm -f .github/workflows/on-*.yml
+rm -f .github/workflows/test-unit-*.yml
+rm -f .github/workflows/test-integration-*.yml
+rm -f .github/workflows/test-e2e*.yml
+rm -f .github/workflows/test-backend.yml
+rm -f .github/workflows/test-frontend.yml
+rm -f .github/workflows/test-regression.yml
+rm -f .github/workflows/quality-*.yml
+rm -f .github/workflows/fast-validation.yml
+rm -f .github/workflows/golden-test-protection.yml
+rm -f .github/workflows/setup-cache.yml
+rm -f .github/workflows/deploy-production.yml
+rm -f .github/workflows/feature-map.yml
+rm -f .github/workflows/dir_guard.yml
+rm -f .github/workflows/regression-scheduled.yml
+rm -f .github/workflows/main-release.yml
+rm -f .github/workflows/branch-protection.yml
+rm -f .github/workflows/temp_script.sh
+
+# 4. 提交清理结果
+git add -A
+git commit -m "🧹 清理旧工作流文件 - 完成重构目标 (26→6个文件)"
+git push origin feature/workflow-refactoring-validation
+
+# 5. 验证清理后状态
+ls -la .github/workflows/ | wc -l  # 应该显示9行(包含., .., README.md + 6个核心文件)
+```
+
+### 3.4 风险控制
+
+- **回滚方案**: 备份分支随时可恢复
+- **分阶段验证**: 每删除一批文件就验证功能
+- **监控告警**: 观察GitHub Actions执行状态
+- **团队通知**: 提前通知团队成员文件变更
 
 继续下一阶段吗？还是需要我先实施这些组件？

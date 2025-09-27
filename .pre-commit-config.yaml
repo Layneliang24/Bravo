@@ -112,10 +112,11 @@ repos:
     hooks:
       - id: hadolint-docker
         name: Hadolint Docker file linter
-        entry: sh -c 'docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --ignore DL3008 --ignore DL3009 --ignore DL3015 --ignore DL3018 --ignore DL3059 - < "$1"'
+        entry: bash -c 'cat "$1" | docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --ignore DL3008 --ignore DL3009 --ignore DL3015 --ignore DL3018 --ignore DL3059 -'
         language: system
         files: ^.*Dockerfile.*$
         pass_filenames: true
+        args: ["--"]
 
   # 提交信息检查
   - repo: https://github.com/commitizen-tools/commitizen

@@ -211,6 +211,10 @@ name字段格式: "{场景} {动作} Pipeline"
 L1-Dependencies: # 依赖缓存 (命中率: 95%)
   path: [node_modules, .venv, ~/.cache]
   key: deps-v6-${{ runner.os }}-${{ hashFiles() }}
+  重点包含:
+    - ~/.cache/ms-playwright # Playwright浏览器缓存 (~300MB)
+    - ~/.cache/pip # Python包缓存
+    - node_modules # NPM依赖
 
 L2-Build: # 构建缓存 (命中率: 85%)
   path: [dist/, build/]
@@ -220,6 +224,16 @@ L3-Test: # 测试缓存 (命中率: 70%)
   path: [test-results/, coverage/]
   key: test-v2-${{ runner.os }}-${{ hashFiles('tests/**') }}
 ```
+
+#### E2E测试缓存优化策略
+
+E2E测试通过以下方式利用缓存：
+
+1. **cache-strategy.yml**: 统一的缓存策略工作流，预先设置Playwright浏览器缓存
+2. **Docker挂载**: 将GitHub Actions缓存挂载到容器内，避免重复下载
+3. **分离式架构**: e2e-cache-setup job 负责缓存，e2e-tests job 负责执行
+4. **首次运行**: 下载浏览器到缓存 (~4分钟)
+5. **后续运行**: 直接使用缓存 (~10秒)
 
 ### 并行执行
 
