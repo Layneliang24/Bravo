@@ -10,8 +10,11 @@ import hashlib
 import json
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# 北京时区（东八区）
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 
 class LocalTestPassport:
@@ -59,11 +62,15 @@ class LocalTestPassport:
         except (json.JSONDecodeError, FileNotFoundError):
             return False, "通行证文件损坏"
 
-        # 检查过期时间（通行证有效期：1小时）
+        # 检查过期时间（通行证有效期：1小时）- 使用北京时间
         expire_time = datetime.fromisoformat(
             passport_data.get("expires_at", "1970-01-01")
         )
-        if datetime.now() > expire_time:
+        current_time = datetime.now(BEIJING_TZ)
+        # 如果过期时间没有时区信息，则添加北京时区
+        if expire_time.tzinfo is None:
+            expire_time = expire_time.replace(tzinfo=BEIJING_TZ)
+        if current_time > expire_time:
             return False, "通行证已过期"
 
         # 检查Git状态是否改变
@@ -71,7 +78,7 @@ class LocalTestPassport:
         if passport_data.get("git_hash") != current_hash:
             return False, "代码已修改，需要重新测试"
 
-        return True, f"有效通行证，剩余时间：{expire_time - datetime.now()}"
+        return True, f"有效通行证，剩余时间：{expire_time - current_time}"
 
     def run_act_validation(self):
         """第一层：使用act进行GitHub Actions语法验证"""
@@ -85,20 +92,46 @@ class LocalTestPassport:
             return True
 
         try:
-            # 使用act进行干运行验证
+            # 测试关键工作流的语法
+            workflows_to_test = ["push-validation.yml", "on-pr.yml", "on-push-dev.yml"]
+
+            for workflow in workflows_to_test:
+                self.log(f"🔍 检查工作流：{workflow}")
+                result = subprocess.run(
+                    ["act", "push", "-W", f".github/workflows/{workflow}", "--list"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if result.returncode != 0:
+                    self.log(f"❌ {workflow} 语法验证失败：{result.stderr}")
+                    return False
+
+            # 额外测试：实际运行关键任务检查bash语法
+            self.log("🔍 运行bash语法检查...")
             result = subprocess.run(
-                ["act", "--dry-run", "pull_request"],
+                [
+                    "act",
+                    "push",
+                    "-W",
+                    ".github/workflows/push-validation.yml",
+                    "--job",
+                    "detect-branch-context",
+                    "--quiet",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=60,
             )
-
-            if result.returncode == 0:
-                self.log("✅ act语法验证通过")
-                return True
-            else:
-                self.log(f"❌ act语法验证失败：{result.stderr}")
+            if result.returncode != 0:
+                self.log(f"❌ 工作流执行测试失败：{result.stderr}")
+                # 检查是否包含bash语法错误
+                if "unexpected EOF" in result.stderr or "syntax error" in result.stderr:
+                    self.log("🚨 检测到bash语法错误！")
                 return False
+
+            self.log("✅ act语法验证通过")
+            return True
 
         except subprocess.TimeoutExpired:
             self.log("⏰ act验证超时，继续后续验证")
@@ -216,8 +249,8 @@ class LocalTestPassport:
         return True
 
     def generate_passport(self):
-        """生成通行证"""
-        current_time = datetime.now()
+        """生成通行证 - 使用北京时间"""
+        current_time = datetime.now(BEIJING_TZ)
         expire_time = current_time + timedelta(hours=1)  # 1小时有效期
 
         passport_data = {
@@ -336,3 +369,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# 新成员添加的注释 - Sat, Sep 27, 2025  1:49:32 PM

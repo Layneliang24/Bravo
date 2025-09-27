@@ -115,9 +115,32 @@ case "$REAL_COMMAND" in
         ;;
 esac
 
-# 特殊处理 ./ 开头的脚本执行
+# 特殊处理 ./ 开头的脚本执行 - 智能拦截
 if [[ "$REAL_COMMAND" =~ ^\./.*$ ]]; then
-    show_host_dependency_warning "$command_full" "脚本直接执行违规"
+    # 白名单：允许的纯Docker脚本
+    local allowed_scripts=(
+        "./test"
+        "./passport"
+        "./safe-push"
+        "./setup.sh"
+    )
+
+    local is_allowed=false
+    for allowed in "${allowed_scripts[@]}"; do
+        if [[ "$REAL_COMMAND" == "$allowed" ]]; then
+            is_allowed=true
+            break
+        fi
+    done
+
+    # 如果不在白名单中，检查是否为危险脚本类型
+    if [[ "$is_allowed" == "false" ]]; then
+        # 检查危险的脚本类型
+        if [[ "$REAL_COMMAND" =~ \.(py|js|ts|sh|bash)$ ]] || \
+           [[ -x "$REAL_COMMAND" ]]; then
+            show_host_dependency_warning "$command_full" "脚本直接执行违规"
+        fi
+    fi
 fi
 
 # 找到真正的命令并执行

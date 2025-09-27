@@ -59,6 +59,9 @@ restore_protection() {
     alias dnf="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" dnf"
     alias brew="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew"
     alias composer="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer"
+    alias python="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" python"
+    alias python3="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" python3"
+    alias source="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" source"
     log_message "✅ RESTORE | 依赖管理拦截器已恢复"
 
     # 3. 检查并恢复bashrc配置
@@ -85,6 +88,9 @@ restore_protection() {
             echo "alias apt-get='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt-get'" >> "$bashrc_path"
             echo "alias brew='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew'" >> "$bashrc_path"
             echo "alias composer='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer'" >> "$bashrc_path"
+            echo "alias python='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" python'" >> "$bashrc_path"
+            echo "alias python3='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" python3'" >> "$bashrc_path"
+            echo "alias source='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" source'" >> "$bashrc_path"
             log_message "✅ RESTORE | ~/.bashrc 依赖管理拦截器配置已恢复"
         fi
     fi

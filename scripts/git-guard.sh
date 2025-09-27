@@ -27,6 +27,11 @@ fi
 LOG_FILE="$(pwd)/logs/git-no-verify-attempts.log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
+# 🚨 首先检查是否为违规的宿主机命令执行（仅在非git命令时检查）
+if [[ "$1" != "git" ]] && [[ "$0" != *"git"* ]]; then
+    check_host_dependency_installation "$@"
+fi
+
 # 🚨 宿主机依赖安装检测函数
 check_host_dependency_installation() {
     local command="$1"
@@ -56,6 +61,25 @@ check_host_dependency_installation() {
         composer)
             if [[ "$args" =~ (install|update|require) ]]; then
                 show_host_dependency_warning "$command $args" "PHP包管理违规"
+                return 1
+            fi
+            ;;
+        python|python3)
+            # 拦截直接的Python执行（除了Git操作相关的）
+            if [[ "$1" != "git" ]]; then
+                show_host_dependency_warning "$command $args" "Python直接执行违规"
+                return 1
+            fi
+            ;;
+        source|.)
+            # 拦截source命令和点号命令
+            show_host_dependency_warning "$command $args" "环境变量加载违规"
+            return 1
+            ;;
+        ./*)
+            # 拦截本地脚本直接执行
+            if [[ "$command" =~ ^\.\/.* ]]; then
+                show_host_dependency_warning "$command $args" "本地脚本直接执行违规"
                 return 1
             fi
             ;;
@@ -281,7 +305,7 @@ if [[ "$1" == "commit" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$
     show_violation_warning "commit --no-verify" "git $*"
 fi
 
-# 🎫 本地测试通行证验证函数
+# 🎫 本地测试通行证验证函数 - 纯Docker验证
 check_local_test_passport() {
     local passport_file="$PROJECT_ROOT/.git/local_test_passport.json"
 
@@ -290,15 +314,24 @@ check_local_test_passport() {
         return 1
     fi
 
-    # 使用Python脚本验证通行证
+    # 🐳 纯Docker验证 - 避免宿主机依赖污染
     if [[ -f "$PROJECT_ROOT/scripts/local_test_passport.py" ]]; then
-        # 尝试python3，如果失败则使用python
-        if command -v python3 &> /dev/null; then
-            python3 "$PROJECT_ROOT/scripts/local_test_passport.py" --check >/dev/null 2>&1
-        else
-            python "$PROJECT_ROOT/scripts/local_test_passport.py" --check >/dev/null 2>&1
+        # 检查Docker是否可用
+        if ! command -v docker &> /dev/null; then
+            echo "⚠️  Docker未安装，无法执行本地验证。请安装Docker后重试。"
+            return 1
         fi
-        return $?
+
+        # 使用validator容器验证通行证（纯Docker环境）
+        if docker-compose --profile validation exec -T validator validate --check >/dev/null 2>&1; then
+            return 0
+        else
+            # 如果容器未运行，启动并验证
+            docker-compose --profile validation up -d validator >/dev/null 2>&1
+            sleep 2  # 等待容器启动
+            docker-compose --profile validation exec -T validator validate --check >/dev/null 2>&1
+            return $?
+        fi
     fi
 
     return 1
@@ -319,20 +352,25 @@ show_passport_warning() {
     echo "   • 避免反复的远程修复循环"
     echo "   • 提高开发效率和代码稳定性"
     echo ""
-    echo "🎯 获取推送通行证的步骤："
-    echo "   1. 运行本地测试：python3 scripts/local_test_passport.py"
-    echo "   2. 等待四层验证完成（语法→环境→功能→差异）"
-    echo "   3. 获取通行证后即可正常推送"
+    echo "🎯 获取推送通行证的步骤（纯Docker环境）："
+    echo "   1. 启动验证容器：docker-compose --profile validation up -d validator"
+    echo "   2. 运行本地测试：docker-compose --profile validation exec validator validate"
+    echo "   3. 等待四层验证完成（语法→环境→功能→差异）"
+    echo "   4. 获取通行证后即可正常推送"
     echo ""
-    echo "🚀 快捷命令："
+    echo "🚀 快捷命令（纯Docker）："
     echo "   # 生成通行证"
-    echo "   python3 scripts/local_test_passport.py"
+    echo "   docker-compose --profile validation exec validator validate"
     echo "   "
     echo "   # 检查通行证状态"
-    echo "   python3 scripts/local_test_passport.py --check"
+    echo "   docker-compose --profile validation exec validator validate --check"
     echo "   "
     echo "   # 强制重新生成"
-    echo "   python3 scripts/local_test_passport.py --force"
+    echo "   docker-compose --profile validation exec validator validate --force"
+    echo ""
+    echo "   # 便捷脚本（自动启动容器）"
+    echo "   ./test          # 生成通行证"
+    echo "   ./passport      # 检查状态"
     echo ""
     echo "⚠️  紧急绕过（极度不推荐）："
     echo "   export ALLOW_PUSH_WITHOUT_PASSPORT=true"

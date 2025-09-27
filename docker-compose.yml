@@ -3,8 +3,6 @@
 # 环境变量通过此文件配置，不需要本地 .env 文件
 # 依赖通过 Dockerfile 管理，不需要本地 .venv
 
-version: "3.8"
-
 services:
   # 数据库服务
   mysql:
@@ -14,10 +12,12 @@ services:
       MYSQL_USER: bravo_user
       MYSQL_PASSWORD: bravo_password
       MYSQL_ROOT_PASSWORD: root_password
+      TZ: Asia/Shanghai # 设置北京时间
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -53,9 +53,11 @@ services:
       - DB_HOST=mysql
       - DB_PORT=3306
       - REDIS_URL=redis://redis:6379/0
+      - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs
+      - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:
       mysql:
         condition: service_healthy
@@ -72,9 +74,11 @@ services:
       - "3000:3000"
     environment:
       - VITE_API_URL=http://localhost:8000
+      - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules # 使用命名volume避免覆盖依赖
+      - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     command: npm run dev -- --host 0.0.0.0
 
   # Celery Worker
@@ -86,8 +90,10 @@ services:
       - DJANGO_SETTINGS_MODULE=bravo.settings.local
       - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
       - REDIS_URL=redis://redis:6379/0
+      - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./backend:/app
+      - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:
       mysql:
         condition: service_healthy
@@ -135,9 +141,35 @@ services:
       - frontend
       - backend
 
+  # 本地测试验证服务 - 强制Docker内验证
+  validator:
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile.validator
+    environment:
+      - WORKSPACE=/workspace
+      - TZ=Asia/Shanghai # 设置北京时间
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock # 允许容器内使用Docker
+      - validator_logs:/workspace/logs
+      - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
+    working_dir: /workspace
+    profiles:
+      - validation # 只在验证时启动
+    command: tail -f /dev/null # 保持容器运行
+
 volumes:
   mysql_data:
   redis_data:
   backend_logs:
   frontend_node_modules:
   e2e_node_modules:
+  validator_logs:
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

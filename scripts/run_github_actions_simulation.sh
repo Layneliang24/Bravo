@@ -29,12 +29,19 @@ export DJANGO_SETTINGS_MODULE=bravo.settings.test
 echo ""
 echo "🔧 第一步: 启动所有服务（模拟GitHub Actions services）"
 echo "----------------------------------------"
+
 echo "启动MySQL服务..."
-docker-compose up -d mysql
+# 使用相同的项目上下文确保网络一致性，明确指定项目名称
+# 如果MySQL已经运行就跳过，避免网络冲突
+if cd /workspace && docker-compose -p bravo ps mysql | grep -q "Up"; then
+    echo "MySQL已经运行，跳过启动"
+else
+    cd /workspace && docker-compose -p bravo up -d mysql
+fi
 
 echo "等待MySQL就绪..."
 for i in {1..30}; do
-    if docker-compose exec -T mysql mysql -u root -proot_password -e "SELECT 1;" &>/dev/null; then
+    if cd /workspace && docker-compose -p bravo exec -T mysql mysql -u root -proot_password -e "SELECT 1;" &>/dev/null; then
         echo "✅ MySQL连接成功"
         break
     fi
@@ -52,7 +59,7 @@ echo "模拟: actions/setup-node@v4 + actions/setup-python@v4 + 缓存"
 
 # 启动后端容器安装Python依赖
 echo "安装Python依赖（在后端容器内）..."
-docker-compose run --rm backend bash -c "
+cd /workspace && docker-compose -p bravo run --rm backend bash -c "
     echo '🐍 配置pip国内源...'
     pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
     pip3 config set global.trusted-host pypi.tuna.tsinghua.edu.cn
@@ -63,7 +70,7 @@ docker-compose run --rm backend bash -c "
 
 # 启动前端容器安装Node依赖
 echo "安装Node.js依赖（在前端容器内）..."
-docker-compose run --rm frontend sh -c "
+cd /workspace && docker-compose -p bravo run --rm frontend sh -c "
     echo '📦 配置npm国内源...'
     npm config set registry https://registry.npmmirror.com
     npm config set maxsockets 20
@@ -85,7 +92,7 @@ echo "启动并行测试作业..."
 
 # Job 2: backend-tests
 echo "🐍 启动 Job: backend-tests（后台运行）"
-docker-compose run --rm backend bash -c "
+cd /workspace && docker-compose -p bravo run --rm backend bash -c "
     echo '🐍 Job: backend-tests 开始'
     echo '检查Django配置...'
     python3 manage.py check --settings=bravo.settings.test
@@ -97,7 +104,7 @@ BACKEND_PID=$!
 
 # Job 3: frontend-tests
 echo "📦 启动 Job: frontend-tests（后台运行）"
-docker-compose run --rm frontend sh -c "
+cd /workspace && docker-compose -p bravo run --rm frontend sh -c "
     echo '📦 Job: frontend-tests 开始'
     echo '运行前端单元测试...'
     cd /app && npm run test

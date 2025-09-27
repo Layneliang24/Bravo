@@ -1,0 +1,57 @@
+# 本地测试验证容器 - 强制Docker内验证
+# 解决宿主机依赖污染问题，确保纯Docker开发环境
+
+FROM ubuntu:22.04
+
+# 设置非交互模式和时区
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+
+# 安装基础工具和Python，包括时区数据
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    git \
+    curl \
+    wget \
+    unzip \
+    docker.io \
+    docker-compose \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# 配置时区
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 安装act (GitHub Actions本地模拟器)
+RUN curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
+
+# 安装Python依赖
+RUN pip3 install --no-cache-dir \
+    pathlib \
+    argparse
+
+# 创建工作目录
+WORKDIR /workspace
+
+# 创建日志目录
+RUN mkdir -p /workspace/logs
+
+# 设置Python环境
+ENV PYTHONPATH=/workspace
+ENV PYTHON_CMD=python3
+
+# 创建便捷脚本
+RUN echo '#!/bin/bash' > /usr/local/bin/validate && \
+    echo 'cd /workspace && python3 scripts/local_test_passport.py "$@"' >> /usr/local/bin/validate && \
+    chmod +x /usr/local/bin/validate
+
+RUN echo '#!/bin/bash' > /usr/local/bin/test-quick && \
+    echo 'cd /workspace && bash scripts/one_click_test.sh "$@"' >> /usr/local/bin/test-quick && \
+    chmod +x /usr/local/bin/test-quick
+
+# 默认命令
+CMD ["tail", "-f", "/dev/null"]
