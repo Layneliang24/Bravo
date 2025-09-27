@@ -467,24 +467,71 @@ show_passport_warning() {
     echo "   ./test          # 生成通行证"
     echo "   ./passport      # 检查状态"
     echo ""
-    echo "⚠️  紧急绕过（极度不推荐）："
-    echo "   输入紧急确认码：EMERGENCY_PUSH_BYPASS_2024"
+    echo "⚠️  紧急绕过（极度不推荐，需要人工验证）："
+    echo "   多重人工验证：日期 + 数学题 + 风险确认"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | NO_PASSPORT | $operation | $command_full" >> "$LOG_FILE"
 
 
-    # 询问紧急确认码
+    # 检测自动化绕过尝试
+    if ! tty -s; then
+        echo "🚨 检测到非交互式输入尝试 - 拒绝绕过"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | SECURITY_VIOLATION | 非交互式绕过尝试 | $command_full" >> "$LOG_FILE"
+        echo "❌ 安全限制：确认码必须由人类在真实终端中手动输入"
+        exit 1
+    fi
+
+    # 检测管道输入尝试
+    if [[ -p /dev/stdin ]]; then
+        echo "🚨 检测到管道输入尝试 - 拒绝绕过"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | SECURITY_VIOLATION | 管道输入绕过尝试 | $command_full" >> "$LOG_FILE"
+        echo "❌ 安全限制：禁止使用 echo 'code' | git push 等自动化绕过"
+        exit 1
+    fi
+
+    # 检测命令行中的管道和重定向
+    local full_command=$(ps -o args= -p $PPID 2>/dev/null || echo "")
+    if [[ "$full_command" =~ \| ]] || [[ "$full_command" =~ \< ]] || [[ "$full_command" =~ echo.*EMERGENCY ]]; then
+        echo "🚨 检测到命令行自动化尝试 - 拒绝绕过"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | SECURITY_VIOLATION | 命令行自动化绕过尝试 | $full_command" >> "$LOG_FILE"
+        echo "❌ 安全限制：检测到管道、重定向或echo确认码的自动化尝试"
+        exit 1
+    fi
+
+    # 多重人工验证机制
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "EMERGENCY_PUSH_BYPASS_2024" ]]; then
-        echo "🟡 紧急绕过确认，允许推送"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSPORT_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
+    echo "🔐 人工验证检查点 1/3"
+    read -p "请输入今天的日期 (格式: YYYY-MM-DD): " date_input
+    local expected_date=$(date +%Y-%m-%d)
+    if [[ "$date_input" != "$expected_date" ]]; then
+        echo "❌ 日期验证失败 - 推送被拒绝"
+        exit 1
+    fi
+
+    echo ""
+    echo "🔐 人工验证检查点 2/3"
+    read -p "请输入数学题答案: 17 + 26 = " math_input
+    if [[ "$math_input" != "43" ]]; then
+        echo "❌ 数学验证失败 - 推送被拒绝"
+        exit 1
+    fi
+
+    echo ""
+    echo "🔐 人工验证检查点 3/3"
+    echo "⚠️  最后警告：此操作将绕过所有本地测试保护机制"
+    echo "⚠️  这可能导致远程CI失败，造成开发流程中断"
+    echo "⚠️  建议运行 './test' 生成正常通行证"
+    read -p "确认绕过保护并承担风险 (输入 YES-BYPASS-ALL-PROTECTION): " final_confirmation
+
+    if [[ "$final_confirmation" == "YES-BYPASS-ALL-PROTECTION" ]]; then
+        echo "🟡 人工确认绕过，允许推送（已记录风险操作）"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | BYPASS_CONFIRMED | 人工多重验证通过 | $command_full" >> "$LOG_FILE"
         return 0
     else
-        echo "❌ 推送被取消 - 请先运行本地测试获取通行证！"
-        echo "💡 推荐命令：python3 scripts/local_test_passport.py"
+        echo "❌ 最终确认失败 - 推送被取消"
+        echo "💡 推荐命令：./test（生成正常通行证）"
         exit 1
     fi
 }

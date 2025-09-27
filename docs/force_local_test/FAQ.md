@@ -754,8 +754,8 @@ EOF
 # 方案1: 环境变量绕过已被禁用（安全风险）
 # 此方案已被移除，AI可通过设置环境变量轻易绕过保护
 
-# 方案2: 紧急确认码
-# 推送时输入: EMERGENCY_PUSH_BYPASS_2024
+# 方案2: 多重人工验证绕过（已强化）
+# 推送时需通过：日期验证 + 数学题 + 风险确认
 
 # 方案3: 临时禁用拦截
 mv scripts/git-guard.sh scripts/git-guard.sh.disabled

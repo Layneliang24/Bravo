@@ -447,7 +447,7 @@ git push origin feature/your-feature
    git push origin your-branch
    ```
 
-2. 输入紧急确认码：`EMERGENCY_PUSH_BYPASS_2024`
+2. 多重人工验证：日期验证 + 数学题 + 风险确认
 
 ## 🧪 测试模式说明
 
