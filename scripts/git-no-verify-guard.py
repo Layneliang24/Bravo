@@ -82,11 +82,45 @@ class NoVerifyGuard:
 
         return filtered_args, found_no_verify
 
+    def _show_skip_violation_message(self):
+        """显示skip命令违规提示信息"""
+        print("\n" + "=" * 60)
+        print("🚨 检测到 skip 命令违规行为！")
+        print("=" * 60)
+        print("❌ 禁止使用 skip 命令跳过Docker环境")
+        print("📋 原因: 基于Pure Docker开发原则，跳过容器会导致:")
+        print("   • 宿主机环境污染")
+        print("   • 依赖版本不一致")
+        print("   • 开发环境差异")
+        print("   • 部署问题")
+        print()
+        print("✅ 正确做法:")
+        print("   • 使用Docker容器执行命令")
+        print("   • docker-compose exec [service] [command]")
+        print("   • 保持环境一致性")
+        print()
+        print("📊 此次尝试已记录到: logs/git-no-verify-attempts.log")
+        print("=" * 60)
+
     def run(self, args):
         """主执行逻辑"""
         if len(args) < 1:
             # 直接调用git，没有参数
             return subprocess.run([self.real_git] + args[1:]).returncode
+
+        # 检查是否是skip命令
+        if len(args) > 0 and args[0] == "skip":
+            self._log_attempt(args, blocked=True)
+            self._show_skip_violation_message()
+
+            response = input("\n是否强制继续跳过？(输入 'FORCE_SKIP' 确认): ")
+            if response != "FORCE_SKIP":
+                print("❌ skip命令被取消")
+                return 1
+
+            print("⚠️  强制跳过，但已记录违规行为")
+            # 执行跳过逻辑，这里可以根据需要定制
+            return 0
 
         # 检查是否是commit命令
         is_commit_command = len(args) > 1 and args[1] in ["commit", "ci"]

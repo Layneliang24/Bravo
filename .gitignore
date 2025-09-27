@@ -114,3 +114,23 @@ celerybeat.pid
 # Temporary files archive
 temp_files_archive/
 .mypy_cache/
+
+# Force Local Test System - Personal Files
+.git/local_test_passport.json
+logs/git-no-verify-attempts.log
+logs/local_test_passport.log
+logs/auto_deployment.log
+logs/onboarding.log
+.force_local_test_setup_done
+.force_local_test_auto_deployed
+.force_local_test_user_config
+.user_environment_info
+
+# Force Local Test System - Auto-generated Commands (per environment)
+/test
+/passport
+/safe-push
+test.bat
+passport.bat
+test.ps1
+passport.ps1

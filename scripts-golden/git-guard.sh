@@ -2,6 +2,60 @@
 # Git --no-verify 终极拦截脚本
 # 这个脚本会放在PATH最前面，拦截所有git调用
 
+# 30秒智能超时函数（实用版）
+read_with_timeout() {
+    local prompt="$1"
+    local timeout=30
+    local response=""
+    local start_time=$(date +%s)
+
+    # 显示友好的超时提示
+    echo ""
+    echo "┌─────────────────────────────────────┐"
+    echo "│  ⏰ 智能超时保护已启动（${timeout}秒）        │"
+    echo "│  🎯 目的：防止AI长时间等待卡死      │"
+    echo "│  🤖 AI将在${timeout}秒后被自动打回        │"
+    echo "└─────────────────────────────────────┘"
+    echo ""
+
+    # 显示进度条式的超时提示
+    echo "⏳ 等待人工输入..."
+    echo -n "⏱️  进度: ["
+    for i in $(seq 1 30); do
+        echo -n "░"
+    done
+    echo "] 0%"
+    echo ""
+    echo -n "$prompt"
+
+    # 使用read -t进行超时读取，简洁可靠
+    if read -t $timeout -r response 2>/dev/null; then
+        local end_time=$(date +%s)
+        local used_time=$((end_time - start_time))
+        echo ""
+        echo "✅ 输入完成（用时 ${used_time} 秒）"
+        echo "$response"
+        return 0
+    else
+        echo ""
+        echo ""
+        echo "⚡ 30秒超时触发 - AI自动被打回！"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "🎯 超时保护生效："
+        echo "   • AI无法通过等待绕过验证"
+        echo "   • 流程自动终止并返回修复提示"
+        echo "   • 强制AI继续修复代码而不是等待"
+        echo ""
+        echo "💡 AI应该执行的操作："
+        echo "   1. 运行 ./test 生成通行证"
+        echo "   2. 修复代码质量问题"
+        echo "   3. 重新尝试推送"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | TIMEOUT_SUCCESS | AI被30秒超时成功打回" >> "$LOG_FILE"
+        exit 1
+    fi
+}
+
 # 🛡️ 自我保护检查 - 防止被篡改或绕过
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -139,7 +193,7 @@ show_host_dependency_warning() {
 
     # 询问紧急确认码
     echo ""
-    read -p "紧急确认码: " response
+    response=$(read_with_timeout "紧急确认码: ")
     if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
         echo "🟡 紧急绕过确认，允许宿主机依赖安装"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
@@ -204,7 +258,7 @@ show_protected_branch_warning() {
 
     # 询问紧急确认码
     echo ""
-    read -p "紧急确认码: " response
+    response=$(read_with_timeout "紧急确认码: ")
     if [[ "$response" == "HOTFIX_EMERGENCY_BYPASS" ]]; then
         echo "🟡 紧急绕过确认，允许继续操作"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
@@ -248,7 +302,7 @@ show_violation_warning() {
     echo ""
     echo "⚠️  如果您确实需要强制继续（极度不推荐）："
     echo "请输入完整确认码: I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS"
-    read -p "确认码: " response
+    response=$(read_with_timeout "确认码: ")
     if [[ "$response" != "I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS" ]]; then
         echo "❌ 操作被取消 - 这是明智的选择！"
         echo "💡 请修复问题后重新尝试"
@@ -292,7 +346,7 @@ if check_protected_branch; then
             echo "⚠️  在保护分支$(git branch --show-current)上执行merge操作"
             echo "如果这是PR合并流程，请确认继续；如果是手动合并，建议切换到feature分支"
             echo ""
-            read -p "这是PR合并流程吗？(y/N): " confirm
+            confirm=$(read_with_timeout "这是PR合并流程吗？(y/N): ")
             if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
                 show_protected_branch_warning "手动合并操作 (git merge)" "git $*"
             fi
@@ -381,7 +435,7 @@ show_skip_bypass_warning() {
 
     # 询问紧急确认码
     echo ""
-    read -p "紧急确认码: " response
+    response=$(read_with_timeout "紧急确认码: ")
     if [[ "$response" == "QUALITY_BYPASS_2024" ]]; then
         echo "🟡 紧急绕过确认，记录此次绕过"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
@@ -503,7 +557,7 @@ show_passport_warning() {
     # 多重人工验证机制
     echo ""
     echo "🔐 人工验证检查点 1/3"
-    read -p "请输入今天的日期 (格式: YYYY-MM-DD): " date_input
+    date_input=$(read_with_timeout "请输入今天的日期 (格式: YYYY-MM-DD): ")
     local expected_date=$(date +%Y-%m-%d)
     if [[ "$date_input" != "$expected_date" ]]; then
         echo "❌ 日期验证失败 - 推送被拒绝"
@@ -512,7 +566,7 @@ show_passport_warning() {
 
     echo ""
     echo "🔐 人工验证检查点 2/3"
-    read -p "请输入数学题答案: 17 + 26 = " math_input
+    math_input=$(read_with_timeout "请输入数学题答案: 17 + 26 = ")
     if [[ "$math_input" != "43" ]]; then
         echo "❌ 数学验证失败 - 推送被拒绝"
         exit 1
@@ -523,7 +577,7 @@ show_passport_warning() {
     echo "⚠️  最后警告：此操作将绕过所有本地测试保护机制"
     echo "⚠️  这可能导致远程CI失败，造成开发流程中断"
     echo "⚠️  建议运行 './test' 生成正常通行证"
-    read -p "确认绕过保护并承担风险 (输入 YES-BYPASS-ALL-PROTECTION): " final_confirmation
+    final_confirmation=$(read_with_timeout "确认绕过保护并承担风险 (输入 YES-BYPASS-ALL-PROTECTION): ")
 
     if [[ "$final_confirmation" == "YES-BYPASS-ALL-PROTECTION" ]]; then
         echo "🟡 人工确认绕过，允许推送（已记录风险操作）"
@@ -649,6 +703,9 @@ if [[ "$1" == "push" ]]; then
     # 获取当前分支名
     current_branch=$("$real_git" branch --show-current 2>/dev/null)
 
+    # 设置验证通过标志，防止pre-push hook重复验证
+    export GIT_GUARD_VERIFIED=true
+
     if [[ -n "$remote_name" && -n "$current_branch" ]]; then
         # 重新构造正确的git push命令
         exec "$real_git" push "$remote_name" "$current_branch"
@@ -661,5 +718,8 @@ if [[ "$1" == "push" ]]; then
     fi
 else
     # 其他git命令正常处理
+    # 对于非push命令也设置标志（以防万一）
+    export GIT_GUARD_VERIFIED=true
     exec "$real_git" "$@"
 fi
+# 测试修改

@@ -14,6 +14,45 @@ if [[ "$REAL_COMMAND" == "dependency-guard.sh" ]]; then
     shift
 fi
 
+# 30秒超时读取函数（防止AI无限等待）
+read_with_timeout() {
+    local prompt="$1"
+    local timeout_seconds=30
+    local response=""
+
+    # 反自动化检测
+    if ! tty -s; then
+        echo "❌ 检测到非交互式输入尝试" >&2
+        echo "💡 AI不能绕过人机验证" >&2
+        exit 1
+    fi
+
+    if [[ -p /dev/stdin ]]; then
+        echo "❌ 检测到管道输入尝试" >&2
+        echo "💡 不接受自动化输入" >&2
+        exit 1
+    fi
+
+    echo "⏰ 30秒超时警告：" >&2
+    echo "   ├─ 如果30秒内没有输入，操作将被自动拒绝" >&2
+    echo "   ├─ 这是为了防止AI无限等待而设计的保护机制" >&2
+    echo "   └─ AI应该修复代码而不是等待人工干预" >&2
+    echo "" >&2
+    echo "进度: [████████████████████████████████] 30秒倒计时已开始" >&2
+    echo "" >&2
+
+    if read -t "$timeout_seconds" -p "$prompt" response; then
+        echo "$response"
+    else
+        echo "" >&2
+        echo "⏰ 超时！30秒内未收到输入" >&2
+        echo "🤖 检测到可能的AI等待行为" >&2
+        echo "💡 AI应该修复代码问题，而不是等待人工确认" >&2
+        echo "🔄 操作已自动拒绝，请修复代码后重试" >&2
+        exit 1
+    fi
+}
+
 # 🚨 宿主机依赖安装警告函数
 show_host_dependency_warning() {
     local command_full="$1"
@@ -64,9 +103,9 @@ show_host_dependency_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 使用30秒超时询问紧急确认码
     echo ""
-    read -p "紧急确认码: " response
+    response=$(read_with_timeout "紧急确认码: ")
     if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
         echo "🟡 紧急绕过确认，允许宿主机依赖安装"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"

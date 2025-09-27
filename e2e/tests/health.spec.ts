@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 
 // 测试配置
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3001';
-const API_URL = process.env.API_URL || 'http://localhost:8000';
+const API_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
 // 健康检查测试套件
 test.describe('服务健康检查', () => {

@@ -28,7 +28,8 @@ runs:
           node_modules
           ~/.cache/pip
           backend/.venv
-        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+          ~/.cache/ms-playwright
+        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
         restore-keys: |
           full-deps-v5-${{ runner.os }}-
 
@@ -98,6 +99,21 @@ runs:
         fi
         cd ..
 
+        # 检查和安装Playwright浏览器缓存
+        echo "🎭 检查Playwright浏览器缓存..."
+        if [ ! -d "$HOME/.cache/ms-playwright" ] || [ -z "$(ls -A $HOME/.cache/ms-playwright 2>/dev/null)" ]; then
+          echo "📦 Playwright浏览器缓存不存在，预安装到GitHub Actions缓存..."
+          # 确保e2e依赖已安装
+          if [ ! -d "e2e/node_modules" ]; then
+            echo "安装e2e依赖..."
+            cd e2e && npm ci --prefer-offline --no-audit && cd ..
+          fi
+          # 下载浏览器到GitHub Actions缓存目录
+          cd e2e && npx playwright install chromium && cd ..
+        else
+          echo "✅ Playwright浏览器缓存已存在，跳过下载"
+        fi
+
         echo "✅ 依赖检查完成"
 
     - name: Save Full Dependency Cache
@@ -108,4 +124,5 @@ runs:
           node_modules
           ~/.cache/pip
           backend/.venv
-        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
+          ~/.cache/ms-playwright
+        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
