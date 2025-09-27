@@ -9,7 +9,26 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# 启动验证容器（如果未运行）
+# 🔧 方案A：预启动 + 连接验证架构
+echo "🚀 预启动核心服务栈..."
+
+# 检查并启动MySQL和Redis（测试必需服务）
+echo "📦 启动MySQL和Redis服务..."
+docker-compose up -d mysql redis >/dev/null 2>&1
+
+# 等待服务就绪
+echo "⏳ 等待MySQL和Redis就绪..."
+for i in {1..30}; do
+    if docker-compose exec -T mysql mysqladmin ping -h localhost >/dev/null 2>&1 && \
+       docker-compose exec -T redis redis-cli ping >/dev/null 2>&1; then
+        echo "✅ 核心服务已就绪"
+        break
+    fi
+    echo "等待服务启动... ($i/30)"
+    sleep 2
+done
+
+# 启动验证容器（连接现有服务）
 echo "🚀 启动验证容器..."
 docker-compose --profile validation up -d validator >/dev/null 2>&1
 

@@ -170,6 +170,48 @@ class LocalTestPassport:
                 self.log(f"❌ docker-compose配置错误：{result.stderr}")
                 return False
 
+            # 🔧 方案A：检查必需服务是否已启动
+            self.log("🔍 检查必需服务状态...")
+
+            # 检查MySQL服务
+            try:
+                mysql_result = subprocess.run(
+                    [
+                        "docker-compose",
+                        "exec",
+                        "-T",
+                        "mysql",
+                        "mysqladmin",
+                        "ping",
+                        "-h",
+                        "localhost",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if mysql_result.returncode == 0:
+                    self.log("✅ MySQL服务已就绪")
+                else:
+                    self.log("⚠️  MySQL服务未就绪，可能影响功能测试")
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                self.log("⚠️  MySQL服务检查失败，可能影响功能测试")
+
+            # 检查Redis服务
+            try:
+                redis_result = subprocess.run(
+                    ["docker-compose", "exec", "-T", "redis", "redis-cli", "ping"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if redis_result.returncode == 0:
+                    self.log("✅ Redis服务已就绪")
+                else:
+                    self.log("⚠️  Redis服务未就绪，可能影响功能测试")
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                self.log("⚠️  Redis服务检查失败，可能影响功能测试")
+
             self.log("✅ Docker环境验证通过")
             return True
 
