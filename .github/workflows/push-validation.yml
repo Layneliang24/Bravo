@@ -352,7 +352,7 @@ jobs:
           echo "- Branch: ${{ github.ref_name }} (${{ needs.detect-branch-context.outputs.branch-type }})" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- Author: ${{ github.event.head_commit.author.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Message: $(echo '${{ github.event.head_commit.message }}' | head -c 100)" >> $GITHUB_STEP_SUMMARY
+          echo "- Message: $(echo '${{ github.event.head_commit.message }}' | tr -d '()' | head -c 100)" >> $GITHUB_STEP_SUMMARY
           echo "- Merge Commit: ${{ needs.detect-branch-context.outputs.is-merge-commit }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
