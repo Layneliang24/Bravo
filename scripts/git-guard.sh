@@ -305,6 +305,101 @@ if [[ "$1" == "commit" ]] && [[ "$*" =~ (^|[[:space:]])--no-verify([[:space:]]|$
     show_violation_warning "commit --no-verify" "git $*"
 fi
 
+# 🚨 检测SKIP环境变量和其他绕过机制
+detect_bypass_attempts() {
+    local command_full="$*"
+
+    # 检测SKIP环境变量（pre-commit绕过）
+    if [[ -n "$SKIP" ]]; then
+        show_skip_bypass_warning "SKIP环境变量绕过" "SKIP=$SKIP git $command_full"
+        return 1
+    fi
+
+    # 检测命令行中的绕过模式
+    if echo "$command_full" | grep -qE "(SKIP=|--no-verify|--skip-hooks|--no-pre-commit)"; then
+        show_skip_bypass_warning "命令绕过检查机制" "git $command_full"
+        return 1
+    fi
+
+    # 检测其他常见的绕过尝试
+    if echo "$command_full" | grep -qE "(PRE_COMMIT_ALLOW_NO_CONFIG=|SKIP_VALIDATION=|DISABLE_VALIDATION=)"; then
+        show_skip_bypass_warning "环境变量绕过检查" "git $command_full"
+        return 1
+    fi
+
+    # 检测环境变量中的绕过尝试
+    if [[ -n "$PRE_COMMIT_ALLOW_NO_CONFIG" ]] || [[ -n "$SKIP_VALIDATION" ]] || [[ -n "$DISABLE_VALIDATION" ]]; then
+        show_skip_bypass_warning "环境变量绕过检查" "$(env | grep -E '(PRE_COMMIT_ALLOW_NO_CONFIG|SKIP_VALIDATION|DISABLE_VALIDATION)') git $command_full"
+        return 1
+    fi
+
+    return 0
+}
+
+# SKIP绕过警告函数
+show_skip_bypass_warning() {
+    local bypass_type="$1"
+    local command_full="$2"
+
+    echo "🚨🚨🚨 检测到严重的质量检查绕过！🚨🚨🚨"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ 违规类型：$bypass_type"
+    echo "📋 违规命令：$command_full"
+    echo ""
+    echo "⚠️  绕过代码质量检查的严重后果："
+    echo "   • 代码质量无法保证"
+    echo "   • 可能引入语法错误和安全漏洞"
+    echo "   • 破坏团队代码标准"
+    echo "   • 增加后续调试和修复成本"
+    echo "   • 违背项目质量保证原则"
+    echo ""
+    echo "✅ 正确的处理方式："
+    echo "   1. 修复pre-commit检查发现的问题"
+    echo "   2. 如果检查规则有误，更新.pre-commit-config.yaml"
+    echo "   3. 如果工具有bug，临时禁用特定检查（不是所有检查）"
+    echo "   4. 紧急情况请联系团队负责人"
+    echo ""
+    echo "🔧 如何正确禁用特定检查（示例）："
+    echo "   # 临时禁用单个检查"
+    echo "   git commit -m '...' --no-verify  # 仅用于紧急情况"
+    echo "   # 或在.pre-commit-config.yaml中配置"
+    echo ""
+    echo "⚠️  紧急绕过（需要强制理由）："
+    echo "   export ALLOW_QUALITY_BYPASS=true"
+    echo "   或输入紧急确认码：QUALITY_BYPASS_2024"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 记录违规尝试
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_BLOCKED | $bypass_type | $command_full" >> "$LOG_FILE"
+
+    # 检查环境变量绕过
+    if [[ "$ALLOW_QUALITY_BYPASS" == "true" ]]; then
+        echo "🟡 检测到环境变量绕过，允许操作"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_ENV | $command_full" >> "$LOG_FILE"
+        return 0
+    fi
+
+    # 询问紧急确认码
+    echo ""
+    read -p "紧急确认码: " response
+    if [[ "$response" == "QUALITY_BYPASS_2024" ]]; then
+        echo "🟡 紧急绕过确认，记录此次绕过"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
+        return 0
+    else
+        echo "❌ 操作被取消 - 请修复质量检查问题后重新提交！"
+        echo "💡 建议：仔细阅读pre-commit输出的错误信息并逐一修复"
+        exit 1
+    fi
+}
+
+# 执行绕过检测
+if ! detect_bypass_attempts "$@"; then
+    # 如果检测到绕过且用户选择取消，脚本已经退出
+    # 这里只是为了代码完整性
+    :
+fi
+
 # 🎫 本地测试通行证验证函数 - 纯Docker验证
 check_local_test_passport() {
     local passport_file="$PROJECT_ROOT/.git/local_test_passport.json"

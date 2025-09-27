@@ -52,7 +52,7 @@ class LocalTestPassport:
             return "unknown"
 
     def check_existing_passport(self):
-        """检查现有通行证是否有效"""
+        """检查现有通行证是否有效，包括完整性验证"""
         if not self.passport_file.exists():
             return False, "未找到通行证文件"
 
@@ -61,6 +61,13 @@ class LocalTestPassport:
                 passport_data = json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return False, "通行证文件损坏"
+
+        # 🔒 **新增：完整性验证，防止手动创建的通行证**
+        integrity_valid, integrity_message = self._validate_passport_integrity(
+            passport_data
+        )
+        if not integrity_valid:
+            return False, f"通行证完整性验证失败: {integrity_message}"
 
         # 检查过期时间（通行证有效期：1小时）- 使用北京时间
         expire_time = datetime.fromisoformat(
@@ -248,10 +255,85 @@ class LocalTestPassport:
         self.log("✅ 环境差异检查完成")
         return True
 
+    def _generate_validation_hash(self):
+        """生成验证流程的完整性哈希，防止手动创建通行证"""
+        # 收集验证过程的证据
+        evidence = []
+
+        # 检查是否真实执行了验证流程
+        if hasattr(self, "_validation_executed"):
+            evidence.append("validation_executed")
+
+        # 检查Docker环境
+        try:
+            result = subprocess.run(
+                ["docker", "--version"], capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                evidence.append(f"docker_version:{result.stdout.strip()}")
+        except Exception:
+            evidence.append("docker_check_failed")
+
+        # 检查工作目录
+        evidence.append(f"workspace:{self.workspace}")
+        evidence.append(f"git_status:{self.get_git_hash()}")
+
+        # 生成时间戳和调用栈信息
+        import inspect
+
+        stack = inspect.stack()
+        caller_info = [frame.function for frame in stack[:5]]
+        evidence.append(f"call_stack:{':'.join(caller_info)}")
+
+        # 生成综合哈希
+        evidence_str = "|".join(evidence)
+        return hashlib.sha256(evidence_str.encode()).hexdigest()[:24]
+
+    def _validate_passport_integrity(self, passport_data):
+        """验证通行证完整性，检测手动创建的通行证"""
+        # 检查必需字段
+        required_fields = [
+            "process_integrity_hash",
+            "generation_method",
+            "validation_signature",
+        ]
+        for field in required_fields:
+            if field not in passport_data:
+                self.log(f"⚠️  通行证缺少必需字段: {field}")
+                return False, f"通行证缺少必需字段: {field}"
+
+        # 检查生成方法
+        if passport_data.get("generation_method") != "automated_validation":
+            return False, "通行证生成方法不正确，疑似手动创建"
+
+        # 验证完整性哈希格式
+        integrity_hash = passport_data.get("process_integrity_hash", "")
+        if len(integrity_hash) != 24 or not all(
+            c in "0123456789abcdef" for c in integrity_hash
+        ):
+            return False, "通行证完整性哈希格式无效"
+
+        # 检查可疑的手动创建特征
+        signature = passport_data.get("validation_signature", "")
+        if (
+            "manual" in signature.lower()
+            or "bypass" in signature.lower()
+            or "temp" in signature.lower()
+        ):
+            return False, "检测到手动创建的通行证特征"
+
+        return True, "通行证完整性验证通过"
+
     def generate_passport(self):
-        """生成通行证 - 使用北京时间"""
+        """生成通行证 - 使用北京时间和完整性验证"""
         current_time = datetime.now(BEIJING_TZ)
         expire_time = current_time + timedelta(hours=1)  # 1小时有效期
+
+        # 标记验证流程已执行
+        self._validation_executed = True
+
+        # 生成验证流程的完整性哈希
+        validation_process_hash = self._generate_validation_hash()
 
         passport_data = {
             "version": "1.0",
@@ -268,6 +350,8 @@ class LocalTestPassport:
             "validation_signature": hashlib.sha256(
                 f"{self.get_git_hash()}:{current_time.isoformat()}".encode()
             ).hexdigest()[:32],
+            "process_integrity_hash": validation_process_hash,
+            "generation_method": "automated_validation",
         }
 
         # 保存通行证
@@ -322,7 +406,7 @@ class LocalTestPassport:
             return True
 
     def show_passport_status(self):
-        """显示通行证状态"""
+        """显示通行证状态，包括完整性验证"""
         valid, message = self.check_existing_passport()
 
         if valid:
@@ -333,10 +417,22 @@ class LocalTestPassport:
             print(f"📅 生成时间：{passport_data['generated_at']}")
             print(f"⏰ 过期时间：{passport_data['expires_at']}")
             print(f"🔑 签名：{passport_data['validation_signature']}")
+
+            # 显示完整性验证信息
+            generation_method = passport_data.get("generation_method", "未知")
+            integrity_hash = passport_data.get("process_integrity_hash", "无")
+            print(f"🔒 生成方法：{generation_method}")
+            print(f"🛡️  完整性哈希：{integrity_hash}")
+
             print(f"💬 状态：{message}")
         else:
             print("🚫 当前通行证状态：❌ 无效")
             print(f"💬 原因：{message}")
+
+            # 如果失败原因包含完整性验证，给出具体提示
+            if "完整性验证失败" in message:
+                print("🚨 检测到可能的通行证伪造或手动创建")
+                print("💡 请使用 ./test --force 重新生成合法通行证")
 
 
 def main():
@@ -349,8 +445,15 @@ def main():
     passport = LocalTestPassport()
 
     if args.check:
+        # 检查通行证状态并根据结果设置退出码
+        valid, message = passport.check_existing_passport()
         passport.show_passport_status()
-        sys.exit(0)
+
+        # 🔒 重要：退出码必须反映验证结果
+        if valid:
+            sys.exit(0)  # 通行证有效
+        else:
+            sys.exit(1)  # 通行证无效，包括完整性验证失败
 
     # 检查现有通行证
     if not args.force:
