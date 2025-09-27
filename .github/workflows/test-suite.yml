@@ -61,8 +61,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Node.js with cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python with cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Run Backend Unit Tests
         if: matrix.component == 'backend'
@@ -185,8 +194,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Setup Node.js with cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python with cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Run Integration Tests
         run: |
@@ -255,17 +273,34 @@ jobs:
           retention-days: 7
 
   # 智能E2E测试 (仅在full模式)
-  e2e-tests:
+  # E2E测试缓存设置 (符合设计文档)
+  e2e-cache-setup:
     if: inputs.test-level == 'full'
     needs: integration-tests
+    uses: ./.github/workflows/cache-strategy.yml
+    with:
+      cache-type: playwright
+      cache-scope: e2e
+
+  # E2E测试执行 (使用缓存)
+  e2e-tests:
+    if: inputs.test-level == 'full'
+    needs: e2e-cache-setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup-cached-env
+      - name: Restore Playwright Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            e2e/node_modules
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       - name: Run E2E Tests
         run: |
