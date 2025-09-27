@@ -135,6 +135,30 @@ jobs:
           DB_USER: bravo_user
           DB_PASSWORD: bravo_password
 
+  # E2E测试环境变量设计规范
+  #
+  # 为确保E2E测试在Docker容器环境中正确运行，定义统一的环境变量规范：
+  #
+  # 1. 前端服务端点：
+  #    - FRONTEND_URL: http://frontend-test:3000
+  #    - TEST_BASE_URL: http://frontend-test:3000 (兼容legacy)
+  #
+  # 2. 后端API端点：
+  #    - BACKEND_URL: http://backend-test:8000 (标准变量名)
+  #    - ❌ 禁止使用 API_URL (会导致容器间通信失败)
+  #
+  # 3. 测试代码规范：
+  #    - 必须使用 process.env.BACKEND_URL 读取后端地址
+  #    - 必须使用 process.env.TEST_BASE_URL 读取前端地址
+  #    - fallback值仅用于本地开发，生产环境必须依赖环境变量
+  #
+  # 4. Docker配置一致性：
+  #    - Dockerfile.test 中的 ENV 设置
+  #    - docker-compose.test.yml 中的 environment 设置
+  #    - 测试代码中的 process.env 读取
+  #    - 三者必须保持变量名完全一致
+  #
+
   # 智能E2E测试缓存设置 (仅在full模式)
   e2e-cache-setup:
     if: inputs.test-level == 'full'
