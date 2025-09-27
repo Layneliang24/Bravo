@@ -73,14 +73,16 @@ RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retry-mintimeout 10000
 
-# 🎯 Docker Build Cache优化：npm依赖 + Playwright浏览器
+# 🎯 Docker Build Cache优化：分离npm缓存和Playwright安装
 RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/root/.cache/ms-playwright \
     npm ci --verbose && \
-    npx playwright install chromium && \
+    echo "✅ npm依赖安装完成 (Docker Build Cache优化)"
+
+# 安装Playwright浏览器到镜像层 (确保持久化)
+RUN npx playwright install chromium && \
     npx playwright --version && \
     npm list @playwright/test && \
-    echo "✅ 依赖和Playwright浏览器安装完成 (Docker Build Cache优化)"
+    echo "✅ Playwright浏览器安装完成并持久化到镜像"
 
 # 创建启动脚本
 RUN echo "#!/bin/bash" > /app/e2e/run-tests.sh && \
