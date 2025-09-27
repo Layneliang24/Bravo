@@ -67,18 +67,20 @@ WORKDIR /app/e2e
 RUN echo 'workspace-root=false' > .npmrc && \
     echo 'legacy-peer-deps=true' >> .npmrc
 
-# 严格可重复构建
+# 严格可重复构建 (使用Docker Build Cache优化)
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retry-mintimeout 10000 && \
-    npm ci --verbose
+    npm config set fetch-retry-mintimeout 10000
 
-# 安装Playwright浏览器 (使用Docker构建缓存优化)
-RUN npx playwright install chromium && \
+# 🎯 Docker Build Cache优化：npm依赖 + Playwright浏览器
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/root/.cache/ms-playwright \
+    npm ci --verbose && \
+    npx playwright install chromium && \
     npx playwright --version && \
     npm list @playwright/test && \
-    echo "✅ Playwright浏览器安装完成 (Docker缓存优化)"
+    echo "✅ 依赖和Playwright浏览器安装完成 (Docker Build Cache优化)"
 
 # 创建启动脚本
 RUN echo "#!/bin/bash" > /app/e2e/run-tests.sh && \

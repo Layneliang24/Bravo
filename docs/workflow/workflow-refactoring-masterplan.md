@@ -225,25 +225,52 @@ L3-Test: # 测试缓存 (命中率: 70%)
   key: test-v2-${{ runner.os }}-${{ hashFiles('tests/**') }}
 ```
 
-#### E2E测试缓存优化策略
+#### E2E测试缓存优化策略 (基于Docker Build Cache)
 
-E2E测试通过以下方式利用缓存：
+**⚠️ 设计修正**: 废弃"分离式架构+Docker挂载"方案，采用Docker原生Build Cache优化
 
-1. **cache-strategy.yml**: 统一的缓存策略工作流，预先设置Playwright浏览器缓存
-2. **Docker挂载**: 将GitHub Actions缓存挂载到容器内，避免重复下载
-3. **分离式架构**: e2e-cache-setup job 负责缓存，e2e-tests job 负责执行
+E2E测试通过以下方式实现高效缓存：
+
+1. **Docker Build Cache**: 使用Docker原生`--mount=type=cache`机制
+2. **GitHub Actions buildx缓存**: 利用`actions/setup-buildx-action`的缓存后端
+3. **多层缓存优化**: npm依赖缓存 + Playwright浏览器缓存分层处理
+4. **单一执行架构**: 去除无效的e2e-cache-setup job，直接在e2e-tests中优化
+
+**核心技术方案**：
+
+```dockerfile
+# e2e/Dockerfile.test
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/root/.cache/ms-playwright \
+    npm ci && npx playwright install chromium
+```
+
+**GitHub Actions配置**：
+
+```yaml
+- name: Setup Docker Buildx
+  uses: docker/setup-buildx-action@v3
+  with:
+    driver-opts: |
+      image=moby/buildkit:latest
+```
 
 **时间分解预期**：
 
 - **Docker环境准备**:
-  - 首次运行: ~4分钟 (npm依赖 + Playwright浏览器下载)
-  - 后续运行: ~2分钟 (npm workspaces缓存 + Docker build缓存)
+  - 首次运行: ~4分钟 (下载npm + Playwright)
+  - 后续运行: ~30秒 (Docker Build Cache命中)
 - **E2E测试执行**: ~30秒 (39个测试用例)
 - **总时间预期**:
   - 首次: ~4.5分钟
-  - 后续: ~2.5分钟
+  - 后续: ~1分钟 (比之前设计快60%+)
 
-**重要说明**: 之前文档中的"后续运行 ~10秒"指的仅是测试执行时间，未包含Docker环境准备时间
+**技术优势**:
+
+1. **性能最佳**: Docker原生缓存，无跨系统挂载开销
+2. **稳定可靠**: 避免GitHub Actions挂载的权限和时序问题
+3. **工业标准**: 容器化CI/CD的最佳实践
+4. **可扩展性**: 支持多项目复用，缓存策略灵活
 
 ### 并行执行
 

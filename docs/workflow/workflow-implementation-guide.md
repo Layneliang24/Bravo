@@ -159,46 +159,33 @@ jobs:
   #    - 三者必须保持变量名完全一致
   #
 
-  # 智能E2E测试缓存设置 (仅在full模式)
-  e2e-cache-setup:
-    if: inputs.test-level == 'full'
-    needs: integration-tests
-    uses: ./.github/workflows/cache-strategy.yml
-    with:
-      cache-type: playwright
-      cache-scope: e2e
-
-  # 智能E2E测试执行 (仅在full模式)
+  # 智能E2E测试 (基于Docker Build Cache优化)
   e2e-tests:
     if: inputs.test-level == 'full'
-    needs: e2e-cache-setup
+    needs: integration-tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore Playwright Cache
-        uses: actions/cache/restore@v4
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
         with:
-          path: |
-            ~/.cache/ms-playwright
-            e2e/node_modules
-          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          driver-opts: |
+            image=moby/buildkit:latest
 
-      - name: Run E2E Tests with Cache Optimization
+      - name: Run E2E Tests with Docker Build Cache
         run: |
-          echo "🎭 Running E2E tests with optimized cache strategy..."
+          echo "🎭 Running E2E tests with Docker Build Cache optimization..."
 
-          # 启动基础服务
+          # 启动基础服务 (利用Docker Build Cache)
           docker compose -f docker-compose.test.yml up --build -d mysql-test backend-test frontend-test
 
           # 等待服务就绪
           sleep 15
 
-          # 运行E2E测试（利用cache-strategy.yml + restore缓存）
+          # 运行E2E测试 (利用Docker原生缓存机制)
           E2E_EXIT_CODE=0
           docker compose -f docker-compose.test.yml run --rm e2e-tests || E2E_EXIT_CODE=$?
 
@@ -218,7 +205,7 @@ jobs:
   # 测试结果汇总
   test-summary:
     if: always()
-    needs: [unit-tests, integration-tests, e2e-cache-setup, e2e-tests]
+    needs: [unit-tests, integration-tests, e2e-tests]
     runs-on: ubuntu-latest
     outputs:
       results: ${{ steps.summary.outputs.results }}
