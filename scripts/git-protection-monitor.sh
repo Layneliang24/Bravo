@@ -339,7 +339,7 @@ Git操作相关:
 • 如需临时禁用检查，使用环境变量:
   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true
 • 如需永久调整规则，修改配置文件:
-  scripts/git-guard.sh 中的检查逻辑
+  scripts-golden/git-guard.sh 中的检查逻辑
 
 依赖管理相关:
 • 所有依赖操作必须在Docker容器内进行:

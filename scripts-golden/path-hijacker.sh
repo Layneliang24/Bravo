@@ -8,25 +8,25 @@ INTERCEPTORS_DIR="$PROJECT_ROOT/scripts-golden/path-interceptors"
 # PATH劫持函数
 setup_path_hijacking() {
     echo "🔧 设置PATH劫持拦截..."
-    
+
     # 检查拦截器目录是否存在
     if [[ ! -d "$INTERCEPTORS_DIR" ]]; then
         echo "❌ 拦截器目录不存在: $INTERCEPTORS_DIR"
         return 1
     fi
-    
+
     # 检查PATH中是否已包含拦截器目录
     if [[ ":$PATH:" == *":$INTERCEPTORS_DIR:"* ]]; then
         echo "✅ PATH劫持已激活"
         return 0
     fi
-    
+
     # 将拦截器目录添加到PATH最前面
     export PATH="$INTERCEPTORS_DIR:$PATH"
-    
+
     echo "✅ PATH劫持设置成功"
     echo "📋 拦截器路径: $INTERCEPTORS_DIR"
-    
+
     # 验证拦截效果
     echo "🔍 验证拦截效果:"
     for cmd in npm pip python go cargo; do
@@ -42,11 +42,11 @@ setup_path_hijacking() {
 # 移除PATH劫持
 remove_path_hijacking() {
     echo "🔄 移除PATH劫持..."
-    
+
     # 从PATH中移除拦截器目录
     PATH=$(echo "$PATH" | sed "s|$INTERCEPTORS_DIR:||g" | sed "s|:$INTERCEPTORS_DIR||g")
     export PATH
-    
+
     echo "✅ PATH劫持已移除"
 }
 

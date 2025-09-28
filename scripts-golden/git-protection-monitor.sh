@@ -17,7 +17,7 @@ log_message() {
 # 检查当前alias状态
 check_alias_status() {
     local current_alias=$(alias git 2>/dev/null || echo "NOT_SET")
-    local expected_alias="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
+    local expected_alias="alias git='bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\"'"
 
     if [[ "$current_alias" == *"git-guard.sh"* ]]; then
         echo "PROTECTED"
@@ -98,7 +98,7 @@ restore_protection() {
     log_message "🔧 RESTORE | $reason - 正在恢复git保护..."
 
     # 1. 恢复当前会话alias
-    alias git="bash \"$PROJECT_ROOT/scripts/git-guard.sh\""
+    alias git="bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\""
     log_message "✅ RESTORE | 当前会话alias已恢复"
 
     # 2. 恢复依赖管理拦截器alias
@@ -120,7 +120,7 @@ restore_protection() {
 
     # 3. 检查并恢复bashrc配置
     local bashrc_path="$HOME/.bashrc"
-    local git_alias_line="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
+    local git_alias_line="alias git='bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\"'"
 
     if [[ -f "$bashrc_path" ]]; then
         # 恢复git保护alias
@@ -279,11 +279,11 @@ create_immutable_backup() {
     mkdir -p "$backup_dir"
 
     # 备份关键文件
-    cp "$PROJECT_ROOT/scripts/git-guard.sh" "$backup_dir/git-guard.sh.backup"
+    cp "$PROJECT_ROOT/scripts-golden/git-guard.sh" "$backup_dir/git-guard.sh.backup"
     cp "$0" "$backup_dir/git-protection-monitor.sh.backup"
 
     # 创建校验和
-    sha256sum "$PROJECT_ROOT/scripts/git-guard.sh" > "$backup_dir/checksums.txt"
+    sha256sum "$PROJECT_ROOT/scripts-golden/git-guard.sh" > "$backup_dir/checksums.txt"
     sha256sum "$0" >> "$backup_dir/checksums.txt"
 
     # 设置只读权限
@@ -303,9 +303,9 @@ verify_integrity() {
         else
             log_message "🚨 INTEGRITY | 保护文件被篡改，正在恢复..."
             # 从备份恢复
-            cp "$backup_dir/git-guard.sh.backup" "$PROJECT_ROOT/scripts/git-guard.sh"
+            cp "$backup_dir/git-guard.sh.backup" "$PROJECT_ROOT/scripts-golden/git-guard.sh"
             cp "$backup_dir/git-protection-monitor.sh.backup" "$0"
-            chmod +x "$PROJECT_ROOT/scripts/git-guard.sh"
+            chmod +x "$PROJECT_ROOT/scripts-golden/git-guard.sh"
             chmod +x "$0"
             return 1
         fi

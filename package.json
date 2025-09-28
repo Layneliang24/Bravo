@@ -60,8 +60,8 @@
     "glob": "^11.0.0",
     "husky": "^9.1.7",
     "is-ci": "^3.0.1",
-    "jsdom": "^26.1.0",
     "jscpd": "^4.0.5",
+    "jsdom": "^26.1.0",
     "lint-staged": "^16.1.6",
     "nyc": "^17.1.0",
     "pinia": "^3.0.3",
@@ -109,6 +109,8 @@
   "homepage": "https://github.com/your-username/bravo#readme",
   "dependencies": {
     "eslint": "^8.57.1",
-    "eslint-scope": "^8.4.0"
+    "eslint-scope": "^8.4.0",
+    "react": "^19.1.1",
+    "vue": "^3.5.22"
   }
 }

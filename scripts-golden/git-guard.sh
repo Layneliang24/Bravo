@@ -557,13 +557,13 @@ show_passport_warning() {
     # 使用统一的加密密码验证系统
     echo ""
     echo "🔐 推送保护需要加密验证"
-    
+
     # 使用统一的加密验证系统
     if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "推送验证" "Git推送操作"; then
         echo "❌ 加密验证失败 - 推送被拒绝"
         exit 1
     fi
-    
+
     echo "✅ 加密验证通过，允许绕过操作"
     echo "🟡 已授权绕过保护机制（已记录）"
     echo "$(date '+%Y-%m-%d %H:%M:%S') | BYPASS_CONFIRMED | 加密验证通过 | $command_full" >> "$LOG_FILE"

@@ -25,7 +25,7 @@ echo "✅ 终极拦截系统启动完成"
 echo ""
 echo "🔒 防护层级："
 echo "   1️⃣ PATH劫持 - 拦截绝对路径调用"
-echo "   2️⃣ Shell函数 - 拦截直接命令调用"  
+echo "   2️⃣ Shell函数 - 拦截直接命令调用"
 echo "   3️⃣ Alias别名 - 拦截简单命令"
 echo ""
 echo "🎯 拦截范围："
@@ -46,11 +46,11 @@ if [[ "$1" == "test" ]]; then
     echo ""
     echo "🧪 拦截系统测试："
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     echo "📋 PATH优先级测试:"
     echo "PATH前5个目录:"
     echo "$PATH" | tr ':' '\n' | head -5 | nl
-    
+
     echo ""
     echo "🔍 命令定位测试:"
     for cmd in npm pip python go cargo; do
@@ -61,7 +61,7 @@ if [[ "$1" == "test" ]]; then
             echo "  ⚠️  $cmd -> $cmd_path [可能绕过]"
         fi
     done
-    
+
     echo ""
     echo "🔧 函数定义测试:"
     for func in npm pip python; do
@@ -71,11 +71,11 @@ if [[ "$1" == "test" ]]; then
             echo "  ❌ 函数 $func() 未定义"
         fi
     done
-    
+
     echo ""
     echo "🎭 Alias状态测试:"
     alias | grep -E "(npm|pip|python)" | head -3
-    
+
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     exit 0
@@ -84,6 +84,6 @@ fi
 echo ""
 echo "⚠️  重要：AI现在无法通过以下方式绕过："
 echo "   ❌ 直接命令调用: npm install"
-echo "   ❌ 绝对路径调用: /usr/bin/npm install" 
+echo "   ❌ 绝对路径调用: /usr/bin/npm install"
 echo "   ❌ which查找调用: \$(which npm) install"
 echo "   ❌ PATH变量调用: PATH=/usr/bin npm install"
