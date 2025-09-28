@@ -303,7 +303,8 @@ class LocalGitHubActions:
             "bravo-github-actions-runner",
             "sh",
             "-c",
-            "cd /workspace && pip install pre-commit && " "pre-commit run --all-files",
+            "cd /workspace && pip install pre-commit && "
+            "bash scripts/code-quality-check.sh --all-files",
         ]
         result = subprocess.run(precommit_cmd)
         return result.returncode == 0

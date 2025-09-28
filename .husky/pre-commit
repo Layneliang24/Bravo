@@ -25,11 +25,11 @@ fi
 
 echo ""
 echo "📋 [第三层] 代码质量检查..."
-echo "[INFO] 执行.pre-commit-config.yaml中配置的所有检查项目"
+echo "[INFO] 执行.code-quality-config.yaml中配置的所有检查项目"
 
-# 运行完整的pre-commit检查，显示详细输出
-echo "====== 完整Pre-commit检查开始 ======"
-pre-commit run --all-files --verbose
+# 运行完整的代码质量检查，显示详细输出 (使用重命名工具避免混乱)
+echo "====== 完整代码质量检查开始 ======"
+bash "$(dirname "$(dirname "$0")")/scripts/code-quality-check.sh" --all-files --verbose
 
 # 检查是否有失败的项目
 if [ $? -ne 0 ]; then
@@ -63,4 +63,5 @@ echo "  ✅ 项目保护检查 (根目录守卫, 大文件检查等)"
 echo "  ✅ 提交信息格式检查"
 echo "[INFO] 🛡️ 三层防护全部通过，可以安全提交！"
 echo "[INFO] Git推送时将需要完整的本地测试通行证"
-# 测试自动同步
+echo "��� 来自.husky/pre-commit的测试输出"
+echo "��� 自动同步成功！修改.husky/pre-commit后运行npm run sync-hooks即可"
