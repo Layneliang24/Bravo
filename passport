@@ -1,19 +1,14 @@
 #!/bin/bash
-# 便捷通行证命令 - 纯Docker环境
+# 便捷通行证命令 - 直接调用防篡改脚本
 cd "$(dirname "$0")"
 
-# 检查Docker环境
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker未安装，无法执行通行证验证"
-    echo "请安装Docker后重试"
+# 🛡️ 调用防篡改的本地测试通行证脚本
+GOLDEN_SCRIPT="scripts-golden/local_test_passport.py"
+
+if [ ! -f "$GOLDEN_SCRIPT" ]; then
+    echo "❌ 防篡改通行证脚本不存在: $GOLDEN_SCRIPT"
     exit 1
 fi
 
-# 启动验证容器（如果未运行）
-docker-compose --profile validation up -d validator >/dev/null 2>&1
-
-# 等待容器启动
-sleep 1
-
-# 在容器内执行通行证检查
-docker-compose --profile validation exec validator validate "$@"
+echo "🎫 调用防篡改通行证生成器..."
+python "$GOLDEN_SCRIPT" "$@"

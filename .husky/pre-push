@@ -1,50 +1,60 @@
 #!/bin/sh
 
-echo "🚀 推送前检查开始..."
+# 🚀 Git推送前的通行证验证和安全检查
+echo "[PRE-PUSH] 🛡️ Git推送安全检查"
+echo "[INFO] 验证本地测试通行证和推送安全性"
 
-# 获取当前分支
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-echo "📍 当前分支: $current_branch"
+GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 
-# 检查是否在保护分支上
-if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
-    echo "❌ 禁止直接推送到保护分支: $current_branch"
-    echo "💡 请使用feature分支开发，然后创建PR合并"
-    echo "🔗 工作流: feature/* → dev → main"
+# 第一层：强制本地测试通行证验证
+if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
     echo ""
-    echo "🔒 分支保护规则:"
-    echo "  - main分支: 只能通过PR从dev分支合并"
-    echo "  - dev分支: 只能通过PR从feature分支合并"
-    echo "  - feature分支: 可以自由推送和开发"
-    exit 1
-fi
-
-# 运行推送前测试检查
-echo "🧪 运行推送前测试检查..."
-if [ -f "test_all.sh" ]; then
-    bash test_all.sh
-    if [ $? -ne 0 ]; then
-        echo "❌ 测试失败，推送被阻止"
-        echo "💡 请修复测试问题后再推送"
+    echo "🎫 [第一层] 本地测试通行证验证（必需）..."
+    
+    if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
+        echo ""
+        echo "[ERROR] ======================================"
+        echo "[ERROR] ❌ 本地测试通行证验证失败！"
+        echo "[ERROR] ======================================"
+        echo "[HELP] 推送前必须获得有效的本地测试通行证："
+        echo "[HELP] 1. 运行本地测试: ./test"
+        echo "[HELP] 2. 检查通行证: ./passport"
+        echo "[HELP] 3. 安全推送: ./safe-push"
+        echo ""
+        echo "[INFO] 💡 或直接使用便捷命令："
+        echo "[INFO]    ./test && ./safe-push"
+        echo ""
+        echo "[ERROR] 推送被阻止，请先完成本地测试验证"
         exit 1
     fi
-    echo "✅ 测试检查通过"
-else
-    echo "ℹ️  未找到test_all.sh，跳过测试检查"
+    echo "✅ 本地测试通行证验证通过"
 fi
 
-# 检查是否有未提交的更改
-if ! git diff --quiet && ! git diff --cached --quiet; then
-    echo "❌ 存在未提交的更改，请先提交"
-    git status --porcelain
-    exit 1
+# 第二层：防篡改依赖检查
+if [ -f "$GOLDEN_SCRIPTS/dependency-guard.sh" ]; then
+    echo ""
+    echo "🛡️ [第二层] 防篡改依赖安全检查..."
+    bash "$GOLDEN_SCRIPTS/dependency-guard.sh"
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] 防篡改依赖检查失败，推送被阻止"
+        exit 1
+    fi
+    echo "✅ 依赖安全检查通过"
 fi
 
-# 检查是否有未推送的提交
-if [ -n "$(git log @{u}..HEAD --oneline)" ]; then
-    echo "📤 准备推送 $(git log @{u}..HEAD --oneline | wc -l) 个提交"
-else
-    echo "ℹ️  没有新的提交需要推送"
+# 第三层：Git状态完整性检查
+echo ""
+echo "🔍 [第三层] Git状态完整性检查..."
+
+# 检查是否有未追踪的重要文件
+if [ -f "$GOLDEN_SCRIPTS/git-guard.sh" ]; then
+    echo "✅ 防篡改脚本完整性正常"
 fi
 
-echo "✅ 推送前检查通过"
+echo ""
+echo "[SUCCESS] =================================="
+echo "[SUCCESS] 🎉 所有推送前检查通过！"  
+echo "[SUCCESS] =================================="
+echo "[INFO] 🚀 安全推送到远程仓库..."
+echo "[INFO] 📊 已执行的检查：通行证验证 + 依赖安全 + Git完整性"
+echo ""

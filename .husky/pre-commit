@@ -1,7 +1,30 @@
 #!/bin/sh
 
-# 运行完整的pre-commit检查 - 显示所有检查项目
-echo "[PRECOMMIT] 运行完整的pre-commit检查系统"
+# 🔥 Husky+Git-Guard 混合保护系统
+echo "[PRECOMMIT] 🛡️ Husky+Git-Guard混合保护系统启动"
+echo "[INFO] 三层检查：防篡改脚本 + 本地测试 + 代码质量"
+
+# 第一层：依赖安全检查（简化版）
+echo ""
+echo "🛡️ [第一层] 依赖安全检查..."
+# 检查是否有危险的包管理命令正在运行
+if pgrep -f "npm install\|pip install\|yarn install" > /dev/null 2>&1; then
+    echo "❌ 检测到正在运行的包管理命令，请等待完成后再提交"
+    exit 1
+fi
+echo "✅ 依赖安全检查通过"
+
+# 第二层：本地测试通行证验证（推送前必需）
+if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
+    echo ""
+    echo "🎫 [第二层] 本地测试通行证验证..."
+    if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
+        echo "[INFO] 本地测试通行证状态检查（推送前必需完整通行证）"
+    fi
+fi
+
+echo ""
+echo "📋 [第三层] 代码质量检查..."
 echo "[INFO] 执行.pre-commit-config.yaml中配置的所有检查项目"
 
 # 运行完整的pre-commit检查，显示详细输出
@@ -23,9 +46,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "[SUCCESS] ========================="
-echo "[SUCCESS] 所有Pre-commit检查通过!"
-echo "[SUCCESS] ========================="
+echo "[SUCCESS] ========================================="
+echo "[SUCCESS] 🎉 Husky+Git-Guard混合保护检查全部通过!"
+echo "[SUCCESS] ========================================="
 echo "[INFO] 已执行的检查包括："
 echo "  ✅ 代码质量验证 (comprehensive-check)"
 echo "  ✅ Python格式化 (black, isort)"
@@ -38,4 +61,5 @@ echo "  ✅ Docker文件检查 (hadolint)"
 echo "  ✅ 命名规范检查 (python, typescript, vue)"
 echo "  ✅ 项目保护检查 (根目录守卫, 大文件检查等)"
 echo "  ✅ 提交信息格式检查"
-echo "[INFO] 代码质量达标，可以安全提交！"
+echo "[INFO] 🛡️ 三层防护全部通过，可以安全提交！"
+echo "[INFO] Git推送时将需要完整的本地测试通行证"

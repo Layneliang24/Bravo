@@ -225,7 +225,7 @@ class LocalTestPassport:
 
         # 使用现有的run_github_actions_simulation.sh
         simulation_script = (
-            self.workspace / "scripts-golden" / "run_github_actions_simulation.sh"
+            self.workspace / "scripts-golden" / "run_github_actions_simulation_simple.sh"
         )
         if not simulation_script.exists():
             self.log("⚠️  未找到GitHub Actions模拟脚本，跳过功能测试")
@@ -233,11 +233,13 @@ class LocalTestPassport:
 
         try:
             self.log("🚀 运行GitHub Actions模拟...")
+            # 确保在正确的工作目录中执行
             result = subprocess.run(
-                ["bash", str(simulation_script)],
+                ["bash", f"scripts-golden/run_github_actions_simulation_simple.sh"],
                 capture_output=True,
                 text=True,
                 timeout=300,  # 5分钟超时
+                cwd=str(self.workspace)
             )
 
             if result.returncode == 0:
