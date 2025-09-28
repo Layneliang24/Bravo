@@ -56,7 +56,7 @@ show_host_dependency_warning() {
     echo ""
     echo "⚠️  紧急情况绕过（极度不推荐）："
     echo "   export ALLOW_HOST_DEPENDENCY_INSTALL=true"
-    echo "   或输入紧急确认码：DOCKER_NATIVE_BYPASS"
+    echo "   或通过加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -69,15 +69,17 @@ show_host_dependency_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 加密密码验证（替代简单确认码）
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许宿主机依赖安装"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
+    echo "🔐 紧急绕过需要加密验证"
+    
+    # 使用统一的加密验证系统
+    if bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "紧急绕过验证" "宿主机依赖安装绕过"; then
+        echo "🟡 加密验证通过，允许宿主机依赖安装"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_AUTHENTICATED | $command_full" >> "$LOG_FILE"
         return 0
     else
-        echo "❌ 操作被取消 - 请使用Docker容器进行依赖管理！"
+        echo "❌ 验证失败 - 请使用Docker容器进行依赖管理！"
         echo "💡 推荐命令：docker-compose exec [service] $command_full"
         exit 1
     fi

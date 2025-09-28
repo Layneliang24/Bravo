@@ -124,7 +124,7 @@ show_host_dependency_warning() {
     echo ""
     echo "⚠️  紧急情况绕过（极度不推荐）："
     echo "   export ALLOW_HOST_DEPENDENCY_INSTALL=true"
-    echo "   或输入紧急确认码：DOCKER_NATIVE_BYPASS"
+    echo "   或通过加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -137,10 +137,12 @@ show_host_dependency_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 加密密码验证（替代简单确认码）
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
+    echo "🔐 紧急绕过需要加密验证"
+    
+    # 使用统一的加密验证系统
+    if bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "Git绕过验证" "宿主机依赖安装绕过"; then
         echo "🟡 紧急绕过确认，允许宿主机依赖安装"
         echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
         return 0
@@ -189,7 +191,7 @@ show_protected_branch_warning() {
     echo ""
     echo "⚠️  紧急情况绕过（极度不推荐）："
     echo "   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true"
-    echo "   或输入紧急确认码：HOTFIX_EMERGENCY_BYPASS"
+    echo "   或通过加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -202,15 +204,17 @@ show_protected_branch_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 加密密码验证（替代简单确认码）
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "HOTFIX_EMERGENCY_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许继续操作"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
+    echo "🔐 保护分支操作需要加密验证"
+    
+    # 使用统一的加密验证系统
+    if bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "保护分支操作" "受保护分支$operation"; then
+        echo "🟡 加密验证通过，允许继续操作"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_AUTHENTICATED | $operation | $command_full" >> "$LOG_FILE"
         return 0
     else
-        echo "❌ 操作被取消 - 请切换到feature分支进行开发！"
+        echo "❌ 验证失败 - 请切换到feature分支进行开发！"
         echo "💡 推荐命令：git checkout -b feature/$(whoami)-$(date +%m%d)"
         exit 1
     fi
@@ -366,7 +370,7 @@ show_skip_bypass_warning() {
     echo ""
     echo "⚠️  紧急绕过（需要强制理由）："
     echo "   export ALLOW_QUALITY_BYPASS=true"
-    echo "   或输入紧急确认码：QUALITY_BYPASS_2024"
+    echo "   或通过加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -379,15 +383,17 @@ show_skip_bypass_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 加密密码验证（替代简单确认码）
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "QUALITY_BYPASS_2024" ]]; then
-        echo "🟡 紧急绕过确认，记录此次绕过"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
+    echo "🔐 质量检查绕过需要加密验证"
+    
+    # 使用统一的加密验证系统  
+    if bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "质量检查绕过" "代码质量检查绕过"; then
+        echo "🟡 加密验证通过，记录此次绕过"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_AUTHENTICATED | $command_full" >> "$LOG_FILE"
         return 0
     else
-        echo "❌ 操作被取消 - 请修复质量检查问题后重新提交！"
+        echo "❌ 验证失败 - 请修复质量检查问题后重新提交！"
         echo "💡 建议：仔细阅读pre-commit输出的错误信息并逐一修复"
         exit 1
     fi
@@ -468,7 +474,7 @@ show_passport_warning() {
     echo "   ./passport      # 检查状态"
     echo ""
     echo "⚠️  紧急绕过（极度不推荐，需要人工验证）："
-    echo "   多重人工验证：日期 + 数学题 + 风险确认"
+    echo "   加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
