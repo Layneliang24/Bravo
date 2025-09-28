@@ -1,7 +1,7 @@
 #!/bin/bash
 # 🐍 代码质量检查包装脚本
 # 用途：避免pre-commit命名混乱，提供清晰的代码质量检查入口
-# 
+#
 # 这个脚本替代原来的 "pre-commit run" 命令
 # 使用重命名的配置文件 .code-quality-config.yaml
 
