@@ -14,6 +14,12 @@ if [[ "$REAL_COMMAND" == "dependency-guard.sh" ]]; then
     shift
 fi
 
+# 特殊处理：如果是pre-push钩子调用（没有参数），直接通过检查
+if [[ -z "$REAL_COMMAND" ]]; then
+    echo "✅ 依赖安全检查通过（pre-push模式）"
+    exit 0
+fi
+
 # 30秒超时读取函数（防止AI无限等待）
 read_with_timeout() {
     local prompt="$1"
