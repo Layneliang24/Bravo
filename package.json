@@ -43,7 +43,6 @@
     "install:all": "npm ci --prefer-offline --no-audit",
     "postinstall:disabled": "npm run e2e:install",
     "prepare": "node -e \"if (process.env.CI) process.exit(0); try { require('child_process').execSync('npx husky install', {stdio: 'inherit'}); } catch (e) { console.log('Husky install skipped'); }\"",
-    "sync-hooks": "bash scripts/auto-sync-hooks.sh",
     "code-quality": "bash scripts/code-quality-check.sh",
     "check:syntax": "node scripts/check-syntax.js"
   },

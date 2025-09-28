@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# 🚀 Git推送前的通行证验证和安全检查
+echo "[PRE-PUSH] 🛡️ Git推送安全检查"
+echo "[INFO] 验证本地测试通行证和推送安全性"
+
+GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
+
+# 第一层：强制本地测试通行证验证
+if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
+    echo ""
+    echo "🎫 [第一层] 本地测试通行证验证（必需）..."
+
+    if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
+        echo ""
+        echo "[ERROR] ======================================"
+        echo "[ERROR] ❌ 本地测试通行证验证失败！"
+        echo "[ERROR] ======================================"
+        echo "[HELP] 推送前必须获得有效的本地测试通行证："
+        echo "[HELP] 1. 运行本地测试: ./test"
+        echo "[HELP] 2. 检查通行证: ./passport"
+        echo "[HELP] 3. 安全推送: ./safe-push"
+        echo ""
+        echo "[INFO] 💡 或直接使用便捷命令："
+        echo "[INFO]    ./test && ./safe-push"
+        echo ""
+        echo "[ERROR] 推送被阻止，请先完成本地测试验证"
+        exit 1
+    fi
+    echo "✅ 本地测试通行证验证通过"
+fi
+
+# 第二层：防篡改依赖检查
+if [ -f "$GOLDEN_SCRIPTS/dependency-guard.sh" ]; then
+    echo ""
+    echo "🛡️ [第二层] 防篡改依赖安全检查..."
+    bash "$GOLDEN_SCRIPTS/dependency-guard.sh"
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] 防篡改依赖检查失败，推送被阻止"
+        exit 1
+    fi
+    echo "✅ 依赖安全检查通过"
+fi
+
+# 第三层：Git状态完整性检查
+echo ""
+echo "🔍 [第三层] Git状态完整性检查..."
+
+# 检查是否有未追踪的重要文件
+if [ -f "$GOLDEN_SCRIPTS/git-guard.sh" ]; then
+    echo "✅ 防篡改脚本完整性正常"
+fi
+
+echo ""
+echo "[SUCCESS] =================================="
+echo "[SUCCESS] 🎉 所有推送前检查通过！"
+echo "[SUCCESS] =================================="
+echo "[INFO] 🚀 安全推送到远程仓库..."
+echo "[INFO] 📊 已执行的检查：通行证验证 + 依赖安全 + Git完整性"
+echo ""

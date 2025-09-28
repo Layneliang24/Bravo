@@ -237,7 +237,7 @@ class LocalTestPassport:
             self.log("🚀 运行GitHub Actions模拟...")
             # 确保在正确的工作目录中执行
             result = subprocess.run(
-                ["bash", f"scripts-golden/run_github_actions_simulation_simple.sh"],
+                ["bash", "scripts-golden/run_github_actions_simulation_simple.sh"],
                 capture_output=True,
                 text=True,
                 timeout=300,  # 5分钟超时

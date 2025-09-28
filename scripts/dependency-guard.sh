@@ -45,6 +45,11 @@ show_host_dependency_warning() {
     case "$command_full" in
         npm*|yarn*|pnpm*|node*) container_name="frontend" ;;
         pip*|python*) container_name="backend" ;;
+        go*) container_name="go-service" ;;
+        cargo*) container_name="rust-service" ;;
+        gem*) container_name="ruby-service" ;;
+        mvn*|gradle*) container_name="java-service" ;;
+        conda*|mamba*) container_name="python-env" ;;
         *) container_name="适当的" ;;
     esac
     echo "   docker-compose exec $container_name $command_full"
@@ -96,6 +101,36 @@ case "$REAL_COMMAND" in
     python|python3)
         # 拦截所有python命令，引导到Docker容器
         show_host_dependency_warning "$command_full" "Python执行环境违规"
+        ;;
+    go)
+        if [[ "$args" =~ (^|[[:space:]])(get|install|mod[[:space:]]+tidy|mod[[:space:]]+download)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Go包管理违规"
+        fi
+        ;;
+    cargo)
+        if [[ "$args" =~ (^|[[:space:]])(install|add|build)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Rust包管理违规"
+        fi
+        ;;
+    gem)
+        if [[ "$args" =~ (^|[[:space:]])(install|update)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Ruby包管理违规"
+        fi
+        ;;
+    mvn)
+        if [[ "$args" =~ (^|[[:space:]])(install|compile|package)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Maven构建违规"
+        fi
+        ;;
+    gradle)
+        if [[ "$args" =~ (^|[[:space:]])(build|install|assemble)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Gradle构建违规"
+        fi
+        ;;
+    conda|mamba)
+        if [[ "$args" =~ (^|[[:space:]])(install|create|env)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Conda环境管理违规"
+        fi
         ;;
     source)
         # 拦截source命令，避免激活宿主机虚拟环境
@@ -149,10 +184,13 @@ case "$REAL_COMMAND" in
     npm)
         real_command_path="$(command -v npm.cmd 2>/dev/null || command -v npm 2>/dev/null | grep -v dependency-guard)"
         ;;
-    pip|pip3)
+    pip|pip3|python|python3)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
         ;;
-    python|python3)
+    go|cargo|gem|mvn|gradle)
+        real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
+        ;;
+    conda|mamba)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
         ;;
     source)
