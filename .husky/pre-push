@@ -10,7 +10,7 @@ GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
     echo ""
     echo "🎫 [第一层] 本地测试通行证验证（必需）..."
-    
+
     if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
         echo ""
         echo "[ERROR] ======================================"
@@ -53,7 +53,7 @@ fi
 
 echo ""
 echo "[SUCCESS] =================================="
-echo "[SUCCESS] 🎉 所有推送前检查通过！"  
+echo "[SUCCESS] 🎉 所有推送前检查通过！"
 echo "[SUCCESS] =================================="
 echo "[INFO] 🚀 安全推送到远程仓库..."
 echo "[INFO] 📊 已执行的检查：通行证验证 + 依赖安全 + Git完整性"
