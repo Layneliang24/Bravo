@@ -1,0 +1,10 @@
+#!/bin/bash
+# PIP PATH拦截器 - 拦截所有pip调用（包括绝对路径）
+# 这个脚本将被放置在PATH的最前面来拦截所有pip调用
+
+# 获取项目根目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# 调用统一的dependency-guard.sh处理
+exec bash "$PROJECT_ROOT/scripts/dependency-guard.sh" pip "$@"

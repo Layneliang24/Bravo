@@ -4,41 +4,48 @@ name: Cache Strategy
 on:
   workflow_call:
     inputs:
-      cache-key:
+      cache-type:
         required: true
         type: string
-      cache-paths:
-        required: true
+        description: "缓存类型: dependencies, playwright, test-results"
+      cache-scope:
+        required: false
         type: string
+        default: "full"
+        description: "缓存范围: full, frontend, backend, e2e"
 
 jobs:
   setup-cache:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-            frontend/dist
-            e2e/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - uses: actions/checkout@v4
 
-      - name: Setup Python Cache
+      - name: Setup Dependencies Cache
+        if: inputs.cache-type == 'dependencies' || inputs.cache-type == 'full'
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
+            node_modules
             backend/.venv
-            backend/htmlcov
-          key: ${{ runner.os }}-python-${{ hashFiles('backend/requirements/**/*.txt') }}
+            frontend/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt') }}
           restore-keys: |
-            ${{ runner.os }}-python-
+            deps-${{ runner.os }}-
+
+      - name: Setup Playwright Cache
+        if: inputs.cache-type == 'playwright' || inputs.cache-type == 'full'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            e2e/node_modules
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       - name: Setup Test Results Cache
+        if: inputs.cache-type == 'test-results' || inputs.cache-type == 'full'
         uses: actions/cache@v4
         with:
           path: |
@@ -46,6 +53,19 @@ jobs:
             frontend/coverage
             e2e/test-results
             e2e/playwright-report
-          key: ${{ runner.os }}-test-results-${{ github.sha }}
+          key: test-results-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-test-results-
+            test-results-${{ runner.os }}-
+
+      - name: Install Missing Dependencies
+        if: inputs.cache-type == 'playwright'
+        run: |
+          echo "🎭 检查并安装Playwright浏览器..."
+          if [ ! -d "$HOME/.cache/ms-playwright" ] || [ -z "$(ls -A $HOME/.cache/ms-playwright 2>/dev/null)" ]; then
+            echo "📦 Playwright浏览器缓存不存在，开始安装..."
+            cd e2e && npm ci --prefer-offline --no-audit
+            npx playwright install chromium
+            echo "✅ Playwright浏览器安装完成"
+          else
+            echo "✅ Playwright浏览器缓存已存在，跳过安装"
+          fi

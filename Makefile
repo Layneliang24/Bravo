@@ -142,3 +142,36 @@ move-clutter: ## 将根目录误放文件按类型归档至对应目录
 	else \
 		echo "✨ 未发现违规文件"; \
 	fi
+
+# ========== Cursor AI保护系统 ==========
+.PHONY: test test-quick test-check passport passport-force safe-push setup-protection
+
+test:
+	@bash scripts/one_click_test.sh
+
+test-quick:
+	@bash scripts/one_click_test.sh --quick
+
+test-check:
+	@bash scripts/one_click_test.sh --check
+
+passport:
+	@python3 scripts/local_test_passport.py --check
+
+passport-force:
+	@python3 scripts/local_test_passport.py --force
+
+safe-push:
+	@bash scripts/git-guard.sh push origin $$(git branch --show-current)
+
+setup-protection:
+	@bash scripts/setup_cursor_protection.sh
+
+cursor-help:
+	@echo "🚀 Cursor AI保护系统命令"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  make test        - 运行本地测试并生成推送通行证"
+	@echo "  make test-quick  - 快速测试"
+	@echo "  make passport    - 检查通行证状态"
+	@echo "  make safe-push   - 安全推送"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

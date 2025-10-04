@@ -1,0 +1,644 @@
+name: "Scheduled Tasks Pipeline"
+
+on:
+  schedule:
+    # 每日凌晨2点运行完整回归测试
+    - cron: "0 2 * * *"
+    # 每周一凌晨3点运行安全扫描
+    - cron: "0 3 * * 1"
+    # 每月1号凌晨4点运行依赖更新检查
+    - cron: "0 4 1 * *"
+  workflow_dispatch:
+    inputs:
+      task-type:
+        description: "Type of scheduled task to run"
+        type: choice
+        options:
+          - regression-tests
+          - security-scan
+          - dependency-update
+          - performance-baseline
+          - all
+        default: all
+      target-branch:
+        description: "Target branch for testing"
+        type: choice
+        options:
+          - dev
+          - main
+        default: dev
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # 确定要执行的任务
+  determine-tasks:
+    name: "Determine Scheduled Tasks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      run-regression: ${{ steps.tasks.outputs.run-regression }}
+      run-security: ${{ steps.tasks.outputs.run-security }}
+      run-dependency: ${{ steps.tasks.outputs.run-dependency }}
+      run-performance: ${{ steps.tasks.outputs.run-performance }}
+      target-branch: ${{ steps.tasks.outputs.target-branch }}
+
+    steps:
+      - name: Determine Tasks to Run
+        id: tasks
+        run: |
+          echo "📅 Determining scheduled tasks to execute..."
+
+          TASK_TYPE="${{ github.event.inputs.task-type }}"
+          TARGET_BRANCH="${{ github.event.inputs.target-branch }}"
+
+          # 如果是通过schedule触发，根据时间确定任务
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            CURRENT_HOUR=$(date +%H)
+            CURRENT_DAY=$(date +%u)  # 1=Monday, 7=Sunday
+            CURRENT_DATE=$(date +%d)
+
+            echo "Current time: Hour=$CURRENT_HOUR, Day=$CURRENT_DAY, Date=$CURRENT_DATE"
+
+            if [[ "$CURRENT_HOUR" == "02" ]]; then
+              TASK_TYPE="regression-tests"
+              TARGET_BRANCH="dev"
+              echo "🧪 Daily regression tests scheduled"
+            elif [[ "$CURRENT_HOUR" == "03" && "$CURRENT_DAY" == "1" ]]; then
+              TASK_TYPE="security-scan"
+              TARGET_BRANCH="dev"
+              echo "🔐 Weekly security scan scheduled"
+            elif [[ "$CURRENT_HOUR" == "04" && "$CURRENT_DATE" == "01" ]]; then
+              TASK_TYPE="dependency-update"
+              TARGET_BRANCH="dev"
+              echo "📦 Monthly dependency update scheduled"
+            else
+              TASK_TYPE="all"
+              TARGET_BRANCH="dev"
+              echo "🔄 Default: All tasks scheduled"
+            fi
+          fi
+
+          # 默认值
+          if [[ -z "$TARGET_BRANCH" ]]; then
+            TARGET_BRANCH="dev"
+          fi
+
+          echo "target-branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+
+          # 确定要运行的任务
+          case "$TASK_TYPE" in
+            "regression-tests")
+              echo "run-regression=true" >> $GITHUB_OUTPUT
+              echo "run-security=false" >> $GITHUB_OUTPUT
+              echo "run-dependency=false" >> $GITHUB_OUTPUT
+              echo "run-performance=false" >> $GITHUB_OUTPUT
+              ;;
+            "security-scan")
+              echo "run-regression=false" >> $GITHUB_OUTPUT
+              echo "run-security=true" >> $GITHUB_OUTPUT
+              echo "run-dependency=false" >> $GITHUB_OUTPUT
+              echo "run-performance=false" >> $GITHUB_OUTPUT
+              ;;
+            "dependency-update")
+              echo "run-regression=false" >> $GITHUB_OUTPUT
+              echo "run-security=false" >> $GITHUB_OUTPUT
+              echo "run-dependency=true" >> $GITHUB_OUTPUT
+              echo "run-performance=false" >> $GITHUB_OUTPUT
+              ;;
+            "performance-baseline")
+              echo "run-regression=false" >> $GITHUB_OUTPUT
+              echo "run-security=false" >> $GITHUB_OUTPUT
+              echo "run-dependency=false" >> $GITHUB_OUTPUT
+              echo "run-performance=true" >> $GITHUB_OUTPUT
+              ;;
+            "all")
+              echo "run-regression=true" >> $GITHUB_OUTPUT
+              echo "run-security=true" >> $GITHUB_OUTPUT
+              echo "run-dependency=true" >> $GITHUB_OUTPUT
+              echo "run-performance=true" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+          echo "Task configuration:"
+          echo "  Target branch: $TARGET_BRANCH"
+          echo "  Task type: $TASK_TYPE"
+
+  # 每日回归测试
+  daily-regression-tests:
+    name: "Daily Regression Tests"
+    needs: determine-tasks
+    if: needs.determine-tasks.outputs.run-regression == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test-scope: ["critical", "integration", "e2e"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.determine-tasks.outputs.target-branch }}
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Run Regression Test Suite
+        run: |
+          echo "🧪 Running ${{ matrix.test-scope }} regression tests..."
+
+          case "${{ matrix.test-scope }}" in
+            "critical")
+              echo "Running critical path tests..."
+              cd backend && source .venv/bin/activate
+              python -m pytest tests/ -m "critical" --maxfail=5 --tb=short
+              ;;
+            "integration")
+              echo "Running integration regression tests..."
+              cd backend && source .venv/bin/activate
+              python -m pytest tests/integration/ --maxfail=3 --tb=short
+              ;;
+            "e2e")
+              echo "Running E2E regression tests..."
+              # 使用containerized E2E测试
+              docker compose -f docker-compose.test.yml up --build -d
+              sleep 15
+              E2E_CID=$(docker compose -f docker-compose.test.yml ps -q e2e-tests)
+              if [ -n "$E2E_CID" ]; then
+                E2E_EXIT_CODE=$(docker wait "$E2E_CID" 2>/dev/null || echo "1")
+                echo "E2E exit code: $E2E_EXIT_CODE"
+              else
+                E2E_EXIT_CODE=1
+              fi
+              docker compose -f docker-compose.test.yml down
+              exit $E2E_EXIT_CODE
+              ;;
+          esac
+
+          echo "✅ ${{ matrix.test-scope }} regression tests completed"
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:7-alpine
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 6379:6379
+
+  # 每周安全扫描
+  weekly-security-scan:
+    name: "Weekly Security Scan"
+    needs: determine-tasks
+    if: needs.determine-tasks.outputs.run-security == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.determine-tasks.outputs.target-branch }}
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Comprehensive Security Scan
+        run: |
+          echo "🔐 Running comprehensive security scan..."
+
+          # 创建报告目录
+          mkdir -p reports/security/weekly
+
+          # 1. 依赖漏洞扫描
+          echo "Scanning dependencies for vulnerabilities..."
+          npm audit --audit-level=low --json > reports/security/weekly/npm-audit.json || true
+
+          cd backend && source .venv/bin/activate
+          pip install safety bandit semgrep
+
+          # Python依赖安全扫描
+          safety check --json --output ../reports/security/weekly/safety-report.json || true
+
+          # 2. 代码安全扫描
+          echo "Scanning code for security issues..."
+          bandit -r . \
+            -f json \
+            -o ../reports/security/weekly/bandit-report.json \
+            --exclude ./migrations,./venv,./.venv \
+            || true
+
+          # 3. 使用semgrep进行高级扫描
+          echo "Running semgrep security rules..."
+          semgrep --config=auto --json --output=../reports/security/weekly/semgrep-report.json . || true
+
+          cd ..
+
+          # 4. 检查敏感信息泄露
+          echo "Checking for sensitive information leaks..."
+          {
+            echo "Searching for potential secrets..."
+            find . -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.vue" | \
+            xargs grep -l "password\|secret\|key\|token" | \
+            grep -v test | grep -v migration || true
+          } > reports/security/weekly/sensitive-files.txt
+
+          # 5. 生成安全报告摘要
+          echo "Generating security summary..."
+          cat > reports/security/weekly/security-summary.md << EOF
+          # Weekly Security Scan Report
+
+          **Date**: $(date)
+          **Branch**: ${{ needs.determine-tasks.outputs.target-branch }}
+          **Commit**: ${{ github.sha }}
+
+          ## Scan Results
+
+          ### NPM Audit
+          \`\`\`bash
+          $(npm audit --audit-level=low 2>&1 | head -20)
+          \`\`\`
+
+          ### Python Safety Check
+          \`\`\`bash
+          $(cd backend && source .venv/bin/activate && safety check 2>&1 | head -20)
+          \`\`\`
+
+          ### Bandit Code Scan
+          \`\`\`bash
+          $(cd backend && source .venv/bin/activate && bandit -r . --exclude ./migrations,./venv,./.venv 2>&1 | tail -10)
+          \`\`\`
+
+          ## Recommendations
+
+          1. Review and fix high/critical vulnerabilities
+          2. Update dependencies with known vulnerabilities
+          3. Remove any hardcoded secrets
+          4. Implement automated security scanning in CI/CD
+
+          EOF
+
+          echo "✅ Weekly security scan completed"
+
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-security-scan-${{ github.run_number }}
+          path: reports/security/weekly/
+          retention-days: 30
+
+      - name: Check for Critical Issues
+        run: |
+          echo "🚨 Checking for critical security issues..."
+
+          # 检查npm audit是否有critical/high漏洞
+          CRITICAL_NPM=$(npm audit --audit-level=high --json 2>/dev/null | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH_NPM=$(npm audit --audit-level=high --json 2>/dev/null | jq '.metadata.vulnerabilities.high // 0')
+
+          echo "NPM Critical vulnerabilities: $CRITICAL_NPM"
+          echo "NPM High vulnerabilities: $HIGH_NPM"
+
+          if [[ "$CRITICAL_NPM" -gt 0 || "$HIGH_NPM" -gt 5 ]]; then
+            echo "❌ Critical security issues detected in dependencies!"
+            echo "Please address these vulnerabilities immediately."
+            exit 1
+          fi
+
+          echo "✅ No critical security issues detected"
+
+  # 每月依赖更新检查
+  monthly-dependency-update:
+    name: "Monthly Dependency Update Check"
+    needs: determine-tasks
+    if: needs.determine-tasks.outputs.run-dependency == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.determine-tasks.outputs.target-branch }}
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Check for Dependency Updates
+        run: |
+          echo "📦 Checking for dependency updates..."
+
+          # 创建报告目录
+          mkdir -p reports/dependencies/monthly
+
+          # 1. 检查npm依赖更新
+          echo "Checking npm dependencies..."
+          npx npm-check-updates --format json > reports/dependencies/monthly/npm-updates.json || true
+          npx npm-check-updates > reports/dependencies/monthly/npm-updates.txt || true
+
+          # 2. 检查Python依赖更新
+          echo "Checking Python dependencies..."
+          cd backend && source .venv/bin/activate
+          pip install pip-check pip-review
+
+          pip-check --format json > ../reports/dependencies/monthly/pip-check.json || true
+          pip list --outdated --format json > ../reports/dependencies/monthly/pip-outdated.json || true
+
+          cd ..
+
+          # 3. 生成依赖更新报告
+          cat > reports/dependencies/monthly/dependency-report.md << EOF
+          # Monthly Dependency Update Report
+
+          **Date**: $(date)
+          **Branch**: ${{ needs.determine-tasks.outputs.target-branch }}
+
+          ## NPM Dependencies
+
+          ### Available Updates:
+          \`\`\`
+          $(cat reports/dependencies/monthly/npm-updates.txt | head -30)
+          \`\`\`
+
+          ## Python Dependencies
+
+          ### Outdated Packages:
+          \`\`\`
+          $(cd backend && source .venv/bin/activate && pip list --outdated | head -20)
+          \`\`\`
+
+          ## Recommendations
+
+          1. Review major version updates carefully
+          2. Test updates in development environment
+          3. Check for breaking changes in changelogs
+          4. Update dependencies incrementally
+          5. Run full test suite after updates
+
+          ## Security Updates
+
+          Priority should be given to packages with known security vulnerabilities.
+
+          EOF
+
+          echo "✅ Dependency update check completed"
+
+      - name: Upload Dependency Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-dependency-report-${{ github.run_number }}
+          path: reports/dependencies/monthly/
+          retention-days: 90
+
+      - name: Create Dependency Update Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              const reportContent = fs.readFileSync('reports/dependencies/monthly/dependency-report.md', 'utf8');
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📦 Monthly Dependency Update Report - ${new Date().toISOString().slice(0, 7)}`,
+                body: reportContent,
+                labels: ['dependencies', 'maintenance', 'scheduled']
+              });
+
+              console.log('Dependency update issue created successfully');
+            } catch (error) {
+              console.log('Error creating issue:', error.message);
+            }
+
+  # 性能基准测试
+  performance-baseline:
+    name: "Performance Baseline Testing"
+    needs: determine-tasks
+    if: needs.determine-tasks.outputs.run-performance == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.determine-tasks.outputs.target-branch }}
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Build for Performance Testing
+        run: |
+          echo "🏗️ Building optimized version for performance testing..."
+          npm run build:frontend
+
+      - name: Run Performance Benchmarks
+        run: |
+          echo "⚡ Running performance benchmarks..."
+
+          # 创建性能报告目录
+          mkdir -p reports/performance
+
+          # 1. Lighthouse性能测试
+          echo "Running Lighthouse performance audit..."
+          cat > lighthouserc.performance.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "staticDistDir": "./frontend/dist",
+                "url": ["index.html"],
+                "numberOfRuns": 5,
+                "settings": {
+                  "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless",
+                  "maxWaitForFcp": 30000,
+                  "maxWaitForLoad": 60000,
+                  "throttlingMethod": "simulate",
+                  "emulatedFormFactor": "desktop"
+                }
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": 0.8}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+
+          npx lhci autorun --config=lighthouserc.performance.json || echo "Performance audit completed"
+
+          # 2. Bundle分析
+          echo "Analyzing bundle size..."
+          cd frontend
+          npm run analyze || npm run build:analyze || echo "Bundle analysis not available"
+          cd ..
+
+          # 3. 生成性能报告
+          cat > reports/performance/performance-baseline.md << EOF
+          # Performance Baseline Report
+
+          **Date**: $(date)
+          **Branch**: ${{ needs.determine-tasks.outputs.target-branch }}
+          **Commit**: ${{ github.sha }}
+
+          ## Frontend Performance
+
+          ### Bundle Size Analysis
+          - Total bundle size: $(du -sh frontend/dist | cut -f1)
+          - Main JS bundle: $(find frontend/dist -name "*.js" -type f -exec du -ch {} + | grep total | cut -f1)
+          - CSS files: $(find frontend/dist -name "*.css" -type f -exec du -ch {} + | grep total | cut -f1)
+
+          ### Performance Metrics
+          - Lighthouse Performance Score: See artifacts
+          - First Contentful Paint: TBD
+          - Largest Contentful Paint: TBD
+          - Time to Interactive: TBD
+
+          ## Backend Performance
+
+          ### API Response Times
+          - Health check endpoint: TBD
+          - Authentication endpoint: TBD
+          - Main data endpoints: TBD
+
+          ## Recommendations
+
+          1. Monitor bundle size growth
+          2. Optimize images and assets
+          3. Implement code splitting
+          4. Use performance budgets
+          5. Regular performance monitoring
+
+          EOF
+
+          echo "✅ Performance baseline testing completed"
+
+      - name: Upload Performance Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline-${{ github.run_number }}
+          path: |
+            reports/performance/
+            .lighthouseci/
+          retention-days: 30
+
+  # 任务执行总结
+  scheduled-tasks-summary:
+    name: "Scheduled Tasks Summary"
+    needs:
+      [
+        determine-tasks,
+        daily-regression-tests,
+        weekly-security-scan,
+        monthly-dependency-update,
+        performance-baseline,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Summary Report
+        run: |
+          echo "## 📅 Scheduled Tasks Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Execution Date**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch**: ${{ needs.determine-tasks.outputs.target-branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查各任务执行结果
+          REGRESSION_RESULT="${{ needs.daily-regression-tests.result }}"
+          SECURITY_RESULT="${{ needs.weekly-security-scan.result }}"
+          DEPENDENCY_RESULT="${{ needs.monthly-dependency-update.result }}"
+          PERFORMANCE_RESULT="${{ needs.performance-baseline.result }}"
+
+          echo "**Task Execution Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Task | Scheduled | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Regression Tests | ${{ needs.determine-tasks.outputs.run-regression }} | $REGRESSION_RESULT | ~45min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.determine-tasks.outputs.run-security }} | $SECURITY_RESULT | ~30min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Update | ${{ needs.determine-tasks.outputs.run-dependency }} | $DEPENDENCY_RESULT | ~20min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance Baseline | ${{ needs.determine-tasks.outputs.run-performance }} | $PERFORMANCE_RESULT | ~25min |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 计算总体健康状态
+          TASKS_PASSED=0
+          TASKS_TOTAL=0
+
+          if [[ "${{ needs.determine-tasks.outputs.run-regression }}" == "true" ]]; then
+            TASKS_TOTAL=$((TASKS_TOTAL + 1))
+            if [[ "$REGRESSION_RESULT" == "success" ]]; then
+              TASKS_PASSED=$((TASKS_PASSED + 1))
+            fi
+          fi
+
+          if [[ "${{ needs.determine-tasks.outputs.run-security }}" == "true" ]]; then
+            TASKS_TOTAL=$((TASKS_TOTAL + 1))
+            if [[ "$SECURITY_RESULT" == "success" ]]; then
+              TASKS_PASSED=$((TASKS_PASSED + 1))
+            fi
+          fi
+
+          if [[ "${{ needs.determine-tasks.outputs.run-dependency }}" == "true" ]]; then
+            TASKS_TOTAL=$((TASKS_TOTAL + 1))
+            if [[ "$DEPENDENCY_RESULT" == "success" ]]; then
+              TASKS_PASSED=$((TASKS_PASSED + 1))
+            fi
+          fi
+
+          if [[ "${{ needs.determine-tasks.outputs.run-performance }}" == "true" ]]; then
+            TASKS_TOTAL=$((TASKS_TOTAL + 1))
+            if [[ "$PERFORMANCE_RESULT" == "success" ]]; then
+              TASKS_PASSED=$((TASKS_PASSED + 1))
+            fi
+          fi
+
+          HEALTH_PERCENTAGE=$((TASKS_PASSED * 100 / TASKS_TOTAL))
+
+          echo "**Overall Health**: $TASKS_PASSED/$TASKS_TOTAL tasks passed ($HEALTH_PERCENTAGE%)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ $HEALTH_PERCENTAGE -ge 80 ]]; then
+            echo "✅ **System Health: GOOD**" >> $GITHUB_STEP_SUMMARY
+            echo "All critical scheduled tasks completed successfully." >> $GITHUB_STEP_SUMMARY
+          elif [[ $HEALTH_PERCENTAGE -ge 60 ]]; then
+            echo "⚠️ **System Health: WARNING**" >> $GITHUB_STEP_SUMMARY
+            echo "Some scheduled tasks failed. Please review and address issues." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **System Health: CRITICAL**" >> $GITHUB_STEP_SUMMARY
+            echo "Multiple scheduled tasks failed. Immediate attention required." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Available Reports:" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results and coverage reports" >> $GITHUB_STEP_SUMMARY
+          echo "- Security scan findings" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency update recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance baseline metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔔 Next Scheduled Runs:" >> $GITHUB_STEP_SUMMARY
+          echo "- Daily regression: Every day at 02:00 UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- Weekly security: Every Monday at 03:00 UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- Monthly dependencies: 1st of each month at 04:00 UTC" >> $GITHUB_STEP_SUMMARY

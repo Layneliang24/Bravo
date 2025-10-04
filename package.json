@@ -24,6 +24,7 @@
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && pylint apps/ --rcfile=.pylintrc",
+    "type-check": "cd frontend && npm run type-check",
     "format": "npm run format:frontend && npm run format:backend",
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && black . && isort .",
@@ -42,6 +43,7 @@
     "install:all": "npm ci --prefer-offline --no-audit",
     "postinstall:disabled": "npm run e2e:install",
     "prepare": "node -e \"if (process.env.CI) process.exit(0); try { require('child_process').execSync('npx husky install', {stdio: 'inherit'}); } catch (e) { console.log('Husky install skipped'); }\"",
+    "code-quality": "bash scripts/code-quality-check.sh",
     "check:syntax": "node scripts/check-syntax.js"
   },
   "devDependencies": {
@@ -58,8 +60,8 @@
     "glob": "^11.0.0",
     "husky": "^9.1.7",
     "is-ci": "^3.0.1",
-    "jsdom": "^26.1.0",
     "jscpd": "^4.0.5",
+    "jsdom": "^26.1.0",
     "lint-staged": "^16.1.6",
     "nyc": "^17.1.0",
     "pinia": "^3.0.3",
@@ -107,6 +109,8 @@
   "homepage": "https://github.com/your-username/bravo#readme",
   "dependencies": {
     "eslint": "^8.57.1",
-    "eslint-scope": "^8.4.0"
+    "eslint-scope": "^8.4.0",
+    "react": "^19.1.1",
+    "vue": "^3.5.22"
   }
 }

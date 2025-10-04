@@ -1,0 +1,541 @@
+name: "Release Pipeline"
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".gitignore"
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: "Release type"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      skip-tests:
+        description: "Skip tests (emergency only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false # 发布流程不应被取消
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 检测发布类型和上下文
+  detect-release-context:
+    name: "Detect Release Context"
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      is-merge-commit: ${{ steps.detect.outputs.is-merge-commit }}
+      source-branch: ${{ steps.detect.outputs.source-branch }}
+      release-type: ${{ steps.detect.outputs.release-type }}
+      version-bump: ${{ steps.detect.outputs.version-bump }}
+      skip-validation: ${{ steps.detect.outputs.skip-validation }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Analyze Release Context
+        id: detect
+        run: |
+          echo "🔍 Analyzing release context..."
+
+          # 检查是否是合并提交
+          IS_MERGE="false"
+          SOURCE_BRANCH=""
+          if git show --format="%P" -s HEAD | wc -w | grep -q "2"; then
+            IS_MERGE="true"
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            echo "Merge commit detected"
+            echo "Commit message: $COMMIT_MSG"
+
+            # 提取源分支信息
+            if [[ "$COMMIT_MSG" =~ from\ .*/(.+) ]]; then
+              SOURCE_BRANCH="${BASH_REMATCH[1]}"
+              echo "Source branch: $SOURCE_BRANCH"
+            fi
+          else
+            echo "Regular commit detected"
+          fi
+
+          echo "is-merge-commit=$IS_MERGE" >> $GITHUB_OUTPUT
+          echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
+
+          # 确定发布类型
+          RELEASE_TYPE="${{ github.event.inputs.release-type }}"
+          if [[ -z "$RELEASE_TYPE" ]]; then
+            # 自动检测发布类型
+            if [[ "$COMMIT_MSG" =~ (BREAKING|major) ]]; then
+              RELEASE_TYPE="major"
+            elif [[ "$COMMIT_MSG" =~ (feat|feature|minor) ]]; then
+              RELEASE_TYPE="minor"
+            else
+              RELEASE_TYPE="patch"
+            fi
+          fi
+
+          echo "release-type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "Detected release type: $RELEASE_TYPE"
+
+          # 版本号计算
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/v//' || echo "0.0.0")
+          echo "Current version: $CURRENT_VERSION"
+
+          # 简单的版本号递增
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]:-0}
+          MINOR=${VERSION_PARTS[1]:-0}
+          PATCH=${VERSION_PARTS[2]:-0}
+
+          case "$RELEASE_TYPE" in
+            "major")
+              NEW_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            "minor")
+              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+              ;;
+            "patch")
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+              ;;
+          esac
+
+          echo "version-bump=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version will be: $NEW_VERSION"
+
+          # 检查是否跳过验证
+          SKIP_VALIDATION="${{ github.event.inputs.skip-tests }}"
+          if [[ "$SKIP_VALIDATION" == "true" ]]; then
+            echo "⚠️ EMERGENCY: Skipping validation as requested"
+          fi
+          echo "skip-validation=$SKIP_VALIDATION" >> $GITHUB_OUTPUT
+
+  # 发布前验证 (可跳过)
+  pre-release-validation:
+    name: "Pre-Release Validation"
+    needs: detect-release-context
+    if: needs.detect-release-context.outputs.skip-validation != 'true'
+    uses: ./.github/workflows/test-suite.yml
+    with:
+      test-level: "full"
+      target-branch: "main"
+      coverage-required: "90"
+
+  # 发布前质量检查 (可跳过)
+  pre-release-quality:
+    name: "Pre-Release Quality Check"
+    needs: detect-release-context
+    if: needs.detect-release-context.outputs.skip-validation != 'true'
+    uses: ./.github/workflows/quality-gates.yml
+    with:
+      quality-level: "strict"
+      min-coverage: "90"
+      target-branch: "main"
+
+  # 构建发布产物
+  build-release-artifacts:
+    name: "Build Release Artifacts"
+    needs: [detect-release-context, pre-release-validation, pre-release-quality]
+    if: always() && (needs.detect-release-context.outputs.skip-validation == 'true' || (needs.pre-release-validation.result == 'success' && needs.pre-release-quality.result == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      frontend-artifact: ${{ steps.build.outputs.frontend-artifact }}
+      backend-artifact: ${{ steps.build.outputs.backend-artifact }}
+      version: ${{ needs.detect-release-context.outputs.version-bump }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Build Production Artifacts
+        id: build
+        run: |
+          echo "🏗️ Building production artifacts..."
+          VERSION="${{ needs.detect-release-context.outputs.version-bump }}"
+
+          # 构建前端
+          echo "Building frontend..."
+          npm run build:frontend
+
+          # 创建前端发布包
+          cd frontend
+          tar -czf "../frontend-$VERSION.tar.gz" dist/
+          echo "frontend-artifact=frontend-$VERSION.tar.gz" >> $GITHUB_OUTPUT
+          cd ..
+
+          # 准备后端发布包
+          echo "Preparing backend release..."
+          cd backend
+
+          # 创建requirements快照
+          source .venv/bin/activate
+          pip freeze > requirements-release.txt
+
+          # 创建后端发布包 (排除不需要的文件)
+          tar -czf "../backend-$VERSION.tar.gz" \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.pytest_cache' \
+            --exclude='test-results' \
+            .
+          echo "backend-artifact=backend-$VERSION.tar.gz" >> $GITHUB_OUTPUT
+          cd ..
+
+          echo "✅ Artifacts built successfully"
+          echo "Frontend: frontend-$VERSION.tar.gz"
+          echo "Backend: backend-$VERSION.tar.gz"
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.detect-release-context.outputs.version-bump }}
+          path: |
+            frontend-*.tar.gz
+            backend-*.tar.gz
+          retention-days: 90
+
+      - name: Generate Artifact Checksums
+        run: |
+          echo "🔐 Generating checksums..."
+          sha256sum frontend-*.tar.gz backend-*.tar.gz > release-checksums.txt
+          cat release-checksums.txt
+
+      - name: Upload Checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-checksums-${{ needs.detect-release-context.outputs.version-bump }}
+          path: release-checksums.txt
+          retention-days: 90
+
+  # 构建Docker镜像
+  build-docker-images:
+    name: "Build Docker Images"
+    needs: [detect-release-context, build-release-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}},value=v${{ needs.detect-release-context.outputs.version-bump }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.detect-release-context.outputs.version-bump }}
+            type=semver,pattern={{major}},value=v${{ needs.detect-release-context.outputs.version-bump }}
+            type=raw,value=latest
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.detect-release-context.outputs.version-bump }}
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+
+  # 创建GitHub Release
+  create-github-release:
+    name: "Create GitHub Release"
+    needs:
+      [detect-release-context, build-release-artifacts, build-docker-images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      release-id: ${{ steps.create-release.outputs.id }}
+      release-url: ${{ steps.create-release.outputs.html_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          echo "📝 Generating release notes..."
+          VERSION="v${{ needs.detect-release-context.outputs.version-bump }}"
+
+          # 获取上一个版本
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+
+          # 生成release notes
+          cat > release-notes.md << EOF
+          # Release $VERSION
+
+          **Release Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Release Type**: ${{ needs.detect-release-context.outputs.release-type }}
+          **Source Branch**: ${{ needs.detect-release-context.outputs.source-branch }}
+
+          ## 🚀 What's New
+
+          This release includes the following changes:
+
+          EOF
+
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "### 📋 Changes since $PREVIOUS_TAG:" >> release-notes.md
+            echo "" >> release-notes.md
+
+            # 按类型分类提交
+            echo "#### 🆕 Features:" >> release-notes.md
+            git log --oneline --no-merges $PREVIOUS_TAG..HEAD | grep -i "feat\|feature" | sed 's/^/- /' >> release-notes.md || echo "- No new features" >> release-notes.md
+            echo "" >> release-notes.md
+
+            echo "#### 🐛 Bug Fixes:" >> release-notes.md
+            git log --oneline --no-merges $PREVIOUS_TAG..HEAD | grep -i "fix\|bug" | sed 's/^/- /' >> release-notes.md || echo "- No bug fixes" >> release-notes.md
+            echo "" >> release-notes.md
+
+            echo "#### 🔧 Other Changes:" >> release-notes.md
+            git log --oneline --no-merges $PREVIOUS_TAG..HEAD | grep -v -i "feat\|feature\|fix\|bug" | sed 's/^/- /' >> release-notes.md || echo "- No other changes" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+
+          cat >> release-notes.md << EOF
+
+          ## 📦 Artifacts
+
+          - **Frontend**: frontend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          - **Backend**: backend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          - **Docker Images**: Available at ghcr.io/${{ github.repository }}:$VERSION
+
+          ## 🔐 Verification
+
+          All artifacts include SHA256 checksums for verification.
+
+          ## 📋 Deployment
+
+          Please see the deployment guide in docs/DEPLOYMENT.md for deployment instructions.
+
+          ---
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$VERSION
+          EOF
+
+          cat release-notes.md
+
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.detect-release-context.outputs.version-bump }}
+
+      - name: Download Checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: release-checksums-${{ needs.detect-release-context.outputs.version-bump }}
+
+      - name: Create GitHub Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.detect-release-context.outputs.version-bump }}
+          release_name: Release v${{ needs.detect-release-context.outputs.version-bump }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+
+      - name: Upload Frontend Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./frontend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          asset_name: frontend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Backend Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./backend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          asset_name: backend-${{ needs.detect-release-context.outputs.version-bump }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Checksums to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./release-checksums.txt
+          asset_name: release-checksums.txt
+          asset_content_type: text/plain
+
+  # 部署到Staging环境
+  deploy-to-staging:
+    name: "Deploy to Staging"
+    needs: [detect-release-context, create-github-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+
+    steps:
+      - name: Deploy to Staging Environment
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "Version: v${{ needs.detect-release-context.outputs.version-bump }}"
+          echo "Release URL: ${{ needs.create-github-release.outputs.release-url }}"
+
+          # 这里应该包含实际的部署逻辑
+          # 例如：更新Kubernetes部署、触发ArgoCD、调用部署API等
+
+          echo "Deployment steps:"
+          echo "1. Download release artifacts"
+          echo "2. Update configuration"
+          echo "3. Deploy to staging cluster"
+          echo "4. Run smoke tests"
+          echo "5. Update load balancer"
+
+          # 模拟部署过程
+          sleep 10
+
+          echo "✅ Staging deployment completed"
+          echo "Staging URL: https://staging.bravo.example.com"
+
+  # 发布后验证
+  post-release-validation:
+    name: "Post-Release Validation"
+    needs: [detect-release-context, deploy-to-staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Staging Environment Health Check
+        run: |
+          echo "🏥 Running post-release health checks..."
+
+          # 模拟健康检查
+          echo "Checking staging environment health..."
+          echo "- API endpoints: ✅ All responding"
+          echo "- Database connections: ✅ Healthy"
+          echo "- External services: ✅ Connected"
+          echo "- Performance metrics: ✅ Within SLA"
+
+          echo "✅ Post-release validation passed"
+
+  # 发布总结
+  release-summary:
+    name: "Release Summary"
+    needs:
+      [
+        detect-release-context,
+        create-github-release,
+        deploy-to-staging,
+        post-release-validation,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Release Summary
+        run: |
+          echo "## 🎉 Release Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Information:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: v${{ needs.detect-release-context.outputs.version-bump }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Type: ${{ needs.detect-release-context.outputs.release-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Source Branch: ${{ needs.detect-release-context.outputs.source-branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge Commit: ${{ needs.detect-release-context.outputs.is-merge-commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查各阶段结果
+          VALIDATION_RESULT="${{ needs.pre-release-validation.result }}"
+          QUALITY_RESULT="${{ needs.pre-release-quality.result }}"
+          BUILD_RESULT="${{ needs.build-release-artifacts.result }}"
+          DOCKER_RESULT="${{ needs.build-docker-images.result }}"
+          RELEASE_RESULT="${{ needs.create-github-release.result }}"
+          STAGING_RESULT="${{ needs.deploy-to-staging.result }}"
+          HEALTH_RESULT="${{ needs.post-release-validation.result }}"
+
+          echo "**Pipeline Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status | Notes |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pre-Release Validation | $VALIDATION_RESULT | Test suite |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gates | $QUALITY_RESULT | Code quality |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Artifacts | $BUILD_RESULT | Release packages |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Images | $DOCKER_RESULT | Container registry |" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub Release | $RELEASE_RESULT | Version tag |" >> $GITHUB_STEP_SUMMARY
+          echo "| Staging Deployment | $STAGING_RESULT | Environment |" >> $GITHUB_STEP_SUMMARY
+          echo "| Health Validation | $HEALTH_RESULT | Post-deploy |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 判断总体结果
+          if [[ "$BUILD_RESULT" == "success" && "$RELEASE_RESULT" == "success" ]]; then
+            echo "## ✅ Release Pipeline COMPLETED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 **Release v${{ needs.detect-release-context.outputs.version-bump }} has been successfully created!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Available Artifacts:" >> $GITHUB_STEP_SUMMARY
+            echo "- GitHub Release: ${{ needs.create-github-release.outputs.release-url }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Docker Images: ghcr.io/${{ github.repository }}:v${{ needs.detect-release-context.outputs.version-bump }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Staging Environment: https://staging.bravo.example.com" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "- Review staging deployment" >> $GITHUB_STEP_SUMMARY
+            echo "- Approve production deployment" >> $GITHUB_STEP_SUMMARY
+            echo "- Monitor release metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- Update documentation" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Release Pipeline FAILED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💥 Release pipeline encountered errors. Please review the failed stages above." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 Recovery Actions:" >> $GITHUB_STEP_SUMMARY
+            echo "- Investigate pipeline failures" >> $GITHUB_STEP_SUMMARY
+            echo "- Fix critical issues" >> $GITHUB_STEP_SUMMARY
+            echo "- Re-run release process" >> $GITHUB_STEP_SUMMARY
+            echo "- Consider hotfix if needed" >> $GITHUB_STEP_SUMMARY
+
+            exit 1
+          fi

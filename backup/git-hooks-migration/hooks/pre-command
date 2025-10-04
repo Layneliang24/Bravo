@@ -1,0 +1,6 @@
+#!/bin/bash
+# Git命令执行前的保护检查
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [[ -f "$PROJECT_ROOT/scripts/git-protection-monitor.sh" ]]; then
+    bash "$PROJECT_ROOT/scripts/git-protection-monitor.sh" check
+fi

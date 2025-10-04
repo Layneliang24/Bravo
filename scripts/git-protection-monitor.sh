@@ -17,7 +17,7 @@ log_message() {
 # 检查当前alias状态
 check_alias_status() {
     local current_alias=$(alias git 2>/dev/null || echo "NOT_SET")
-    local expected_alias="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
+    local expected_alias="alias git='bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\"'"
 
     if [[ "$current_alias" == *"git-guard.sh"* ]]; then
         echo "PROTECTED"
@@ -38,32 +38,89 @@ check_bashrc_config() {
     fi
 }
 
+# 检查危险环境变量
+check_dangerous_env_vars() {
+    local dangerous_vars=(
+        "ALLOW_PUSH_WITHOUT_PASSPORT"
+        "SKIP_VALIDATION"
+        "DISABLE_VALIDATION"
+        "PRE_COMMIT_ALLOW_NO_CONFIG"
+        "BYPASS_PROTECTION"
+        "NO_GUARD"
+        "DISABLE_GUARD"
+    )
+
+    local found_vars=()
+    for var in "${dangerous_vars[@]}"; do
+        if [[ -n "${!var}" ]]; then
+            found_vars+=("$var=${!var}")
+        fi
+    done
+
+    if [[ ${#found_vars[@]} -gt 0 ]]; then
+        echo "COMPROMISED:${found_vars[*]}"
+    else
+        echo "SAFE"
+    fi
+}
+
+# 清理危险环境变量
+cleanup_dangerous_env_vars() {
+    local dangerous_vars=(
+        "ALLOW_PUSH_WITHOUT_PASSPORT"
+        "SKIP_VALIDATION"
+        "DISABLE_VALIDATION"
+        "PRE_COMMIT_ALLOW_NO_CONFIG"
+        "BYPASS_PROTECTION"
+        "NO_GUARD"
+        "DISABLE_GUARD"
+    )
+
+    local cleaned_vars=()
+    for var in "${dangerous_vars[@]}"; do
+        if [[ -n "${!var}" ]]; then
+            unset "$var"
+            cleaned_vars+=("$var")
+        fi
+    done
+
+    if [[ ${#cleaned_vars[@]} -gt 0 ]]; then
+        log_message "🧹 CLEANUP | 已清理危险环境变量: ${cleaned_vars[*]}"
+        return 0
+    else
+        return 1
+    fi
+}
+
 # 自动恢复保护
 restore_protection() {
     local reason="$1"
     log_message "🔧 RESTORE | $reason - 正在恢复git保护..."
 
     # 1. 恢复当前会话alias
-    alias git="bash \"$PROJECT_ROOT/scripts/git-guard.sh\""
+    alias git="bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\""
     log_message "✅ RESTORE | 当前会话alias已恢复"
 
     # 2. 恢复依赖管理拦截器alias
-    alias npm="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" npm"
-    alias yarn="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yarn"
-    alias pnpm="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pnpm"
-    alias pip="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip"
-    alias pip3="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip3"
-    alias apt="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt"
-    alias apt-get="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt-get"
-    alias yum="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yum"
-    alias dnf="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" dnf"
-    alias brew="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew"
-    alias composer="bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer"
+    alias npm="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" npm"
+    alias yarn="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" yarn"
+    alias pnpm="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pnpm"
+    alias pip="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pip"
+    alias pip3="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pip3"
+    alias apt="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" apt"
+    alias apt-get="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" apt-get"
+    alias yum="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" yum"
+    alias dnf="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" dnf"
+    alias brew="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" brew"
+    alias composer="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" composer"
+    alias python="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" python"
+    alias python3="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" python3"
+    alias source="bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" source"
     log_message "✅ RESTORE | 依赖管理拦截器已恢复"
 
     # 3. 检查并恢复bashrc配置
     local bashrc_path="$HOME/.bashrc"
-    local git_alias_line="alias git='bash \"$PROJECT_ROOT/scripts/git-guard.sh\"'"
+    local git_alias_line="alias git='bash \"$PROJECT_ROOT/scripts-golden/git-guard.sh\"'"
 
     if [[ -f "$bashrc_path" ]]; then
         # 恢复git保护alias
@@ -76,15 +133,18 @@ restore_protection() {
         # 恢复依赖管理拦截器alias
         if ! grep -q "dependency-guard.sh" "$bashrc_path"; then
             echo "# 依赖管理拦截器 (纯Docker环境保护)" >> "$bashrc_path"
-            echo "alias npm='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" npm'" >> "$bashrc_path"
-            echo "alias yarn='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" yarn'" >> "$bashrc_path"
-            echo "alias pnpm='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pnpm'" >> "$bashrc_path"
-            echo "alias pip='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip'" >> "$bashrc_path"
-            echo "alias pip3='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" pip3'" >> "$bashrc_path"
-            echo "alias apt='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt'" >> "$bashrc_path"
-            echo "alias apt-get='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" apt-get'" >> "$bashrc_path"
-            echo "alias brew='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" brew'" >> "$bashrc_path"
-            echo "alias composer='bash \"$PROJECT_ROOT/scripts/dependency-guard.sh\" composer'" >> "$bashrc_path"
+            echo "alias npm='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" npm'" >> "$bashrc_path"
+            echo "alias yarn='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" yarn'" >> "$bashrc_path"
+            echo "alias pnpm='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pnpm'" >> "$bashrc_path"
+            echo "alias pip='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pip'" >> "$bashrc_path"
+            echo "alias pip3='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" pip3'" >> "$bashrc_path"
+            echo "alias apt='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" apt'" >> "$bashrc_path"
+            echo "alias apt-get='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" apt-get'" >> "$bashrc_path"
+            echo "alias brew='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" brew'" >> "$bashrc_path"
+            echo "alias composer='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" composer'" >> "$bashrc_path"
+            echo "alias python='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" python'" >> "$bashrc_path"
+            echo "alias python3='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" python3'" >> "$bashrc_path"
+            echo "alias source='bash \"$PROJECT_ROOT/scripts-golden/dependency-guard.sh\" source'" >> "$bashrc_path"
             log_message "✅ RESTORE | ~/.bashrc 依赖管理拦截器配置已恢复"
         fi
     fi
@@ -108,25 +168,57 @@ restore_protection() {
 main_check() {
     local alias_status=$(check_alias_status)
     local bashrc_status=$(check_bashrc_config)
+    local env_status=$(check_dangerous_env_vars)
+    local protection_compromised=false
 
+    # 检查环境变量安全
+    if [[ "$env_status" =~ ^COMPROMISED: ]]; then
+        local found_vars="${env_status#COMPROMISED:}"
+        log_message "🚨 SECURITY | 检测到危险环境变量: $found_vars"
+
+        # 立即清理危险环境变量
+        if cleanup_dangerous_env_vars; then
+            log_message "🔒 SECURITY | 环境变量已自动清理"
+            # 发送安全警告
+            echo ""
+            echo "🚨🚨🚨 安全威胁已阻止 🚨🚨🚨"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "⚠️  检测到AI尝试设置绕过环境变量: $found_vars"
+            echo "🧹 已自动清理所有危险环境变量"
+            echo "🔒 保护机制持续生效"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+        fi
+        protection_compromised=true
+    fi
+
+    # 检查alias保护
     case "$alias_status" in
         "PROTECTED")
-            log_message "✅ CHECK | Git保护正常工作"
-            return 0
+            if [[ "$protection_compromised" == "false" ]]; then
+                log_message "✅ CHECK | Git保护正常工作"
+            fi
             ;;
         "NOT_SET")
             restore_protection "Alias未设置"
-            return 1
+            protection_compromised=true
             ;;
         "COMPROMISED")
             restore_protection "Alias被修改为: $(alias git 2>/dev/null)"
-            return 1
+            protection_compromised=true
             ;;
     esac
 
+    # 检查bashrc配置
     if [[ "$bashrc_status" == "MISSING" ]]; then
         restore_protection "Bashrc配置丢失"
+        protection_compromised=true
+    fi
+
+    if [[ "$protection_compromised" == "true" ]]; then
         return 1
+    else
+        return 0
     fi
 }
 
@@ -187,11 +279,11 @@ create_immutable_backup() {
     mkdir -p "$backup_dir"
 
     # 备份关键文件
-    cp "$PROJECT_ROOT/scripts/git-guard.sh" "$backup_dir/git-guard.sh.backup"
+    cp "$PROJECT_ROOT/scripts-golden/git-guard.sh" "$backup_dir/git-guard.sh.backup"
     cp "$0" "$backup_dir/git-protection-monitor.sh.backup"
 
     # 创建校验和
-    sha256sum "$PROJECT_ROOT/scripts/git-guard.sh" > "$backup_dir/checksums.txt"
+    sha256sum "$PROJECT_ROOT/scripts-golden/git-guard.sh" > "$backup_dir/checksums.txt"
     sha256sum "$0" >> "$backup_dir/checksums.txt"
 
     # 设置只读权限
@@ -211,9 +303,9 @@ verify_integrity() {
         else
             log_message "🚨 INTEGRITY | 保护文件被篡改，正在恢复..."
             # 从备份恢复
-            cp "$backup_dir/git-guard.sh.backup" "$PROJECT_ROOT/scripts/git-guard.sh"
+            cp "$backup_dir/git-guard.sh.backup" "$PROJECT_ROOT/scripts-golden/git-guard.sh"
             cp "$backup_dir/git-protection-monitor.sh.backup" "$0"
-            chmod +x "$PROJECT_ROOT/scripts/git-guard.sh"
+            chmod +x "$PROJECT_ROOT/scripts-golden/git-guard.sh"
             chmod +x "$0"
             return 1
         fi
@@ -247,7 +339,7 @@ Git操作相关:
 • 如需临时禁用检查，使用环境变量:
   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true
 • 如需永久调整规则，修改配置文件:
-  scripts/git-guard.sh 中的检查逻辑
+  scripts-golden/git-guard.sh 中的检查逻辑
 
 依赖管理相关:
 • 所有依赖操作必须在Docker容器内进行:

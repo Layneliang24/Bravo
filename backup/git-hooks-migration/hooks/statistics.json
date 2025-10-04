@@ -1,0 +1,8 @@
+{
+  "total_checks": 103,
+  "total_files_scanned": 337,
+  "total_issues_found": 65,
+  "commits_blocked": 20,
+  "average_scan_time": 0.034542442576880564,
+  "last_check_time": "2025-09-13T12:41:58.324014"
+}

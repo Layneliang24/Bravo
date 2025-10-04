@@ -1,0 +1,14 @@
+#!/bin/bash
+# 安全推送命令 - 调用防篡改Git-Guard
+cd "$(dirname "$0")"
+
+# 🛡️ 调用防篡改的Git-Guard进行安全推送
+GOLDEN_SCRIPT="scripts-golden/git-guard.sh"
+
+if [ ! -f "$GOLDEN_SCRIPT" ]; then
+    echo "❌ 防篡改Git-Guard脚本不存在: $GOLDEN_SCRIPT"
+    exit 1
+fi
+
+echo "🚀 调用防篡改Git-Guard进行安全推送..."
+bash "$GOLDEN_SCRIPT" git push "$@"

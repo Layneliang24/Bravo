@@ -1,0 +1,35 @@
+#!/bin/bash
+# Server-side branch protection hook
+# This hook is executed on the server side when receiving pushes
+# It provides an additional layer of protection for shared repositories
+
+# Protected branches
+protected_branches="main dev"
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+while read oldrev newrev refname
+do
+    # Extract branch name
+    branch=$(echo "$refname" | sed 's/refs\/heads\///')
+
+    # Check if this is a protected branch
+    for protected in $protected_branches; do
+        if [ "$branch" = "$protected" ]; then
+            echo -e "${RED}Error: Direct push to protected branch '$branch' is rejected by server policy!${NC}" >&2
+            echo -e "${YELLOW}Protected branches: $protected_branches${NC}" >&2
+            echo "Please use the pull request workflow instead." >&2
+            echo "" >&2
+            echo "If you are a repository administrator and need to override this protection:" >&2
+            echo "  1. Temporarily rename this hook: mv .git/hooks/pre-receive .git/hooks/pre-receive.disabled" >&2
+            echo "  2. Push your changes" >&2
+            echo "  3. Re-enable the hook: mv .git/hooks/pre-receive.disabled .git/hooks/pre-receive" >&2
+            exit 1
+        fi
+    done
+done
+
+exit 0
