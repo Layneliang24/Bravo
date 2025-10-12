@@ -29,4 +29,17 @@ module.exports = {
     global: 'readonly',
     Buffer: 'readonly',
   },
+  overrides: [
+    {
+      // 测试文件配置
+      files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
+      env: {
+        jest: true,
+        node: true,
+      },
+      rules: {
+        'no-console': 'off', // 测试文件允许 console
+      },
+    },
+  ],
 };
