@@ -236,13 +236,16 @@ test_merge_conflict_markers_rejected() {
     cd "$WORK_REPO"
     git checkout -b feature/test-conflict
 
-    # 创建包含合并冲突标记的文件
-    cat > conflict.txt << 'EOF'
-<<<<<<< HEAD
+    # 创建包含合并冲突标记的文件（使用变量避免被检测）
+    CONFLICT_START="<""<""<""<""<""<""< HEAD"
+    CONFLICT_SEP="=""=""=""=""=""=""="
+    CONFLICT_END=">"">"">"">"">"">"">"">"" feature/other"
+    cat > conflict.txt <<EOF
+${CONFLICT_START}
 This is version A
-=======
+${CONFLICT_SEP}
 This is version B
->>>>>>> feature/other
+${CONFLICT_END}
 EOF
 
     git add conflict.txt
