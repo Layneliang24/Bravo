@@ -20,7 +20,7 @@ env:
 jobs:
   setup-cache:
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # 🚀 Phase 4: 减少超时时间以加快失败检测
+    timeout-minutes: 10 # 🔧 临时增加超时时间，解决偶发性网络延迟问题
 
     outputs:
       frontend-cache-hit: ${{ steps.frontend-cache.outputs.cache-hit }}

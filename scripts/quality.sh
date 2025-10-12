@@ -68,7 +68,8 @@ cd ..
 
 # 运行预提交钩子检查
 echo "🪝 运行预提交钩子检查..."
-pre-commit run --all-files
+# 使用重命名的代码质量检查工具，避免pre-commit命名混乱
+bash "$(dirname "$0")/code-quality-check.sh" --all-files
 
 # 生成质量报告
 echo "📊 生成代码质量报告..."

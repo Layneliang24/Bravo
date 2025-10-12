@@ -1,0 +1,14 @@
+#!/bin/bash
+# 便捷通行证命令 - 直接调用防篡改脚本
+cd "$(dirname "$0")"
+
+# 🛡️ 调用防篡改的本地测试通行证脚本
+GOLDEN_SCRIPT="scripts-golden/local_test_passport.py"
+
+if [ ! -f "$GOLDEN_SCRIPT" ]; then
+    echo "❌ 防篡改通行证脚本不存在: $GOLDEN_SCRIPT"
+    exit 1
+fi
+
+echo "🎫 调用防篡改通行证生成器..."
+python "$GOLDEN_SCRIPT" "$@"

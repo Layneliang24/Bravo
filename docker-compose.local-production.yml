@@ -1,0 +1,122 @@
+# 本地生产环境测试配置
+# 基于docker-compose.production.yml，但适配本地测试环境
+
+# Docker Compose 配置文件
+# 本地生产环境测试
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: bravo-mysql-local-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-local_root_password_123}
+      MYSQL_DATABASE: ${DB_NAME:-bravo_production_test}
+      MYSQL_USER: ${DB_USER:-bravo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-local_test_password_123}
+    volumes:
+      - mysql_data_local:/var/lib/mysql
+    ports:
+      - "3307:3306" # 避免与开发环境冲突
+    networks:
+      - bravo-local-prod-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: bravo-redis-local-prod
+    ports:
+      - "6380:6379" # 避免与开发环境冲突
+    volumes:
+      - redis_data_local:/data
+    networks:
+      - bravo-local-prod-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Django后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.production
+    container_name: bravo-backend-local-prod
+    environment:
+      - DJANGO_SETTINGS_MODULE=bravo.settings.production
+      - DB_HOST=mysql
+      - DB_NAME=${DB_NAME:-bravo_production_test}
+      - DB_USER=${DB_USER:-bravo}
+      - DB_PASSWORD=${DB_PASSWORD:-local_test_password_123}
+      - REDIS_HOST=redis
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-local-test-secret-key}
+      # 本地测试禁用HTTPS重定向
+      - DISABLE_SSL_REDIRECT=True
+    ports:
+      - "8001:8000" # 避免与开发环境冲突
+    volumes:
+      - ./backend:/app
+      - static_files_local:/app/staticfiles
+      - media_files_local:/app/mediafiles
+    networks:
+      - bravo-local-prod-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Vue.js前端（简化版）
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+    container_name: bravo-frontend-local-prod
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=http://localhost:8001/api
+    ports:
+      - "8080:80" # 使用8080端口避免冲突
+    volumes:
+      - static_files_local:/usr/share/nginx/html/static
+      - media_files_local:/usr/share/nginx/html/media
+    networks:
+      - bravo-local-prod-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql_data_local:
+    driver: local
+  redis_data_local:
+    driver: local
+  static_files_local:
+    driver: local
+  media_files_local:
+    driver: local
+
+networks:
+  bravo-local-prod-network:
+    driver: bridge

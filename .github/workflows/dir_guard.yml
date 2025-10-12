@@ -8,12 +8,25 @@ jobs:
       - uses: actions/checkout@v4
       - name: Block root clutter
         run: |
-          # 禁止根新增指定类型
-          forbidden_files=$(git diff --name-only origin/main...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          # 禁止根新增指定类型（允许删除）
+          # 使用 --diff-filter=A 只检测新增文件
+          # 使用 PR 的 base 分支进行比较
+          BASE_REF="${{ github.event.pull_request.base.ref || 'main' }}"
+          echo "📋 比较基准分支: origin/$BASE_REF"
+
+          forbidden_files=$(git diff --name-only --diff-filter=A origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
           if [ -n "$forbidden_files" ]; then
             echo "::error::检测到根目录新增文档/测试，请移至 docs/ 或同目录测试"
             echo "违规文件:"
             echo "$forbidden_files"
             exit 1
           fi
+
+          # 删除根目录违规文件是鼓励的
+          deleted_files=$(git diff --name-only --diff-filter=D origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$deleted_files" ]; then
+            echo "✅ 检测到删除根目录违规文件（鼓励）:"
+            echo "$deleted_files"
+          fi
+
           echo "✅ 目录检查通过"

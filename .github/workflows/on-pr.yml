@@ -61,13 +61,24 @@ jobs:
         run: |
           echo "Checking directory protection rules..."
 
-          # 检查根目录新增文件
-          forbidden_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          # 检查根目录新增文件（允许删除）
+          # 使用 --diff-filter=A 只检测新增文件
+          BASE_REF="${{ github.base_ref || 'main' }}"
+          echo "📋 比较基准分支: origin/$BASE_REF"
+
+          forbidden_files=$(git diff --name-only --diff-filter=A origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
           if [ -n "$forbidden_files" ]; then
             echo "ERROR: Root directory clutter detected:"
             echo "$forbidden_files"
             echo "Please move documentation to docs/ and tests to appropriate directories"
             exit 1
+          fi
+
+          # 删除根目录违规文件是鼓励的
+          deleted_files=$(git diff --name-only --diff-filter=D origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$deleted_files" ]; then
+            echo "✅ 检测到删除根目录违规文件（鼓励）:"
+            echo "$deleted_files"
           fi
 
           echo "Directory protection check passed"

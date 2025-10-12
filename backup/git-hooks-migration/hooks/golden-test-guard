@@ -1,0 +1,45 @@
+#!/bin/bash
+# 🔒 黄金测试保护钩子
+# 此钩子阻止对tests-golden目录的任何修改
+
+echo "🔍 检查黄金测试保护..."
+
+# 检查是否有对tests-golden目录的修改
+if git diff --cached --name-only | grep -q "^tests-golden/"; then
+    echo "❌ 错误：检测到对黄金测试目录的修改！"
+    echo ""
+    echo "🔒 黄金测试目录 (tests-golden/) 受到保护，不允许修改。"
+    echo ""
+    echo "被修改的文件："
+    git diff --cached --name-only | grep "^tests-golden/" | sed 's/^/  - /'
+    echo ""
+    echo "如果您需要修改黄金测试，请："
+    echo "1. 确保这是必要的业务逻辑变更"
+    echo "2. 通过 PR 流程进行代码审查"
+    echo "3. 使用 --no-verify 标志绕过此检查（仅限紧急情况）"
+    echo ""
+    echo "命令示例：git commit --no-verify -m \"紧急修复黄金测试\""
+    echo ""
+    exit 1
+fi
+
+# 检查是否有对黄金测试配置文件的修改
+if git diff --cached --name-only | grep -E "(playwright\.config\.ts|vitest\.config\.ts|pytest\.ini)" | grep -q "tests-golden"; then
+    echo "⚠️  警告：检测到对黄金测试配置文件的修改"
+    echo "请确保这些修改是必要的，并通过代码审查。"
+fi
+
+# 检查是否有删除黄金测试的操作
+if git diff --cached --diff-filter=D --name-only | grep -q "^tests-golden/"; then
+    echo "❌ 错误：检测到删除黄金测试文件的操作！"
+    echo ""
+    echo "被删除的文件："
+    git diff --cached --diff-filter=D --name-only | grep "^tests-golden/" | sed 's/^/  - /'
+    echo ""
+    echo "删除黄金测试需要特别审批，请通过 PR 流程处理。"
+    echo ""
+    exit 1
+fi
+
+echo "✅ 黄金测试保护检查通过"
+exit 0

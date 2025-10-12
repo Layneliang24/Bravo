@@ -81,14 +81,13 @@ services:
         condition: service_healthy
       frontend-test:
         condition: service_healthy
-    # 🚀 Phase 5.2: 挂载Playwright浏览器缓存 (关键优化)
-    volumes:
-      - ~/.cache/ms-playwright:/root/.cache/ms-playwright:ro
-    # 🚀 Phase 5.2: 配置Playwright使用挂载的缓存
+    # GitHub Actions环境配置
     environment:
-      - PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
       - CI=true
       - NODE_ENV=test
+      - TEST_BASE_URL=http://frontend-test:3000
+      - FRONTEND_URL=http://frontend-test:3000
+      - BACKEND_URL=http://backend-test:8000
     command:
       - /bin/sh
       - -c

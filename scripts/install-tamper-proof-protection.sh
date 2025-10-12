@@ -42,12 +42,12 @@ __git_protected() {
     local project_root="'"$PROJECT_ROOT"'"
     local guard_script="$project_root/scripts/git-guard.sh"
     local auto_fix_script="$project_root/scripts/auto-fix-git-protection.sh"
-    
+
     # 自动修复检查（每次调用都检查）
     if [[ -f "$auto_fix_script" ]]; then
         bash "$auto_fix_script" 2>/dev/null || true
     fi
-    
+
     # 调用保护脚本
     if [[ -f "$guard_script" ]]; then
         bash "$guard_script" "$@"
@@ -81,7 +81,7 @@ if [[ -f "$HOME/.bashrc" ]]; then
     # 移除旧的简单alias
     sed -i '/^alias git.*git-guard\.sh/d' "$HOME/.bashrc" 2>/dev/null || true
     sed -i '/^alias git.*git-interceptor/d' "$HOME/.bashrc" 2>/dev/null || true
-    
+
     # 检查是否已经有智能函数
     if ! grep -q "__git_protected" "$HOME/.bashrc"; then
         echo "" >> "$HOME/.bashrc"
@@ -121,7 +121,7 @@ chmod +x "$PROJECT_ROOT/scripts/periodic-protection-check.sh"
 # 设置crontab（如果可用）
 if command -v crontab >/dev/null 2>&1; then
     CRON_JOB="* * * * * cd '$PROJECT_ROOT' && bash scripts/periodic-protection-check.sh"
-    
+
     if ! crontab -l 2>/dev/null | grep -q "periodic-protection-check"; then
         (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab - 2>/dev/null && \
         log "${GREEN}✅ 定时监控已设置 (每分钟检查)${NC}" || \
@@ -249,7 +249,7 @@ git checkout -b feature/your-feature
 git add .
 git commit -m "your changes"  # 会通过正常检查
 
-# 3. 推送并创建PR  
+# 3. 推送并创建PR
 git push origin feature/your-feature
 ```
 
@@ -357,7 +357,7 @@ log "${BLUE}📋 安装内容总结:${NC}"
 log "   ✅ 智能防篡改alias函数"
 log "   ✅ 不可变文件备份系统"
 log "   ✅ 定时监控和自动修复"
-log "   ✅ 完整性检查机制"  
+log "   ✅ 完整性检查机制"
 log "   ✅ 用户教育文档"
 log ""
 log "${YELLOW}🔄 后续步骤:${NC}"

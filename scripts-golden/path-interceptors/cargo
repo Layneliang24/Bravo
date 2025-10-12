@@ -1,0 +1,5 @@
+#!/bin/bash
+# CARGO PATH拦截器 - 拦截所有cargo调用（包括绝对路径）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+exec bash "$PROJECT_ROOT/scripts/dependency-guard.sh" cargo "$@"

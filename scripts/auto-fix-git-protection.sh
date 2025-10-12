@@ -10,12 +10,12 @@ quick_protection_check() {
     if ! alias git 2>/dev/null | grep -q "git-guard.sh"; then
         return 1  # 保护被破坏
     fi
-    
+
     # 检查保护脚本是否存在
     if [[ ! -f "$PROJECT_ROOT/scripts/git-guard.sh" ]]; then
         return 1  # 文件丢失
     fi
-    
+
     return 0  # 保护正常
 }
 
@@ -23,7 +23,7 @@ quick_protection_check() {
 quick_fix() {
     # 立即恢复alias
     alias git="bash \"$PROJECT_ROOT/scripts/git-guard.sh\""
-    
+
     # 如果脚本丢失，从备份恢复
     if [[ ! -f "$PROJECT_ROOT/scripts/git-guard.sh" ]] && [[ -f "$PROJECT_ROOT/.git-protection-backup/git-guard.sh.backup" ]]; then
         cp "$PROJECT_ROOT/.git-protection-backup/git-guard.sh.backup" "$PROJECT_ROOT/scripts/git-guard.sh"

@@ -1,0 +1,433 @@
+name: "PR Validation Pipeline"
+
+on:
+  pull_request:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.ref }}-${{ github.base_ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # 智能检测PR类型和验证级别
+  detect-pr-type:
+    name: "Detect PR Type & Validation Level"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      pr-type: ${{ steps.detect.outputs.type }}
+      validation-level: ${{ steps.detect.outputs.level }}
+      test-level: ${{ steps.detect.outputs.test-level }}
+      quality-level: ${{ steps.detect.outputs.quality-level }}
+      coverage-required: ${{ steps.detect.outputs.coverage-required }}
+
+    steps:
+      - name: Analyze PR Context
+        id: detect
+        run: |
+          echo "🔍 Analyzing PR: ${{ github.head_ref }} → ${{ github.base_ref }}"
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR Body Length: $(echo '${{ github.event.pull_request.body }}' | wc -c)"
+
+          # 分析PR标题和分支名判断类型
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          HEAD_BRANCH="${{ github.head_ref }}"
+          BASE_BRANCH="${{ github.base_ref }}"
+
+          if [[ "$BASE_BRANCH" == "main" ]]; then
+            if [[ "$HEAD_BRANCH" == "dev" ]]; then
+              # dev → main: 生产发布
+              echo "type=production-release" >> $GITHUB_OUTPUT
+              echo "level=strict" >> $GITHUB_OUTPUT
+              echo "test-level=full" >> $GITHUB_OUTPUT
+              echo "quality-level=strict" >> $GITHUB_OUTPUT
+              echo "coverage-required=90" >> $GITHUB_OUTPUT
+              echo "🏭 Production Release PR detected"
+              echo "   - Full test suite required"
+              echo "   - Strict quality gates"
+              echo "   - 90% coverage requirement"
+            else
+              # hotfix/emergency → main: 紧急修复
+              echo "type=emergency-hotfix" >> $GITHUB_OUTPUT
+              echo "level=emergency" >> $GITHUB_OUTPUT
+              echo "test-level=medium" >> $GITHUB_OUTPUT
+              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "coverage-required=80" >> $GITHUB_OUTPUT
+              echo "🚨 Emergency Hotfix PR detected"
+              echo "   - Medium test suite"
+              echo "   - Standard quality gates"
+              echo "   - 80% coverage requirement"
+            fi
+          elif [[ "$BASE_BRANCH" == "dev" ]]; then
+            # feature → dev: 功能集成
+            if [[ "$PR_TITLE" =~ (hotfix|urgent|critical|fix) ]] || [[ "$HEAD_BRANCH" =~ (hotfix|urgent|critical|fix) ]]; then
+              echo "type=urgent-fix" >> $GITHUB_OUTPUT
+              echo "level=urgent" >> $GITHUB_OUTPUT
+              echo "test-level=medium" >> $GITHUB_OUTPUT
+              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "coverage-required=75" >> $GITHUB_OUTPUT
+              echo "🔥 Urgent Fix PR detected"
+            else
+              echo "type=feature-integration" >> $GITHUB_OUTPUT
+              echo "level=standard" >> $GITHUB_OUTPUT
+              echo "test-level=medium" >> $GITHUB_OUTPUT
+              echo "quality-level=standard" >> $GITHUB_OUTPUT
+              echo "coverage-required=80" >> $GITHUB_OUTPUT
+              echo "🚀 Feature Integration PR detected"
+            fi
+            echo "   - Medium test suite"
+            echo "   - Standard quality gates"
+            echo "   - 80% coverage requirement"
+          else
+            # 其他分支: 轻量验证
+            echo "type=other" >> $GITHUB_OUTPUT
+            echo "level=basic" >> $GITHUB_OUTPUT
+            echo "test-level=fast" >> $GITHUB_OUTPUT
+            echo "quality-level=basic" >> $GITHUB_OUTPUT
+            echo "coverage-required=70" >> $GITHUB_OUTPUT
+            echo "ℹ️ Other PR type detected - basic validation"
+          fi
+
+  # 分支保护验证
+  branch-protection:
+    name: "Branch Protection Validation"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Branch Protection Rules
+        run: |
+          echo "🔒 Validating branch protection rules..."
+
+          # 验证main分支只能从dev分支接收PR
+          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
+            echo "❌ BRANCH PROTECTION VIOLATION!"
+            echo "   Only 'dev' branch is allowed to create PRs to 'main'"
+            echo "   Source: ${{ github.head_ref }}"
+            echo "   Target: ${{ github.base_ref }}"
+            echo ""
+            echo "🔑 DOUBLE KEY SYSTEM:"
+            echo "   - Key A: Cursor can only push to 'dev' branch"
+            echo "   - Key B: Only 'dev' can create PRs to 'main'"
+            echo ""
+            echo "📋 Correct workflow:"
+            echo "   1. Create feature branch from dev"
+            echo "   2. Develop and test on feature branch"
+            echo "   3. Create PR: feature → dev"
+            echo "   4. After merge, create PR: dev → main"
+            exit 1
+          fi
+
+          # 检查是否有合并冲突标记
+          echo "Checking for conflict markers..."
+          if find . -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.ts" | head -20 | xargs grep -l "<<<<<<< HEAD\|>>>>>>> \|=======" 2>/dev/null; then
+            echo "❌ Merge conflict markers detected in code!"
+            echo "Please resolve all conflicts before proceeding."
+            exit 1
+          fi
+
+          echo "✅ Branch protection rules satisfied"
+
+  # 快速预检查 (并行执行)
+  quick-validation:
+    name: "Quick Pre-validation"
+    needs: [detect-pr-type, branch-protection]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-cached-env
+
+      - name: Quick Syntax & Style Check
+        run: |
+          echo "⚡ Running quick pre-validation checks..."
+
+          # 检查基本语法错误
+          echo "Checking frontend syntax..."
+          npm run lint:frontend -- --quiet || echo "⚠️ Frontend lint issues detected"
+
+          echo "Checking backend syntax..."
+          cd backend && source .venv/bin/activate
+          # 只检查严重的语法错误
+          flake8 . --select=E9,F63,F7,F82 --exclude=migrations,__pycache__,.venv || echo "⚠️ Backend syntax issues detected"
+
+          echo "✅ Quick validation completed"
+
+      - name: Check PR Readiness
+        run: |
+          echo "📋 Checking PR readiness..."
+
+          # 检查PR描述
+          PR_BODY_LENGTH=$(echo '${{ github.event.pull_request.body }}' | wc -c)
+          if [[ $PR_BODY_LENGTH -lt 50 ]]; then
+            echo "⚠️ PR description is very short ($PR_BODY_LENGTH chars)"
+            echo "Consider adding more details about the changes"
+          fi
+
+          # 检查文件变更数量
+          FILES_CHANGED=$(echo '${{ github.event.pull_request.changed_files }}')
+          if [[ $FILES_CHANGED -gt 50 ]]; then
+            echo "⚠️ Large PR detected: $FILES_CHANGED files changed"
+            echo "Consider splitting into smaller PRs for easier review"
+          fi
+
+          echo "PR Analysis:"
+          echo "  - Files changed: $FILES_CHANGED"
+          echo "  - Description length: $PR_BODY_LENGTH chars"
+          echo "  - Type: ${{ needs.detect-pr-type.outputs.pr-type }}"
+          echo "  - Validation level: ${{ needs.detect-pr-type.outputs.validation-level }}"
+
+  # 调用测试套件组件
+  test-execution:
+    name: "Test Suite Execution"
+    needs: [detect-pr-type, quick-validation]
+    uses: ./.github/workflows/test-suite.yml
+    with:
+      test-level: ${{ needs.detect-pr-type.outputs.test-level }}
+      target-branch: ${{ github.base_ref }}
+      coverage-required: ${{ needs.detect-pr-type.outputs.coverage-required }}
+
+  # 调用质量门禁组件
+  quality-validation:
+    name: "Quality Gates Validation"
+    needs: [detect-pr-type, quick-validation]
+    uses: ./.github/workflows/quality-gates.yml
+    with:
+      quality-level: ${{ needs.detect-pr-type.outputs.quality-level }}
+      min-coverage: ${{ needs.detect-pr-type.outputs.coverage-required }}
+      target-branch: ${{ github.base_ref }}
+
+  # 目录保护检查
+  directory-protection:
+    name: "Directory Protection Check"
+    needs: detect-pr-type
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Directory Rules
+        run: |
+          echo "📁 Checking directory protection rules..."
+
+          # 检查根目录新增文件（允许删除）
+          # 使用 --diff-filter=A 只检测新增文件
+          BASE_REF="${{ github.base_ref || 'main' }}"
+          echo "📋 比较基准分支: origin/$BASE_REF"
+
+          forbidden_files=$(git diff --name-only --diff-filter=A origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$forbidden_files" ]; then
+            echo "❌ Root directory clutter detected:"
+            echo "$forbidden_files"
+            echo ""
+            echo "📋 Please move files to appropriate directories:"
+            echo "  - Documentation: docs/"
+            echo "  - Tests: tests/ or */tests/"
+            echo "  - Examples: examples/"
+            exit 1
+          fi
+
+          # 删除根目录违规文件是鼓励的
+          deleted_files=$(git diff --name-only --diff-filter=D origin/$BASE_REF...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$deleted_files" ]; then
+            echo "✅ 检测到删除根目录违规文件（鼓励）:"
+            echo "$deleted_files"
+          fi
+
+          # 检查关键文件修改
+          protected_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^\.github/workflows/(pr-validation|push-validation|release-pipeline|test-suite|quality-gates)\.yml$' || true)
+          if [ -n "$protected_files" ]; then
+            echo "⚠️ Critical workflow files modified:"
+            echo "$protected_files"
+            echo ""
+            echo "🔍 These files require extra review attention."
+          fi
+
+          echo "✅ Directory protection check passed"
+
+  # 最终审批门禁
+  approval-gate:
+    name: "Final Approval Gate"
+    needs:
+      [detect-pr-type, test-execution, quality-validation, directory-protection]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Collect Validation Results
+        run: |
+          echo "## 🎯 PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR Information:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Type: ${{ needs.detect-pr-type.outputs.pr-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Source → Target: ${{ github.head_ref }} → ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation Level: ${{ needs.detect-pr-type.outputs.validation-level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Author: ${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 收集各组件结果
+          TEST_RESULT="${{ needs.test-execution.result }}"
+          TEST_OUTPUT="${{ needs.test-execution.outputs.test-results }}"
+          QUALITY_RESULT="${{ needs.quality-validation.result }}"
+          QUALITY_SCORE="${{ needs.quality-validation.outputs.quality-score }}"
+          QUALITY_PASSED="${{ needs.quality-validation.outputs.gates-passed }}"
+          DIRECTORY_RESULT="${{ needs.directory-protection.result }}"
+
+          echo "**Validation Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | $TEST_RESULT | Level: ${{ needs.detect-pr-type.outputs.test-level }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gates | $QUALITY_RESULT | Score: $QUALITY_SCORE/100 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Directory Protection | $DIRECTORY_RESULT | Rules validated |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 计算总体结果
+          OVERALL_SUCCESS=true
+
+          if [[ "$TEST_RESULT" != "success" || "$TEST_OUTPUT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+            echo "❌ Test suite validation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "$QUALITY_RESULT" != "success" || "$QUALITY_PASSED" != "true" ]]; then
+            OVERALL_SUCCESS=false
+            echo "❌ Quality gates validation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "$DIRECTORY_RESULT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+            echo "❌ Directory protection validation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$OVERALL_SUCCESS" == "true" ]]; then
+            echo "## ✅ PR Validation PASSED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 All automated validations have passed successfully." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "${{ needs.detect-pr-type.outputs.pr-type }}" == "production-release" ]]; then
+              echo "- **PRODUCTION RELEASE**: This PR requires manual review by a senior maintainer" >> $GITHUB_STEP_SUMMARY
+              echo "- All quality gates passed with strict validation" >> $GITHUB_STEP_SUMMARY
+              echo "- Human approval is mandatory before merge" >> $GITHUB_STEP_SUMMARY
+            elif [[ "${{ needs.detect-pr-type.outputs.pr-type }}" == "emergency-hotfix" ]]; then
+              echo "- **EMERGENCY HOTFIX**: Expedited review process" >> $GITHUB_STEP_SUMMARY
+              echo "- Consider immediate deployment after merge" >> $GITHUB_STEP_SUMMARY
+              echo "- Monitor production closely after deployment" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Request review from team members" >> $GITHUB_STEP_SUMMARY
+              echo "- Address any review feedback" >> $GITHUB_STEP_SUMMARY
+              echo "- Merge when approved" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🛡️ Validation Details:" >> $GITHUB_STEP_SUMMARY
+            echo "- Test Level: ${{ needs.detect-pr-type.outputs.test-level }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Quality Level: ${{ needs.detect-pr-type.outputs.quality-level }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Coverage Requirement: ${{ needs.detect-pr-type.outputs.coverage-required }}%" >> $GITHUB_STEP_SUMMARY
+            echo "- Quality Score: $QUALITY_SCORE/100" >> $GITHUB_STEP_SUMMARY
+
+            echo "PR validation completed successfully"
+          else
+            echo "## ❌ PR Validation FAILED!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚫 Some automated validations have failed. Please address the issues above." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 Recommended Actions:" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "$TEST_RESULT" != "success" ]]; then
+              echo "- Fix failing tests in the test suite" >> $GITHUB_STEP_SUMMARY
+              echo "- Ensure test coverage meets the ${{ needs.detect-pr-type.outputs.coverage-required }}% requirement" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [[ "$QUALITY_RESULT" != "success" ]]; then
+              echo "- Address code quality issues (lint, security, performance)" >> $GITHUB_STEP_SUMMARY
+              echo "- Improve quality score to meet ${{ needs.detect-pr-type.outputs.quality-level }} level requirements" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [[ "$DIRECTORY_RESULT" != "success" ]]; then
+              echo "- Move files to appropriate directories" >> $GITHUB_STEP_SUMMARY
+              echo "- Follow project directory structure guidelines" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 After fixing the issues, push new commits to automatically re-run validation." >> $GITHUB_STEP_SUMMARY
+
+            echo "PR validation failed - please fix issues"
+            exit 1
+          fi
+
+  # PR标签管理
+  manage-pr-labels:
+    name: "Manage PR Labels"
+    needs: [detect-pr-type, approval-gate]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Add PR Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prType = '${{ needs.detect-pr-type.outputs.pr-type }}';
+            const validationLevel = '${{ needs.detect-pr-type.outputs.validation-level }}';
+            const overallSuccess = '${{ needs.approval-gate.result }}' === 'success';
+
+            const labels = [];
+
+            // 添加类型标签
+            switch(prType) {
+              case 'production-release':
+                labels.push('🏭 production-release', '🔥 critical');
+                break;
+              case 'emergency-hotfix':
+                labels.push('🚨 hotfix', '⚡ urgent');
+                break;
+              case 'urgent-fix':
+                labels.push('🔥 urgent-fix');
+                break;
+              case 'feature-integration':
+                labels.push('✨ feature');
+                break;
+            }
+
+            // 添加状态标签
+            if (overallSuccess) {
+              labels.push('✅ validation-passed');
+            } else {
+              labels.push('❌ validation-failed');
+            }
+
+            // 添加验证级别标签
+            labels.push(`🎯 ${validationLevel}-validation`);
+
+            console.log('Adding labels:', labels);
+
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+            } catch (error) {
+              console.log('Error adding labels:', error.message);
+              // 不因为标签失败而导致整个工作流失败
+            }

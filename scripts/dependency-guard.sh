@@ -45,13 +45,18 @@ show_host_dependency_warning() {
     case "$command_full" in
         npm*|yarn*|pnpm*|node*) container_name="frontend" ;;
         pip*|python*) container_name="backend" ;;
+        go*) container_name="go-service" ;;
+        cargo*) container_name="rust-service" ;;
+        gem*) container_name="ruby-service" ;;
+        mvn*|gradle*) container_name="java-service" ;;
+        conda*|mamba*) container_name="python-env" ;;
         *) container_name="适当的" ;;
     esac
     echo "   docker-compose exec $container_name $command_full"
     echo ""
     echo "⚠️  紧急情况绕过（极度不推荐）："
     echo "   export ALLOW_HOST_DEPENDENCY_INSTALL=true"
-    echo "   或输入紧急确认码：DOCKER_NATIVE_BYPASS"
+    echo "   或通过加密密码验证（30秒超时，AI无法绕过）"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -64,15 +69,17 @@ show_host_dependency_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 加密密码验证（替代简单确认码）
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许宿主机依赖安装"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
+    echo "🔐 紧急绕过需要加密验证"
+
+    # 使用统一的加密验证系统
+    if bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "紧急绕过验证" "宿主机依赖安装绕过"; then
+        echo "🟡 加密验证通过，允许宿主机依赖安装"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_AUTHENTICATED | $command_full" >> "$LOG_FILE"
         return 0
     else
-        echo "❌ 操作被取消 - 请使用Docker容器进行依赖管理！"
+        echo "❌ 验证失败 - 请使用Docker容器进行依赖管理！"
         echo "💡 推荐命令：docker-compose exec [service] $command_full"
         exit 1
     fi
@@ -93,6 +100,46 @@ case "$REAL_COMMAND" in
             show_host_dependency_warning "$command_full" "Python包管理违规"
         fi
         ;;
+    python|python3)
+        # 拦截所有python命令，引导到Docker容器
+        show_host_dependency_warning "$command_full" "Python执行环境违规"
+        ;;
+    go)
+        if [[ "$args" =~ (^|[[:space:]])(get|install|mod[[:space:]]+tidy|mod[[:space:]]+download)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Go包管理违规"
+        fi
+        ;;
+    cargo)
+        if [[ "$args" =~ (^|[[:space:]])(install|add|build)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Rust包管理违规"
+        fi
+        ;;
+    gem)
+        if [[ "$args" =~ (^|[[:space:]])(install|update)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Ruby包管理违规"
+        fi
+        ;;
+    mvn)
+        if [[ "$args" =~ (^|[[:space:]])(install|compile|package)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Maven构建违规"
+        fi
+        ;;
+    gradle)
+        if [[ "$args" =~ (^|[[:space:]])(build|install|assemble)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Gradle构建违规"
+        fi
+        ;;
+    conda|mamba)
+        if [[ "$args" =~ (^|[[:space:]])(install|create|env)([[:space:]]|$) ]]; then
+            show_host_dependency_warning "$command_full" "Conda环境管理违规"
+        fi
+        ;;
+    source)
+        # 拦截source命令，避免激活宿主机虚拟环境
+        if [[ "$args" =~ (venv|virtualenv|\.venv|env/bin/activate) ]]; then
+            show_host_dependency_warning "$command_full" "虚拟环境激活违规"
+        fi
+        ;;
     apt|apt-get|yum|dnf|brew)
         if [[ "$args" =~ (^|[[:space:]])(install|update|upgrade)([[:space:]]|$) ]]; then
             show_host_dependency_warning "$command_full" "系统包管理违规"
@@ -105,21 +152,62 @@ case "$REAL_COMMAND" in
         ;;
 esac
 
+# 特殊处理 ./ 开头的脚本执行 - 智能拦截
+if [[ "$REAL_COMMAND" =~ ^\./.*$ ]]; then
+    # 白名单：允许的纯Docker脚本
+    local allowed_scripts=(
+        "./test"
+        "./passport"
+        "./safe-push"
+        "./setup.sh"
+    )
+
+    local is_allowed=false
+    for allowed in "${allowed_scripts[@]}"; do
+        if [[ "$REAL_COMMAND" == "$allowed" ]]; then
+            is_allowed=true
+            break
+        fi
+    done
+
+    # 如果不在白名单中，检查是否为危险脚本类型
+    if [[ "$is_allowed" == "false" ]]; then
+        # 检查危险的脚本类型
+        if [[ "$REAL_COMMAND" =~ \.(py|js|ts|sh|bash)$ ]] || \
+           [[ -x "$REAL_COMMAND" ]]; then
+            show_host_dependency_warning "$command_full" "脚本直接执行违规"
+        fi
+    fi
+fi
+
 # 找到真正的命令并执行
 real_command_path=""
 case "$REAL_COMMAND" in
     npm)
         real_command_path="$(command -v npm.cmd 2>/dev/null || command -v npm 2>/dev/null | grep -v dependency-guard)"
         ;;
-    pip|pip3)
+    pip|pip3|python|python3)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
+        ;;
+    go|cargo|gem|mvn|gradle)
+        real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
+        ;;
+    conda|mamba)
+        real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
+        ;;
+    source)
+        # source 是bash内建命令，不能通过command找到
+        real_command_path="source"
         ;;
     *)
         real_command_path="$(command -v $REAL_COMMAND 2>/dev/null | grep -v dependency-guard)"
         ;;
 esac
 
-if [[ -x "$real_command_path" ]]; then
+if [[ "$REAL_COMMAND" == "source" ]]; then
+    # source是bash内建命令，需要特殊处理
+    source "$@"
+elif [[ -x "$real_command_path" ]]; then
     exec "$real_command_path" "$@"
 else
     echo "❌ 真正的 $REAL_COMMAND 命令未找到"
