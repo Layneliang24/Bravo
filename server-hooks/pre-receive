@@ -216,9 +216,6 @@ check_code_quality_markers() {
         'TODO:'
         'FIXME:'
         'HACK:'
-        '<<<<<<< HEAD'  # 合并冲突标记
-        '======='
-        '>>>>>>>'
     )
 
     # 获取新增的代码行
@@ -229,8 +226,11 @@ check_code_quality_markers() {
         new_code=$(git diff $oldrev..$newrev 2>/dev/null || true)
     fi
 
-    # 检查合并冲突标记（严格）
-    if echo "$new_code" | grep -q '<<<<<<< HEAD'; then
+    # 检查合并冲突标记（严格）- 使用变量拼接避免误报
+    local conflict_start="<""<""<""<""<""<""< HEAD"
+    local conflict_sep="=""=""=""=""=""=""="
+    local conflict_end=">"">"">"">"">"">"">"">"
+    if echo "$new_code" | grep -qE "($conflict_start|$conflict_sep|$conflict_end)"; then
         log_error "检测到未解决的合并冲突标记"
         fail_check "代码质量标记检查失败"
     fi
