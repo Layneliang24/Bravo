@@ -2,7 +2,11 @@ name: "PR Validation Pipeline"
 
 on:
   pull_request:
-    branches: [dev, main]
+    branches:
+      - dev
+      - main
+      - hotfix/*
+      - release/*
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -83,6 +87,28 @@ jobs:
             echo "   - Medium test suite"
             echo "   - Standard quality gates"
             echo "   - 80% coverage requirement"
+          elif [[ "$BASE_BRANCH" =~ ^hotfix/ ]]; then
+            # → hotfix/*: 紧急修复分支的PR
+            echo "type=hotfix-pr" >> $GITHUB_OUTPUT
+            echo "level=urgent" >> $GITHUB_OUTPUT
+            echo "test-level=medium" >> $GITHUB_OUTPUT
+            echo "quality-level=standard" >> $GITHUB_OUTPUT
+            echo "coverage-required=80" >> $GITHUB_OUTPUT
+            echo "🚨 Hotfix Branch PR detected"
+            echo "   - Medium test suite"
+            echo "   - Standard quality gates"
+            echo "   - 80% coverage requirement"
+          elif [[ "$BASE_BRANCH" =~ ^release/ ]]; then
+            # → release/*: 发布分支的PR
+            echo "type=release-pr" >> $GITHUB_OUTPUT
+            echo "level=strict" >> $GITHUB_OUTPUT
+            echo "test-level=full" >> $GITHUB_OUTPUT
+            echo "quality-level=strict" >> $GITHUB_OUTPUT
+            echo "coverage-required=85" >> $GITHUB_OUTPUT
+            echo "📦 Release Branch PR detected"
+            echo "   - Full test suite"
+            echo "   - Strict quality gates"
+            echo "   - 85% coverage requirement"
           else
             # 其他分支: 轻量验证
             echo "type=other" >> $GITHUB_OUTPUT
