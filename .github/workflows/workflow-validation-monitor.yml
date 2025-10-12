@@ -69,6 +69,7 @@ jobs:
         run: |
           echo "📦 安装act..."
           curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+          sudo mv ./bin/act /usr/local/bin/act || true
           act --version
 
       - name: Validate with act
