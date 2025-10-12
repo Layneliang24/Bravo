@@ -119,12 +119,13 @@ jobs:
         run: |
           echo "🔍 检查合并冲突标记..."
 
-          # 排除测试文件和文档中的示例代码
+          # 排除测试文件、文档和工作流中的示例代码
           CONFLICTS=$(git diff HEAD~1..HEAD | \
             grep -v 'server-hooks/test-pre-receive.sh' | \
             grep -v 'server-hooks/pre-receive' | \
             grep -v 'ENHANCEMENTS.md' | \
             grep -v 'TEST_RESULTS.md' | \
+            grep -v '.github/workflows/server-hooks-simulation.yml' | \
             grep -E '^[+].*<<<<<<<|^[+].*>>>>>>>' || true)
 
           if [ -n "$CONFLICTS" ]; then
