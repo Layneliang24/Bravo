@@ -2,7 +2,13 @@ name: "Push Validation Pipeline"
 
 on:
   push:
-    branches: [feature/*, dev, main]
+    branches:
+      - feature/*
+      - hotfix/*
+      - bugfix/*
+      - release/*
+      - dev
+      - main
   workflow_dispatch:
     inputs:
       force-full-validation:
@@ -92,6 +98,33 @@ jobs:
               echo "skip-validation=false" >> $GITHUB_OUTPUT
               echo "⚠️ DEV branch direct push detected - WARNING validation"
             fi
+
+          elif [[ "$BRANCH_NAME" =~ ^hotfix/ ]]; then
+            echo "branch-type=hotfix" >> $GITHUB_OUTPUT
+            echo "validation-level=urgent" >> $GITHUB_OUTPUT
+            echo "test-level=medium" >> $GITHUB_OUTPUT
+            echo "quality-level=standard" >> $GITHUB_OUTPUT
+            echo "coverage-required=80" >> $GITHUB_OUTPUT
+            echo "skip-validation=false" >> $GITHUB_OUTPUT
+            echo "🚨 HOTFIX branch push detected - URGENT validation"
+
+          elif [[ "$BRANCH_NAME" =~ ^bugfix/ ]]; then
+            echo "branch-type=bugfix" >> $GITHUB_OUTPUT
+            echo "validation-level=bugfix" >> $GITHUB_OUTPUT
+            echo "test-level=medium" >> $GITHUB_OUTPUT
+            echo "quality-level=standard" >> $GITHUB_OUTPUT
+            echo "coverage-required=75" >> $GITHUB_OUTPUT
+            echo "skip-validation=false" >> $GITHUB_OUTPUT
+            echo "🐛 BUGFIX branch push detected - STANDARD validation"
+
+          elif [[ "$BRANCH_NAME" =~ ^release/ ]]; then
+            echo "branch-type=release" >> $GITHUB_OUTPUT
+            echo "validation-level=release" >> $GITHUB_OUTPUT
+            echo "test-level=full" >> $GITHUB_OUTPUT
+            echo "quality-level=strict" >> $GITHUB_OUTPUT
+            echo "coverage-required=85" >> $GITHUB_OUTPUT
+            echo "skip-validation=false" >> $GITHUB_OUTPUT
+            echo "📦 RELEASE branch push detected - FULL validation"
 
           elif [[ "$BRANCH_NAME" =~ ^feature/ ]]; then
             if [[ "$COMMIT_MSG" =~ (WIP|wip|work in progress) ]]; then
