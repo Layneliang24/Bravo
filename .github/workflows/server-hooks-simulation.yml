@@ -120,13 +120,16 @@ jobs:
           echo "🔍 检查合并冲突标记..."
 
           # 排除测试文件、文档和工作流中的示例代码
+          # 使用变量拼接避免 grep 模式本身被检测到
+          MARKER_L="<""<""<""<""<""<""<"
+          MARKER_R=">"">"">"">"">"">"">"">"
           CONFLICTS=$(git diff HEAD~1..HEAD | \
             grep -v 'server-hooks/test-pre-receive.sh' | \
             grep -v 'server-hooks/pre-receive' | \
             grep -v 'ENHANCEMENTS.md' | \
             grep -v 'TEST_RESULTS.md' | \
             grep -v '.github/workflows/server-hooks-simulation.yml' | \
-            grep -E '^[+].*<<<<<<<|^[+].*>>>>>>>' || true)
+            grep -E "^\[+\].*${MARKER_L}|^\[+\].*${MARKER_R}" || true)
 
           if [ -n "$CONFLICTS" ]; then
             echo "❌ 检测到未解决的合并冲突标记"
