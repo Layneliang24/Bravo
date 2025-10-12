@@ -1,0 +1,288 @@
+name: Server-Side Hooks Simulation
+
+# 🎯 GitHub Actions 模拟服务器端 Pre-Receive 钩子
+# 用途：GitHub.com 不支持自定义 pre-receive，使用 Actions 模拟
+# 触发：所有推送到分支（feature、dev、main）
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: server-hooks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 模拟 Pre-Receive 检查
+  pre-receive-simulation:
+    name: Pre-Receive Checks Simulation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史用于检查
+
+      - name: Setup Environment
+        run: |
+          echo "🛡️ Server-Side Hooks Simulation"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Event: ${{ github.event_name }}"
+
+      # 检查1：分支保护
+      - name: Check 1 - Branch Protection
+        if: github.event_name == 'push'
+        run: |
+          BRANCH="${{ github.ref_name }}"
+
+          if [[ "$BRANCH" == "main" || "$BRANCH" == "dev" ]]; then
+            echo "❌ 检测到直接推送到受保护分支: $BRANCH"
+            echo "⚠️ 这违反了分支保护策略"
+            echo "💡 正确流程："
+            echo "  1. 创建 feature 分支"
+            echo "  2. 提交变更"
+            echo "  3. 创建 Pull Request 到 $BRANCH"
+            echo ""
+            echo "⚠️ 注意：GitHub Actions 只能警告，无法阻止推送"
+            echo "⚠️ 请配置 Branch Protection Rules 来强制执行"
+            exit 1
+          fi
+
+          echo "✅ 分支保护检查通过"
+
+      # 检查2：禁止的文件
+      - name: Check 2 - Forbidden Files
+        run: |
+          echo "🔍 检查禁止的文件模式..."
+
+          FORBIDDEN_PATTERNS=(
+            "\.env$"
+            "\.env\.local$"
+            "\.env\.production$"
+            "\.(key|pem|p12|pfx|jks)$"
+            "id_rsa"
+            "id_dsa"
+          )
+
+          FORBIDDEN_FOUND=false
+
+          for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+            FILES=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | grep -E "$pattern" || true)
+            if [ -n "$FILES" ]; then
+              echo "❌ 检测到禁止的文件模式: $pattern"
+              echo "$FILES"
+              FORBIDDEN_FOUND=true
+            fi
+          done
+
+          if [ "$FORBIDDEN_FOUND" = true ]; then
+            echo ""
+            echo "💡 请移除敏感文件后重新提交"
+            exit 1
+          fi
+
+          echo "✅ 禁止的文件检查通过"
+
+      # 检查3：大文件
+      - name: Check 3 - Large Files
+        run: |
+          echo "🔍 检查大文件（>10MB）..."
+
+          MAX_SIZE=$((10 * 1024 * 1024))
+          LARGE_FILES=$(git diff-tree -r --no-commit-id --name-only HEAD 2>/dev/null | \
+            while read file; do
+              if [ -f "$file" ]; then
+                SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
+                if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+                  echo "$file ($(($SIZE / 1024 / 1024))MB)"
+                fi
+              fi
+            done)
+
+          if [ -n "$LARGE_FILES" ]; then
+            echo "❌ 检测到大文件："
+            echo "$LARGE_FILES"
+            echo ""
+            echo "💡 请使用 Git LFS 管理大文件"
+            exit 1
+          fi
+
+          echo "✅ 大文件检查通过"
+
+      # 检查4：合并冲突标记
+      - name: Check 4 - Merge Conflict Markers
+        run: |
+          echo "🔍 检查合并冲突标记..."
+
+          # 排除测试文件、文档和工作流中的示例代码
+          # 使用变量拼接避免 grep 模式本身被检测到
+          MARKER_L="<""<""<""<""<""<""<"
+          MARKER_R=">"">"">"">"">"">"">"">"
+          CONFLICTS=$(git diff HEAD~1..HEAD | \
+            grep -v 'server-hooks/test-pre-receive.sh' | \
+            grep -v 'server-hooks/pre-receive' | \
+            grep -v 'ENHANCEMENTS.md' | \
+            grep -v 'TEST_RESULTS.md' | \
+            grep -v '.github/workflows/server-hooks-simulation.yml' | \
+            grep -E "^\[+\].*${MARKER_L}|^\[+\].*${MARKER_R}" || true)
+
+          if [ -n "$CONFLICTS" ]; then
+            echo "❌ 检测到未解决的合并冲突标记"
+            echo "$CONFLICTS"
+            exit 1
+          fi
+
+          echo "✅ 合并冲突标记检查通过"
+
+      # 检查5：根目录守卫
+      - name: Check 5 - Root Directory Guard
+        run: |
+          echo "🔍 检查根目录文件..."
+
+          ROOT_FILES=$(git diff --name-only --diff-filter=AM HEAD~1..HEAD 2>/dev/null | grep -E '^[^/]+\.' || true)
+
+          if [ -z "$ROOT_FILES" ]; then
+            echo "✅ 根目录守卫检查通过"
+            exit 0
+          fi
+
+          ALLOWED_PATTERNS=(
+            "^\."
+            "^package\.json$"
+            "^package-lock\.json$"
+            "^docker-compose.*\.yml$"
+            "^Dockerfile.*"
+            "^Makefile$"
+            "^(setup|install|configure|build|deploy|test|safe-push|passport)\.(sh|py|js)$"
+            "^(README|LICENSE|CHANGELOG|CODE_OF_CONDUCT|CONTRIBUTING|SECURITY)\.md$"
+            "^(requirements|Pipfile|Gemfile).*"
+          )
+
+          FORBIDDEN=""
+          while read -r file; do
+            [ -z "$file" ] && continue
+
+            ALLOWED=false
+            for pattern in "${ALLOWED_PATTERNS[@]}"; do
+              if echo "$file" | grep -qE "$pattern"; then
+                ALLOWED=true
+                break
+              fi
+            done
+
+            if [ "$ALLOWED" = false ]; then
+              FORBIDDEN="$FORBIDDEN\n  - $file"
+            fi
+          done <<< "$ROOT_FILES"
+
+          if [ -n "$FORBIDDEN" ]; then
+            echo "❌ 检测到根目录不允许的文件："
+            echo -e "$FORBIDDEN"
+            echo ""
+            echo "💡 请将文件移动到合适的目录"
+            exit 1
+          fi
+
+          echo "✅ 根目录守卫检查通过"
+
+      # 检查6：NPM Workspaces 保护
+      - name: Check 6 - NPM Workspaces Protection
+        run: |
+          echo "🔍 检查 NPM Workspaces 架构..."
+
+          VIOLATIONS=""
+
+          # 检查子目录 package-lock.json
+          SUB_LOCKS=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | \
+            grep -E '^(frontend|backend)/[^/]+/package-lock\.json$' || true)
+
+          if [ -n "$SUB_LOCKS" ]; then
+            VIOLATIONS="${VIOLATIONS}❌ 检测到子目录的 package-lock.json 变更\n"
+            VIOLATIONS="${VIOLATIONS}   这会破坏 npm workspaces 依赖结构\n"
+            echo "$SUB_LOCKS"
+          fi
+
+          # 检查工作流文件
+          WORKFLOW_FILES=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | \
+            grep -E '\.github/workflows/.*\.yml$' || true)
+
+          if [ -n "$WORKFLOW_FILES" ]; then
+            while read -r workflow; do
+              [ -z "$workflow" ] && continue
+              if grep -qE 'cd\s+(frontend|backend)/[^/]+.*npm\s+(ci|install)' "$workflow" 2>/dev/null; then
+                VIOLATIONS="${VIOLATIONS}❌ 工作流文件包含子目录 npm ci/install: $workflow\n"
+              fi
+            done <<< "$WORKFLOW_FILES"
+          fi
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo -e "$VIOLATIONS"
+            echo ""
+            echo "💡 正确做法："
+            echo "  1. 只在根目录运行 'npm ci'"
+            echo "  2. 子目录只运行 'npm run build/test'"
+            exit 1
+          fi
+
+          echo "✅ NPM Workspaces 架构保护通过"
+
+      # 检查7：Scripts-Golden 保护
+      - name: Check 7 - Scripts-Golden Protection
+        run: |
+          echo "🔍 检查 Scripts-Golden 目录..."
+
+          GOLDEN_CHANGES=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | \
+            grep '^scripts-golden/' || true)
+
+          if [ -n "$GOLDEN_CHANGES" ]; then
+            echo "⚠️ 检测到 scripts-golden 目录的修改："
+            echo "$GOLDEN_CHANGES"
+            echo ""
+            echo "⚠️ scripts-golden 目录包含核心安全脚本"
+            echo "💡 修改这些脚本需要："
+            echo "  1. 安全审查"
+            echo "  2. 团队批准"
+            echo "  3. 详细的变更说明"
+            echo ""
+            echo "⚠️ 这是警告，但强烈建议审查这些变更"
+          else
+            echo "✅ Scripts-Golden 保护检查通过"
+          fi
+
+      # 总结
+      - name: Summary
+        if: success()
+        run: |
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════╗"
+          echo "║  ✅ 所有服务器端检查模拟通过！                          ║"
+          echo "╚═══════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📊 已执行的检查："
+          echo "  ✅ 分支保护检查"
+          echo "  ✅ 禁止的文件检查"
+          echo "  ✅ 大文件检查"
+          echo "  ✅ 合并冲突标记检查"
+          echo "  ✅ 根目录守卫检查"
+          echo "  ✅ NPM Workspaces 保护"
+          echo "  ✅ Scripts-Golden 保护"
+          echo ""
+          echo "⚠️ 注意：GitHub Actions 只能在推送后检查"
+          echo "⚠️ 无法像服务器端钩子一样阻止推送"
+          echo "💡 请配置 Branch Protection Rules 以强制执行规则"
+
+      - name: Failed Summary
+        if: failure()
+        run: |
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════╗"
+          echo "║  ❌ 服务器端检查模拟失败！                              ║"
+          echo "╚═══════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "💡 请根据上述错误信息修复问题"
+          echo "💡 修复后重新推送或更新 Pull Request"

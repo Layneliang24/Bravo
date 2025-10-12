@@ -33,7 +33,7 @@ echo "🚀 [Execution] 开始执行代码质量检查..."
 echo "───────────────────────────────────────────"
 
 # 执行代码质量检查，使用重命名的配置文件
-pre-commit run --config "$CONFIG_FILE" "$@"
+python -m pre_commit run --config "$CONFIG_FILE" "$@"
 
 RESULT=$?
 
