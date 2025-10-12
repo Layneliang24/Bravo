@@ -13,6 +13,8 @@
     "dev:backend": "cd backend && python manage.py runserver",
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
+    "build:frontend:fast": "cd frontend && npm run build",
+    "build:skip-check": "cd frontend && npm run build",
     "test": "npm run test:frontend && npm run test:backend && npm run test:e2e",
     "test:all": "bash test_all.sh",
     "test:frontend": "cd frontend && npm run test",
