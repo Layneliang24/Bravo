@@ -100,7 +100,7 @@ class LocalTestPassport:
 
         try:
             # 测试关键工作流的语法
-            workflows_to_test = ["push-validation.yml", "on-pr.yml", "on-push-dev.yml"]
+            workflows_to_test = ["push-validation.yml", "pr-validation.yml"]
 
             for workflow in workflows_to_test:
                 self.log(f"🔍 检查工作流：{workflow}")
