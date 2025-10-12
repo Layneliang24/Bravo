@@ -1,6 +1,7 @@
 name: Workflow Validation Monitor
 
 # 监控工作流文件变更并自动验证
+# 测试: 验证持续验证流程是否正常工作 (2025-10-12)
 on:
   pull_request:
     paths:
