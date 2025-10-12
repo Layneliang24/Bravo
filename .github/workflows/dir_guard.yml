@@ -8,12 +8,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Block root clutter
         run: |
-          # 禁止根新增指定类型
-          forbidden_files=$(git diff --name-only origin/main...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          # 禁止根新增指定类型（允许删除）
+          # 使用 --diff-filter=A 只检测新增文件
+          forbidden_files=$(git diff --name-only --diff-filter=A origin/main...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
           if [ -n "$forbidden_files" ]; then
             echo "::error::检测到根目录新增文档/测试，请移至 docs/ 或同目录测试"
             echo "违规文件:"
             echo "$forbidden_files"
             exit 1
           fi
+
+          # 删除根目录违规文件是鼓励的
+          deleted_files=$(git diff --name-only --diff-filter=D origin/main...HEAD | grep -E '^[^/]+\.(md|txt|test_.*\.py|.*_test\.py|\.keep|\.example)$' || true)
+          if [ -n "$deleted_files" ]; then
+            echo "✅ 检测到删除根目录违规文件（鼓励）:"
+            echo "$deleted_files"
+          fi
+
           echo "✅ 目录检查通过"
