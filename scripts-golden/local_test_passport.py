@@ -108,6 +108,8 @@ class LocalTestPassport:
                     ["act", "push", "-W", f".github/workflows/{workflow}", "--list"],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="ignore",
                     timeout=30,
                 )
                 if result.returncode != 0:
@@ -128,6 +130,8 @@ class LocalTestPassport:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="ignore",
                 timeout=60,
             )
             if result.returncode != 0:
@@ -163,7 +167,11 @@ class LocalTestPassport:
 
             # 验证docker-compose配置
             result = subprocess.run(
-                ["docker-compose", "config"], capture_output=True, text=True
+                ["docker-compose", "config"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
             )
 
             if result.returncode != 0:
@@ -203,6 +211,8 @@ class LocalTestPassport:
                     ["docker-compose", "exec", "-T", "redis", "redis-cli", "ping"],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="ignore",
                     timeout=5,
                 )
                 if redis_result.returncode == 0:
@@ -236,10 +246,13 @@ class LocalTestPassport:
         try:
             self.log("🚀 运行GitHub Actions模拟...")
             # 确保在正确的工作目录中执行
+            # 使用sh代替bash，兼容性更好
             result = subprocess.run(
-                ["bash", "scripts-golden/run_github_actions_simulation_simple.sh"],
+                ["sh", "scripts-golden/run_github_actions_simulation_simple.sh"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="ignore",
                 timeout=300,  # 5分钟超时
                 cwd=str(self.workspace),
             )
