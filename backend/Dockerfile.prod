@@ -38,7 +38,7 @@ ENV PATH=/root/.local/bin:$PATH
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p /app/staticfiles /app/media /app/logs
+RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django
 
 # 收集静态文件
 RUN python manage.py collectstatic --noinput || true
