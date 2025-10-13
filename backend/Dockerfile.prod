@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装Python依赖
-COPY requirements/prod.txt requirements.txt
-RUN pip install --no-cache-dir --user -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+COPY requirements requirements
+RUN pip install --no-cache-dir --user -r requirements/prod.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 # 最终镜像
 FROM python:3.11-slim
