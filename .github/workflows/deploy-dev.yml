@@ -36,19 +36,19 @@ jobs:
             git pull origin dev || git clone -b dev https://github.com/Layneliang24/Bravo.git .
 
             echo "⏹️  停止旧容器..."
-            docker-compose -f docker-compose.production.yml down || true
+            docker-compose -f docker-compose.prod-optimized.yml down || true
 
             echo "📦 拉取镜像..."
-            docker-compose -f docker-compose.production.yml pull || echo "镜像拉取完成或部分失败，继续..."
+            docker-compose -f docker-compose.prod-optimized.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
             echo "🚀 启动服务..."
-            docker-compose -f docker-compose.production.yml up -d
+            docker-compose -f docker-compose.prod-optimized.yml up -d
 
             echo "⏳ 等待服务就绪..."
             sleep 10
 
             echo "📊 检查服务状态..."
-            docker-compose -f docker-compose.production.yml ps
+            docker-compose -f docker-compose.prod-optimized.yml ps
 
             echo "✅ Dev环境部署完成"
           ENDSSH
