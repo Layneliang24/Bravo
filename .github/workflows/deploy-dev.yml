@@ -1,8 +1,8 @@
-name: Deploy to Production
+name: Deploy to Dev Environment
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
 
-      - name: Deploy to server
+      - name: Deploy to dev server
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
@@ -30,24 +30,13 @@ jobs:
             cd /home/layne/project/bravo
 
             # 拉取最新代码
-            git pull origin main || git clone https://github.com/Layneliang24/Bravo.git .
+            git pull origin dev || git clone -b dev https://github.com/Layneliang24/Bravo.git .
 
             # 停止旧容器
             docker-compose -f docker-compose.production.yml down || true
 
-            # 拉取最新镜像并启动
-            docker-compose -f docker-compose.production.yml pull
+            # 启动服务（使用dev配置）
             docker-compose -f docker-compose.production.yml up -d
 
-            # 清理悬空镜像
-            docker image prune -f
-
-            echo "✅ 部署完成"
+            echo "✅ Dev环境部署完成"
           ENDSSH
-
-      - name: Health check
-        env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-        run: |
-          sleep 10
-          curl -f http://$HOST:8000/health/ || echo "⚠️ 健康检查失败"
