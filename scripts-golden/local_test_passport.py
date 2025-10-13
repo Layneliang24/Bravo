@@ -8,10 +8,20 @@
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# 设置输出编码为UTF-8，防止Windows GBK编码问题
+if sys.platform == "win32":
+    import io
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    # 设置环境变量
+    os.environ["PYTHONIOENCODING"] = "utf-8"
 
 # 北京时区（东八区）
 BEIJING_TZ = timezone(timedelta(hours=8))
