@@ -38,15 +38,15 @@ ENV PATH=/root/.local/bin:$PATH
 COPY . .
 
 # 创建必要的目录并设置权限
-RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django && \
+RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django /app/static && \
     chmod -R 777 /var/log/django
 
 # 收集静态文件（确保成功）
-RUN DJANGO_SETTINGS_MODULE=bravo.settings.production \
-    python manage.py collectstatic --noinput --clear
+ENV DJANGO_SETTINGS_MODULE=bravo.settings.production
+RUN python manage.py collectstatic --noinput --clear --skip-checks
 
-# 创建启动脚本（确保日志目录和静态文件在启动前准备好）
-RUN echo '#!/bin/sh\nset -e\nmkdir -p /var/log/django\nchmod 777 /var/log/django\necho "Collecting static files..."\npython manage.py collectstatic --noinput --clear\nexec "$@"' > /entrypoint.sh && \
+# 创建启动脚本（确保日志目录在启动前准备好）
+RUN echo '#!/bin/sh\nset -e\nmkdir -p /var/log/django\nchmod 777 /var/log/django\nexec "$@"' > /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 # 设置启动入口
