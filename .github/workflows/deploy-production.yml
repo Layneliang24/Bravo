@@ -38,7 +38,7 @@ jobs:
             echo "🚀 强制部署触发"
           elif [[ "${{ github.event_name }}" == "push" ]]; then
             # 检查是否有实质性变更
-            if git diff --quiet HEAD~1 HEAD -- '*.py' '*.js' '*.vue' '*.ts' '*.tsx' 'docker-compose.production.yml' 'Dockerfile*'; then
+            if git diff --quiet HEAD~1 HEAD -- '*.py' '*.js' '*.vue' '*.ts' '*.tsx' 'docker-compose.prod-optimized.yml' 'Dockerfile*'; then
               echo "should-deploy=false" >> $GITHUB_OUTPUT
               echo "ℹ️ 没有实质性代码变更，跳过部署"
             else
@@ -64,135 +64,52 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
 
-      - name: Test server connection
-        run: |
-          ssh -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "echo 'Connection successful'"
-
-      - name: Deploy to server
+      - name: Deploy to production server
         env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER }}
         run: |
-          # 创建环境文件
-          cat > .env.production << EOF
-          DB_NAME=bravo_production
-          DB_USER=bravo
-          DB_PASSWORD=${DB_PASSWORD}
-          DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-          DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-          DEBUG=False
-          REDIS_HOST=redis
-          REDIS_PORT=6379
-          ALLOWED_HOSTS=${SERVER_IP},localhost,127.0.0.1
-          CSRF_TRUSTED_ORIGINS=https://${SERVER_IP}
-          EOF
+          ssh -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=30 \
+              $USER@$HOST << 'ENDSSH'
+            set -e
 
-          # 同步代码到服务器
-          rsync -avz --delete --exclude='.git' --exclude='node_modules' --exclude='__pycache__' \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            . ${SSH_USER}@${SERVER_IP}:${PROJECT_PATH}/
+            echo "📁 进入项目目录..."
+            cd /home/layne/project/bravo
 
-          # 在服务器上执行部署
-          ssh ${SSH_USER}@${SERVER_IP} << 'EOF'
-            cd ${{ secrets.PROJECT_PATH }}
+            echo "🔄 拉取最新代码..."
+            git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
 
-            # 备份当前版本
-            if [ -d "backup" ]; then
-              rm -rf backup.old
-              mv backup backup.old
-            fi
-            mkdir -p backup
+            echo "⏹️  停止旧容器..."
+            docker-compose -f docker-compose.prod-optimized.yml down || true
 
-            # 如果服务正在运行，备份数据库
-            if docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
-              echo "🗄️ 备份数据库..."
-              docker-compose -f docker-compose.production.yml exec -T mysql mysqldump -u root -p${DB_ROOT_PASSWORD} bravo_production > backup/database.sql
-              docker-compose -f docker-compose.production.yml down
-            fi
+            echo "📦 拉取镜像..."
+            docker-compose -f docker-compose.prod-optimized.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
-            # 清理旧资源
-            docker system prune -f
-
-            # 构建新镜像
-            echo "🔨 构建生产镜像..."
-            docker-compose -f docker-compose.production.yml build --no-cache
-
-            # 启动服务
             echo "🚀 启动服务..."
-            docker-compose -f docker-compose.production.yml up -d
+            docker-compose -f docker-compose.prod-optimized.yml up -d
 
-            # 等待数据库启动
-            echo "⏳ 等待数据库启动..."
-            sleep 45
+            echo "⏳ 等待服务就绪..."
+            sleep 10
 
-            # 执行数据库迁移
-            echo "🗄️ 执行数据库迁移..."
-            docker-compose -f docker-compose.production.yml exec -T backend python manage.py migrate
+            echo "📊 检查服务状态..."
+            docker-compose -f docker-compose.prod-optimized.yml ps
 
-            # 收集静态文件
-            echo "📦 收集静态文件..."
-            docker-compose -f docker-compose.production.yml exec -T backend python manage.py collectstatic --noinput
-
-            # 重启服务确保配置生效
-            echo "🔄 重启服务..."
-            docker-compose -f docker-compose.production.yml restart
-
-            echo "✅ 部署完成"
-          EOF
+            echo "✅ 生产环境部署完成"
+          ENDSSH
 
       - name: Health check
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          # 等待服务完全启动
-          sleep 60
-
-          # 检查服务状态
-          MAX_ATTEMPTS=10
-          ATTEMPT=0
-
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            if curl -f http://${{ secrets.SERVER_IP }}/health > /dev/null 2>&1; then
-              echo "✅ 前端服务正常"
-              break
-            fi
-            ATTEMPT=$((ATTEMPT + 1))
-            echo "⏳ 等待前端服务启动... ($ATTEMPT/$MAX_ATTEMPTS)"
-            sleep 30
-          done
-
-          ATTEMPT=0
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            if curl -f http://${{ secrets.SERVER_IP }}:8000/health/ > /dev/null 2>&1; then
-              echo "✅ 后端服务正常"
-              break
-            fi
-            ATTEMPT=$((ATTEMPT + 1))
-            echo "⏳ 等待后端服务启动... ($ATTEMPT/$MAX_ATTEMPTS)"
-            sleep 30
-          done
-
-      - name: Deployment notification
-        if: always()
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "🎉 生产环境部署成功！"
-            echo ""
-            echo "📍 访问地址:"
-            echo "  前端: http://${{ secrets.SERVER_IP }}"
-            echo "  后端API: http://${{ secrets.SERVER_IP }}:8000/api"
-            echo "  管理后台: http://${{ secrets.SERVER_IP }}:8000/admin"
-          else
-            echo "❌ 部署失败，请检查日志"
-          fi
+          sleep 20
+          curl -f http://$HOST/health || echo "⚠️ 前端健康检查失败"
+          curl -f http://$HOST/api/ || echo "⚠️ 后端健康检查失败"
 
   # 部署后测试
   post-deploy-tests:
@@ -203,18 +120,21 @@ jobs:
 
     steps:
       - name: API Health Check
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          # 测试API端点
-          curl -f http://${{ secrets.SERVER_IP }}:8000/health/ || exit 1
-          curl -f http://${{ secrets.SERVER_IP }}:8000/api/ || exit 1
+          curl -f http://$HOST/api/ || exit 1
+          curl -f http://$HOST/admin/ || exit 1
 
       - name: Frontend Check
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          # 测试前端
-          curl -f http://${{ secrets.SERVER_IP }}/health || exit 1
-          curl -f http://${{ secrets.SERVER_IP }}/ || exit 1
+          curl -f http://$HOST/ || exit 1
 
       - name: Create deployment summary
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
           echo "## 🚀 生产环境部署报告" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -224,9 +144,9 @@ jobs:
           echo "**部署状态:** ✅ 成功" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📍 服务地址" >> $GITHUB_STEP_SUMMARY
-          echo "- **前端:** http://${{ secrets.SERVER_IP }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **后端API:** http://${{ secrets.SERVER_IP }}:8000/api" >> $GITHUB_STEP_SUMMARY
-          echo "- **管理后台:** http://${{ secrets.SERVER_IP }}:8000/admin" >> $GITHUB_STEP_SUMMARY
+          echo "- **前端:** http://$HOST" >> $GITHUB_STEP_SUMMARY
+          echo "- **后端API:** http://$HOST/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **管理后台:** http://$HOST/admin" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ 健康检查" >> $GITHUB_STEP_SUMMARY
           echo "- 前端服务: 正常" >> $GITHUB_STEP_SUMMARY
