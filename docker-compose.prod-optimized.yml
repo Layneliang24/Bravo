@@ -68,8 +68,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/staticfiles:/app/staticfiles
+      # staticfiles在容器内构建，不需要挂载
+      # - ./backend/staticfiles:/app/staticfiles
       - ./backend/media:/app/media
+      - staticfiles:/app/staticfiles # 使用named volume在frontend间共享
     depends_on:
       - mysql
       - redis
@@ -118,7 +120,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./backend/staticfiles:/usr/share/nginx/html/static
+      - staticfiles:/usr/share/nginx/html/static:ro # 从backend共享，只读
       - ./backend/media:/usr/share/nginx/html/media
     depends_on:
       - backend
@@ -133,3 +135,4 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  staticfiles: # 用于backend和frontend共享静态文件
