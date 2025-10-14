@@ -37,14 +37,17 @@ ENV PATH=/root/.local/bin:$PATH
 # 复制代码
 COPY . .
 
-# 创建必要的目录
-RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django
+# 创建必要的目录并设置权限
+RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django && \
+    chmod -R 777 /var/log/django
 
 # 收集静态文件
 RUN python manage.py collectstatic --noinput || true
 
 # 运行迁移和启动服务
-CMD python manage.py migrate --noinput && \
+CMD mkdir -p /var/log/django && \
+    chmod 777 /var/log/django && \
+    python manage.py migrate --noinput && \
     gunicorn bravo.wsgi:application \
     --bind 0.0.0.0:8000 \
     --workers 2 \
