@@ -44,16 +44,12 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs /var/log/django && \
 # 收集静态文件
 RUN python manage.py collectstatic --noinput || true
 
+# 创建启动脚本（确保日志目录在Django初始化前存在）
+RUN echo '#!/bin/sh\nset -e\nmkdir -p /var/log/django\nchmod 777 /var/log/django\nexec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# 设置启动入口
+ENTRYPOINT ["/entrypoint.sh"]
+
 # 运行迁移和启动服务
-CMD mkdir -p /var/log/django && \
-    chmod 777 /var/log/django && \
-    python manage.py migrate --noinput && \
-    gunicorn bravo.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 2 \
-    --threads 2 \
-    --max-requests 1000 \
-    --max-requests-jitter 50 \
-    --timeout 30 \
-    --access-logfile - \
-    --error-logfile -
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn bravo.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 2 --max-requests 1000 --max-requests-jitter 50 --timeout 30 --access-logfile - --error-logfile -"]
