@@ -51,7 +51,7 @@ fi
 
 echo ""
 echo "📦 步骤2：停止Nginx容器..."
-docker-compose -f docker-compose.prod-optimized.yml stop frontend
+docker-compose -f docker-compose.prod.yml stop frontend
 
 echo ""
 echo "📜 步骤3：申请SSL证书..."
@@ -95,7 +95,7 @@ EOF
 
 echo ""
 echo "🚀 步骤6：重启服务..."
-docker-compose -f docker-compose.prod-optimized.yml up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 echo ""
 echo "✅ SSL证书配置完成！"
@@ -108,5 +108,5 @@ echo "  Let's Encrypt证书90天有效期"
 echo "  添加到crontab自动续期："
 echo "  sudo crontab -e"
 echo "  添加以下行："
-echo "  0 0 1 * * certbot renew --quiet && docker-compose -f $(pwd)/docker-compose.prod-optimized.yml restart frontend"
+echo "  0 0 1 * * certbot renew --quiet && docker-compose -f $(pwd)/docker-compose.prod.yml restart frontend"
 echo ""

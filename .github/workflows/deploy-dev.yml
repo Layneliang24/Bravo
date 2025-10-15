@@ -29,26 +29,26 @@ jobs:
               $USER@$HOST << 'ENDSSH'
             set -e
 
-            echo "📁 进入项目目录..."
-            cd /home/layne/project/bravo-dev
+          echo "📁 进入项目目录..."
+          cd /home/layne/project/bravo-dev
 
-            echo "🔄 拉取最新代码..."
-            git pull origin dev || git clone -b dev https://github.com/Layneliang24/Bravo.git .
+          echo "🔄 拉取最新代码..."
+          git pull origin dev || git clone -b dev https://github.com/Layneliang24/Bravo.git .
 
-            echo "⏹️  停止旧容器..."
-            docker-compose -f docker-compose.dev-server.yml down || true
+          echo "⏹️  停止旧容器..."
+          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
 
-            echo "📦 拉取镜像..."
-            docker-compose -f docker-compose.dev-server.yml pull || echo "镜像拉取完成或部分失败，继续..."
+          echo "📦 拉取镜像..."
+          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
-            echo "🚀 启动服务..."
-            docker-compose -f docker-compose.dev-server.yml up -d
+          echo "🚀 启动服务..."
+          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml up -d
 
-            echo "⏳ 等待服务就绪..."
-            sleep 10
+          echo "⏳ 等待服务就绪..."
+          sleep 10
 
-            echo "📊 检查服务状态..."
-            docker-compose -f docker-compose.dev-server.yml ps
+          echo "📊 检查服务状态..."
+          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml ps
 
             echo "✅ Dev环境部署完成"
           ENDSSH
