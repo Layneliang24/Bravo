@@ -83,7 +83,13 @@ jobs:
           cd /home/layne/project/bravo-prod
 
           echo "🔄 拉取最新代码..."
-          git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
+          if [ -d ".git" ]; then
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+          else
+            git clone -b main https://github.com/Layneliang24/Bravo.git .
+          fi
 
           echo "⏹️  停止旧容器..."
           COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml down || true
