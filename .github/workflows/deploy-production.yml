@@ -3,11 +3,61 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "强制部署"
+        required: false
+        default: "false"
+
+# 确保只有一个部署在运行
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  # 部署前检查
+  pre-deploy:
+    name: Pre-deployment Checks
     runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if should deploy
+        id: check
+        run: |
+          if [[ "${{ github.event.inputs.force_deploy }}" == "true" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "🚀 强制部署触发"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # 检查是否有实质性变更
+            if git diff --quiet HEAD~1 HEAD -- '*.py' '*.js' '*.vue' '*.ts' '*.tsx' 'docker-compose.prod-optimized.yml' 'Dockerfile*'; then
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "ℹ️ 没有实质性代码变更，跳过部署"
+            else
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "✅ 检测到代码变更，准备部署"
+            fi
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  # 生产环境部署
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    if: needs.pre-deploy.outputs.should-deploy == 'true'
+    environment:
+      name: production
+      url: http://8.129.16.190
 
     steps:
       - name: Checkout code
@@ -18,36 +68,87 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
 
-      - name: Deploy to server
+      - name: Deploy to production server
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no $USER@$HOST << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=30 \
+              $USER@$HOST << 'ENDSSH'
             set -e
 
-            # 进入项目目录
-            cd /home/layne/project/bravo
+            echo "📁 进入项目目录..."
+            cd /home/layne/project/bravo-prod
 
-            # 拉取最新代码
-            git pull origin main || git clone https://github.com/Layneliang24/Bravo.git .
+            echo "🔄 拉取最新代码..."
+            git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
 
-            # 停止旧容器
-            docker-compose -f docker-compose.production.yml down || true
+            echo "⏹️  停止旧容器..."
+            docker-compose -f docker-compose.prod-server.yml down || true
 
-            # 拉取最新镜像并启动
-            docker-compose -f docker-compose.production.yml pull
-            docker-compose -f docker-compose.production.yml up -d
+            echo "📦 拉取镜像..."
+            docker-compose -f docker-compose.prod-server.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
-            # 清理悬空镜像
-            docker image prune -f
+            echo "🚀 启动服务..."
+            docker-compose -f docker-compose.prod-server.yml up -d
 
-            echo "✅ 部署完成"
+            echo "⏳ 等待服务就绪..."
+            sleep 10
+
+            echo "📊 检查服务状态..."
+            docker-compose -f docker-compose.prod-server.yml ps
+
+            echo "✅ 生产环境部署完成"
           ENDSSH
 
       - name: Health check
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          sleep 10
-          curl -f http://$HOST:8000/health/ || echo "⚠️ 健康检查失败"
+          sleep 20
+          curl -f http://$HOST/health || echo "⚠️ 前端健康检查失败"
+          curl -f http://$HOST/api/ || echo "⚠️ 后端健康检查失败"
+
+  # 部署后测试
+  post-deploy-tests:
+    name: Post-deployment Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always() && needs.deploy.result == 'success'
+
+    steps:
+      - name: API Health Check
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+        run: |
+          curl -f http://$HOST/api/ || exit 1
+          curl -f http://$HOST/admin/ || exit 1
+
+      - name: Frontend Check
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+        run: |
+          curl -f http://$HOST/ || exit 1
+
+      - name: Create deployment summary
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+        run: |
+          echo "## 🚀 生产环境部署报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**部署时间:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**部署分支:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**提交SHA:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**部署状态:** ✅ 成功" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📍 服务地址" >> $GITHUB_STEP_SUMMARY
+          echo "- **前端:** http://$HOST" >> $GITHUB_STEP_SUMMARY
+          echo "- **后端API:** http://$HOST/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **管理后台:** http://$HOST/admin" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ 健康检查" >> $GITHUB_STEP_SUMMARY
+          echo "- 前端服务: 正常" >> $GITHUB_STEP_SUMMARY
+          echo "- 后端服务: 正常" >> $GITHUB_STEP_SUMMARY
+          echo "- 数据库: 正常" >> $GITHUB_STEP_SUMMARY

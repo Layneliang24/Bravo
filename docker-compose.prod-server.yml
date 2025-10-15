@@ -1,0 +1,138 @@
+# Production环境服务器部署配置
+# 部署路径: /home/layne/project/bravo-prod
+# 使用方式: docker-compose -f docker-compose.prod-server.yml up -d
+
+services:
+  # MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: bravo-mysql-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-bravo_prod_2024}
+      MYSQL_DATABASE: ${DB_NAME:-bravo_production}
+      MYSQL_USER: ${DB_USER:-bravo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-bravo_pass_2024}
+    ports:
+      - "3307:3306" # 改端口避免与dev冲突
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=50
+      --innodb_buffer_pool_size=128M
+      --innodb_log_file_size=32M
+      --performance_schema=OFF
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M
+    restart: unless-stopped
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: bravo-redis-prod
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru --port 6380
+    ports:
+      - "6380:6380" # 改端口避免与dev冲突
+    volumes:
+      - redis_data_prod:/data
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+        reservations:
+          memory: 50M
+    restart: unless-stopped
+
+  # Django后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: bravo-backend-prod
+    environment:
+      - DJANGO_SETTINGS_MODULE=bravo.settings.production
+      - DB_NAME=${DB_NAME:-bravo_production}
+      - DB_USER=${DB_USER:-bravo}
+      - DB_PASSWORD=${DB_PASSWORD:-bravo_pass_2024}
+      - DB_HOST=mysql
+      - DB_PORT=3306 # 容器内部端口不变
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380 # 容器内部端口改为6380
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DISABLE_SSL_REDIRECT=True
+    ports:
+      - "8001:8000" # 改端口避免与dev冲突
+    volumes:
+      - ./backend/media:/app/media
+      - staticfiles_prod:/app/staticfiles
+    depends_on:
+      - mysql
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M
+    restart: unless-stopped
+
+  # Celery Worker
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: bravo-celery-prod
+    command: sh -c "mkdir -p /var/log/django && chmod 777 /var/log/django && celery -A bravo worker -l warning --concurrency=1"
+    environment:
+      - DJANGO_SETTINGS_MODULE=bravo.settings.production
+      - DB_NAME=${DB_NAME:-bravo_production}
+      - DB_USER=${DB_USER:-bravo}
+      - DB_PASSWORD=${DB_PASSWORD:-bravo_pass_2024}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
+    depends_on:
+      - mysql
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+        reservations:
+          memory: 150M
+    restart: unless-stopped
+
+  # Vue前端 + Nginx (生产环境使用不同端口或域名)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: bravo-frontend-prod
+    ports:
+      - "8080:80" # 改端口避免与dev冲突（后续可配置域名）
+      # 生产环境HTTPS暂时禁用
+      # - "8443:443"
+    volumes:
+      - staticfiles_prod:/usr/share/nginx/html/static:ro
+      - ./backend/media:/usr/share/nginx/html/media
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
+    restart: unless-stopped
+
+volumes:
+  mysql_data_prod:
+  redis_data_prod:
+  staticfiles_prod:
