@@ -86,19 +86,29 @@ jobs:
             git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
 
             echo "⏹️  停止旧容器..."
-            docker-compose -f docker-compose.prod-server.yml down || true
+            docker-compose -f docker-compose.prod-optimized.yml down || true
 
             echo "📦 拉取镜像..."
-            docker-compose -f docker-compose.prod-server.yml pull || echo "镜像拉取完成或部分失败，继续..."
+            docker-compose -f docker-compose.prod-optimized.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
-            echo "🚀 启动服务..."
-            docker-compose -f docker-compose.prod-server.yml up -d
+            echo "🚀 启动服务（使用prod端口配置）..."
+            # 使用.env.prod中的端口配置
+            if [ -f .env.prod ]; then
+              set -a && source .env.prod && set +a
+            fi
+            COMPOSE_PROJECT_NAME=bravo-prod \
+            FRONTEND_HTTP_PORT=8080 \
+            FRONTEND_HTTPS_PORT=8443 \
+            BACKEND_PORT=8001 \
+            MYSQL_PORT=3307 \
+            REDIS_PORT=6380 \
+            docker-compose -f docker-compose.prod-optimized.yml up -d
 
             echo "⏳ 等待服务就绪..."
             sleep 10
 
             echo "📊 检查服务状态..."
-            docker-compose -f docker-compose.prod-server.yml ps
+            docker-compose -f docker-compose.prod-optimized.yml ps
 
             echo "✅ 生产环境部署完成"
           ENDSSH
@@ -108,8 +118,8 @@ jobs:
           HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
           sleep 20
-          curl -f http://$HOST/health || echo "⚠️ 前端健康检查失败"
-          curl -f http://$HOST/api/ || echo "⚠️ 后端健康检查失败"
+          curl -f http://$HOST:8080/health || echo "⚠️ 前端健康检查失败"
+          curl -f http://$HOST:8001/health/ || echo "⚠️ 后端健康检查失败"
 
   # 部署后测试
   post-deploy-tests:
@@ -123,14 +133,14 @@ jobs:
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          curl -f http://$HOST/api/ || exit 1
-          curl -f http://$HOST/admin/ || exit 1
+          curl -f http://$HOST:8001/api/ || exit 1
+          curl -f http://$HOST:8080/admin/ || exit 1
 
       - name: Frontend Check
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          curl -f http://$HOST/ || exit 1
+          curl -f http://$HOST:8080/ || exit 1
 
       - name: Create deployment summary
         env:
@@ -144,9 +154,9 @@ jobs:
           echo "**部署状态:** ✅ 成功" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📍 服务地址" >> $GITHUB_STEP_SUMMARY
-          echo "- **前端:** http://$HOST" >> $GITHUB_STEP_SUMMARY
-          echo "- **后端API:** http://$HOST/api" >> $GITHUB_STEP_SUMMARY
-          echo "- **管理后台:** http://$HOST/admin" >> $GITHUB_STEP_SUMMARY
+          echo "- **前端:** http://$HOST:8080" >> $GITHUB_STEP_SUMMARY
+          echo "- **后端API:** http://$HOST:8001/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **管理后台:** http://$HOST:8080/admin" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ 健康检查" >> $GITHUB_STEP_SUMMARY
           echo "- 前端服务: 正常" >> $GITHUB_STEP_SUMMARY
