@@ -133,7 +133,7 @@ Let's Encrypt证书有效期90天，需要自动续期：
 sudo crontab -e
 
 # 添加自动续期任务（每月1号凌晨执行）
-0 0 1 * * certbot renew --quiet && docker-compose -f /home/layne/project/bravo/docker-compose.prod-optimized.yml restart frontend
+0 0 1 * * certbot renew --quiet && docker-compose -f /home/layne/project/bravo/docker-compose.prod.yml restart frontend
 ```
 
 ### 步骤5：验证HTTPS
@@ -191,7 +191,7 @@ services:
 cp frontend/nginx-ssl.conf frontend/nginx.conf
 
 # 重启服务
-docker-compose -f docker-compose.prod-optimized.yml restart frontend
+docker-compose -f docker-compose.prod.yml restart frontend
 ```
 
 ### 步骤4：信任自签名证书
@@ -298,7 +298,7 @@ ssl_session_timeout 10m;
 sudo certbot renew
 
 # 重启Nginx
-docker-compose -f docker-compose.prod-optimized.yml restart frontend
+docker-compose -f docker-compose.prod.yml restart frontend
 
 # 验证新证书
 echo | openssl s_client -servername your-domain.com -connect your-domain.com:443 2>/dev/null | openssl x509 -noout -dates
@@ -319,7 +319,7 @@ echo | openssl s_client -servername your-domain.com -connect your-domain.com:443
 
 如果暂时不配置SSL，可以禁用HTTPS重定向：
 
-在 `docker-compose.prod-optimized.yml` 的backend服务中添加：
+在 `docker-compose.prod.yml` 的backend服务中添加：
 
 ```yaml
 environment:

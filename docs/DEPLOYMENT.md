@@ -83,19 +83,19 @@ cp .env.production .env
 nano .env  # 修改配置
 
 # 启动服务
-docker-compose -f docker-compose.production.yml up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 # 等待服务启动（约2-3分钟）
 sleep 180
 
 # 执行数据库迁移
-docker-compose -f docker-compose.production.yml exec backend python manage.py migrate
+docker-compose -f docker-compose.prod.yml exec backend python manage.py migrate
 
 # 收集静态文件
-docker-compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+docker-compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --noinput
 
 # 创建管理员用户
-docker-compose -f docker-compose.production.yml exec backend python manage.py createsuperuser
+docker-compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
 ```
 
 ## ⚙️ 关键配置说明
@@ -160,10 +160,10 @@ echo "0 12 * * * /usr/bin/certbot renew --quiet" | crontab -
 
 ```bash
 # 检查所有服务状态
-docker-compose -f docker-compose.production.yml ps
+docker-compose -f docker-compose.prod.yml ps
 
 # 检查服务日志
-docker-compose -f docker-compose.production.yml logs
+docker-compose -f docker-compose.prod.yml logs
 ```
 
 ### 2. 功能测试
@@ -211,23 +211,23 @@ ab -n 1000 -c 10 http://8.129.16.190:8000/api/
 
 ```bash
 # 查看服务状态
-docker-compose -f docker-compose.production.yml ps
+docker-compose -f docker-compose.prod.yml ps
 
 # 查看日志
-docker-compose -f docker-compose.production.yml logs -f
+docker-compose -f docker-compose.prod.yml logs -f
 
 # 重启服务
-docker-compose -f docker-compose.production.yml restart
+docker-compose -f docker-compose.prod.yml restart
 
 # 更新代码
 git pull origin main
-docker-compose -f docker-compose.production.yml restart
+docker-compose -f docker-compose.prod.yml restart
 
 # 备份数据库
-docker-compose -f docker-compose.production.yml exec mysql mysqldump -u root -p bravo_production > backup.sql
+docker-compose -f docker-compose.prod.yml exec mysql mysqldump -u root -p bravo_production > backup.sql
 
 # 还原数据库
-docker-compose -f docker-compose.production.yml exec -T mysql mysql -u root -p bravo_production < backup.sql
+docker-compose -f docker-compose.prod.yml exec -T mysql mysql -u root -p bravo_production < backup.sql
 ```
 
 ### 监控和日志
@@ -289,20 +289,20 @@ systemctl restart docker
 
 ```bash
 # 检查MySQL容器
-docker-compose -f docker-compose.production.yml logs mysql
+docker-compose -f docker-compose.prod.yml logs mysql
 
 # 重启数据库
-docker-compose -f docker-compose.production.yml restart mysql
+docker-compose -f docker-compose.prod.yml restart mysql
 ```
 
 #### 3. 前端资源404
 
 ```bash
 # 重新收集静态文件
-docker-compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+docker-compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --noinput
 
 # 重启前端容器
-docker-compose -f docker-compose.production.yml restart frontend
+docker-compose -f docker-compose.prod.yml restart frontend
 ```
 
 #### 4. 内存不足

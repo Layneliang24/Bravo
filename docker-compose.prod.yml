@@ -1,21 +1,32 @@
-# Dev环境服务器部署配置
-# 部署路径: /home/layne/project/bravo-dev
-# 使用方式: docker-compose -f docker-compose.dev-server.yml up -d
+# 生产环境部署配置
+# 支持多环境部署（bravo-dev / bravo-prod）
+#
+# 使用方式:
+#   Dev环境:  COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml up -d
+#   Prod环境: COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml up -d
+#
+# 环境变量配置（可选，默认为prod环境）:
+#   COMPOSE_PROJECT_NAME: 项目名称前缀，决定容器名和卷名
+#   MYSQL_PORT: MySQL外部端口 (默认3306)
+#   REDIS_PORT: Redis外部端口 (默认6379)
+#   BACKEND_PORT: Backend外部端口 (默认8000)
+#   FRONTEND_HTTP_PORT: Frontend HTTP外部端口 (默认80)
+#   FRONTEND_HTTPS_PORT: Frontend HTTPS外部端口 (默认443)
 
 services:
-  # MySQL
+  # MySQL - 内存优化配置
   mysql:
     image: mysql:8.0
-    container_name: bravo-mysql-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-bravo_dev_2024}
-      MYSQL_DATABASE: ${DB_NAME:-bravo_dev}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-bravo_prod_2024}
+      MYSQL_DATABASE: ${DB_NAME:-bravo_production}
       MYSQL_USER: ${DB_USER:-bravo}
       MYSQL_PASSWORD: ${DB_PASSWORD:-bravo_pass_2024}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
-      - mysql_data_dev:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     command: >
       --default-authentication-plugin=mysql_native_password
       --max_connections=50
@@ -30,15 +41,15 @@ services:
           memory: 200M
     restart: unless-stopped
 
-  # Redis
+  # Redis - 轻量配置
   redis:
     image: redis:7-alpine
-    container_name: bravo-redis-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-redis
     command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis_data_dev:/data
+      - redis_data:/data
     deploy:
       resources:
         limits:
@@ -52,25 +63,25 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
-    container_name: bravo-backend-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-backend
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.production
-      - DB_NAME=${DB_NAME:-bravo_dev}
+      - DB_NAME=${DB_NAME:-bravo_production}
       - DB_USER=${DB_USER:-bravo}
       - DB_PASSWORD=${DB_PASSWORD:-bravo_pass_2024}
       - DB_HOST=mysql
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-me}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
       - DEBUG=False
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
       - DISABLE_SSL_REDIRECT=True
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend/media:/app/media
-      - staticfiles_dev:/app/staticfiles
+      - staticfiles:/app/staticfiles
     depends_on:
       - mysql
       - redis
@@ -82,16 +93,16 @@ services:
           memory: 200M
     restart: unless-stopped
 
-  # Celery Worker
+  # Celery Worker - 轻量配置
   celery:
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
-    container_name: bravo-celery-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-celery
     command: sh -c "mkdir -p /var/log/django && chmod 777 /var/log/django && celery -A bravo worker -l warning --concurrency=1"
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.production
-      - DB_NAME=${DB_NAME:-bravo_dev}
+      - DB_NAME=${DB_NAME:-bravo_production}
       - DB_USER=${DB_USER:-bravo}
       - DB_PASSWORD=${DB_PASSWORD:-bravo_pass_2024}
       - DB_HOST=mysql
@@ -114,12 +125,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
-    container_name: bravo-frontend-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-frontend
     ports:
-      - "80:80"
-      - "443:443"
+      - "${FRONTEND_HTTP_PORT:-80}:80"
+      - "${FRONTEND_HTTPS_PORT:-443}:443"
     volumes:
-      - staticfiles_dev:/usr/share/nginx/html/static:ro
+      - staticfiles:/usr/share/nginx/html/static:ro
       - ./backend/media:/usr/share/nginx/html/media
     depends_on:
       - backend
@@ -132,6 +143,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  mysql_data_dev:
-  redis_data_dev:
-  staticfiles_dev:
+  mysql_data:
+  redis_data:
+  staticfiles:
+

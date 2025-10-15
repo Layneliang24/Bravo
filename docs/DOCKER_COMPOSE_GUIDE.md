@@ -6,12 +6,12 @@ Bravo项目的Docker配置经过优化，提供清晰、模块化的容器编排
 
 ### 核心配置文件（4个）
 
-| 文件                                | 用途               | 使用场景       |
-| ----------------------------------- | ------------------ | -------------- |
-| `docker-compose.yml`                | 基础开发环境       | 日常开发       |
-| `docker-compose.test.yml`           | 测试环境           | CI/CD测试      |
-| `docker-compose.production.yml`     | 生产环境           | 生产部署       |
-| `docker-compose.github-actions.yml` | GitHub Actions仿真 | 本地工作流调试 |
+| 文件                      | 用途               | 使用场景       |
+| ------------------------- | ------------------ | -------------- |
+| `docker-compose.yml`      | 基础开发环境       | 日常开发       |
+| `docker-compose.test.yml` | 测试环境           | CI/CD测试      |
+| `docker-compose.prod.yml` | 生产环境           | 生产部署       |
+| `docker-compose.ci.yml`   | GitHub Actions仿真 | 本地工作流调试 |
 
 ### 可选增强配置（2个）
 
@@ -20,12 +20,13 @@ Bravo项目的Docker配置经过优化，提供清晰、模块化的容器编排
 | `docker-compose.monitoring.yml` | 监控和日志 | Prometheus, Grafana, Elasticsearch, Kibana |
 | `docker-compose.tools.yml`      | 开发工具   | Mailhog, MinIO, Nginx                      |
 
-### 环境配置文件
+### 环境变量说明
 
-| 文件                                | 用途                 |
-| ----------------------------------- | -------------------- |
-| `docker/env/env.production.example` | 生产环境配置示例     |
-| `docker/env/env.local-prod.example` | 本地生产测试配置示例 |
+生产环境部署使用 `docker-compose.prod.yml`，支持通过环境变量区分不同部署环境：
+
+- `COMPOSE_PROJECT_NAME`: 项目名称前缀（如 `bravo-dev` 或 `bravo-prod`）
+- `MYSQL_PORT`, `REDIS_PORT`, `BACKEND_PORT`: 服务端口配置
+- `FRONTEND_HTTP_PORT`, `FRONTEND_HTTPS_PORT`: 前端端口配置
 
 ---
 
