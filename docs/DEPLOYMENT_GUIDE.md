@@ -63,7 +63,7 @@ cd /home/layne/project/bravo
 git pull origin main
 
 # 重新构建并启动
-docker-compose -f docker-compose.prod-optimized.yml up -d --build
+docker-compose -f docker-compose.prod.yml up -d --build
 
 # 执行数据库迁移
 docker exec bravo-backend-prod python manage.py migrate
@@ -153,22 +153,22 @@ backend:
 
 ```bash
 # 查看运行状态
-docker-compose -f docker-compose.prod-optimized.yml ps
+docker-compose -f docker-compose.prod.yml ps
 
 # 查看日志
-docker-compose -f docker-compose.prod-optimized.yml logs -f
+docker-compose -f docker-compose.prod.yml logs -f
 
 # 查看特定服务日志
-docker-compose -f docker-compose.prod-optimized.yml logs -f backend
+docker-compose -f docker-compose.prod.yml logs -f backend
 
 # 重启服务
-docker-compose -f docker-compose.prod-optimized.yml restart
+docker-compose -f docker-compose.prod.yml restart
 
 # 停止服务
-docker-compose -f docker-compose.prod-optimized.yml stop
+docker-compose -f docker-compose.prod.yml stop
 
 # 完全停止并删除
-docker-compose -f docker-compose.prod-optimized.yml down
+docker-compose -f docker-compose.prod.yml down
 ```
 
 ### Django管理
@@ -247,8 +247,8 @@ docker stop <container_id>
 docker logs bravo-mysql-prod
 
 # 可能需要清理数据重新初始化
-docker-compose -f docker-compose.prod-optimized.yml down -v
-docker-compose -f docker-compose.prod-optimized.yml up -d
+docker-compose -f docker-compose.prod.yml down -v
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### 4. 静态文件404
@@ -260,7 +260,7 @@ docker-compose -f docker-compose.prod-optimized.yml up -d
 docker exec bravo-backend-prod python manage.py collectstatic --noinput
 
 # 重启nginx
-docker-compose -f docker-compose.prod-optimized.yml restart frontend
+docker-compose -f docker-compose.prod.yml restart frontend
 ```
 
 ---
@@ -289,7 +289,7 @@ docker system prune -a
 # MySQL: docker logs bravo-mysql-prod
 
 # 清理旧日志
-docker-compose -f docker-compose.prod-optimized.yml logs --tail=100
+docker-compose -f docker-compose.prod.yml logs --tail=100
 ```
 
 ---

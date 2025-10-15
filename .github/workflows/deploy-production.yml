@@ -38,7 +38,7 @@ jobs:
             echo "🚀 强制部署触发"
           elif [[ "${{ github.event_name }}" == "push" ]]; then
             # 检查是否有实质性变更
-            if git diff --quiet HEAD~1 HEAD -- '*.py' '*.js' '*.vue' '*.ts' '*.tsx' 'docker-compose.prod-optimized.yml' 'Dockerfile*'; then
+            if git diff --quiet HEAD~1 HEAD -- '*.py' '*.js' '*.vue' '*.ts' '*.tsx' 'docker-compose.prod.yml' 'Dockerfile*'; then
               echo "should-deploy=false" >> $GITHUB_OUTPUT
               echo "ℹ️ 没有实质性代码变更，跳过部署"
             else
@@ -79,26 +79,26 @@ jobs:
               $USER@$HOST << 'ENDSSH'
             set -e
 
-            echo "📁 进入项目目录..."
-            cd /home/layne/project/bravo-prod
+          echo "📁 进入项目目录..."
+          cd /home/layne/project/bravo-prod
 
-            echo "🔄 拉取最新代码..."
-            git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
+          echo "🔄 拉取最新代码..."
+          git pull origin main || git clone -b main https://github.com/Layneliang24/Bravo.git .
 
-            echo "⏹️  停止旧容器..."
-            docker-compose -f docker-compose.prod-server.yml down || true
+          echo "⏹️  停止旧容器..."
+          COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml down || true
 
-            echo "📦 拉取镜像..."
-            docker-compose -f docker-compose.prod-server.yml pull || echo "镜像拉取完成或部分失败，继续..."
+          echo "📦 拉取镜像..."
+          COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
-            echo "🚀 启动服务..."
-            docker-compose -f docker-compose.prod-server.yml up -d
+          echo "🚀 启动服务..."
+          COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml up -d
 
-            echo "⏳ 等待服务就绪..."
-            sleep 10
+          echo "⏳ 等待服务就绪..."
+          sleep 10
 
-            echo "📊 检查服务状态..."
-            docker-compose -f docker-compose.prod-server.yml ps
+          echo "📊 检查服务状态..."
+          COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml ps
 
             echo "✅ 生产环境部署完成"
           ENDSSH

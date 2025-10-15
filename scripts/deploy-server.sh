@@ -13,14 +13,14 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # 检查是否在项目根目录
-if [ ! -f "docker-compose.prod-optimized.yml" ]; then
+if [ ! -f "docker-compose.prod.yml" ]; then
     echo -e "${RED}❌ 错误: 请在项目根目录执行此脚本${NC}"
     exit 1
 fi
 
 # 1. 停止并清理旧容器
 echo -e "${YELLOW}📦 停止旧容器...${NC}"
-docker-compose -f docker-compose.prod-optimized.yml down || true
+docker-compose -f docker-compose.prod.yml down || true
 
 # 2. 清理alpha项目容器（如果存在）
 echo -e "${YELLOW}🧹 清理alpha项目...${NC}"
@@ -49,11 +49,11 @@ fi
 
 # 4. 构建镜像
 echo -e "${YELLOW}🔨 构建Docker镜像...${NC}"
-docker-compose -f docker-compose.prod-optimized.yml build --no-cache
+docker-compose -f docker-compose.prod.yml build --no-cache
 
 # 5. 启动服务
 echo -e "${YELLOW}🚀 启动服务...${NC}"
-docker-compose -f docker-compose.prod-optimized.yml up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 # 6. 等待服务就绪
 echo -e "${YELLOW}⏳ 等待服务启动...${NC}"
@@ -61,7 +61,7 @@ sleep 15
 
 # 7. 检查服务状态
 echo -e "${YELLOW}🔍 检查服务状态...${NC}"
-docker-compose -f docker-compose.prod-optimized.yml ps
+docker-compose -f docker-compose.prod.yml ps
 
 # 8. 执行数据库迁移
 echo -e "${YELLOW}📊 执行数据库迁移...${NC}"
@@ -88,11 +88,11 @@ echo -e "   前端: ${GREEN}http://$(hostname -I | awk '{print $1}')${NC}"
 echo -e "   后端API: ${GREEN}http://$(hostname -I | awk '{print $1}'):8000${NC}"
 echo ""
 echo -e "📊 查看日志："
-echo -e "   docker-compose -f docker-compose.prod-optimized.yml logs -f"
+echo -e "   docker-compose -f docker-compose.prod.yml logs -f"
 echo ""
 echo -e "🔧 管理命令："
-echo -e "   停止: docker-compose -f docker-compose.prod-optimized.yml stop"
-echo -e "   启动: docker-compose -f docker-compose.prod-optimized.yml start"
-echo -e "   重启: docker-compose -f docker-compose.prod-optimized.yml restart"
+echo -e "   停止: docker-compose -f docker-compose.prod.yml stop"
+echo -e "   启动: docker-compose -f docker-compose.prod.yml start"
+echo -e "   重启: docker-compose -f docker-compose.prod.yml restart"
 echo ""
 echo -e "${YELLOW}⚠️  记得修改 .env.production 中的密码！${NC}"
