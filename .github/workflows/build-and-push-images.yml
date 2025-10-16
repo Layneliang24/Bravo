@@ -79,8 +79,6 @@ jobs:
           file: ./backend/Dockerfile.prod
           push: true
           tags: ${{ steps.tags.outputs.backend_tags }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/backend:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/backend:buildcache,mode=max
           labels: |
             org.opencontainers.image.source=${{ github.repositoryUrl }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -93,8 +91,6 @@ jobs:
           file: ./frontend/Dockerfile.prod
           push: true
           tags: ${{ steps.tags.outputs.frontend_tags }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/frontend:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/frontend:buildcache,mode=max
           labels: |
             org.opencontainers.image.source=${{ github.repositoryUrl }}
             org.opencontainers.image.revision=${{ github.sha }}
