@@ -82,10 +82,10 @@ SECURE_BROWSER_XSS_FILTER = True
 
 # 静态文件配置
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR.parent, "staticfiles")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR.parent, "mediafiles")
+MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
 
 # 文件存储配置
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
