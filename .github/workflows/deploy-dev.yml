@@ -1,13 +1,20 @@
 name: Deploy to Dev Environment
 
 on:
-  push:
+  # 在镜像构建完成后自动触发
+  workflow_run:
+    workflows: ["🐳 Build and Push Docker Images"]
+    types:
+      - completed
     branches: [dev]
+  # 保留手动触发选项
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # 只有在镜像构建成功时才部署
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
