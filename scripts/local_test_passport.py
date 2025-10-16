@@ -420,7 +420,7 @@ class LocalTestPassport:
         failed_validations = []
 
         for name, validation_func in validations:
-            self.log(f"\n{'='*20} {name} {'='*20}")
+            self.log(f"\n{'=' * 20} {name} {'=' * 20}")
 
             try:
                 if not validation_func():
@@ -433,7 +433,7 @@ class LocalTestPassport:
                 failed_validations.append(name)
 
         # 总结
-        self.log(f"\n{'='*60}")
+        self.log(f"\n{'=' * 60}")
         self.log("📊 验证结果汇总：")
 
         if failed_validations:

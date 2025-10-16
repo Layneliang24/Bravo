@@ -2,16 +2,17 @@
 # 支持多环境部署（bravo-dev / bravo-prod）
 #
 # 使用方式:
-#   Dev环境:  COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml up -d
+#   Dev环境:  COMPOSE_PROJECT_NAME=bravo-dev MYSQL_PORT=3307 REDIS_PORT=6380 BACKEND_PORT=8001 FRONTEND_HTTP_PORT=8080 FRONTEND_HTTPS_PORT=8443 docker-compose -f docker-compose.prod.yml up -d
 #   Prod环境: COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml up -d
 #
 # 环境变量配置（可选，默认为prod环境）:
 #   COMPOSE_PROJECT_NAME: 项目名称前缀，决定容器名和卷名
-#   MYSQL_PORT: MySQL外部端口 (默认3306)
-#   REDIS_PORT: Redis外部端口 (默认6379)
-#   BACKEND_PORT: Backend外部端口 (默认8000)
-#   FRONTEND_HTTP_PORT: Frontend HTTP外部端口 (默认80)
-#   FRONTEND_HTTPS_PORT: Frontend HTTPS外部端口 (默认443)
+#   MYSQL_PORT: MySQL外部端口 (默认3306, dev建议3307)
+#   REDIS_PORT: Redis外部端口 (默认6379, dev建议6380)
+#   BACKEND_PORT: Backend外部端口 (默认8000, dev建议8001)
+#   FRONTEND_HTTP_PORT: Frontend HTTP外部端口 (默认80, dev建议8080)
+#   FRONTEND_HTTPS_PORT: Frontend HTTPS外部端口 (默认443, dev建议8443)
+#   DJANGO_SECRET_KEY: Django密钥（必需）
 
 services:
   # MySQL - 内存优化配置
@@ -109,6 +110,7 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
     depends_on:
       - mysql
       - redis
@@ -146,4 +148,3 @@ volumes:
   mysql_data:
   redis_data:
   staticfiles:
-

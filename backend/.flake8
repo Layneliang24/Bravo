@@ -14,7 +14,9 @@ exclude =
     .pytest_cache,
     htmlcov,
     .coverage,
-    .mypy_cache
+    .mypy_cache,
+    ../scripts,
+    ../scripts-golden
 per-file-ignores =
     */migrations/*:E501
     */settings/*:E501,F401,F403,F405
