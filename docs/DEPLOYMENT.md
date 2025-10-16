@@ -1,5 +1,48 @@
 # 🚀 Bravo项目生产环境部署指南
 
+## 🎯 部署架构概览
+
+### 自动化CI/CD流程（v2.0）
+
+Bravo项目采用**完全自动化的镜像推送架构**，实现零人工干预的持续部署：
+
+```
+代码提交 → PR验证 → 合并分支 → 自动构建镜像 → 推送到阿里云 → 自动部署
+```
+
+**核心优势**：
+
+- ✅ **服务器零构建**：镜像在GitHub Actions中构建，服务器只需拉取
+- ✅ **内存占用低**：无需在服务器上编译代码和构建镜像
+- ✅ **部署速度快**：拉取预构建镜像比现场构建快5-10倍
+- ✅ **环境完全隔离**：dev和prod使用不同镜像tag，互不影响
+- ✅ **支持版本回滚**：每个版本都有独立镜像，可快速回滚
+
+### 镜像仓库架构
+
+**阿里云容器镜像服务（杭州）**：
+
+```
+registry.cn-hangzhou.aliyuncs.com/bravo-project/
+├── backend:dev           # 开发环境最新版
+├── backend:dev-<sha>     # 开发环境特定版本
+├── backend:latest        # 生产环境最新版
+├── backend:<version>     # 生产环境特定版本（如2025.01.15-a1b2c3d4）
+├── frontend:dev
+├── frontend:dev-<sha>
+├── frontend:latest
+└── frontend:<version>
+```
+
+### 部署触发条件
+
+| 事件         | 触发工作流                            | 结果                   |
+| ------------ | ------------------------------------- | ---------------------- |
+| PR合并到dev  | ✅ 构建dev镜像 → ✅ 部署到dev环境     | dev.layneliang.com更新 |
+| PR合并到main | ✅ 构建latest镜像 → ✅ 部署到prod环境 | layneliang.com更新     |
+
+---
+
 ## 📋 部署前准备
 
 ### 1. 服务器要求
@@ -15,6 +58,22 @@
 - SSH root 或 sudo 访问权限
 - 服务器防火墙配置权限
 - 域名解析权限（如果使用域名）
+
+### 3. 阿里云镜像仓库配置（首次部署必需）
+
+**⚠️ 重要**：新架构需要先配置阿里云容器镜像服务。
+
+**快速配置步骤**：
+
+1. 登录阿里云控制台：https://cr.console.aliyuncs.com/
+2. 创建命名空间：`bravo-project`（私有）
+3. 创建仓库：`backend` 和 `frontend`（私有）
+4. 设置Registry登录密码
+5. 配置GitHub Secrets：
+   - `ALIYUN_REGISTRY_USERNAME`：你的阿里云账号
+   - `ALIYUN_REGISTRY_PASSWORD`：Registry密码
+
+**详细配置文档**：见 [ALIYUN_REGISTRY_SETUP.md](./ALIYUN_REGISTRY_SETUP.md)
 
 ## 🔧 服务器环境设置
 
