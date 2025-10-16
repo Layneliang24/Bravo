@@ -11,6 +11,7 @@ Bravo项目采用**完全自动化的镜像推送架构**，实现零人工干�
 ```
 
 **核心优势**：
+
 - ✅ **服务器零构建**：镜像在GitHub Actions中构建，服务器只需拉取
 - ✅ **内存占用低**：无需在服务器上编译代码和构建镜像
 - ✅ **部署速度快**：拉取预构建镜像比现场构建快5-10倍
@@ -20,6 +21,7 @@ Bravo项目采用**完全自动化的镜像推送架构**，实现零人工干�
 ### 镜像仓库架构
 
 **阿里云容器镜像服务（杭州）**：
+
 ```
 registry.cn-hangzhou.aliyuncs.com/bravo-project/
 ├── backend:dev           # 开发环境最新版
@@ -34,10 +36,10 @@ registry.cn-hangzhou.aliyuncs.com/bravo-project/
 
 ### 部署触发条件
 
-| 事件 | 触发工作流 | 结果 |
-|------|-----------|------|
-| PR合并到dev | ✅ 构建dev镜像 → ✅ 部署到dev环境 | dev.layneliang.com更新 |
-| PR合并到main | ✅ 构建latest镜像 → ✅ 部署到prod环境 | layneliang.com更新 |
+| 事件         | 触发工作流                            | 结果                   |
+| ------------ | ------------------------------------- | ---------------------- |
+| PR合并到dev  | ✅ 构建dev镜像 → ✅ 部署到dev环境     | dev.layneliang.com更新 |
+| PR合并到main | ✅ 构建latest镜像 → ✅ 部署到prod环境 | layneliang.com更新     |
 
 ---
 
@@ -62,6 +64,7 @@ registry.cn-hangzhou.aliyuncs.com/bravo-project/
 **⚠️ 重要**：新架构需要先配置阿里云容器镜像服务。
 
 **快速配置步骤**：
+
 1. 登录阿里云控制台：https://cr.console.aliyuncs.com/
 2. 创建命名空间：`bravo-project`（私有）
 3. 创建仓库：`backend` 和 `frontend`（私有）
