@@ -128,10 +128,23 @@ jobs:
           echo "⏳ 等待服务就绪..."
           sleep 10
 
+          echo "🔧 配置Nginx SSL..."
+          # 复制SSL配置到容器
+          if [ -f "frontend/nginx.ssl.conf" ]; then
+            docker cp frontend/nginx.ssl.conf bravo-prod-frontend:/etc/nginx/conf.d/ssl.conf
+            docker exec bravo-prod-frontend nginx -t && docker exec bravo-prod-frontend nginx -s reload
+            echo "✅ SSL配置已应用"
+          else
+            echo "⚠️  未找到nginx.ssl.conf，跳过SSL配置"
+          fi
+
           echo "📊 检查服务状态..."
           COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml ps
 
-            echo "✅ 生产环境部署完成"
+          echo "🔍 验证Nginx端口..."
+          docker exec bravo-prod-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
+
+          echo "✅ 生产环境部署完成"
           ENDSSH
 
       - name: Health check
