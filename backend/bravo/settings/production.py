@@ -13,9 +13,10 @@ ALLOWED_HOSTS = [
     "8.129.16.190",  # 服务器IP
     "localhost",
     "127.0.0.1",
-    # 添加你的域名
-    # 'yourdomain.com',
-    # 'www.yourdomain.com',
+    # 域名配置
+    "layneliang.com",  # 生产域名
+    "www.layneliang.com",
+    "dev.layneliang.com",  # 开发域名
 ]
 
 # 安全配置
@@ -62,7 +63,13 @@ CSRF_COOKIE_SECURE = not os.environ.get("DISABLE_SSL_REDIRECT", False)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://8.129.16.190",
-    # 'https://yourdomain.com',
+    "https://8.129.16.190:8443",  # Dev环境HTTPS端口
+    "https://layneliang.com",  # 生产域名
+    "https://www.layneliang.com",
+    "https://dev.layneliang.com",  # 开发域名
+    "https://dev.layneliang.com:8443",
+    "http://8.129.16.190:8080",  # Dev环境HTTP端口
+    "http://dev.layneliang.com:8080",
 ]
 
 # HTTPS安全配置
