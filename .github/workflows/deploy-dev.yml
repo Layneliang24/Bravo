@@ -22,6 +22,8 @@ jobs:
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
@@ -47,8 +49,11 @@ jobs:
           echo "⏹️  停止旧容器..."
           COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
 
-          echo "📦 拉取镜像..."
-          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml pull || echo "镜像拉取完成或部分失败，继续..."
+          echo "🔐 登录阿里云镜像仓库..."
+          echo "${REGISTRY_PASSWORD}" | docker login registry.cn-hangzhou.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+
+          echo "📦 拉取最新镜像..."
+          COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
 
           echo "🚀 启动服务..."
           # 检查是否配置了SSL证书（域名模式）
@@ -68,6 +73,7 @@ jobs:
 
           # 为dev环境使用不同端口避免与prod冲突
           COMPOSE_PROJECT_NAME=bravo-dev \
+          IMAGE_TAG=dev \
           USE_DOMAIN=$USE_DOMAIN \
           DOMAIN_NAME=$DOMAIN_NAME \
           MYSQL_PORT=3307 \

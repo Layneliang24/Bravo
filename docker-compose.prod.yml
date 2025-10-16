@@ -1,12 +1,14 @@
-# 生产环境部署配置
+# 生产环境部署配置 - 使用预构建镜像
 # 支持多环境部署（bravo-dev / bravo-prod）
 #
 # 使用方式:
-#   Dev环境:  COMPOSE_PROJECT_NAME=bravo-dev MYSQL_PORT=3307 REDIS_PORT=6380 BACKEND_PORT=8001 FRONTEND_HTTP_PORT=8080 FRONTEND_HTTPS_PORT=8443 docker-compose -f docker-compose.prod.yml up -d
-#   Prod环境: COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml up -d
+#   Dev环境:  COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev MYSQL_PORT=3307 REDIS_PORT=6380 BACKEND_PORT=8001 FRONTEND_HTTP_PORT=8080 FRONTEND_HTTPS_PORT=8443 docker-compose -f docker-compose.prod.yml up -d
+#   Prod环境: COMPOSE_PROJECT_NAME=bravo-prod IMAGE_TAG=latest docker-compose -f docker-compose.prod.yml up -d
 #
 # 环境变量配置（可选，默认为prod环境）:
 #   COMPOSE_PROJECT_NAME: 项目名称前缀，决定容器名和卷名
+#   IMAGE_TAG: Docker镜像标签 (dev环境用'dev', prod环境用'latest'或版本号)
+#   REGISTRY: 镜像仓库地址 (默认阿里云杭州)
 #   MYSQL_PORT: MySQL外部端口 (默认3306, dev建议3307)
 #   REDIS_PORT: Redis外部端口 (默认6379, dev建议6380)
 #   BACKEND_PORT: Backend外部端口 (默认8000, dev建议8001)
@@ -59,11 +61,9 @@ services:
           memory: 50M
     restart: unless-stopped
 
-  # Django后端
+  # Django后端 - 使用预构建镜像
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
+    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-backend
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.production
@@ -94,11 +94,9 @@ services:
           memory: 200M
     restart: unless-stopped
 
-  # Celery Worker - 轻量配置
+  # Celery Worker - 轻量配置（使用backend镜像）
   celery:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
+    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-celery
     command: sh -c "mkdir -p /var/log/django && chmod 777 /var/log/django && celery -A bravo worker -l warning --concurrency=1"
     environment:
@@ -122,11 +120,9 @@ services:
           memory: 150M
     restart: unless-stopped
 
-  # Vue前端 + Nginx
+  # Vue前端 + Nginx - 使用预构建镜像
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
+    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/frontend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-frontend
     ports:
       - "${FRONTEND_HTTP_PORT:-80}:80"
