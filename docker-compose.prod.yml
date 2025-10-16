@@ -65,6 +65,7 @@ services:
   backend:
     image: ${REGISTRY:-crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-backend
+    command: sh -c "cp -rn /app/staticfiles/* /shared/static/ 2>/dev/null || true && python manage.py migrate --noinput && gunicorn bravo.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 2 --max-requests 1000 --max-requests-jitter 50 --timeout 30 --access-logfile - --error-logfile -"
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.production
       - DB_NAME=${DB_NAME:-bravo_production}
@@ -82,7 +83,7 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend/media:/app/media
-      - staticfiles:/app/staticfiles
+      - staticfiles:/shared/static
     depends_on:
       - mysql
       - redis
@@ -129,7 +130,7 @@ services:
       - "${FRONTEND_HTTPS_PORT:-443}:443"
     volumes:
       - staticfiles:/usr/share/nginx/html/static:ro
-      - ./backend/media:/usr/share/nginx/html/media
+      - ./backend/media:/usr/share/nginx/html/media:ro
       # SSL证书挂载（如果使用域名）
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
