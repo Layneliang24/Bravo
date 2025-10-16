@@ -97,8 +97,8 @@ jobs:
             # 先清理所有未提交的改动和未跟踪文件
             git reset --hard HEAD
             git clean -fdx
-            # 拉取最新代码
-            git fetch origin main
+            # 强制更新远程分支信息
+            git fetch --force --prune origin
             git reset --hard origin/main
           else
             git clone -b main https://github.com/Layneliang24/Bravo.git .
