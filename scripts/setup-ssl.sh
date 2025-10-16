@@ -27,14 +27,14 @@ ENVIRONMENT=${1:-"prod"}
 if [ "$ENVIRONMENT" = "prod" ]; then
     DOMAIN="layneliang.com"
     WWW_DOMAIN="www.layneliang.com"
-    EMAIL="your-email@example.com"  # 请替换为真实邮箱
+    EMAIL="2227208441@qq.com"  # 请替换为真实邮箱
     HTTP_PORT=80
     HTTPS_PORT=443
     echo -e "${GREEN}配置生产环境SSL证书: ${DOMAIN}${NC}"
 elif [ "$ENVIRONMENT" = "dev" ]; then
     DOMAIN="dev.layneliang.com"
     WWW_DOMAIN=""
-    EMAIL="your-email@example.com"  # 请替换为真实邮箱
+    EMAIL="2227208441@qq.com"  # 请替换为真实邮箱
     HTTP_PORT=8080
     HTTPS_PORT=8443
     echo -e "${GREEN}配置开发环境SSL证书: ${DOMAIN}${NC}"
