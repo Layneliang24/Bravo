@@ -1,11 +1,13 @@
 name: Deploy to Production
 
 on:
-  push:
+  # 在镜像构建完成后自动触发
+  workflow_run:
+    workflows: ["🐳 Build and Push Docker Images"]
+    types:
+      - completed
     branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
+  # 保留手动触发选项
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -23,6 +25,8 @@ jobs:
   pre-deploy:
     name: Pre-deployment Checks
     runs-on: ubuntu-latest
+    # 只有在镜像构建成功或手动触发时才执行
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       should-deploy: ${{ steps.check.outputs.should-deploy }}
     steps:
