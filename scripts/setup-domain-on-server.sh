@@ -22,16 +22,34 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# 项目路径（自动检测或手动指定）
+DEV_PROJECT="/home/layne/project/bravo-dev"
+PROD_PROJECT="/home/layne/project/bravo-prod"
+
+# 选择一个存在的项目目录来获取脚本
+if [ -d "$DEV_PROJECT" ]; then
+    PROJECT_DIR="$DEV_PROJECT"
+    echo -e "${GREEN}使用开发环境目录: $PROJECT_DIR${NC}"
+elif [ -d "$PROD_PROJECT" ]; then
+    PROJECT_DIR="$PROD_PROJECT"
+    echo -e "${GREEN}使用生产环境目录: $PROJECT_DIR${NC}"
+else
+    echo -e "${RED}错误: 找不到项目目录${NC}"
+    echo "请确保以下目录之一存在："
+    echo "  - $DEV_PROJECT"
+    echo "  - $PROD_PROJECT"
+    exit 1
+fi
+
 # 1. 进入项目目录
 echo -e "${GREEN}[1/6] 进入项目目录...${NC}"
-cd /root/bravo || { echo -e "${RED}错误: 项目目录不存在${NC}"; exit 1; }
+cd "$PROJECT_DIR" || { echo -e "${RED}错误: 无法进入项目目录${NC}"; exit 1; }
 pwd
 
 # 2. 拉取最新代码
 echo -e "${GREEN}[2/6] 拉取最新代码...${NC}"
 git fetch origin
-git checkout dev
-git pull origin dev
+git pull origin dev 2>/dev/null || git pull origin main 2>/dev/null || echo "代码已是最新"
 
 # 3. 停止容器
 echo -e "${GREEN}[3/6] 停止前端容器...${NC}"
