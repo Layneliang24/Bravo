@@ -134,6 +134,12 @@ services:
     volumes:
       - staticfiles:/usr/share/nginx/html/static:ro
       - ./backend/media:/usr/share/nginx/html/media
+      # SSL证书挂载（如果使用域名）
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    environment:
+      - USE_DOMAIN=${USE_DOMAIN:-false}
+      - DOMAIN_NAME=${DOMAIN_NAME:-}
     depends_on:
       - backend
     deploy:
