@@ -107,5 +107,13 @@ jobs:
           echo "🔍 验证Nginx端口..."
           docker exec bravo-dev-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
 
+          echo "📁 验证静态文件..."
+          echo "Backend容器内的静态文件:"
+          docker exec bravo-dev-backend ls -la /shared/static/ | head -20 || echo "⚠️ Backend共享卷为空"
+          echo "Frontend容器内的静态文件:"
+          docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/ | head -20 || echo "⚠️ Frontend静态文件目录为空"
+          echo "检查admin静态文件:"
+          docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/admin/ | head -10 || echo "⚠️ Admin静态文件不存在"
+
           echo "✅ Dev环境部署完成"
           ENDSSH
