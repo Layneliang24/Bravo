@@ -50,7 +50,7 @@ jobs:
           COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
 
           echo "🔐 登录阿里云镜像仓库..."
-          echo "${REGISTRY_PASSWORD}" | docker login registry.cn-hangzhou.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+          echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
 
           echo "📦 拉取最新镜像..."
           COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull

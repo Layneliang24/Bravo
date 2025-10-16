@@ -63,7 +63,7 @@ services:
 
   # Django后端 - 使用预构建镜像
   backend:
-    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
+    image: ${REGISTRY:-crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-backend
     environment:
       - DJANGO_SETTINGS_MODULE=bravo.settings.production
@@ -96,7 +96,7 @@ services:
 
   # Celery Worker - 轻量配置（使用backend镜像）
   celery:
-    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
+    image: ${REGISTRY:-crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com}/bravo-project/backend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-celery
     command: sh -c "mkdir -p /var/log/django && chmod 777 /var/log/django && celery -A bravo worker -l warning --concurrency=1"
     environment:
@@ -122,7 +122,7 @@ services:
 
   # Vue前端 + Nginx - 使用预构建镜像
   frontend:
-    image: ${REGISTRY:-registry.cn-hangzhou.aliyuncs.com}/bravo-project/frontend:${IMAGE_TAG:-latest}
+    image: ${REGISTRY:-crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com}/bravo-project/frontend:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-frontend
     ports:
       - "${FRONTEND_HTTP_PORT:-80}:80"

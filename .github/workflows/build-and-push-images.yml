@@ -24,7 +24,7 @@ on:
           - production
 
 env:
-  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  REGISTRY: crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com
   NAMESPACE: bravo-project
 
 jobs:
