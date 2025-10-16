@@ -320,6 +320,75 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
+## 🔐 SSL/HTTPS自动化配置（v2.0+）
+
+### 自动化流程说明
+
+从v2.0版本开始，**SSL配置已完全自动化**，无需手动干预：
+
+#### 1. 部署时自动应用
+
+每次部署时，GitHub Actions会自动：
+
+```bash
+# ✅ 自动检测nginx.ssl.conf文件
+# ✅ 自动复制到容器内
+# ✅ 自动测试Nginx配置
+# ✅ 自动重载Nginx
+# ✅ 自动验证端口监听
+```
+
+#### 2. 配置文件
+
+- **文件位置**：`frontend/nginx.ssl.conf`
+- **容器路径**：`/etc/nginx/conf.d/ssl.conf`
+- **自动化时机**：每次 `docker-compose up -d` 后
+
+#### 3. 支持的环境
+
+| 环境 | 域名               | 端口 | 自动应用 |
+| ---- | ------------------ | ---- | -------- |
+| Dev  | dev.layneliang.com | 8443 | ✅       |
+| Prod | layneliang.com     | 443  | ✅       |
+
+#### 4. 验证自动化
+
+查看部署日志确认：
+
+```
+🔧 配置Nginx SSL...
+✅ SSL配置已应用
+🔍 验证Nginx端口...
+tcp  0.0.0.0:443  LISTEN  nginx
+```
+
+#### 5. 如果自动化失败
+
+极少情况下可能需要手动应用：
+
+```bash
+# Dev环境
+cd /home/layne/project/bravo-dev
+docker cp frontend/nginx.ssl.conf bravo-dev-frontend:/etc/nginx/conf.d/ssl.conf
+docker exec bravo-dev-frontend nginx -s reload
+
+# Prod环境
+cd /home/layne/project/bravo-prod
+docker cp frontend/nginx.ssl.conf bravo-prod-frontend:/etc/nginx/conf.d/ssl.conf
+docker exec bravo-prod-frontend nginx -s reload
+```
+
+### Django域名配置
+
+**ALLOWED_HOSTS**已包含所有域名，无需手动配置：
+
+- ✅ `layneliang.com`（生产）
+- ✅ `www.layneliang.com`
+- ✅ `dev.layneliang.com`（开发）
+- ✅ `8.129.16.190`（IP访问）
+
+---
+
 ## 📞 技术支持
 
 如遇到部署问题，请提供以下信息：
