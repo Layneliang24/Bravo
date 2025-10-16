@@ -26,7 +26,7 @@ ENVIRONMENT=${1:-"prod"}
 
 if [ "$ENVIRONMENT" = "prod" ]; then
     DOMAIN="layneliang.com"
-    WWW_DOMAIN="www.layneliang.com"
+    WWW_DOMAIN=""  # 暂不申请www，因为没有DNS记录
     EMAIL="2227208441@qq.com"  # 请替换为真实邮箱
     HTTP_PORT=80
     HTTPS_PORT=443
