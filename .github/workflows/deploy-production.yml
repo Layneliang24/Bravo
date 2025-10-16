@@ -101,8 +101,27 @@ jobs:
           COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml pull || echo "镜像拉取完成或部分失败，继续..."
 
           echo "🚀 启动服务..."
+          # 检查是否配置了SSL证书（域名模式）
+          if [ -d "/etc/letsencrypt/live/layneliang.com" ]; then
+            echo "检测到SSL证书，使用域名配置..."
+            # 复制域名配置到容器
+            if [ -f "frontend/nginx.domain-production.conf" ]; then
+              cp frontend/nginx.domain-production.conf frontend/nginx.conf.tmp
+              # 临时替换Dockerfile中的nginx配置
+              echo "使用域名Nginx配置"
+            fi
+            USE_DOMAIN=true
+            DOMAIN_NAME=layneliang.com
+          else
+            echo "未检测到SSL证书，使用IP配置..."
+            USE_DOMAIN=false
+            DOMAIN_NAME=""
+          fi
+
           # 生产环境使用默认端口
           COMPOSE_PROJECT_NAME=bravo-prod \
+          USE_DOMAIN=$USE_DOMAIN \
+          DOMAIN_NAME=$DOMAIN_NAME \
           DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-prod-secret-please-change-$(date +%s)}" \
           docker-compose -f docker-compose.prod.yml up -d
 
