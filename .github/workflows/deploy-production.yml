@@ -1,11 +1,13 @@
 name: Deploy to Production
 
 on:
-  push:
+  # 在镜像构建完成后自动触发
+  workflow_run:
+    workflows: ["🐳 Build and Push Docker Images"]
+    types:
+      - completed
     branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
+  # 保留手动触发选项
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -23,6 +25,8 @@ jobs:
   pre-deploy:
     name: Pre-deployment Checks
     runs-on: ubuntu-latest
+    # 只有在镜像构建成功或手动触发时才执行
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       should-deploy: ${{ steps.check.outputs.should-deploy }}
     steps:
@@ -72,12 +76,18 @@ jobs:
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
               -o ServerAliveCountMax=30 \
-              $USER@$HOST << 'ENDSSH'
+              $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
             set -e
+
+            # 接收参数
+            REGISTRY_USERNAME="$1"
+            REGISTRY_PASSWORD="$2"
 
           echo "📁 进入项目目录..."
           cd /home/layne/project/bravo-prod
@@ -97,22 +107,58 @@ jobs:
           echo "⏹️  停止旧容器..."
           COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml down || true
 
-          echo "📦 拉取镜像..."
-          COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml pull || echo "镜像拉取完成或部分失败，继续..."
+          echo "🔐 登录阿里云镜像仓库..."
+          echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+
+          echo "📦 拉取最新镜像..."
+          COMPOSE_PROJECT_NAME=bravo-prod IMAGE_TAG=latest docker-compose -f docker-compose.prod.yml pull
 
           echo "🚀 启动服务..."
+          # 检查是否配置了SSL证书（域名模式）
+          if [ -d "/etc/letsencrypt/live/layneliang.com" ]; then
+            echo "检测到SSL证书，使用域名配置..."
+            # 复制域名配置到容器
+            if [ -f "frontend/nginx.domain-production.conf" ]; then
+              cp frontend/nginx.domain-production.conf frontend/nginx.conf.tmp
+              # 临时替换Dockerfile中的nginx配置
+              echo "使用域名Nginx配置"
+            fi
+            USE_DOMAIN=true
+            DOMAIN_NAME=layneliang.com
+          else
+            echo "未检测到SSL证书，使用IP配置..."
+            USE_DOMAIN=false
+            DOMAIN_NAME=""
+          fi
+
           # 生产环境使用默认端口
           COMPOSE_PROJECT_NAME=bravo-prod \
+          IMAGE_TAG=latest \
+          USE_DOMAIN=$USE_DOMAIN \
+          DOMAIN_NAME=$DOMAIN_NAME \
           DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-prod-secret-please-change-$(date +%s)}" \
           docker-compose -f docker-compose.prod.yml up -d
 
           echo "⏳ 等待服务就绪..."
           sleep 10
 
+          echo "🔧 配置Nginx SSL..."
+          # 复制SSL配置到容器
+          if [ -f "frontend/nginx.ssl.conf" ]; then
+            docker cp frontend/nginx.ssl.conf bravo-prod-frontend:/etc/nginx/conf.d/ssl.conf
+            docker exec bravo-prod-frontend nginx -t && docker exec bravo-prod-frontend nginx -s reload
+            echo "✅ SSL配置已应用"
+          else
+            echo "⚠️  未找到nginx.ssl.conf，跳过SSL配置"
+          fi
+
           echo "📊 检查服务状态..."
           COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml ps
 
-            echo "✅ 生产环境部署完成"
+          echo "🔍 验证Nginx端口..."
+          docker exec bravo-prod-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
+
+          echo "✅ 生产环境部署完成"
           ENDSSH
 
       - name: Health check
