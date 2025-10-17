@@ -99,13 +99,13 @@ jobs:
           sleep 10
 
           echo "🔧 配置Nginx SSL..."
-          # 复制SSL配置到容器
-          if [ -f "frontend/nginx.ssl.conf" ]; then
-            docker cp frontend/nginx.ssl.conf bravo-dev-frontend:/etc/nginx/conf.d/ssl.conf
+          # 复制开发环境SSL配置到容器
+          if [ -f "frontend/nginx.domain-dev.conf" ]; then
+            docker cp frontend/nginx.domain-dev.conf bravo-dev-frontend:/etc/nginx/conf.d/default.conf
             docker exec bravo-dev-frontend nginx -t && docker exec bravo-dev-frontend nginx -s reload
-            echo "✅ SSL配置已应用"
+            echo "✅ 开发环境SSL配置已应用（dev.layneliang.com）"
           else
-            echo "⚠️  未找到nginx.ssl.conf，跳过SSL配置"
+            echo "⚠️  未找到nginx.domain-dev.conf，跳过SSL配置"
           fi
 
           echo "📊 检查服务状态..."
