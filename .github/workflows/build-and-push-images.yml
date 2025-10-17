@@ -11,6 +11,8 @@ on:
       - "frontend/**"
       - "docker-compose.prod.yml"
       - ".github/workflows/build-and-push-images.yml"
+      - ".github/workflows/deploy-dev.yml"
+      - ".github/workflows/deploy-production.yml"
 
   # 手动触发
   workflow_dispatch:
