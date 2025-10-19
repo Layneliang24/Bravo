@@ -1,0 +1,161 @@
+name: 📋 List Deployment Versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      show-images:
+        description: "是否显示本地镜像列表"
+        required: false
+        type: boolean
+        default: true
+
+  # 也可以定期运行
+  schedule:
+    - cron: "0 0 * * 0" # 每周日 UTC 0点运行
+
+jobs:
+  list-versions:
+    name: 查看部署信息
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
+
+      - name: Get Deployment Info
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER }}
+          SHOW_IMAGES: ${{ inputs.show-images || 'true' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$SHOW_IMAGES"
+
+            SHOW_IMAGES="$1"
+
+            cd /home/layne/project/bravo-prod
+
+            echo "## 📋 生产环境部署信息"
+            echo ""
+
+            # 当前运行版本
+            echo "### 🚀 当前运行版本"
+            echo ""
+            if [ -f .deployment-current ]; then
+              echo '```'
+              cat .deployment-current
+              echo '```'
+
+              # 显示实际运行的容器
+              echo ""
+              echo "**运行的容器:**"
+              echo '```'
+              docker ps --filter "name=bravo-prod" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+              echo '```'
+            else
+              echo "无部署记录"
+            fi
+            echo ""
+
+            # 上一个版本
+            echo "### 🔄 上一个版本（可快速回滚）"
+            echo ""
+            if [ -f .deployment-previous ]; then
+              echo '```'
+              cat .deployment-previous
+              echo '```'
+            else
+              echo "无备份版本"
+            fi
+            echo ""
+
+            # 本地可用镜像
+            if [ "$SHOW_IMAGES" = "true" ]; then
+              echo "### 💾 服务器本地镜像"
+              echo ""
+              echo '```'
+              docker images --filter "reference=*bravo*" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+              echo '```'
+              echo ""
+            fi
+
+            # 部署历史（最近10条）
+            echo "### 📜 部署历史（最近10条）"
+            echo ""
+            if [ -f .deployment-history ]; then
+              echo '```'
+              tail -n 10 .deployment-history
+              echo '```'
+
+              # 统计
+              TOTAL_DEPLOYS=$(wc -l < .deployment-history)
+              SUCCESS_DEPLOYS=$(grep -c "部署成功" .deployment-history || echo "0")
+              FAILED_DEPLOYS=$(grep -c "部署失败" .deployment-history || echo "0")
+              ROLLBACK_DEPLOYS=$(grep -c "回滚" .deployment-history || echo "0")
+
+              echo ""
+              echo "**统计信息:**"
+              echo "- 总部署次数: $TOTAL_DEPLOYS"
+              echo "- 成功部署: $SUCCESS_DEPLOYS"
+              echo "- 失败部署: $FAILED_DEPLOYS"
+              echo "- 回滚次数: $ROLLBACK_DEPLOYS"
+            else
+              echo "无历史记录"
+            fi
+            echo ""
+
+            # 磁盘使用情况
+            echo "### 💿 磁盘使用情况"
+            echo ""
+            echo '```'
+            df -h /home/layne/project/bravo-prod
+            echo ""
+            echo "Docker镜像占用:"
+            docker system df
+            echo '```'
+            echo ""
+
+            # 保存到文件供下载
+            {
+              echo "# Bravo生产环境部署报告"
+              echo ""
+              echo "生成时间: $(date)"
+              echo ""
+              echo "## 当前运行版本"
+              echo ""
+              if [ -f .deployment-current ]; then
+                cat .deployment-current
+              fi
+              echo ""
+              echo "## 部署历史"
+              echo ""
+              if [ -f .deployment-history ]; then
+                tail -n 20 .deployment-history
+              fi
+            } > /tmp/deployment-report.md
+
+            cat /tmp/deployment-report.md
+          ENDSSH
+
+      - name: Create Summary
+        run: |
+          echo "## 📊 部署版本查询完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**查询时间**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**服务器**: ${{ secrets.ALIYUN_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 快速操作：" >> $GITHUB_STEP_SUMMARY
+          echo "- [手动回滚](https://github.com/${{ github.repository }}/actions/workflows/rollback-production.yml)" >> $GITHUB_STEP_SUMMARY
+          echo "- [查看部署历史](https://github.com/${{ github.repository }}/actions/workflows/list-deployment-versions.yml)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 如何回滚：" >> $GITHUB_STEP_SUMMARY
+          echo "1. 点击上方「手动回滚」链接" >> $GITHUB_STEP_SUMMARY
+          echo "2. 选择回滚类型：" >> $GITHUB_STEP_SUMMARY
+          echo "   - **previous**: 回滚到上一个版本（最快）" >> $GITHUB_STEP_SUMMARY
+          echo "   - **stable**: 回滚到最后稳定版本" >> $GITHUB_STEP_SUMMARY
+          echo "   - **specific**: 回滚到指定版本（需要版本号）" >> $GITHUB_STEP_SUMMARY
+          echo "3. 填写回滚原因（必填）" >> $GITHUB_STEP_SUMMARY
+          echo "4. 点击「Run workflow」执行" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **注意**: 回滚操作会影响生产环境，请谨慎操作！" >> $GITHUB_STEP_SUMMARY

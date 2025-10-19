@@ -72,7 +72,25 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
 
+      - name: Get Current Deployment Info
+        id: current-version
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER }}
+        run: |
+          echo "📋 获取当前部署信息..."
+          CURRENT_INFO=$(ssh -o StrictHostKeyChecking=no $USER@$HOST \
+            "cd /home/layne/project/bravo-prod && \
+             if [ -f .deployment-current ]; then cat .deployment-current; else echo 'FIRST_DEPLOY=true'; fi" || echo "FIRST_DEPLOY=true")
+
+          echo "当前部署信息:"
+          echo "$CURRENT_INFO"
+          echo "current_info<<EOF" >> $GITHUB_OUTPUT
+          echo "$CURRENT_INFO" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Deploy to production server
+        id: deploy
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
@@ -91,6 +109,30 @@ jobs:
 
           echo "📁 进入项目目录..."
           cd /home/layne/project/bravo-prod
+
+          # 备份当前版本信息
+          echo "💾 备份当前部署信息..."
+          if [ -f .deployment-current ]; then
+            # 将当前版本保存为上一个版本
+            cp .deployment-current .deployment-previous
+
+            # 读取当前版本并备份镜像
+            CURRENT_BACKEND_IMAGE=$(docker inspect bravo-prod-backend --format='{{.Config.Image}}' 2>/dev/null || echo "none")
+            CURRENT_FRONTEND_IMAGE=$(docker inspect bravo-prod-frontend --format='{{.Config.Image}}' 2>/dev/null || echo "none")
+
+            echo "📋 当前运行版本:"
+            echo "  Backend:  $CURRENT_BACKEND_IMAGE"
+            echo "  Frontend: $CURRENT_FRONTEND_IMAGE"
+
+            # 给当前镜像打backup标签（本地保留）
+            if [ "$CURRENT_BACKEND_IMAGE" != "none" ]; then
+              docker tag "$CURRENT_BACKEND_IMAGE" bravo-backend-backup:latest || true
+              docker tag "$CURRENT_FRONTEND_IMAGE" bravo-frontend-backup:latest || true
+              echo "✅ 已为当前镜像打上backup标签"
+            fi
+          else
+            echo "ℹ️  首次部署，无需备份"
+          fi
 
           echo "🔄 拉取最新代码..."
           if [ -d ".git" ]; then
@@ -112,6 +154,21 @@ jobs:
 
           echo "📦 拉取最新镜像..."
           COMPOSE_PROJECT_NAME=bravo-prod IMAGE_TAG=latest docker-compose -f docker-compose.prod.yml pull
+
+          # 记录新版本信息
+          echo "📝 记录新版本信息..."
+          NEW_BACKEND_DIGEST=$(docker inspect crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest --format='{{index .RepoDigests 0}}' 2>/dev/null || echo "unknown")
+          NEW_VERSION=$(date +%Y-%m-%d_%H:%M:%S)
+
+          {
+            echo "DEPLOY_TIME=$NEW_VERSION"
+            echo "BACKEND_IMAGE=crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest"
+            echo "FRONTEND_IMAGE=crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:latest"
+            echo "BACKEND_DIGEST=$NEW_BACKEND_DIGEST"
+            echo "GITHUB_SHA=${{ github.sha }}"
+            echo "GITHUB_RUN_ID=${{ github.run_id }}"
+            echo "GITHUB_ACTOR=${{ github.actor }}"
+          } > .deployment-current
 
           echo "🚀 启动服务..."
           # 检查是否配置了SSL证书（域名模式）
@@ -158,16 +215,159 @@ jobs:
           echo "🔍 验证Nginx端口..."
           docker exec bravo-prod-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
 
-          echo "✅ 生产环境部署完成"
+          echo "✅ 部署步骤完成，等待健康检查..."
           ENDSSH
 
-      - name: Health check
+      - name: Enhanced Health Check with Auto Rollback
+        id: health-check
+        if: always()
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
-          sleep 20
-          curl -f http://$HOST/health || echo "⚠️ 前端健康检查失败"
-          curl -f http://$HOST/api/ || echo "⚠️ 后端健康检查失败"
+          ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
+            set -e
+
+            REGISTRY_USERNAME="$1"
+            REGISTRY_PASSWORD="$2"
+
+            echo "🏥 开始增强健康检查..."
+            cd /home/layne/project/bravo-prod
+
+            # 健康检查函数
+            check_health() {
+              local retry=0
+              local max_retry=5
+
+              while [ $retry -lt $max_retry ]; do
+                echo "🔍 健康检查 ($((retry+1))/$max_retry)..."
+
+                # 检查容器状态
+                if ! docker ps | grep -q bravo-prod-backend; then
+                  echo "❌ Backend容器未运行"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                if ! docker ps | grep -q bravo-prod-frontend; then
+                  echo "❌ Frontend容器未运行"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 检查前端（检查HTTP状态码）
+                FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+                if [ "$FRONTEND_STATUS" != "200" ]; then
+                  echo "⚠️ 前端健康检查失败 (状态码: $FRONTEND_STATUS)"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 检查后端API
+                BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/ || echo "000")
+                if [ "$BACKEND_STATUS" != "200" ]; then
+                  echo "⚠️ 后端API健康检查失败 (状态码: $BACKEND_STATUS)"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 所有检查通过
+                echo "✅ 健康检查通过"
+                echo "  - Frontend: $FRONTEND_STATUS"
+                echo "  - Backend API: $BACKEND_STATUS"
+                return 0
+              done
+
+              echo "❌ 健康检查失败（重试${max_retry}次）"
+              return 1
+            }
+
+            # 执行健康检查
+            if check_health; then
+              echo "🎉 新版本部署成功！"
+
+              # 登录镜像仓库以更新stable标签
+              echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+
+              # 更新stable标签（标记为稳定版本）
+              echo "🏷️  更新prod-stable标签..."
+              docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest \
+                         crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable || true
+              docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:latest \
+                         crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable || true
+
+              # 推送stable标签到远程仓库（可选，用于远程回滚）
+              docker push crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable || echo "⚠️ 推送backend stable标签失败"
+              docker push crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable || echo "⚠️ 推送frontend stable标签失败"
+
+              # 记录到部署历史
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] 部署成功 - GitHub SHA: ${{ github.sha }} - Run ID: ${{ github.run_id }}" >> .deployment-history
+
+              exit 0
+            else
+              echo "🚨 健康检查失败，开始自动回滚..."
+
+              # 检查是否有备份可以回滚
+              if [ ! -f .deployment-previous ]; then
+                echo "❌ 没有可回滚的版本（首次部署失败）"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] 首次部署失败 - 无法回滚 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
+                exit 1
+              fi
+
+              echo "📋 读取上一个版本信息..."
+              if [ -f .deployment-previous ]; then
+                cat .deployment-previous
+              fi
+
+              echo "⏹️  停止失败的容器..."
+              COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml down
+
+              echo "🔄 使用备份镜像回滚..."
+              # 使用backup标签（本地备份）
+              if docker images | grep -q bravo-backend-backup; then
+                docker tag bravo-backend-backup:latest crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest
+                docker tag bravo-frontend-backup:latest crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:latest
+                echo "✅ 使用本地备份镜像"
+              else
+                # 从镜像仓库拉取stable版本
+                echo "⬇️ 从镜像仓库拉取stable版本..."
+                echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+                docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable || echo "⚠️ 拉取backend stable失败"
+                docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable || echo "⚠️ 拉取frontend stable失败"
+                docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable \
+                           crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest
+                docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable \
+                           crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:latest
+                echo "✅ 使用镜像仓库stable版本"
+              fi
+
+              echo "🚀 重新启动旧版本..."
+              COMPOSE_PROJECT_NAME=bravo-prod IMAGE_TAG=latest docker-compose -f docker-compose.prod.yml up -d
+
+              sleep 30
+
+              # 验证回滚是否成功
+              if check_health; then
+                echo "✅ 回滚成功，服务已恢复到上一个版本"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] 部署失败，已自动回滚 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
+
+                # 恢复.deployment-current
+                cp .deployment-previous .deployment-current
+              else
+                echo "🚨🚨🚨 严重错误：回滚也失败了！"
+                echo "请立即检查服务器状态并人工介入！"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] 部署失败且回滚失败 - 需要人工介入 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
+              fi
+
+              exit 1
+            fi
+          ENDSSH
 
   # 部署后测试
   post-deploy-tests:

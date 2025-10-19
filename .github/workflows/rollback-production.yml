@@ -1,0 +1,274 @@
+name: 🔄 Rollback Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollback-type:
+        description: "回滚类型"
+        required: true
+        type: choice
+        options:
+          - "previous" # 回滚到上一个版本
+          - "stable" # 回滚到最后稳定版本
+          - "specific" # 回滚到指定版本
+      specific-version:
+        description: "指定版本（仅当选择specific时需要，格式：2025.01.19-135959-abc123ef）"
+        required: false
+        type: string
+      reason:
+        description: "回滚原因（必填，用于审计）"
+        required: true
+        type: string
+
+# 确保只有一个回滚在运行
+concurrency:
+  group: production-rollback
+  cancel-in-progress: false
+
+jobs:
+  confirm-rollback:
+    name: 确认回滚操作
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Rollback Info
+        run: |
+          echo "## 🔄 生产环境回滚确认" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**回滚类型**: ${{ inputs.rollback-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**操作人**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**回滚原因**: ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**时间**: $(date)" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ inputs.rollback-type }}" = "specific" ]; then
+            echo "**目标版本**: ${{ inputs.specific-version }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **警告**: 这将影响生产环境，请确认操作无误！" >> $GITHUB_STEP_SUMMARY
+
+  rollback:
+    name: 执行回滚
+    needs: confirm-rollback
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://8.129.16.190
+
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
+
+      - name: Execute Rollback
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          ROLLBACK_TYPE: ${{ inputs.rollback-type }}
+          SPECIFIC_VERSION: ${{ inputs.specific-version }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' \
+            "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD" "$ROLLBACK_TYPE" "$SPECIFIC_VERSION" "$REASON"
+
+            set -e
+
+            REGISTRY_USERNAME="$1"
+            REGISTRY_PASSWORD="$2"
+            ROLLBACK_TYPE="$3"
+            SPECIFIC_VERSION="$4"
+            REASON="$5"
+
+            echo "🔄 开始回滚操作..."
+            echo "  类型: $ROLLBACK_TYPE"
+            echo "  原因: $REASON"
+            cd /home/layne/project/bravo-prod
+
+            # 登录镜像仓库
+            echo "🔐 登录阿里云镜像仓库..."
+            echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com \
+              --username "${REGISTRY_USERNAME}" --password-stdin
+
+            # 根据回滚类型确定目标版本
+            case "$ROLLBACK_TYPE" in
+              "previous")
+                echo "📋 回滚到上一个版本..."
+                if [ ! -f .deployment-previous ]; then
+                  echo "❌ 没有找到上一个版本信息"
+                  exit 1
+                fi
+
+                # 使用backup标签
+                if docker images | grep -q bravo-backend-backup; then
+                  TARGET_BACKEND="bravo-backend-backup:latest"
+                  TARGET_FRONTEND="bravo-frontend-backup:latest"
+                  echo "✅ 使用本地备份镜像"
+                else
+                  echo "❌ 本地备份镜像不存在，尝试使用stable版本"
+                  docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable
+                  docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable
+                  TARGET_BACKEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable"
+                  TARGET_FRONTEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable"
+                fi
+                ;;
+
+              "stable")
+                echo "📋 回滚到最后稳定版本..."
+                echo "⬇️ 拉取prod-stable镜像..."
+                docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable
+                docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable
+                TARGET_BACKEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:prod-stable"
+                TARGET_FRONTEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:prod-stable"
+                ;;
+
+              "specific")
+                if [ -z "$SPECIFIC_VERSION" ]; then
+                  echo "❌ 未指定版本号"
+                  exit 1
+                fi
+
+                echo "📋 回滚到指定版本: $SPECIFIC_VERSION ..."
+                echo "⬇️ 拉取指定版本镜像..."
+
+                if ! docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:${SPECIFIC_VERSION}; then
+                  echo "❌ 指定的版本不存在: $SPECIFIC_VERSION"
+                  echo "可用的镜像标签："
+                  echo "请在GitHub Container Registry或阿里云控制台查看可用版本"
+                  exit 1
+                fi
+
+                docker pull crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:${SPECIFIC_VERSION}
+                TARGET_BACKEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:${SPECIFIC_VERSION}"
+                TARGET_FRONTEND="crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:${SPECIFIC_VERSION}"
+                ;;
+
+              *)
+                echo "❌ 未知的回滚类型: $ROLLBACK_TYPE"
+                exit 1
+                ;;
+            esac
+
+            echo "🎯 目标镜像:"
+            echo "  Backend:  $TARGET_BACKEND"
+            echo "  Frontend: $TARGET_FRONTEND"
+
+            # 停止当前容器
+            echo "⏹️  停止当前服务..."
+            COMPOSE_PROJECT_NAME=bravo-prod docker-compose -f docker-compose.prod.yml down
+
+            # 重新标记镜像为latest
+            echo "🏷️  重新标记镜像..."
+            docker tag $TARGET_BACKEND crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:latest
+            docker tag $TARGET_FRONTEND crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:latest
+
+            # 启动回滚版本
+            echo "🚀 启动回滚版本..."
+            COMPOSE_PROJECT_NAME=bravo-prod IMAGE_TAG=latest docker-compose -f docker-compose.prod.yml up -d
+
+            sleep 30
+
+            # 健康检查
+            echo "🏥 健康检查..."
+            HEALTH_OK=true
+
+            # 检查容器运行状态
+            if ! docker ps | grep -q bravo-prod-backend; then
+              echo "❌ Backend容器未运行"
+              HEALTH_OK=false
+            fi
+
+            if ! docker ps | grep -q bravo-prod-frontend; then
+              echo "❌ Frontend容器未运行"
+              HEALTH_OK=false
+            fi
+
+            # 检查服务响应
+            FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+            BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/ || echo "000")
+
+            if [ "$FRONTEND_STATUS" = "200" ] && [ "$BACKEND_STATUS" = "200" ]; then
+              echo "✅ 健康检查通过"
+              echo "  - Frontend: $FRONTEND_STATUS"
+              echo "  - Backend: $BACKEND_STATUS"
+            else
+              echo "❌ 健康检查失败"
+              echo "  - Frontend: $FRONTEND_STATUS"
+              echo "  - Backend: $BACKEND_STATUS"
+              HEALTH_OK=false
+            fi
+
+            if [ "$HEALTH_OK" = "true" ]; then
+              echo "✅ 回滚成功！服务正常运行"
+
+              # 记录回滚日志
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] 手动回滚成功 - 类型:${ROLLBACK_TYPE} - 原因:${REASON} - 操作人:${{ github.actor }}" >> .deployment-history
+
+              # 更新当前版本信息
+              {
+                echo "DEPLOY_TIME=$(date +%Y-%m-%d_%H:%M:%S)"
+                echo "BACKEND_IMAGE=$TARGET_BACKEND"
+                echo "FRONTEND_IMAGE=$TARGET_FRONTEND"
+                echo "ROLLBACK_TYPE=$ROLLBACK_TYPE"
+                echo "ROLLBACK_REASON=$REASON"
+                echo "ROLLBACK_BY=${{ github.actor }}"
+                echo "ROLLBACK_AT=$(date)"
+              } > .deployment-current
+
+            else
+              echo "❌ 回滚后健康检查失败"
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] 回滚失败 - 健康检查未通过 - 类型:${ROLLBACK_TYPE}" >> .deployment-history
+              exit 1
+            fi
+          ENDSSH
+
+      - name: Verify Rollback
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+        run: |
+          echo "🔍 验证回滚结果..."
+          sleep 10
+
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$HOST/ || echo "000")
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$HOST:8000/api/ || echo "000")
+
+          if [ "$FRONTEND_STATUS" = "200" ] && [ "$BACKEND_STATUS" = "200" ]; then
+            echo "✅ 远程验证通过"
+            echo "  - Frontend: $FRONTEND_STATUS"
+            echo "  - Backend: $BACKEND_STATUS"
+          else
+            echo "❌ 远程验证失败"
+            echo "  - Frontend: $FRONTEND_STATUS"
+            echo "  - Backend: $BACKEND_STATUS"
+            exit 1
+          fi
+
+      - name: Rollback Summary
+        if: always()
+        run: |
+          echo "## 🎯 回滚完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**状态**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**回滚类型**: ${{ inputs.rollback-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**回滚原因**: ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**操作人**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**时间**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ 生产环境已成功回滚" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 后续操作建议：" >> $GITHUB_STEP_SUMMARY
+            echo "1. ✅ 确认服务功能正常" >> $GITHUB_STEP_SUMMARY
+            echo "2. 🔍 分析导致回滚的原因" >> $GITHUB_STEP_SUMMARY
+            echo "3. 🐛 修复问题后重新部署" >> $GITHUB_STEP_SUMMARY
+            echo "4. 📊 检查部署历史：查看 .deployment-history 文件" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ 回滚失败，请立即检查服务器状态" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 紧急处理步骤：" >> $GITHUB_STEP_SUMMARY
+            echo "1. 🚨 SSH登录服务器检查状态" >> $GITHUB_STEP_SUMMARY
+            echo "2. 📋 查看容器日志：docker-compose logs" >> $GITHUB_STEP_SUMMARY
+            echo "3. 💬 联系运维团队" >> $GITHUB_STEP_SUMMARY
+          fi
