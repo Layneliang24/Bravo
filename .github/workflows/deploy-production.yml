@@ -259,8 +259,8 @@ jobs:
                   continue
                 fi
 
-                # 检查前端（检查HTTP状态码）
-                FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+                # 检查前端（检查HTTP状态码，跟随重定向）
+                FRONTEND_STATUS=$(curl -L -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
                 if [ "$FRONTEND_STATUS" != "200" ]; then
                   echo "⚠️ 前端健康检查失败 (状态码: $FRONTEND_STATUS)"
                   retry=$((retry+1))
@@ -388,7 +388,7 @@ jobs:
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
         run: |
-          curl -f http://$HOST/ || exit 1
+          curl -L -f http://$HOST/ || exit 1
 
       - name: Create deployment summary
         env:
