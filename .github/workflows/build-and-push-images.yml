@@ -11,6 +11,8 @@ on:
       - "frontend/**"
       - "docker-compose.prod.yml"
       - ".github/workflows/build-and-push-images.yml"
+      - ".github/workflows/deploy-dev.yml"
+      - ".github/workflows/deploy-production.yml"
 
   # 手动触发
   workflow_dispatch:
@@ -41,26 +43,29 @@ jobs:
         run: |
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
           SHORT_SHA=${GITHUB_SHA::8}
+          TIMESTAMP=$(date -u +%Y.%m.%d-%H%M%S)
 
           if [ "$BRANCH_NAME" = "main" ]; then
-            # 生产环境：使用版本号和latest
-            VERSION=$(date +%Y.%m.%d)-${SHORT_SHA}
-            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${VERSION},${REGISTRY}/${NAMESPACE}/backend:latest"
-            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${VERSION},${REGISTRY}/${NAMESPACE}/frontend:latest"
+            # 生产环境：3个标签（版本号、latest、prod-stable）
+            VERSION=${TIMESTAMP}-${SHORT_SHA}
+            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${VERSION},${REGISTRY}/${NAMESPACE}/backend:latest,${REGISTRY}/${NAMESPACE}/backend:prod-stable"
+            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${VERSION},${REGISTRY}/${NAMESPACE}/frontend:latest,${REGISTRY}/${NAMESPACE}/frontend:prod-stable"
             echo "environment=production" >> $GITHUB_OUTPUT
           else
-            # 开发环境：使用dev和dev-sha
-            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:dev-${SHORT_SHA},${REGISTRY}/${NAMESPACE}/backend:dev"
-            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:dev-${SHORT_SHA},${REGISTRY}/${NAMESPACE}/frontend:dev"
+            # 开发环境：3个标签（版本号、dev、dev-stable）
+            VERSION=dev-${TIMESTAMP}-${SHORT_SHA}
+            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${VERSION},${REGISTRY}/${NAMESPACE}/backend:dev,${REGISTRY}/${NAMESPACE}/backend:dev-stable"
+            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${VERSION},${REGISTRY}/${NAMESPACE}/frontend:dev,${REGISTRY}/${NAMESPACE}/frontend:dev-stable"
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
 
           echo "backend_tags=${BACKEND_TAGS}" >> $GITHUB_OUTPUT
           echo "frontend_tags=${FRONTEND_TAGS}" >> $GITHUB_OUTPUT
-          echo "version=${VERSION:-dev-${SHORT_SHA}}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
           echo "📦 Backend镜像标签: ${BACKEND_TAGS}"
           echo "📦 Frontend镜像标签: ${FRONTEND_TAGS}"
+          echo "🏷️  版本号: ${VERSION}"
 
       - name: 设置Docker Buildx
         uses: docker/setup-buildx-action@v3
