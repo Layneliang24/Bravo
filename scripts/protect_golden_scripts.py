@@ -8,10 +8,16 @@ Scripts-Golden保护系统
 """
 
 import hashlib
+import io
 import os
 import sys
 import threading
 from datetime import datetime
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # 30秒超时设置
 TIMEOUT_SECONDS = 30
@@ -178,20 +184,20 @@ def main():
         # 没有修改golden文件，直接通过
         sys.exit(0)
 
-    print("检测到 {} 个核心保护脚本被修改:".format(len(golden_files)))
-    for file in golden_files:
-        print("   - {}".format(file))
-    print("")
-
-    # 检查人工授权环境变量
+    # 检查人工授权环境变量（静默模式）
     manual_auth = os.environ.get("GOLDEN_SCRIPTS_MANUAL_AUTH")
     if manual_auth == "AUTHORIZED_BY_HUMAN":
-        print("SUCCESS: 检测到人工授权环境变量")
-        print("INFO: 已通过独立终端授权，允许修改")
+        # 静默模式：授权通过时不输出，避免重复信息
         log_security_violation(
             "人工环境变量授权", "GOLDEN_SCRIPTS_MANUAL_AUTH=AUTHORIZED_BY_HUMAN"
         )
         sys.exit(0)
+
+    # 只有在需要授权时才输出文件列表
+    print("检测到 {} 个核心保护脚本被修改:".format(len(golden_files)))
+    for file in golden_files:
+        print("   - {}".format(file))
+    print("")
 
     # 在非交互式环境中（如pre-commit），提供清晰的指导
     if not sys.stdin.isatty():
