@@ -34,7 +34,7 @@ show_protected_branch_warning() {
     echo ""
     echo "⚠️  紧急情况绕过（极度不推荐）："
     echo "   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true"
-    echo "   或输入紧急确认码：HOTFIX_EMERGENCY_BYPASS"
+    echo "   或在提示时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -47,18 +47,22 @@ show_protected_branch_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 使用统一的加密密码验证系统
     echo ""
-    read -p "紧急确认码: " response
-    if [[ "$response" == "HOTFIX_EMERGENCY_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许继续操作"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
-        return 0
-    else
-        echo "❌ 操作被取消 - 请切换到feature分支进行开发！"
+    echo "🔐 需要密码验证才能继续"
+
+    # 调用加密验证系统
+    PROJECT_ROOT="$(cd "$(dirname "$(dirname "$0")")" && pwd)"
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "$operation" "$command_full"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 推荐命令：git checkout -b feature/$(whoami)-$(date +%m%d)"
         exit 1
     fi
+
+    echo "✅ 密码验证通过，已授权继续"
+    echo "⚠️  操作已记录"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSWORD_VERIFIED | $operation | $command_full" >> "$LOG_FILE"
+    return 0
 }
 
 # 通用违规处理函数
@@ -74,7 +78,6 @@ show_violation_warning() {
     echo "   • 代码质量检查被绕过"
     echo "   • 架构违规问题扩散"
     echo "   • 分支保护策略被绕过"
-    echo "   • 噗你阿母，你绕过试试！！！"
     echo ""
     echo "✅ 正确的解决方案："
     echo "   1. 修复检查发现的问题"
@@ -90,19 +93,21 @@ show_violation_warning() {
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | BLOCKED | $violation_type | $command_full" >> "$LOG_FILE"
 
-    # 询问是否强制继续（可选）
+    # 使用统一的加密密码验证系统
     echo ""
-    echo "⚠️  如果您确实需要强制继续（极度不推荐）："
-    echo "请输入完整确认码: I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS"
-    read -p "确认码: " response
-    if [[ "$response" != "I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS" ]]; then
-        echo "❌ 操作被取消 - 这是明智的选择！"
+    echo "🔐 需要密码验证才能继续"
+
+    # 调用加密验证系统
+    PROJECT_ROOT="$(cd "$(dirname "$(dirname "$0")")" && pwd)"
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "$violation_type" "$command_full"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 请修复问题后重新尝试"
         exit 1
-    else
-        echo "⚠️  强制继续，但违规行为已记录"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | FORCED | $violation_type | $command_full" >> "$LOG_FILE"
     fi
+
+    echo "✅ 密码验证通过，已授权继续"
+    echo "⚠️  操作已记录"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSWORD_VERIFIED | $violation_type | $command_full" >> "$LOG_FILE"
 }
 
 # 保护分支修改检查（在所有其他检查之前）
