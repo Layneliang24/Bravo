@@ -176,9 +176,9 @@ show_host_dependency_warning() {
     esac
     echo "   docker-compose exec $container_name $command_full"
     echo ""
-    echo "⚠️  紧急情况绕过（极度不推荐）："
+    echo "⚠️  紧急情况绕过（需要密码验证）："
     echo "   export ALLOW_HOST_DEPENDENCY_INSTALL=true"
-    echo "   或输入紧急确认码：DOCKER_NATIVE_BYPASS"
+    echo "   或在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -191,18 +191,20 @@ show_host_dependency_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 使用密码验证
     echo ""
-    response=$(read_with_timeout "紧急确认码: ")
-    if [[ "$response" == "DOCKER_NATIVE_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许宿主机依赖安装"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
-        return 0
-    else
-        echo "❌ 操作被取消 - 请使用Docker容器进行依赖管理！"
+    echo "🔐 需要密码验证才能在宿主机安装依赖"
+
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "宿主机依赖安装" "$command_full"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 推荐命令：docker-compose exec [service] $command_full"
         exit 1
     fi
+
+    echo "✅ 密码验证通过，允许宿主机依赖安装"
+    echo "⚠️  已记录此次操作"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_PASSWORD_VERIFIED | $command_full" >> "$LOG_FILE"
+    return 0
 }
 
 # 检查是否在保护分支上
@@ -241,9 +243,9 @@ show_protected_branch_warning() {
     echo "🔧 快速创建feature分支："
     echo "   git checkout -b feature/quick-fix-$(date +%m%d-%H%M)"
     echo ""
-    echo "⚠️  紧急情况绕过（极度不推荐）："
+    echo "⚠️  紧急情况绕过（需要密码验证）："
     echo "   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true"
-    echo "   或输入紧急确认码：HOTFIX_EMERGENCY_BYPASS"
+    echo "   或在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -256,18 +258,20 @@ show_protected_branch_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 使用密码验证
     echo ""
-    response=$(read_with_timeout "紧急确认码: ")
-    if [[ "$response" == "HOTFIX_EMERGENCY_BYPASS" ]]; then
-        echo "🟡 紧急绕过确认，允许继续操作"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_EMERGENCY | $operation | $command_full" >> "$LOG_FILE"
-        return 0
-    else
-        echo "❌ 操作被取消 - 请切换到feature分支进行开发！"
+    echo "🔐 需要密码验证才能在保护分支上操作"
+
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "保护分支操作" "$operation"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 推荐命令：git checkout -b feature/$(whoami)-$(date +%m%d)"
         exit 1
     fi
+
+    echo "✅ 密码验证通过，允许在保护分支操作"
+    echo "⚠️  已记录此次操作"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_PASSWORD_VERIFIED | $operation | $command_full" >> "$LOG_FILE"
+    return 0
 }
 
 # 通用违规处理函数
@@ -298,19 +302,20 @@ show_violation_warning() {
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | BLOCKED | $violation_type | $command_full" >> "$LOG_FILE"
 
-    # 询问是否强制继续（可选）
+    # 使用统一的加密密码验证系统
     echo ""
-    echo "⚠️  如果您确实需要强制继续（极度不推荐）："
-    echo "请输入完整确认码: I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS"
-    response=$(read_with_timeout "确认码: ")
-    if [[ "$response" != "I_UNDERSTAND_THE_RISKS_OF_BYPASSING_CHECKS" ]]; then
-        echo "❌ 操作被取消 - 这是明智的选择！"
+    echo "🔐 需要密码验证才能继续"
+
+    # 调用加密验证系统
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "$violation_type" "$command_full"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 请修复问题后重新尝试"
         exit 1
-    else
-        echo "⚠️  强制继续，但违规行为已记录"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | FORCED | $violation_type | $command_full" >> "$LOG_FILE"
     fi
+
+    echo "✅ 密码验证通过，已授权继续"
+    echo "⚠️  操作已记录"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | PASSWORD_VERIFIED | $violation_type | $command_full" >> "$LOG_FILE"
 }
 
 # 保护分支修改检查（在所有其他检查之前）
@@ -418,9 +423,9 @@ show_skip_bypass_warning() {
     echo "   git commit -m '...' --no-verify  # 仅用于紧急情况"
     echo "   # 或在.pre-commit-config.yaml中配置"
     echo ""
-    echo "⚠️  紧急绕过（需要强制理由）："
+    echo "⚠️  紧急绕过（需要密码验证）："
     echo "   export ALLOW_QUALITY_BYPASS=true"
-    echo "   或输入紧急确认码：QUALITY_BYPASS_2024"
+    echo "   或在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
@@ -433,18 +438,20 @@ show_skip_bypass_warning() {
         return 0
     fi
 
-    # 询问紧急确认码
+    # 使用密码验证
     echo ""
-    response=$(read_with_timeout "紧急确认码: ")
-    if [[ "$response" == "QUALITY_BYPASS_2024" ]]; then
-        echo "🟡 紧急绕过确认，记录此次绕过"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_EMERGENCY | $command_full" >> "$LOG_FILE"
-        return 0
-    else
-        echo "❌ 操作被取消 - 请修复质量检查问题后重新提交！"
+    echo "🔐 需要密码验证才能绕过质量检查"
+
+    if ! bash "$PROJECT_ROOT/scripts-golden/encrypted_auth_system.sh" --verify "质量检查绕过" "$bypass_type"; then
+        echo "❌ 密码验证失败 - 操作被拒绝"
         echo "💡 建议：仔细阅读pre-commit输出的错误信息并逐一修复"
         exit 1
     fi
+
+    echo "✅ 密码验证通过，已授权绕过"
+    echo "⚠️  已记录此次绕过"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_PASSWORD_VERIFIED | $command_full" >> "$LOG_FILE"
+    return 0
 }
 
 # 执行绕过检测
