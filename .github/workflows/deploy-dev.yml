@@ -126,102 +126,166 @@ jobs:
           echo "检查Backend的STATIC_ROOT配置:"
           docker exec bravo-dev-backend python -c "from bravo.settings.production import STATIC_ROOT; print(f'STATIC_ROOT: {STATIC_ROOT}')" || echo "⚠️ 无法获取STATIC_ROOT"
 
+          # 在部署前备份当前运行的镜像（用于回滚）
+          echo "📦 备份当前镜像作为回滚点..."
+          if docker images | grep -q bravo-dev-backend; then
+            docker tag bravo-dev-backend:latest bravo-dev-backend-backup:latest || echo "Backend backup created"
+          fi
+          if docker images | grep -q bravo-dev-frontend; then
+            docker tag bravo-dev-frontend:latest bravo-dev-frontend-backup:latest || echo "Frontend backup created"
+          fi
+
+          # 记录部署信息
+          echo "DEPLOYED_AT=$(date '+%Y-%m-%d %H:%M:%S')" > .deployment-current
+          echo "GITHUB_SHA=${{ github.sha }}" >> .deployment-current
+          echo "GITHUB_RUN_ID=${{ github.run_id }}" >> .deployment-current
+
           echo "✅ Dev环境部署步骤完成，准备健康检查..."
           ENDSSH
 
-      - name: Test Rollback Mechanism with Intentional Failure
-        id: rollback-test
+      - name: Health Check with Auto Rollback
+        id: health-check
+        if: always()
         env:
           HOST: ${{ secrets.ALIYUN_HOST }}
           USER: ${{ secrets.ALIYUN_USER }}
           REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
-          echo "🧪 ===================="
-          echo "🧪 回滚机制测试开始"
-          echo "🧪 ===================="
-          echo ""
-          echo "📋 测试计划："
-          echo "  1. 故意检查错误的URL（触发健康检查失败）"
-          echo "  2. 观察是否检测到失败"
-          echo "  3. 执行模拟回滚（重启服务）"
-          echo "  4. 验证服务是否恢复正常"
-          echo ""
-
           ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
             set -e
 
             REGISTRY_USERNAME="$1"
             REGISTRY_PASSWORD="$2"
 
+            echo "🏥 开始Dev环境健康检查..."
             cd /home/layne/project/bravo-dev
 
-            echo "🧪 阶段1：检查当前服务是否正常..."
-            NORMAL_FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "000")
-            NORMAL_BACKEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/api/ || echo "000")
+            # 健康检查函数
+            check_health() {
+              local retry=0
+              local max_retry=3
 
-            echo "  - Frontend (正常路径): $NORMAL_FRONTEND"
-            echo "  - Backend API (正常路径): $NORMAL_BACKEND"
+              while [ $retry -lt $max_retry ]; do
+                echo "🔍 健康检查 ($((retry+1))/$max_retry)..."
 
-            if [ "$NORMAL_FRONTEND" = "200" ] && [ "$NORMAL_BACKEND" = "200" ]; then
-              echo "✅ 当前服务正常运行"
+                # 检查容器状态
+                if ! docker ps | grep -q bravo-dev-backend; then
+                  echo "❌ Backend容器未运行"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                if ! docker ps | grep -q bravo-dev-frontend; then
+                  echo "❌ Frontend容器未运行"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 检查前端（使用dev环境端口8080）
+                FRONTEND_STATUS=$(curl -L -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "000")
+                if [ "$FRONTEND_STATUS" != "200" ]; then
+                  echo "⚠️ 前端健康检查失败 (状态码: $FRONTEND_STATUS)"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 检查后端API（使用dev环境端口8001）
+                BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/api/ || echo "000")
+                if [ "$BACKEND_STATUS" != "200" ]; then
+                  echo "⚠️ 后端API健康检查失败 (状态码: $BACKEND_STATUS)"
+                  retry=$((retry+1))
+                  sleep 10
+                  continue
+                fi
+
+                # 所有检查通过
+                echo "✅ 健康检查通过"
+                echo "  - Frontend (port 8080): $FRONTEND_STATUS"
+                echo "  - Backend API (port 8001): $BACKEND_STATUS"
+                return 0
+              done
+
+              echo "❌ 健康检查失败（重试${max_retry}次）"
+              return 1
+            }
+
+            # 执行健康检查
+            if check_health; then
+              echo "🎉 Dev环境部署成功！"
+
+              # 登录镜像仓库以更新dev-stable标签
+              echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+
+              # 更新dev-stable标签（标记为dev稳定版本）
+              echo "🏷️  更新dev-stable标签..."
+              docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:dev \
+                         crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:dev-stable || true
+              docker tag crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:dev \
+                         crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:dev-stable || true
+
+              # 推送stable标签到远程仓库（用于远程回滚）
+              docker push crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:dev-stable || echo "⚠️ 推送backend dev-stable标签失败"
+              docker push crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:dev-stable || echo "⚠️ 推送frontend dev-stable标签失败"
+
+              # 记录到部署历史
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dev部署成功 - GitHub SHA: ${{ github.sha }} - Run ID: ${{ github.run_id }}" >> .deployment-history
+
+              exit 0
             else
-              echo "⚠️ 当前服务状态异常，但继续测试..."
-            fi
-            echo ""
+              echo "🚨 健康检查失败，开始自动回滚..."
 
-            echo "🧪 阶段2：故意检查错误的URL（模拟健康检查失败）..."
-            FAIL_TEST=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/this-path-does-not-exist-to-test-rollback || echo "000")
-
-            echo "  - 错误URL状态码: $FAIL_TEST"
-
-            if [ "$FAIL_TEST" != "200" ]; then
-              echo "✅ 成功检测到健康检查失败（预期结果）"
-              echo "  状态码: $FAIL_TEST (应为404或000)"
-              echo ""
-
-              echo "🧪 阶段3：模拟自动回滚流程..."
-              echo "  (实际生产环境会：停止容器 → 使用backup镜像 → 重启)"
-              echo "  (测试环境简化为：重启服务验证恢复能力)"
-
-              # 模拟回滚：重启服务
-              echo "🔄 重启服务（模拟回滚）..."
-              COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml restart
-
-              echo "⏳ 等待服务重启..."
-              sleep 20
-
-              echo ""
-              echo "🧪 阶段4：验证回滚后服务是否恢复..."
-              AFTER_ROLLBACK_FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "000")
-              AFTER_ROLLBACK_BACKEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/api/ || echo "000")
-
-              echo "  - Frontend: $AFTER_ROLLBACK_FRONTEND"
-              echo "  - Backend API: $AFTER_ROLLBACK_BACKEND"
-              echo ""
-
-              if [ "$AFTER_ROLLBACK_FRONTEND" = "200" ] && [ "$AFTER_ROLLBACK_BACKEND" = "200" ]; then
-                echo "✅✅✅ 回滚机制测试成功！"
-                echo ""
-                echo "📊 测试总结："
-                echo "  1. ✅ 成功检测到健康检查失败"
-                echo "  2. ✅ 成功执行回滚动作"
-                echo "  3. ✅ 服务成功恢复正常"
-                echo ""
-                echo "🎉 证明：回滚机制能够在部署失败时自动恢复服务！"
-              else
-                echo "❌ 回滚测试失败：服务未能恢复"
-                echo "  Frontend: $AFTER_ROLLBACK_FRONTEND (期望200)"
-                echo "  Backend: $AFTER_ROLLBACK_BACKEND (期望200)"
+              # 检查是否有备份可以回滚
+              if ! docker images | grep -q bravo-dev-backend-backup; then
+                echo "❌ 没有可回滚的备份镜像"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dev部署失败 - 无法回滚 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
                 exit 1
               fi
-            else
-              echo "⚠️ 未能触发失败场景（错误URL返回了200）"
-              echo "  这可能说明有通配符路由，继续测试..."
-            fi
 
-            echo ""
-            echo "🧪 ===================="
-            echo "🧪 回滚机制测试完成"
-            echo "🧪 ===================="
+              echo "⏹️  停止失败的容器..."
+              COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down
+
+              echo "🔄 使用备份镜像回滚..."
+              # 使用backup标签恢复
+              docker tag bravo-dev-backend-backup:latest crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/backend:dev
+              docker tag bravo-dev-frontend-backup:latest crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-project/frontend:dev
+              echo "✅ 已恢复备份镜像"
+
+              echo "🚀 重新启动服务（使用备份版本）..."
+              COMPOSE_PROJECT_NAME=bravo-dev \
+              IMAGE_TAG=dev \
+              USE_DOMAIN=true \
+              DOMAIN_NAME=dev.layneliang.com \
+              MYSQL_PORT=3307 \
+              REDIS_PORT=6380 \
+              BACKEND_PORT=8001 \
+              FRONTEND_HTTP_PORT=8080 \
+              FRONTEND_HTTPS_PORT=8443 \
+              DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-$(date +%s)}" \
+              docker-compose -f docker-compose.prod.yml up -d
+
+              echo "⏳ 等待回滚后的服务就绪..."
+              sleep 15
+
+              # 重新配置Nginx SSL
+              if [ -f "frontend/nginx.domain-dev.conf" ]; then
+                docker cp frontend/nginx.domain-dev.conf bravo-dev-frontend:/etc/nginx/conf.d/default.conf
+                docker exec bravo-dev-frontend nginx -t && docker exec bravo-dev-frontend nginx -s reload
+                echo "✅ 回滚后SSL配置已应用"
+              fi
+
+              echo "🔍 验证回滚后的服务..."
+              if check_health; then
+                echo "✅ 回滚成功！服务已恢复到上一个稳定版本"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dev部署失败 - 已自动回滚成功 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
+                exit 1  # 仍然返回失败状态，表示本次部署失败了
+              else
+                echo "❌ 回滚后健康检查仍然失败"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dev部署失败 - 回滚也失败 - GitHub SHA: ${{ github.sha }}" >> .deployment-history
+                exit 1
+              fi
+            fi
           ENDSSH
