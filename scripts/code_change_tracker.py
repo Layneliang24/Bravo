@@ -5,12 +5,19 @@
 用于检测和管理临时修改，防止功能缺失
 """
 
+import io
 import json
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 class CodeChangeTracker:

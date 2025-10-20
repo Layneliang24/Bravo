@@ -7,11 +7,17 @@
 
 import argparse
 import hashlib
+import io
 import json
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # 北京时区（东八区）
 BEIJING_TZ = timezone(timedelta(hours=8))
