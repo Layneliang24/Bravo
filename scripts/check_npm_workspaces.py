@@ -17,9 +17,15 @@ NPM Workspaces架构守护脚本
 [X] 严重禁止：子目录的任何npm ci调用（会破坏整个workspace结构）
 """
 
+import io
 import os
 import re
 import sys
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 class NPMWorkspacesChecker:
@@ -103,8 +109,8 @@ class NPMWorkspacesChecker:
     def print_violations(self):
         """打印所有违规信息"""
         if not self.violations:
-            print("[OK] NPM Workspaces架构检查通过 - 无违规发现")
-            return
+            # 静默模式：没有违规时不输出，避免重复信息
+            return False
 
         print("[ERROR] 发现NPM Workspaces架构违规！")
         print("=" * 60)

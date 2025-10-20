@@ -212,6 +212,7 @@ repos:
         entry: sh -c 'if [ -f ".git/hooks/pre-commit" ]; then echo "[OK] Pre-commit hooks 已安装"; else echo "[ERROR] Pre-commit hooks 未安装或被绕过" && exit 1; fi'
         language: system
         stages: [pre-commit]
+        pass_filenames: false
         always_run: true
 
       - id: file-size-check
