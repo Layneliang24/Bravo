@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: dev # 强制拉取dev分支最新代码，确保使用最新的workflow和健康检查逻辑
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
