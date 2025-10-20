@@ -41,7 +41,7 @@ initialize_auth_system() {
 # 请勿手动修改此文件
 SALT=$salt
 HASH=$hashed_password
-CREATED=$(date '+%Y-%m-%d %H:%M:%S')
+CREATED="$(date '+%Y-%m-%d %H:%M:%S')"
 EOF
 
         chmod 600 "$AUTH_CONFIG_FILE"  # 只有所有者可读写
