@@ -245,6 +245,16 @@ repos:
         pass_filenames: true
         description: "检查带deletable标识的文件是否包含必需的元数据注释"
 
+      # 🐳 DOCKER-COMPOSE 文件数量限制
+      - id: docker-compose-limit
+        name: Docker Compose Files Limit Guard
+        entry: python scripts/check_docker_compose_limit.py
+        language: system
+        files: "^docker-compose.*\\.(yml|yaml)$"
+        pass_filenames: false
+        always_run: true
+        description: "防止根目录docker-compose文件数量无限增长，保持配置简洁"
+
       # 🔒 SCRIPTS-GOLDEN 核心保护脚本守护
       - id: scripts-golden-protection
         name: Scripts-Golden Protection Guard
