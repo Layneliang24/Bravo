@@ -237,6 +237,14 @@ repos:
         pass_filenames: true
         description: "检查npm workspaces架构违规，防止子目录npm ci/install调用"
 
+      # 🗂️ DELETABLE 文件元数据检查
+      - id: file-metadata-check
+        name: Deletable File Metadata Check
+        entry: python scripts/file_metadata_checker.py
+        language: system
+        pass_filenames: true
+        description: "检查带deletable标识的文件是否包含必需的元数据注释"
+
       # 🔒 SCRIPTS-GOLDEN 核心保护脚本守护
       - id: scripts-golden-protection
         name: Scripts-Golden Protection Guard
