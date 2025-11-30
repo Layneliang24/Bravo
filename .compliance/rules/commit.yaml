@@ -1,0 +1,31 @@
+name: commit
+description: 提交消息合规规则
+version: "1.0"
+
+# 提交消息格式要求
+message_format:
+  pattern: "^\\[(REQ-\\d{4}-\\d{3}-[a-z0-9-]+|BUGFIX|REFACTOR|HOTFIX)\\]"
+  required: true
+  examples:
+    - "[REQ-2025-001-user-login] Task-1 Subtask-2 实现登录API"
+    - "[BUGFIX] 修复登录失败的问题"
+    - "[REFACTOR] 重构用户认证模块"
+    - "[HOTFIX] 紧急修复生产环境问题"
+
+# 提交消息必需字段
+required_fields:
+  - req_id_or_type
+  - task_id
+  - description
+
+# 提交消息长度要求
+length:
+  min: 20
+  max: 200
+
+# 禁止的提交消息
+forbidden_patterns:
+  - "^WIP"
+  - "^fix"
+  - "^update"
+  - "^临时"
