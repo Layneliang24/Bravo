@@ -41,6 +41,7 @@ cat docs/00_product/requirements/REQ-2025-EXAMPLE-demo/REQ-2025-EXAMPLE-demo.md
 PRD文件必须包含：
 
 1. **Frontmatter（YAML格式）**
+
    - `req_id`: 需求ID（格式：REQ-YYYY-NNN-slug）
    - `title`: 需求标题
    - `status`: 状态（draft, refined, reviewed, approved, implementing, completed, archived）
@@ -60,16 +61,19 @@ PRD文件必须包含：
 ### 2.2 创建PRD步骤
 
 1. **创建目录**
+
    ```bash
    mkdir -p docs/00_product/requirements/REQ-2025-001-your-feature
    ```
 
 2. **创建PRD文件**
+
    ```bash
    touch docs/00_product/requirements/REQ-2025-001-your-feature/REQ-2025-001-your-feature.md
    ```
 
 3. **编写PRD内容**
+
    - 参考示例PRD：`docs/00_product/requirements/REQ-2025-EXAMPLE-demo/REQ-2025-EXAMPLE-demo.md`
    - 确保包含所有必需的Frontmatter字段
    - 详细描述功能需求和测试用例
@@ -87,6 +91,7 @@ PRD文件必须包含：
 ### 3.1 精化PRD
 
 在Cursor中精化PRD，补充：
+
 - 数据库表设计
 - Redis缓存策略
 - API接口定义（OpenAPI格式）
@@ -117,6 +122,7 @@ python scripts/task-master/adapter.py REQ-2025-001-your-feature
 ```
 
 这将：
+
 - 生成Task-0自检任务
 - 创建三层目录结构
 - 生成task.md和subtask文件
@@ -141,21 +147,25 @@ task-master next --tag=REQ-2025-001-your-feature
 ### 4.3 执行任务
 
 1. **查看任务详情**
+
    ```bash
    task-master show 0 --tag=REQ-2025-001-your-feature
    ```
 
 2. **开始任务**
+
    ```bash
    task-master set-status --id=0 --status=in-progress --tag=REQ-2025-001-your-feature
    ```
 
 3. **执行子任务**
+
    - 阅读子任务文件：`.taskmaster/tasks/REQ-2025-001-your-feature/task-0-self-check/subtask-1-validate-prd-metadata.md`
    - 按照TDD流程：先写测试，再写代码
    - 运行测试确保通过
 
 4. **完成子任务**
+
    ```bash
    task-master set-status --id=0.1 --status=done --tag=REQ-2025-001-your-feature
    ```
@@ -188,10 +198,12 @@ git commit -m "feat(auth): add user login functionality"
 提交时会自动执行：
 
 1. **Pre-commit检查**
+
    - 代码质量检查
    - V4合规引擎检查（第四层）
 
 2. **Commit-msg检查**
+
    - 验证提交消息格式
    - 支持V4格式和传统格式
 
@@ -215,6 +227,7 @@ git commit -m "feat(auth): add user login functionality"
 ### Q1: 合规检查失败怎么办？
 
 **A**: 查看错误信息，常见问题：
+
 - PRD元数据不完整：检查Frontmatter字段
 - 测试文件缺失：确保测试文件存在
 - 提交消息格式错误：使用正确的格式
@@ -222,6 +235,7 @@ git commit -m "feat(auth): add user login functionality"
 ### Q2: Task-Master适配器失败？
 
 **A**: 检查：
+
 - tasks.json是否存在
 - REQ-ID是否正确
 - 是否在容器内执行
@@ -229,6 +243,7 @@ git commit -m "feat(auth): add user login functionality"
 ### Q3: 状态同步失败？
 
 **A**: 检查：
+
 - PRD文件是否存在
 - PRD Frontmatter格式是否正确
 - 是否在容器内执行
@@ -248,6 +263,7 @@ python scripts/task-master/adapter.py REQ-2025-001-your-feature
 ### Q5: 如何禁用合规检查？
 
 **A**: 不推荐，但如果必须：
+
 - 修改`.compliance/config.yaml`中的`strict_mode: false`
 - 或临时移除合规引擎调用（不推荐）
 
@@ -271,4 +287,3 @@ python scripts/task-master/adapter.py REQ-2025-001-your-feature
 2. 使用Task-Master生成任务
 3. 开始开发并体验完整工作流
 4. 遇到问题时参考常见问题部分
-

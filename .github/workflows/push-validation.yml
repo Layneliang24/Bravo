@@ -284,7 +284,8 @@ jobs:
   # 条件测试执行 (基于分支类型)
   conditional-test-execution:
     name: "Conditional Test Execution"
-    needs: [detect-branch-context, quick-health-check]
+    needs:
+      [detect-branch-context, quick-health-check, compliance-check-and-rollback]
     if: needs.detect-branch-context.outputs.skip-validation != 'true'
     uses: ./.github/workflows/test-suite.yml
     with:
@@ -303,10 +304,138 @@ jobs:
       min-coverage: ${{ needs.detect-branch-context.outputs.coverage-required }}
       target-branch: ${{ github.ref_name }}
 
+  # V4合规引擎验证和自动回滚
+  compliance-check-and-rollback:
+    name: "V4 Compliance Check & Auto Rollback"
+    needs: [detect-branch-context, branch-protection-check]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml -q
+
+      - name: Run V4 Compliance Check
+        id: compliance
+        run: |
+          echo "🔍 Running V4 compliance validation..."
+
+          if [ -f ".compliance/runner.py" ]; then
+            # 获取推送中修改的文件
+            PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            if [ -n "$PREV_SHA" ]; then
+              CHANGED_FILES=$(git diff --name-only --diff-filter=ACM $PREV_SHA...HEAD || echo "")
+            else
+              CHANGED_FILES=$(git diff --name-only --diff-filter=ACM HEAD~1...HEAD || echo "")
+            fi
+
+            if [ -n "$CHANGED_FILES" ]; then
+              echo "📋 Changed files:"
+              echo "$CHANGED_FILES" | head -20
+
+              # 运行合规检查
+              python .compliance/runner.py $(echo "$CHANGED_FILES" | tr '\n' ' ') || {
+                echo "compliance_failed=true" >> $GITHUB_OUTPUT
+                echo ""
+                echo "❌ V4 Compliance validation failed!"
+                exit 1
+              }
+              echo "compliance_failed=false" >> $GITHUB_OUTPUT
+            else
+              echo "ℹ️ No changed files to validate"
+              echo "compliance_failed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ℹ️ Compliance engine not installed, skipping validation"
+            echo "compliance_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Unauthorized Deletions
+        id: check_deletions
+        run: |
+          echo "🔍 Checking for unauthorized function deletions..."
+
+          # 检查是否有代码文件被删除
+          PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          if [ -n "$PREV_SHA" ]; then
+            DELETED_FILES=$(git diff --name-only --diff-filter=D $PREV_SHA...HEAD | grep -E '\.(py|vue|ts|js)$' || echo "")
+          else
+            DELETED_FILES=$(git diff --name-only --diff-filter=D HEAD~1...HEAD | grep -E '\.(py|vue|ts|js)$' || echo "")
+          fi
+
+          if [ -n "$DELETED_FILES" ]; then
+            echo "⚠️ Code files deleted:"
+            echo "$DELETED_FILES"
+            echo ""
+            echo "🔍 Checking if deletions are authorized by PRD..."
+
+            # 检查提交消息中是否提到删除原因
+            COMMIT_MSG=$(git log -1 --format="%B")
+            if echo "$COMMIT_MSG" | grep -qiE "(remove|delete|deprecate|refactor|cleanup)"; then
+              echo "✅ Deletion mentioned in commit message"
+              echo "deletion_authorized=true" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️ Deletion not clearly explained in commit message"
+              echo "deletion_authorized=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "✅ No code files deleted"
+            echo "deletion_authorized=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto Rollback on Violation
+        if: steps.compliance.outputs.compliance_failed == 'true' || steps.check_deletions.outputs.deletion_authorized == 'false'
+        run: |
+          echo "🚨 Compliance violation detected!"
+          echo ""
+          echo "📋 Violation details:"
+          echo "  - Compliance check: ${{ steps.compliance.outputs.compliance_failed }}"
+          echo "  - Deletion authorized: ${{ steps.check_deletions.outputs.deletion_authorized }}"
+          echo ""
+          echo "🔄 Attempting automatic rollback..."
+
+          # 获取上一个提交
+          PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          if [ -n "$PREV_SHA" ]; then
+            echo "Rolling back to: $PREV_SHA"
+            echo ""
+            echo "⚠️ Auto-rollback would revert to previous commit"
+            echo "   In production, this requires manual intervention"
+            echo ""
+            echo "📋 To manually rollback:"
+            echo "   git revert HEAD"
+            echo "   git push origin ${{ github.ref_name }}"
+          else
+            echo "❌ Cannot determine previous commit for rollback"
+          fi
+
+          # 在CI环境中，我们只警告，不实际回滚
+          # 实际回滚应该在部署阶段处理
+          echo ""
+          echo "⚠️ This is a CI environment - rollback must be done manually"
+          exit 1
+
   # 分支特定的额外检查
   branch-specific-checks:
     name: "Branch-Specific Additional Checks"
-    needs: [detect-branch-context, conditional-test-execution]
+    needs:
+      [
+        detect-branch-context,
+        conditional-test-execution,
+        compliance-check-and-rollback,
+      ]
     if: needs.detect-branch-context.outputs.branch-type == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 8

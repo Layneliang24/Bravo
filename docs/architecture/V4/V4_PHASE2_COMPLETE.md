@@ -18,11 +18,13 @@
 ### 2. Python核心代码（9个文件）
 
 #### 引擎核心
+
 - ✅ `.compliance/engine.py` - 规则引擎核心（约400行）
 - ✅ `.compliance/runner.py` - Pre-commit入口（约60行）
 - ✅ `.compliance/__init__.py` - 包初始化
 
 #### 检查器插件
+
 - ✅ `.compliance/checkers/__init__.py` - 检查器包初始化
 - ✅ `.compliance/checkers/prd_checker.py` - PRD检查器（约150行）
 - ✅ `.compliance/checkers/test_checker.py` - 测试检查器（约120行）
@@ -77,12 +79,14 @@
 ### 阶段3: Task-Master适配层
 
 需要创建：
+
 - `scripts/task-master/adapter.py` - Task-Master适配器
 - `scripts/task-master/sync_status.py` - 状态同步脚本
 
 ### 阶段4: Git Hooks集成
 
 需要更新：
+
 - `.husky/pre-commit` - 添加合规引擎调用
 - `.husky/commit-msg` - 更新REQ-ID格式验证
 - `.husky/post-commit` - 添加审计日志
@@ -107,4 +111,3 @@ python -c "from compliance.checkers import PRDChecker; print('OK')"
 - [V4架构总览](./AI-WORKFLOW-V4-README.md)
 - [PART5合规引擎](./AI-WORKFLOW-V4-PART5-COMPLIANCE.md)
 - [实施状态](./V4_IMPLEMENTATION_STATUS.md)
-

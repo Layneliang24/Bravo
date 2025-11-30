@@ -19,7 +19,7 @@ paths:
       tags:
         - example
       responses:
-        '200':
+        "200":
           description: 成功返回示例消息
           content:
             application/json:
@@ -33,12 +33,12 @@ paths:
                     type: string
                     format: date-time
                     example: "2025-11-30T10:00:00Z"
-        '500':
+        "500":
           description: 服务器错误
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -51,4 +51,3 @@ components:
         code:
           type: integer
           description: 错误代码
-

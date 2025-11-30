@@ -2,7 +2,6 @@
 """用户模型单元测试"""
 
 import pytest
-
 from django.contrib.auth import get_user_model
 
 # Django异常导入根据需要添加

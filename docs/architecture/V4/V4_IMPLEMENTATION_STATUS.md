@@ -113,16 +113,18 @@
 ### 立即执行
 
 1. **创建合规引擎核心代码**
+
    - 创建`.compliance/engine.py`
    - 创建`.compliance/runner.py`
    - 创建所有检查器插件
 
 2. **验证当前配置**
+
    ```bash
    # 验证目录结构
    ls -la .compliance/
    ls -la .compliance/rules/
-   
+
    # 验证配置文件
    cat .compliance/config.yaml
    ```
@@ -163,4 +165,3 @@ test -f .compliance/rules/prd.yaml && echo "✅ PRD规则存在" || echo "❌ PR
 - [实施计划](./V4_IMPLEMENTATION_PLAN.md)
 - [分步指南](./V4_STEP_BY_STEP_GUIDE.md)
 - [PART6实施手册](./AI-WORKFLOW-V4-PART6-IMPL.md)
-

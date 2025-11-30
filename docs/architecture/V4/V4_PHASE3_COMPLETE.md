@@ -10,6 +10,7 @@
 **文件**: `scripts/task-master/adapter.py` (约400行)
 
 **核心功能**:
+
 1. **读取Task-Master输出**: 从`.taskmaster/tasks/{REQ-ID}/tasks.json`读取任务数据
 2. **生成Task-0**: 自动创建强制性的自检任务
 3. **增强任务**: 为每个任务和子任务添加文件关联
@@ -17,6 +18,7 @@
 5. **文件关联**: 自动推断测试文件和实现文件路径
 
 **关键方法**:
+
 - `convert()` - 主转换入口
 - `_generate_task_0()` - 生成Task-0自检任务
 - `_enhance_task()` - 增强任务（添加文件关联）
@@ -29,11 +31,13 @@
 **文件**: `scripts/task-master/sync_status.py` (约200行)
 
 **核心功能**:
+
 1. **计算完成度**: 统计任务和子任务的完成情况
 2. **更新PRD元数据**: 同步任务状态到PRD Frontmatter
 3. **更新追溯链**: 生成追溯矩阵JSON文件
 
 **关键方法**:
+
 - `sync()` - 主同步入口
 - `_calculate_completion()` - 计算完成度统计
 - `_update_prd_metadata()` - 更新PRD元数据
@@ -97,6 +101,7 @@ docker-compose exec backend python scripts/task-master/sync_status.py REQ-2025-0
 ### 阶段4: Git Hooks集成
 
 需要更新：
+
 - `.husky/pre-commit` - 添加合规引擎调用
 - `.husky/commit-msg` - 更新REQ-ID格式验证
 - `.husky/post-commit` - 添加审计日志和状态同步
@@ -114,4 +119,3 @@ docker-compose exec backend python scripts/task-master/sync_status.py REQ-2025-0
 - [V4架构总览](./AI-WORKFLOW-V4-README.md)
 - [PART2 Task-Master集成](./AI-WORKFLOW-V4-PART2-TM-ADAPTER.md)
 - [实施状态](./V4_IMPLEMENTATION_STATUS.md)
-

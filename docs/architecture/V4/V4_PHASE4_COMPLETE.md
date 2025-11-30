@@ -10,12 +10,14 @@
 **文件**: `.husky/pre-commit`
 
 **新增内容**:
+
 - 在现有三层检查后添加第四层：V4合规引擎检查
 - 支持Docker容器内执行合规检查
 - 如果容器不可用，尝试直接执行（不阻止提交）
 - 详细的错误提示和修复建议
 
 **集成方式**:
+
 - 不破坏现有检查流程
 - 作为第四层检查，在代码质量检查之后执行
 - 失败时提供清晰的错误信息
@@ -25,12 +27,14 @@
 **文件**: `.husky/commit-msg`
 
 **新增内容**:
+
 - 支持V4格式提交消息：`[REQ-ID] Task-X 描述`
 - 保留传统格式支持：`type(scope): description`
 - 支持REQ-ID、BUGFIX、REFACTOR、HOTFIX等前缀
 - 详细的格式说明和示例
 
 **格式支持**:
+
 - V4格式（优先）: `[REQ-2025-001-user-login] Task-1 Subtask-2 实现登录API`
 - 传统格式: `feat(auth): add user login functionality`
 
@@ -39,12 +43,14 @@
 **文件**: `.husky/post-commit`
 
 **新增内容**:
+
 - 自动提取REQ-ID（如果存在）
 - 同步任务状态到PRD元数据
 - 记录提交到合规审计日志
 - 智能检测是否需要状态同步
 
 **功能**:
+
 - 检测提交消息中的REQ-ID
 - 调用`sync_status.py`同步任务状态
 - 记录到合规审计日志
@@ -103,6 +109,7 @@ git commit -m "feat(auth): add user login functionality"
 ### 自动状态同步
 
 提交后，如果检测到REQ-ID，会自动：
+
 1. 同步任务状态到PRD元数据
 2. 更新追溯链
 3. 记录到审计日志
@@ -119,6 +126,7 @@ git commit -m "feat(auth): add user login functionality"
 ### 阶段5: CI/CD集成
 
 需要更新：
+
 - `.github/workflows/on-pr.yml` - 添加合规验证
 - `.github/workflows/on-push-dev.yml` - 添加自动回滚
 
@@ -134,4 +142,3 @@ git commit -m "feat(auth): add user login functionality"
 - [V4架构总览](./AI-WORKFLOW-V4-README.md)
 - [PART5合规引擎](./AI-WORKFLOW-V4-PART5-COMPLIANCE.md)
 - [实施状态](./V4_IMPLEMENTATION_STATUS.md)
-

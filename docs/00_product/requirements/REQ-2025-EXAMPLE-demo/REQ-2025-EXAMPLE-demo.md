@@ -31,6 +31,7 @@ delete_requires_review: false
 ## 用户故事
 
 作为一个开发者，我希望能够：
+
 - 理解V4架构的工作流程
 - 学习如何编写符合规范的PRD
 - 了解Task-Master如何生成任务
@@ -107,4 +108,3 @@ delete_requires_review: false
 - 这是一个演示需求，实际项目中应删除
 - 所有文件路径都是示例，实际开发时需要调整
 - 测试用例应覆盖所有功能点
-

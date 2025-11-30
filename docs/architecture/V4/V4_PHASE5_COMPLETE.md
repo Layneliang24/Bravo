@@ -12,12 +12,14 @@
 **新增Job**: `compliance-validation`
 
 **核心功能**:
+
 1. **合规检查**: 对PR中修改的文件运行V4合规引擎
 2. **追溯链验证**: 检查提交消息中是否包含REQ-ID
 3. **错误友好**: 详细的错误信息和修复建议
 4. **依赖关系**: 在`quick-validation`之后、`test-execution`之前执行
 
 **集成方式**:
+
 - 作为独立job，不阻塞其他检查
 - 失败时提供清晰的错误信息
 - 如果合规引擎未安装，跳过检查（不阻止PR）
@@ -29,12 +31,14 @@
 **新增Job**: `compliance-check-and-rollback`
 
 **核心功能**:
+
 1. **合规检查**: 对推送中修改的文件运行V4合规引擎
 2. **未授权删除检测**: 检测代码文件删除是否经过PRD授权
 3. **自动回滚机制**: 检测到违规时提供回滚指导
 4. **依赖关系**: 在`branch-protection-check`之后、`conditional-test-execution`之前执行
 
 **自动回滚逻辑**:
+
 - 检测未授权的功能删除
 - 检查提交消息中是否明确说明删除原因
 - 提供回滚命令和指导
@@ -95,6 +99,7 @@ detect-branch-context → branch-protection-check → compliance-check-and-rollb
 ### 阶段6: 示例和文档
 
 需要创建：
+
 - 示例PRD文件
 - 使用指南
 - 验证安装脚本
@@ -111,4 +116,3 @@ detect-branch-context → branch-protection-check → compliance-check-and-rollb
 - [V4架构总览](./AI-WORKFLOW-V4-README.md)
 - [PART5合规引擎](./AI-WORKFLOW-V4-PART5-COMPLIANCE.md)
 - [实施状态](./V4_IMPLEMENTATION_STATUS.md)
-
