@@ -264,14 +264,22 @@ jobs:
                 echo ""
                 echo "❌ V4 Compliance validation failed!"
                 echo ""
-                echo "📋 Common issues and fixes:"
-                echo "  - PRD files: Check PRD metadata and format"
-                echo "  - Test files: Ensure test files exist and follow naming conventions"
-                echo "  - Code files: Check code associations and traceability"
-                echo "  - Commit messages: Use format [REQ-ID] Task-X description"
+                echo "📋 常见问题："
+                echo "  1. 代码文件缺少REQ-ID关联"
+                echo "  2. 代码文件缺少对应的测试文件"
+                echo "  3. 代码文件缺少Task-Master任务"
+                echo "  4. PRD元数据不完整"
+                echo "  5. 删除功能未获得PRD授权"
                 echo ""
+                echo "💡 修复建议："
+                echo "  - 在代码文件头部添加REQ-ID注释"
+                echo "  - 创建对应的测试文件"
+                echo "  - 运行Task-Master生成任务"
+                echo "  - 更新PRD元数据"
+                echo "  - 如果删除功能，更新PRD的deletable字段"
                 exit 1
               }
+              echo "✅ V4 Compliance validation passed"
             else
               echo "ℹ️ No changed files to validate"
             fi
