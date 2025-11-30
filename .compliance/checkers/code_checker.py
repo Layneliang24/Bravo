@@ -5,6 +5,7 @@
 """
 
 import re
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -40,6 +41,15 @@ class CodeChecker:
         traceability = self.rule_config.get("traceability", {})
         if traceability.get("require_prd_link", False):
             self._check_prd_link(file_path)
+        if traceability.get("require_test_link", False):
+            self._check_test_link(file_path)
+        if traceability.get("require_task_link", False):
+            self._check_task_link(file_path)
+
+        # 检查删除功能授权（如果规则要求）
+        modification_validation = self.rule_config.get("modification_validation", {})
+        if modification_validation.get("require_prd_approval_for_deletion", False):
+            self._check_deletion_authorization(file_path)
 
         # 检查代码质量
         self._check_quality(file_path)
@@ -48,17 +58,89 @@ class CodeChecker:
 
     def _check_prd_link(self, file_path: str):
         """检查PRD关联（通过文件路径或注释）"""
-        # 这里可以检查文件头部注释中是否包含REQ-ID
-        # 或者通过文件路径推断
+        # 检查文件头部注释中是否包含REQ-ID
         try:
             content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
             # 检查文件头部是否有REQ-ID注释
             lines = content.split("\n")[:20]  # 只检查前20行
             has_req_id = any(re.search(r"REQ-\d{4}-\d{3}-", line) for line in lines)
             if not has_req_id:
-                self.warnings.append("建议在文件头部注释中包含REQ-ID关联")
+                # 在strict_mode下，这是错误而非警告
+                self.errors.append("代码文件必须包含REQ-ID关联（在文件头部注释中）")
         except Exception:
-            pass  # 如果无法读取，跳过此检查
+            self.errors.append("无法读取文件以检查PRD关联")
+
+    def _check_test_link(self, file_path: str):
+        """检查测试文件是否存在"""
+        # 推断对应的测试文件路径
+        path = Path(file_path)
+
+        # 如果是backend代码文件，查找对应的测试文件
+        if "backend/apps/" in file_path or "backend/bravo/" in file_path:
+            # 提取模块名
+            module_name = path.stem
+            # 可能的测试文件位置
+            test_locations = [
+                f"backend/tests/unit/test_{module_name}.py",
+                f"backend/tests/integration/test_{module_name}.py",
+            ]
+
+            # 检查是否存在测试文件
+            has_test = any(Path(loc).exists() for loc in test_locations)
+            if not has_test:
+                self.errors.append(
+                    f"代码文件 {file_path} 缺少对应的测试文件。"
+                    f"请创建: backend/tests/unit/test_{module_name}.py 或 "
+                    f"backend/tests/integration/test_{module_name}.py"
+                )
+
+        # 如果是frontend代码文件，查找对应的E2E测试
+        elif "frontend/src/" in file_path:
+            # 提取功能名
+            feature_name = path.stem
+            test_location = f"e2e/tests/smoke/test-{feature_name}.spec.ts"
+
+            if not Path(test_location).exists():
+                self.warnings.append(f"建议为前端文件创建E2E测试: {test_location}")
+
+    def _check_task_link(self, file_path: str):
+        """检查Task-Master任务是否存在"""
+        # 从文件路径或注释中提取REQ-ID
+        req_id = None
+        try:
+            content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
+            lines = content.split("\n")[:20]
+            for line in lines:
+                match = re.search(r"REQ-(\d{4})-(\d{3})-", line)
+                if match:
+                    req_id = match.group(0).rstrip("-")
+                    break
+        except Exception:
+            pass
+
+        # 如果找不到REQ-ID，尝试从文件路径推断
+        if not req_id:
+            # 从路径中查找REQ-ID模式
+            match = re.search(r"REQ-\d{4}-\d{3}-[a-z0-9-]+", file_path)
+            if match:
+                req_id = match.group(0)
+
+        if req_id:
+            # 检查Task-Master任务目录是否存在
+            task_dir = Path(f".taskmaster/tasks/{req_id}")
+            if not task_dir.exists():
+                # 在strict_mode下，这是错误而非警告
+                self.errors.append(
+                    f"代码文件缺少Task-Master任务关联。"
+                    f"未找到任务目录: {task_dir}。"
+                    "请先运行Task-Master生成任务，或创建对应的任务结构"
+                )
+        else:
+            # 如果没有REQ-ID，无法检查任务关联
+            # 在strict_mode下，这也是错误
+            self.errors.append(
+                "无法从代码文件中提取REQ-ID，无法验证Task-Master任务关联。" "请在文件头部注释中包含REQ-ID"
+            )
 
     def _check_quality(self, file_path: str):
         """检查代码质量"""
@@ -100,3 +182,146 @@ class CodeChecker:
                     has_jsdoc = re.search(r"/\*\*.*?\*/", content, re.DOTALL)
                     if not has_jsdoc:
                         self.warnings.append("建议为函数添加JSDoc注释")
+
+    def _check_deletion_authorization(self, file_path: str):
+        """检查删除功能是否获得PRD授权"""
+        # 获取git diff中的删除操作
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--cached", "--unified=0", file_path],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                # 文件不在暂存区或不是删除操作，跳过
+                return
+
+            diff_output = result.stdout
+
+            # 检查是否有删除的行（以-开头，但不是---）
+            deleted_lines = [
+                line[1:]  # 去掉-前缀
+                for line in diff_output.split("\n")
+                if line.startswith("-") and not line.startswith("---")
+            ]
+
+            if deleted_lines:
+                # 检查删除的内容是否是功能代码（函数、类等）
+                is_feature_code = False
+                feature_patterns = [
+                    r"def\s+\w+\(",  # Python函数
+                    r"class\s+\w+",  # Python类
+                    r"async\s+function",  # JS async函数
+                    r"export\s+function",  # JS export函数
+                    r"export\s+class",  # JS export类
+                ]
+
+                for line in deleted_lines:
+                    for pattern in feature_patterns:
+                        if re.search(pattern, line):
+                            is_feature_code = True
+                            break
+                    if is_feature_code:
+                        break
+
+                if is_feature_code:
+                    # 检查PRD授权
+                    # 1. 从文件路径或注释中提取REQ-ID
+                    req_id = None
+                    try:
+                        # 尝试从当前文件读取REQ-ID
+                        if Path(file_path).exists():
+                            content = Path(file_path).read_text(
+                                encoding="utf-8", errors="ignore"
+                            )
+                            lines = content.split("\n")[:20]
+                            for line in lines:
+                                match = re.search(r"REQ-\d{4}-\d{3}-[a-z0-9-]+", line)
+                                if match:
+                                    req_id = match.group(0)
+                                    break
+                    except Exception:
+                        pass
+
+                    # 2. 如果找不到REQ-ID，尝试从git log中查找
+                    if not req_id:
+                        try:
+                            result = subprocess.run(
+                                ["git", "log", "--oneline", "-1", "--", file_path],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                            )
+                            if result.returncode == 0:
+                                commit_msg = result.stdout
+                                match = re.search(
+                                    r"REQ-\d{4}-\d{3}-[a-z0-9-]+", commit_msg
+                                )
+                                if match:
+                                    req_id = match.group(0)
+                        except Exception:
+                            pass
+
+                    # 3. 检查PRD的deletable字段
+                    if req_id:
+                        prd_path = Path(
+                            f"docs/00_product/requirements/{req_id}/{req_id}.md"
+                        )
+                        if prd_path.exists():
+                            try:
+                                content = prd_path.read_text(encoding="utf-8")
+                                # 提取Frontmatter
+                                if content.startswith("---"):
+                                    parts = content.split("---", 2)
+                                    if len(parts) >= 3:
+                                        import yaml
+
+                                        frontmatter = yaml.safe_load(parts[1])
+                                        deletable = frontmatter.get("deletable", False)
+
+                                        if not deletable:
+                                            self.errors.append(
+                                                f"检测到功能代码删除，但PRD ({req_id}) "
+                                                "的deletable字段为false。"
+                                                "请先修改PRD的deletable字段为true，"
+                                                "或使用[BUGFIX]/[REFACTOR]标记"
+                                            )
+                            except Exception as e:
+                                self.warnings.append(f"无法读取PRD文件验证删除授权: {e}")
+                        else:
+                            self.errors.append(
+                                f"检测到功能代码删除，但未找到对应的PRD文件: {prd_path}。"
+                                "请先创建或更新PRD，设置deletable字段"
+                            )
+                    else:
+                        # 检查提交消息是否包含[BUGFIX]或[REFACTOR]
+                        try:
+                            result = subprocess.run(
+                                ["git", "log", "-1", "--pretty=%B"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                            )
+                            if result.returncode == 0:
+                                commit_msg = result.stdout
+                                if not (
+                                    "[BUGFIX]" in commit_msg
+                                    or "[REFACTOR]" in commit_msg
+                                    or "[HOTFIX]" in commit_msg
+                                ):
+                                    self.errors.append(
+                                        "检测到功能代码删除，但提交消息中未包含"
+                                        "[BUGFIX]/[REFACTOR]/[HOTFIX]标记，"
+                                        "且无法找到对应的PRD授权。"
+                                        "请先修改PRD的deletable字段或添加相应标记"
+                                    )
+                        except Exception:
+                            self.errors.append(
+                                "检测到功能代码删除，但无法验证PRD授权。"
+                                "请确保PRD的deletable字段为true，或在提交消息中包含[BUGFIX]/[REFACTOR]标记"
+                            )
+        except Exception as e:
+            # 如果无法检查删除授权，给出警告
+            self.warnings.append(f"无法检查删除授权: {e}")
