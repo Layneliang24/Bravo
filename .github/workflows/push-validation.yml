@@ -395,37 +395,109 @@ jobs:
             echo "deletion_authorized=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Auto Rollback on Violation
-        if: steps.compliance.outputs.compliance_failed == 'true' || steps.check_deletions.outputs.deletion_authorized == 'false'
+      - name: Check for Severe Violations
+        id: check_violations
         run: |
-          echo "🚨 Compliance violation detected!"
+          echo "🔍 Checking for severe violations using rollback.py..."
+
+          CURRENT_SHA="${{ github.sha }}"
+
+          # 使用rollback.py检查严重违规
+          if [ -f ".compliance/rollback.py" ]; then
+            python .compliance/rollback.py "$CURRENT_SHA" || {
+              VIOLATION_EXIT_CODE=$?
+              if [ $VIOLATION_EXIT_CODE -eq 1 ]; then
+                echo "severe_violation=true" >> $GITHUB_OUTPUT
+                echo "❌ Severe violation detected by rollback.py"
+              else
+                echo "severe_violation=false" >> $GITHUB_OUTPUT
+                echo "✅ No severe violations detected"
+              fi
+            }
+          else
+            echo "⚠️ rollback.py not found, using basic checks"
+            echo "severe_violation=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 检查合规检查结果
+          if [ "${{ steps.compliance.outputs.compliance_failed }}" == "true" ]; then
+            echo "severe_violation=true" >> $GITHUB_OUTPUT
+            echo "❌ Compliance check failed"
+          fi
+
+          # 检查删除授权
+          if [ "${{ steps.check_deletions.outputs.deletion_authorized }}" == "false" ]; then
+            echo "severe_violation=true" >> $GITHUB_OUTPUT
+            echo "❌ Unauthorized deletion detected"
+          fi
+
+      - name: Auto Rollback on Violation
+        if: steps.compliance.outputs.compliance_failed == 'true' || steps.check_deletions.outputs.deletion_authorized == 'false' || steps.check_violations.outputs.severe_violation == 'true'
+        run: |
+          echo "🚨 V4 Compliance violation detected!"
           echo ""
           echo "📋 Violation details:"
           echo "  - Compliance check: ${{ steps.compliance.outputs.compliance_failed }}"
           echo "  - Deletion authorized: ${{ steps.check_deletions.outputs.deletion_authorized }}"
+          echo "  - Severe violation: ${{ steps.check_violations.outputs.severe_violation }}"
           echo ""
-          echo "🔄 Attempting automatic rollback..."
 
-          # 获取上一个提交
-          PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
-          if [ -n "$PREV_SHA" ]; then
-            echo "Rolling back to: $PREV_SHA"
+          CURRENT_SHA="${{ github.sha }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          # 对于main和dev分支的合并提交，执行更严格的检查
+          if [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "dev" ]]; then
+            echo "🚨 CRITICAL: Violation on protected branch ($BRANCH_NAME)"
             echo ""
-            echo "⚠️ Auto-rollback would revert to previous commit"
-            echo "   In production, this requires manual intervention"
+            echo "📋 V4架构要求："
+            echo "  - 所有代码必须关联PRD"
+            echo "  - 所有代码必须有测试文件"
+            echo "  - 所有代码必须有Task-Master任务"
+            echo "  - 删除功能必须获得PRD授权"
             echo ""
-            echo "📋 To manually rollback:"
-            echo "   git revert HEAD"
-            echo "   git push origin ${{ github.ref_name }}"
+            echo "🔄 自动回滚机制："
+
+            # 尝试使用rollback.py执行回滚
+            if [ -f ".compliance/rollback.py" ]; then
+              echo "  使用rollback.py执行回滚..."
+              python .compliance/rollback.py "$CURRENT_SHA" && {
+                echo "✅ 自动回滚成功"
+                echo ""
+                echo "📋 回滚后的操作："
+                echo "  1. 修复合规问题"
+                echo "  2. 更新PRD（如需要）"
+                echo "  3. 重新提交"
+              } || {
+                echo "⚠️ 自动回滚失败，需要手动处理"
+                echo ""
+                echo "📋 手动回滚步骤："
+                echo "  git revert $CURRENT_SHA"
+                echo "  git push origin $BRANCH_NAME"
+              }
+            else
+              echo "⚠️ rollback.py not found, providing manual instructions"
+              echo ""
+              echo "📋 手动回滚步骤："
+              echo "  git revert $CURRENT_SHA"
+              echo "  git push origin $BRANCH_NAME"
+            fi
+
+            # 记录到审计日志
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] V4合规违规 - 分支:$BRANCH_NAME - 提交:$CURRENT_SHA - 操作人:${{ github.actor }}" >> .compliance/audit.log || true
+
+            exit 1
           else
-            echo "❌ Cannot determine previous commit for rollback"
+            # 对于feature分支，只警告
+            echo "⚠️ Compliance violation on feature branch"
+            echo "   This will block PR merge"
+            echo ""
+            echo "📋 修复建议："
+            echo "  1. 检查PRD元数据是否完整"
+            echo "  2. 确保有对应的测试文件"
+            echo "  3. 确保有Task-Master任务"
+            echo "  4. 如果删除功能，更新PRD的deletable字段"
+            exit 1
           fi
-
-          # 在CI环境中，我们只警告，不实际回滚
-          # 实际回滚应该在部署阶段处理
-          echo ""
-          echo "⚠️ This is a CI environment - rollback must be done manually"
-          exit 1
 
   # 分支特定的额外检查
   branch-specific-checks:
