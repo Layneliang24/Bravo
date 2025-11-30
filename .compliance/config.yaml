@@ -1,0 +1,65 @@
+# 合规引擎全局配置
+# V4架构 - 需求第一原则强制执行
+
+# 引擎配置
+engine:
+  version: "1.0"
+  strict_mode: true # 严格模式：任何规则失败都拒绝提交
+  enable_audit_log: true # 启用审计日志
+  audit_log_path: .compliance/audit.log
+
+# 规则加载配置
+rules:
+  enabled: true
+  auto_discover: true # 自动发现rules/目录下的规则文件
+  rules_dir: .compliance/rules
+
+# 检查器配置
+checkers:
+  enabled: true
+  auto_discover: true # 自动发现checkers/目录下的检查器
+  checkers_dir: .compliance/checkers
+
+# 绕过机制配置
+bypass:
+  allow_bypass: false # 禁止绕过（除了特殊情况）
+  bypass_require_reason: true # 绕过需要提供理由
+  bypass_require_approval: true # 绕过需要人工批准
+  bypass_approval_file: .compliance/bypass_approvals.yaml
+
+# 通知配置
+notifications:
+  enabled: false # 默认关闭，需要时启用
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  notify_on_failure: true
+  notify_on_bypass_attempt: true
+
+# 文件路径映射（哪些文件类型使用哪些规则）
+file_rules_mapping:
+  - pattern: "docs/00_product/requirements/**/*.md"
+    rules: [prd]
+  - pattern: "backend/tests/**/*.py"
+    rules: [test, code]
+  - pattern: "e2e/tests/**/*.ts"
+    rules: [test, code]
+  - pattern: "backend/apps/**/*.py"
+    rules: [code]
+  - pattern: "frontend/src/**/*.{vue,ts}"
+    rules: [code]
+  - pattern: ".taskmaster/tasks/**/*.json"
+    rules: [task]
+  - pattern: ".taskmaster/tasks/**/*.md"
+    rules: [task]
+
+# 排除路径（不检查）
+exclude_paths:
+  - "node_modules/**"
+  - "venv/**"
+  - ".git/**"
+  - "*.pyc"
+  - "__pycache__/**"
+  - "build/**"
+  - "dist/**"
+  - ".husky/_/**"
+  - "scripts-golden/**"
+  - "tests-golden/**"

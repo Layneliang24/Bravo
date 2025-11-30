@@ -1,0 +1,29 @@
+name: code
+description: 代码文件合规规则
+version: "1.0"
+
+# 代码文件关联要求
+traceability:
+  require_prd_link: true
+  require_task_link: true
+  require_test_link: true
+
+# 代码质量要求
+quality:
+  require_docstrings: true
+  require_type_hints: true # Python
+  require_jsdoc: true # TypeScript/JavaScript
+  max_complexity: 10
+  max_function_length: 50
+
+# 禁止的操作
+forbidden_operations:
+  - delete_function_without_prd_update
+  - modify_api_without_contract_update
+  - remove_test_without_justification
+
+# 代码修改验证
+modification_validation:
+  require_prd_approval_for_deletion: true
+  require_test_update_for_api_change: true
+  require_documentation_update: true

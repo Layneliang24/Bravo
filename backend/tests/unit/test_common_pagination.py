@@ -2,7 +2,6 @@
 """Common分页模块单元测试"""
 
 import pytest
-
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
 

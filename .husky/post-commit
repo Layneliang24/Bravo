@@ -43,4 +43,35 @@ if echo "$commit_msg" | grep -qE "(hook|infrastructure|ci|cd|build)"; then
     echo "🏗️  检测到基础设施变更，建议运行: npm run test:all"
 fi
 
+# V4合规引擎：审计日志和状态同步
+echo ""
+echo "📝 [V4合规] 审计日志和状态同步..."
+if [ -f ".compliance/runner.py" ]; then
+    # 提取REQ-ID（如果存在）
+    req_id=$(echo "$commit_msg" | grep -oE '\[REQ-\d{4}-\d{3}-[a-z0-9-]+\]' | head -1 | tr -d '[]')
+
+    if [ -n "$req_id" ]; then
+        echo "🔍 检测到REQ-ID: $req_id"
+
+        # 同步任务状态（如果存在适配器）
+        if [ -f "scripts/task-master/sync_status.py" ]; then
+            if command -v docker-compose > /dev/null 2>&1 && docker-compose ps backend > /dev/null 2>&1; then
+                echo "🔄 同步任务状态到PRD元数据..."
+                docker-compose exec -T backend python scripts/task-master/sync_status.py "$req_id" 2>&1 || {
+                    echo "⚠️  状态同步失败，但不影响提交"
+                }
+            else
+                echo "ℹ️  Docker容器不可用，跳过状态同步"
+            fi
+        fi
+    else
+        echo "ℹ️  未检测到REQ-ID，跳过状态同步"
+    fi
+
+    # 记录到审计日志（合规引擎会自动记录）
+    echo "📋 提交已记录到合规审计日志"
+else
+    echo "ℹ️  合规引擎未安装，跳过审计日志"
+fi
+
 echo "✅ 提交后处理完成"

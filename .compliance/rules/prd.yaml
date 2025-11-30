@@ -1,0 +1,56 @@
+name: prd
+description: PRD文件合规规则
+version: "1.0"
+
+# 必需的元数据字段
+required_metadata_fields:
+  - req_id
+  - title
+  - status
+  - test_files
+  - implementation_files
+  - api_contract
+  - deletable
+
+# 元数据验证规则
+metadata_validation:
+  req_id:
+    pattern: "^REQ-\\d{4}-\\d{3}-.+$"
+    required: true
+  title:
+    required: true
+    min_length: 5
+    max_length: 200
+  status:
+    enum:
+      [draft, refined, reviewed, approved, implementing, completed, archived]
+    required: true
+  test_files:
+    type: list
+    required: true
+    min_items: 1
+  implementation_files:
+    type: list
+    required: true
+    min_items: 1
+  api_contract:
+    type: string
+    required: false
+  deletable:
+    type: boolean
+    required: true
+
+# 文件结构验证
+file_structure:
+  require_frontmatter: true
+  frontmatter_format: yaml
+  require_sections:
+    - "功能概述"
+    - "用户故事"
+    - "测试用例"
+
+# 内容验证
+content_validation:
+  min_length: 500
+  require_test_cases: true
+  require_implementation_plan: true

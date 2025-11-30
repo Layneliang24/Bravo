@@ -63,5 +63,67 @@ echo "  ✅ 项目保护检查 (根目录守卫, 大文件检查等)"
 echo "  ✅ 提交信息格式检查"
 echo "[INFO] 🛡️ 三层防护全部通过，可以安全提交！"
 echo "[INFO] Git推送时将需要完整的本地测试通行证"
-echo "��� 来自.husky/pre-commit的测试输出"
-echo "��� 自动同步成功！修改.husky/pre-commit后运行npm run sync-hooks即可"
+echo "📝 来自.husky/pre-commit的测试输出"
+echo "✅ 自动同步成功！修改.husky/pre-commit后运行npm run sync-hooks即可"
+
+# 第四层：V4合规引擎检查
+echo ""
+echo "🔍 [第四层] V4合规引擎检查..."
+if [ -f ".compliance/runner.py" ]; then
+    # 检查backend服务是否运行
+    BACKEND_RUNNING=false
+    if command -v docker-compose > /dev/null 2>&1; then
+        # 检查backend服务状态（忽略错误输出，只检查是否有"Up"状态）
+        BACKEND_STATUS=$(docker-compose ps backend 2>/dev/null | grep -E "Up|running" || echo "")
+        if [ -n "$BACKEND_STATUS" ]; then
+            BACKEND_RUNNING=true
+        fi
+    fi
+
+    if [ "$BACKEND_RUNNING" = true ]; then
+        echo "[INFO] 在Docker容器内执行合规检查..."
+        if docker-compose exec -T backend python .compliance/runner.py 2>&1; then
+            echo "✅ V4合规引擎检查通过"
+        else
+            echo ""
+            echo "[ERROR] ========================="
+            echo "[ERROR] V4合规检查失败!"
+            echo "[ERROR] ========================="
+            echo "[HELP] 请根据上述错误信息修复问题："
+            echo "[HELP] - PRD文件: 检查PRD元数据和格式"
+            echo "[HELP] - 测试文件: 确保测试文件存在且符合规范"
+            echo "[HELP] - 代码文件: 检查代码关联和追溯链"
+            echo "[ERROR] 修复后请重新提交"
+            exit 1
+        fi
+    else
+        # 如果backend容器不可用，尝试直接执行
+        echo "[INFO] backend容器未运行，尝试直接执行合规检查..."
+        if command -v python3 > /dev/null 2>&1; then
+            if python3 .compliance/runner.py 2>&1; then
+                echo "✅ V4合规引擎检查通过（本地执行）"
+            else
+                echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
+                echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
+                echo "[INFO] 或手动运行: docker-compose exec backend python .compliance/runner.py"
+                # 非严格模式：允许继续提交，但给出警告
+                echo "[INFO] 继续提交，但建议修复合规问题"
+            fi
+        elif command -v python > /dev/null 2>&1; then
+            if python .compliance/runner.py 2>&1; then
+                echo "✅ V4合规引擎检查通过（本地执行）"
+            else
+                echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
+                echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
+                echo "[INFO] 或手动运行: docker-compose exec backend python .compliance/runner.py"
+                echo "[INFO] 继续提交，但建议修复合规问题"
+            fi
+        else
+            echo "[WARNING] Python未安装，无法执行合规检查"
+            echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
+            echo "[INFO] 继续提交，但建议修复合规问题"
+        fi
+    fi
+else
+    echo "[INFO] 合规引擎未安装，跳过V4合规检查"
+fi

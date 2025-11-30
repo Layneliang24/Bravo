@@ -1,0 +1,36 @@
+name: test
+description: 测试文件合规规则
+version: "1.0"
+
+# 测试文件命名规范
+naming:
+  backend_unit: "test_{module}.py"
+  backend_integration: "test_{feature}.py"
+  backend_regression: "test_{bug_id}.py"
+  e2e: "test-{feature}.spec.ts"
+
+# 测试文件位置要求
+location:
+  backend_unit: "backend/tests/unit/"
+  backend_integration: "backend/tests/integration/"
+  backend_regression: "backend/tests/regression/"
+  e2e_smoke: "e2e/tests/smoke/"
+  e2e_regression: "e2e/tests/regression/"
+  e2e_performance: "e2e/tests/performance/"
+
+# 测试文件必需内容
+required_content:
+  - test_function_definitions
+  - assertions
+  - test_docstrings
+
+# 测试覆盖率要求
+coverage:
+  unit_tests: 80
+  integration_tests: 60
+  e2e_tests: 40
+
+# TDD要求
+tdd:
+  require_test_before_code: true
+  require_test_file_for_code_file: true
