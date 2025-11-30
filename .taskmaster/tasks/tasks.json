@@ -1,0 +1,33 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set up the API endpoint for Hello World",
+        "description": "Create the GET endpoint `/api/hello` that returns a JSON response.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "1. Set up a new route in the API server for the `/api/hello` endpoint.\n2. Implement the handler function to return the JSON response `{'message': 'Hello, World!'}`.\n3. Ensure the server is configured to handle JSON responses.",
+        "testStrategy": "1. Use a tool like Postman or cURL to send a GET request to `/api/hello`.\n2. Verify that the response is `{'message': 'Hello, World!'}`.\n3. Check the HTTP status code to ensure it is 200 OK.",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Add unit tests for the Hello World API",
+        "description": "Write unit tests to ensure the `/api/hello` endpoint functions correctly.",
+        "status": "pending",
+        "dependencies": [1],
+        "priority": "medium",
+        "details": "1. Set up a testing framework (e.g., Jest, Mocha) if not already configured.\n2. Write a test case to send a GET request to `/api/hello`.\n3. Assert that the response body is `{'message': 'Hello, World!'}`.\n4. Assert that the HTTP status code is 200 OK.",
+        "testStrategy": "1. Run the unit tests using the configured testing framework.\n2. Ensure all tests pass without any failures.\n3. Verify that the test coverage is adequate and covers all expected scenarios.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-30T04:02:20.306Z",
+      "updated": "2025-11-30T04:02:20.306Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

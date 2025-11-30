@@ -1,0 +1,14 @@
+# 测试需求：Hello World功能
+
+## 功能描述
+实现一个简单的Hello World API接口
+
+## 功能需求
+1. 创建一个GET接口 `/api/hello`
+2. 返回JSON格式: `{"message": "Hello, World!"}`
+3. 添加单元测试
+
+## 验收标准
+- [ ] 接口可以正常访问
+- [ ] 返回正确的JSON格式
+- [ ] 单元测试通过
