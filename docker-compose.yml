@@ -56,6 +56,7 @@ services:
       - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./backend:/app
+      - ./.compliance:/app/.compliance:ro # 只读挂载合规引擎（V4架构）
       - backend_logs:/app/logs
       - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:
