@@ -77,16 +77,26 @@ jobs:
               echo "coverage-required=75" >> $GITHUB_OUTPUT
               echo "🔥 Urgent Fix PR detected"
             else
-              echo "type=feature-integration" >> $GITHUB_OUTPUT
-              echo "level=standard" >> $GITHUB_OUTPUT
-              echo "test-level=medium" >> $GITHUB_OUTPUT
-              echo "quality-level=standard" >> $GITHUB_OUTPUT
-              echo "coverage-required=80" >> $GITHUB_OUTPUT
-              echo "🚀 Feature Integration PR detected"
+              # 检查是否为文档/配置PR（通过PR标题判断）
+              if [[ "$PR_TITLE" =~ ^(docs|doc|chore|config): ]]; then
+                echo "type=docs-config-pr" >> $GITHUB_OUTPUT
+                echo "level=standard" >> $GITHUB_OUTPUT
+                echo "test-level=medium" >> $GITHUB_OUTPUT
+                echo "quality-level=standard" >> $GITHUB_OUTPUT
+                echo "coverage-required=50" >> $GITHUB_OUTPUT
+                echo "📝 Documentation/Config PR detected - Lower coverage requirement (50%)"
+              else
+                echo "type=feature-integration" >> $GITHUB_OUTPUT
+                echo "level=standard" >> $GITHUB_OUTPUT
+                echo "test-level=medium" >> $GITHUB_OUTPUT
+                echo "quality-level=standard" >> $GITHUB_OUTPUT
+                echo "coverage-required=80" >> $GITHUB_OUTPUT
+                echo "🚀 Feature Integration PR detected"
+              fi
             fi
             echo "   - Medium test suite"
             echo "   - Standard quality gates"
-            echo "   - 80% coverage requirement"
+            echo "   - Coverage requirement: ${{ steps.detect.outputs.coverage-required }}%"
           elif [[ "$BASE_BRANCH" =~ ^hotfix/ ]]; then
             # → hotfix/*: 紧急修复分支的PR
             echo "type=hotfix-pr" >> $GITHUB_OUTPUT
