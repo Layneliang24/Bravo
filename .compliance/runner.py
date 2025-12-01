@@ -11,15 +11,31 @@ from pathlib import Path
 # 添加引擎路径
 current_dir = Path(__file__).parent
 project_root = current_dir.parent
+
+# 添加多个可能的路径
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(current_dir))
+sys.path.insert(0, str(current_dir.parent))
 
 # 导入引擎
 try:
     from compliance.engine import ComplianceEngine
 except ImportError:
-    # 如果直接导入失败，尝试添加路径
-    sys.path.insert(0, str(current_dir))
-    from engine import ComplianceEngine
+    try:
+        # 如果直接导入失败，尝试从当前目录导入
+        from engine import ComplianceEngine
+    except ImportError:
+        # 如果还是失败，尝试添加父目录
+        import importlib.util
+
+        engine_path = current_dir / "engine.py"
+        if engine_path.exists():
+            spec = importlib.util.spec_from_file_location("engine", engine_path)
+            engine_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(engine_module)
+            ComplianceEngine = engine_module.ComplianceEngine
+        else:
+            raise ImportError("无法找到合规引擎模块")
 
 
 def get_staged_files() -> list:
@@ -43,8 +59,12 @@ def get_staged_files() -> list:
 
 def main():
     """Pre-commit入口"""
-    # 获取暂存文件
-    staged_files = get_staged_files()
+    # 优先使用命令行参数（从宿主机传递的文件列表）
+    if len(sys.argv) > 1:
+        staged_files = [f for f in sys.argv[1:] if f.strip()]
+    else:
+        # 如果没有参数，尝试从git获取
+        staged_files = get_staged_files()
 
     if not staged_files:
         print("ℹ️ 没有暂存的文件，跳过合规检查", file=sys.stderr)

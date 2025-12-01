@@ -170,18 +170,62 @@ def check_modification_authorization():
         sys.exit(1)
 
 
+def get_actually_modified_files(file_list):
+    """检查文件是否真的被修改了（通过git diff）"""
+    import subprocess
+
+    actually_modified = []
+    for file_path in file_list:
+        # 检查文件是否在暂存区中被修改
+        try:
+            # 检查暂存区
+            result = subprocess.run(
+                ["git", "diff", "--cached", "--name-only", file_path],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                actually_modified.append(file_path)
+                continue
+        except Exception:
+            pass
+
+        # 检查工作区
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--name-only", file_path],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                actually_modified.append(file_path)
+        except Exception:
+            pass
+
+    return actually_modified
+
+
 def main():
     """主函数"""
     if len(sys.argv) < 2:
         print("ERROR: 未指定要检查的文件")
         sys.exit(1)
 
-    # 获取修改的文件列表
-    modified_files = sys.argv[1:]
-    golden_files = [f for f in modified_files if f.startswith("scripts-golden/")]
+    # 获取传入的文件列表
+    input_files = sys.argv[1:]
+    golden_files = [f for f in input_files if f.startswith("scripts-golden/")]
 
     if not golden_files:
-        # 没有修改golden文件，直接通过
+        # 没有scripts-golden文件，直接通过
+        sys.exit(0)
+
+    # 检查这些文件是否真的被修改了
+    actually_modified = get_actually_modified_files(golden_files)
+
+    if not actually_modified:
+        # 文件没有被修改，直接通过
         sys.exit(0)
 
     # 检查人工授权环境变量（静默模式）
@@ -194,8 +238,8 @@ def main():
         sys.exit(0)
 
     # 只有在需要授权时才输出文件列表
-    print("检测到 {} 个核心保护脚本被修改:".format(len(golden_files)))
-    for file in golden_files:
+    print("检测到 {} 个核心保护脚本被修改:".format(len(actually_modified)))
+    for file in actually_modified:
         print("   - {}".format(file))
     print("")
 
@@ -226,7 +270,9 @@ def main():
     if os.environ.get("CI") == "true":
         print("ERROR: 检测到CI环境中的修改尝试")
         print("INFO: AI无法在CI环境中修改保护脚本")
-        log_security_violation("CI环境修改尝试", "文件: {}".format(", ".join(golden_files)))
+        log_security_violation(
+            "CI环境修改尝试", "文件: {}".format(", ".join(actually_modified))
+        )
         sys.exit(1)
 
     # 要求授权

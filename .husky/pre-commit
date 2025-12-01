@@ -82,19 +82,27 @@ if [ -f ".compliance/runner.py" ]; then
 
     if [ "$BACKEND_RUNNING" = true ]; then
         echo "[INFO] 在Docker容器内执行合规检查..."
-        if docker-compose exec -T backend python .compliance/runner.py 2>&1; then
+        # 在宿主机获取暂存文件列表
+        STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | tr '\n' ' ')
+        if [ -z "$STAGED_FILES" ]; then
+            echo "ℹ️ 没有暂存的文件，跳过合规检查"
             echo "✅ V4合规引擎检查通过"
         else
-            echo ""
-            echo "[ERROR] ========================="
-            echo "[ERROR] V4合规检查失败!"
-            echo "[ERROR] ========================="
-            echo "[HELP] 请根据上述错误信息修复问题："
-            echo "[HELP] - PRD文件: 检查PRD元数据和格式"
-            echo "[HELP] - 测试文件: 确保测试文件存在且符合规范"
-            echo "[HELP] - 代码文件: 检查代码关联和追溯链"
-            echo "[ERROR] 修复后请重新提交"
-            exit 1
+            # 将文件列表传递给容器内的合规引擎
+            if docker-compose exec -T backend python .compliance/runner.py $STAGED_FILES 2>&1; then
+                echo "✅ V4合规引擎检查通过"
+            else
+                echo ""
+                echo "[ERROR] ========================="
+                echo "[ERROR] V4合规检查失败!"
+                echo "[ERROR] ========================="
+                echo "[HELP] 请根据上述错误信息修复问题："
+                echo "[HELP] - PRD文件: 检查PRD元数据和格式"
+                echo "[HELP] - 测试文件: 确保测试文件存在且符合规范"
+                echo "[HELP] - 代码文件: 检查代码关联和追溯链"
+                echo "[ERROR] 修复后请重新提交"
+                exit 1
+            fi
         fi
     else
         # 如果backend容器不可用，尝试直接执行

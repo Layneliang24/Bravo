@@ -5,6 +5,7 @@
 
 import fnmatch
 import importlib
+import importlib.util
 import json
 import os
 import sys
@@ -20,6 +21,11 @@ class ComplianceEngine:
 
     def __init__(self, config_path: str = ".compliance/config.yaml"):
         self.config_path = config_path
+        # 设置项目根目录
+        config_abs_path = Path(config_path).resolve()
+        self.project_root = (
+            config_abs_path.parent.parent
+        )  # .compliance/config.yaml -> 项目根目录
         self.config = self._load_config()
         self.rules = self._load_rules()
         self.checkers = self._load_checkers()
@@ -265,13 +271,33 @@ class ComplianceEngine:
             "errors": [err for f in results["failed"] for err in f["errors"]],
         }
 
-        audit_log_path = self.config["engine"]["audit_log_path"]
-        audit_log_dir = os.path.dirname(audit_log_path)
-        if audit_log_dir and not os.path.exists(audit_log_dir):
-            os.makedirs(audit_log_dir, exist_ok=True)
+        # 尝试多个可能的日志路径（支持只读文件系统）
+        audit_log_path = self.config["engine"].get(
+            "audit_log_path", ".compliance/audit.log"
+        )
+        possible_paths = [
+            Path(self.project_root) / audit_log_path,
+            Path(self.project_root) / "logs" / "compliance_audit.log",
+            Path("/tmp") / "compliance_audit.log",  # 容器内临时目录
+        ]
 
-        with open(audit_log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        log_written = False
+        for path in possible_paths:
+            try:
+                # 确保目录存在
+                path.parent.mkdir(parents=True, exist_ok=True)
+                # 尝试写入
+                with open(path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+                log_written = True
+                break
+            except (OSError, PermissionError):
+                # 如果写入失败，尝试下一个路径
+                continue
+
+        if not log_written:
+            # 如果所有路径都失败，只输出警告，不阻止检查
+            print("⚠️ 无法写入审计日志（所有路径都失败），但继续执行检查", file=sys.stderr)
 
     def print_results(self, results: Dict[str, Any]):
         """打印检查结果"""
