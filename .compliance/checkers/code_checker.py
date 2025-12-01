@@ -31,10 +31,15 @@ class CodeChecker:
         self.errors = []
         self.warnings = []
 
+        # 解析文件路径（支持相对路径和绝对路径）
         path = Path(file_path)
+        if not path.is_absolute():
+            # 如果是相对路径，尝试相对于当前工作目录
+            path = Path.cwd() / path
+        path = path.resolve()
 
         if not path.exists():
-            self.errors.append(f"文件不存在: {file_path}")
+            self.errors.append(f"文件不存在: {file_path} (解析后路径: {path})")
             return False, self.errors, self.warnings
 
         # 检查文件关联性（如果规则要求）

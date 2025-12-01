@@ -246,8 +246,15 @@ class ComplianceEngine:
             checker = self.checkers[rule_name]
 
             try:
-                # 执行检查
-                passed, errors, warnings = checker.check(file_path)
+                # 解析文件路径（支持相对路径和绝对路径）
+                file_path_abs = Path(file_path)
+                if not file_path_abs.is_absolute():
+                    # 如果是相对路径，相对于项目根目录
+                    file_path_abs = self.project_root / file_path
+                file_path_str = str(file_path_abs.resolve())
+                
+                # 执行检查（使用解析后的绝对路径）
+                passed, errors, warnings = checker.check(file_path_str)
 
                 if not passed:
                     result["status"] = "failed"
