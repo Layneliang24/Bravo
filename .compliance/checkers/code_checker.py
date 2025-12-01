@@ -34,13 +34,47 @@ class CodeChecker:
         # 解析文件路径（支持相对路径和绝对路径）
         path = Path(file_path)
         if not path.is_absolute():
-            # 如果是相对路径，尝试相对于当前工作目录
-            path = Path.cwd() / path
+            # 尝试多个可能的路径
+            possible_paths = [
+                Path.cwd() / path,
+                Path("/app") / path,  # 容器内项目根目录
+            ]
+            for p in possible_paths:
+                if p.exists():
+                    path = p
+                    break
+            else:
+                # 如果都找不到，使用第一个可能的路径
+                path = possible_paths[0]
         path = path.resolve()
 
+        # 如果文件不存在，尝试从git获取内容（暂存文件）
+        file_content = None
         if not path.exists():
-            self.errors.append(f"文件不存在: {file_path} (解析后路径: {path})")
-            return False, self.errors, self.warnings
+            import subprocess
+
+            # 尝试多个可能的git工作目录
+            git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+            for git_dir in git_dirs:
+                git_path = Path(git_dir) / ".git"
+                if git_path.exists():
+                    try:
+                        result = subprocess.run(
+                            ["git", "show", f":{file_path}"],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            cwd=git_dir,
+                        )
+                        if result.returncode == 0:
+                            file_content = result.stdout
+                            break
+                    except (FileNotFoundError, subprocess.SubprocessError):
+                        continue
+
+            if not file_content:
+                self.errors.append(f"文件不存在且无法从git获取: {file_path}")
+                return False, self.errors, self.warnings
 
         # 检查文件关联性（如果规则要求）
         traceability = self.rule_config.get("traceability", {})
@@ -74,7 +108,7 @@ class CodeChecker:
                 if p.exists():
                     path = p
                     break
-        
+
         # 获取文件内容
         content = None
         try:
@@ -83,6 +117,7 @@ class CodeChecker:
             else:
                 # 文件不存在，尝试从git获取（暂存文件）
                 import subprocess
+
                 result = subprocess.run(
                     ["git", "show", f":{file_path}"],
                     capture_output=True,
@@ -98,11 +133,13 @@ class CodeChecker:
         except Exception as e:
             self.errors.append(f"无法读取文件以检查PRD关联: {str(e)}")
             return
-        
+
         if content:
             # 检查文件头部是否有REQ-ID注释
             lines = content.split("\n")[:20]  # 只检查前20行
-            has_req_id = any(re.search(r"REQ-\d{4}(-\d{3})?-[A-Z0-9-]+", line) for line in lines)
+            has_req_id = any(
+                re.search(r"REQ-\d{4}(-\d{3})?-[A-Z0-9-]+", line) for line in lines
+            )
             if not has_req_id:
                 # 在strict_mode下，这是错误而非警告
                 self.errors.append("代码文件必须包含REQ-ID关联（在文件头部注释中）")
