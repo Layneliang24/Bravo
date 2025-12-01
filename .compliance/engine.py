@@ -114,28 +114,55 @@ class ComplianceEngine:
                     checkers[rule_name] = checker_class(self.rules[rule_name])
                     print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
         except ImportError as e:
-            print(f"⚠️ 导入检查器失败: {e}", file=sys.stderr)
-            # 尝试直接导入
-            for checker_file in Path(checkers_dir).glob("*_checker.py"):
-                module_name = checker_file.stem
+            print(f"⚠️ 标准导入失败: {e}", file=sys.stderr)
+            print("⚠️ 尝试从文件系统直接导入检查器...", file=sys.stderr)
+            # 方法2: 从文件系统直接导入（容器内场景）
+            checker_files = {
+                "prd": "prd_checker.py",
+                "test": "test_checker.py",
+                "code": "code_checker.py",
+                "commit": "commit_checker.py",
+                "task": "task_checker.py",
+            }
+            
+            for rule_name, checker_file_name in checker_files.items():
+                if rule_name not in self.rules:
+                    continue
+                    
+                checker_file_path = Path(checkers_dir) / checker_file_name
+                if not checker_file_path.exists():
+                    print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
+                    continue
+                
                 try:
-                    # 构建模块路径
-                    module_path = f"compliance.checkers.{module_name}"
-                    module = importlib.import_module(module_path)
+                    # 使用importlib.util直接从文件导入
+                    spec = importlib.util.spec_from_file_location(
+                        f"checker_{rule_name}", checker_file_path
+                    )
+                    checker_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(checker_module)
+                    
                     # 查找Checker类
-                    for attr_name in dir(module):
-                        attr = getattr(module, attr_name)
+                    checker_class = None
+                    for attr_name in dir(checker_module):
+                        attr = getattr(checker_module, attr_name)
                         if (
                             isinstance(attr, type)
                             and attr_name.endswith("Checker")
                             and attr_name != "BaseChecker"
                         ):
-                            rule_name = module_name.replace("_checker", "")
-                            if rule_name in self.rules:
-                                checkers[rule_name] = attr(self.rules[rule_name])
-                                print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
-                except Exception as e:
-                    print(f"❌ 加载检查器失败 {module_name}: {e}", file=sys.stderr)
+                            checker_class = attr
+                            break
+                    
+                    if checker_class:
+                        checkers[rule_name] = checker_class(self.rules[rule_name])
+                        print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
+                    else:
+                        print(f"❌ 加载检查器失败 {rule_name}: 未找到Checker类", file=sys.stderr)
+                except Exception as e2:
+                    print(f"❌ 加载检查器失败 {rule_name}: {e2}", file=sys.stderr)
+                    import traceback
+                    traceback.print_exc()
 
         return checkers
 
@@ -252,7 +279,7 @@ class ComplianceEngine:
                     # 如果是相对路径，相对于项目根目录
                     file_path_abs = self.project_root / file_path
                 file_path_str = str(file_path_abs.resolve())
-                
+
                 # 执行检查（使用解析后的绝对路径）
                 passed, errors, warnings = checker.check(file_path_str)
 
