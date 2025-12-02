@@ -96,8 +96,10 @@ class ComplianceEngine:
                 CodeChecker,
                 CommitChecker,
                 PRDChecker,
+                Task0Checker,
                 TaskChecker,
                 TestChecker,
+                TestRunnerChecker,
             )
 
             # 创建检查器实例（需要规则配置，稍后设置）
@@ -107,6 +109,8 @@ class ComplianceEngine:
                 "code": CodeChecker,
                 "commit": CommitChecker,
                 "task": TaskChecker,
+                "task0": Task0Checker,
+                "test_runner": TestRunnerChecker,
             }
 
             for rule_name, checker_class in checker_classes.items():
@@ -123,17 +127,19 @@ class ComplianceEngine:
                 "code": "code_checker.py",
                 "commit": "commit_checker.py",
                 "task": "task_checker.py",
+                "task0": "task0_checker.py",
+                "test_runner": "test_runner_checker.py",
             }
-            
+
             for rule_name, checker_file_name in checker_files.items():
                 if rule_name not in self.rules:
                     continue
-                    
+
                 checker_file_path = Path(checkers_dir) / checker_file_name
                 if not checker_file_path.exists():
                     print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
                     continue
-                
+
                 try:
                     # 使用importlib.util直接从文件导入
                     spec = importlib.util.spec_from_file_location(
@@ -141,7 +147,7 @@ class ComplianceEngine:
                     )
                     checker_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(checker_module)
-                    
+
                     # 查找Checker类
                     checker_class = None
                     for attr_name in dir(checker_module):
@@ -153,7 +159,7 @@ class ComplianceEngine:
                         ):
                             checker_class = attr
                             break
-                    
+
                     if checker_class:
                         checkers[rule_name] = checker_class(self.rules[rule_name])
                         print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
@@ -162,6 +168,7 @@ class ComplianceEngine:
                 except Exception as e2:
                     print(f"❌ 加载检查器失败 {rule_name}: {e2}", file=sys.stderr)
                     import traceback
+
                     traceback.print_exc()
 
         return checkers

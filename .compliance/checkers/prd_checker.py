@@ -110,6 +110,18 @@ class PRDChecker:
             if field not in metadata:
                 self.errors.append(f"缺少必需字段: {field}")
 
+        # 验证PRD状态（T09: PRD状态为draft时不允许开发）
+        status = metadata.get("status", "").lower()
+        if status == "draft":
+            self.errors.append(
+                "PRD状态为 'draft'，必须先审核通过（状态改为 'approved'）才能开始开发。\n"
+                "PRD审核流程：draft（草稿）→ review（审核中）→ approved（已批准）"
+            )
+        elif status not in ["approved", "review", "draft", "archived"]:
+            self.warnings.append(
+                f"PRD状态 '{status}' 不在标准状态列表中：draft, review, approved, archived"
+            )
+
         # 验证字段格式
         for field, rules in validation_rules.items():
             if field not in metadata:

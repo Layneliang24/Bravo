@@ -1,0 +1,61 @@
+# Task-0自检规则
+# 确保Task-0是强制入口，所有开发必须先完成Task-0
+
+name: task0
+description: Task-0自检规则 - 验证开发环境配置和项目自检
+version: "1.0"
+enabled: true
+strict_mode: true # 严格模式：Task-0未完成时拒绝提交
+
+# 规则配置
+rules:
+  - id: TASK0-001
+    name: task0_completion_required
+    description: Task-0必须完成才能开始其他开发工作
+    severity: error
+    enabled: true
+    message: "Task-0未完成，必须先完成Task-0自检"
+    help: |
+      Task-0是项目的强制入口，用于验证：
+      1. 开发环境配置正确
+      2. 依赖安装完整
+      3. 数据库连接正常
+      4. 基础服务可用
+      
+      完成Task-0后，运行：
+        task-master set-status --id=0 --status=done
+
+  - id: TASK0-002
+    name: task0_existence_check
+    description: 建议创建Task-0作为项目入口
+    severity: warning
+    enabled: true
+    message: "Task-0不存在，建议创建Task-0作为项目自检入口"
+    help: |
+      创建Task-0的步骤：
+      1. 使用task-master add-task创建Task-0
+      2. 在Task-0中添加环境自检步骤
+      3. 完成自检后标记为done
+
+# 检查器配置
+checker:
+  name: task0_checker
+  module: .compliance.checkers.task0_checker
+  class: Task0Checker
+  enabled: true
+
+# 适用文件类型
+applies_to:
+  - "backend/apps/**/*.py"
+  - "frontend/src/**/*.{vue,ts,tsx,js,jsx}"
+  - "backend/**/*.py"
+
+# 排除文件
+excludes:
+  - "tests/**"
+  - "docs/**"
+  - ".compliance/**"
+  - "scripts/**"
+  - "node_modules/**"
+  - "venv/**"
+
