@@ -50,6 +50,7 @@ class CodeChecker:
 
         # 如果文件不存在，尝试从git获取内容（暂存文件）
         file_content = None
+        file_from_git = False
         if not path.exists():
             import subprocess
 
@@ -59,6 +60,21 @@ class CodeChecker:
                 git_path = Path(git_dir) / ".git"
                 if git_path.exists():
                     try:
+                        # 配置git safe.directory（避免权限问题）
+                        subprocess.run(
+                            [
+                                "git",
+                                "config",
+                                "--global",
+                                "--add",
+                                "safe.directory",
+                                git_dir,
+                            ],
+                            capture_output=True,
+                            check=False,
+                            cwd=git_dir,
+                        )
+                        # 使用git show获取暂存文件内容
                         result = subprocess.run(
                             ["git", "show", f":{file_path}"],
                             capture_output=True,
@@ -66,24 +82,28 @@ class CodeChecker:
                             check=False,
                             cwd=git_dir,
                         )
-                        if result.returncode == 0:
+                        if result.returncode == 0 and result.stdout:
                             file_content = result.stdout
+                            file_from_git = True
                             break
                     except (FileNotFoundError, subprocess.SubprocessError):
                         continue
 
+            # 如果无法从git获取，记录警告但不阻止（可能是新文件，让其他检查继续）
             if not file_content:
-                self.errors.append(f"文件不存在且无法从git获取: {file_path}")
-                return False, self.errors, self.warnings
+                self.warnings.append(f"无法从文件系统或git获取文件内容: {file_path}，将跳过内容检查")
+                # 不直接返回False，让其他检查（如路径检查）继续
 
         # 检查文件关联性（如果规则要求）
         traceability = self.rule_config.get("traceability", {})
         if traceability.get("require_prd_link", False):
-            self._check_prd_link(file_path)
+            self._check_prd_link(
+                file_path, file_content if file_content else None, file_from_git
+            )
         if traceability.get("require_test_link", False):
-            self._check_test_link(file_path)
+            self._check_test_link(file_path, file_from_git)
         if traceability.get("require_task_link", False):
-            self._check_task_link(file_path)
+            self._check_task_link(file_path, file_from_git)
 
         # 检查删除功能授权（如果规则要求）
         modification_validation = self.rule_config.get("modification_validation", {})
@@ -95,44 +115,70 @@ class CodeChecker:
 
         return len(self.errors) == 0, self.errors, self.warnings
 
-    def _check_prd_link(self, file_path: str):
+    def _check_prd_link(
+        self, file_path: str, file_content: str = None, file_from_git: bool = False
+    ):
         """检查PRD关联（通过文件路径或注释）"""
-        # 解析文件路径
-        path = Path(file_path)
-        if not path.is_absolute():
-            possible_paths = [
-                Path.cwd() / path,
-                Path("/app") / path,
-            ]
-            for p in possible_paths:
-                if p.exists():
-                    path = p
-                    break
-
         # 获取文件内容
-        content = None
-        try:
-            if path.exists():
-                content = path.read_text(encoding="utf-8", errors="ignore")
-            else:
-                # 文件不存在，尝试从git获取（暂存文件）
-                import subprocess
+        content = file_content
+        if not content:
+            # 解析文件路径
+            path = Path(file_path)
+            if not path.is_absolute():
+                possible_paths = [
+                    Path.cwd() / path,
+                    Path("/app") / path,
+                ]
+                for p in possible_paths:
+                    if p.exists():
+                        path = p
+                        break
 
-                result = subprocess.run(
-                    ["git", "show", f":{file_path}"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                    cwd="/app" if Path("/app").exists() else Path.cwd(),
-                )
-                if result.returncode == 0:
-                    content = result.stdout
+            try:
+                if path.exists():
+                    content = path.read_text(encoding="utf-8", errors="ignore")
                 else:
-                    self.errors.append("无法读取文件以检查PRD关联（文件不存在且无法从git获取）")
-                    return
-        except Exception as e:
-            self.errors.append(f"无法读取文件以检查PRD关联: {str(e)}")
-            return
+                    # 文件不存在，尝试从git获取（暂存文件）
+                    import subprocess
+
+                    git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                    for git_dir in git_dirs:
+                        git_path = Path(git_dir) / ".git"
+                        if git_path.exists():
+                            try:
+                                subprocess.run(
+                                    [
+                                        "git",
+                                        "config",
+                                        "--global",
+                                        "--add",
+                                        "safe.directory",
+                                        git_dir,
+                                    ],
+                                    capture_output=True,
+                                    check=False,
+                                    cwd=git_dir,
+                                )
+                                result = subprocess.run(
+                                    ["git", "show", f":{file_path}"],
+                                    capture_output=True,
+                                    text=True,
+                                    check=False,
+                                    cwd=git_dir,
+                                )
+                                if result.returncode == 0 and result.stdout:
+                                    content = result.stdout
+                                    break
+                            except (FileNotFoundError, subprocess.SubprocessError):
+                                continue
+
+                    if not content:
+                        # 无法获取文件内容，但继续检查（可能是新文件）
+                        self.warnings.append(f"无法读取文件以检查PRD关联: {file_path}，将跳过REQ-ID检查")
+                        return
+            except Exception as e:
+                self.errors.append(f"无法读取文件以检查PRD关联: {str(e)}")
+                return
 
         if content:
             # 检查文件头部是否有REQ-ID注释
@@ -142,9 +188,12 @@ class CodeChecker:
             )
             if not has_req_id:
                 # 在strict_mode下，这是错误而非警告
-                self.errors.append("代码文件必须包含REQ-ID关联（在文件头部注释中）")
+                self.errors.append(
+                    "❌ 代码文件必须包含REQ-ID关联（在文件头部注释中）\n"
+                    "   提示: 请在文件头部添加注释，例如: # REQ-2025-001-feature-name"
+                )
 
-    def _check_test_link(self, file_path: str):
+    def _check_test_link(self, file_path: str, file_from_git: bool = False):
         """检查测试文件是否存在"""
         # 推断对应的测试文件路径
         path = Path(file_path)
@@ -159,8 +208,62 @@ class CodeChecker:
                 f"backend/tests/integration/test_{module_name}.py",
             ]
 
-            # 检查是否存在测试文件
-            has_test = any(Path(loc).exists() for loc in test_locations)
+            # 检查是否存在测试文件（包括从git检查）
+            has_test = False
+            for test_loc in test_locations:
+                test_path = Path(test_loc)
+                if not test_path.is_absolute():
+                    possible_paths = [
+                        Path.cwd() / test_path,
+                        Path("/app") / test_path,
+                    ]
+                    for p in possible_paths:
+                        if p.exists():
+                            has_test = True
+                            break
+                else:
+                    if test_path.exists():
+                        has_test = True
+                        break
+
+                # 如果文件不存在，尝试从git检查（暂存文件）
+                if not has_test and file_from_git:
+                    import subprocess
+
+                    git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                    for git_dir in git_dirs:
+                        git_path = Path(git_dir) / ".git"
+                        if git_path.exists():
+                            try:
+                                subprocess.run(
+                                    [
+                                        "git",
+                                        "config",
+                                        "--global",
+                                        "--add",
+                                        "safe.directory",
+                                        git_dir,
+                                    ],
+                                    capture_output=True,
+                                    check=False,
+                                    cwd=git_dir,
+                                )
+                                result = subprocess.run(
+                                    ["git", "show", f":{test_loc}"],
+                                    capture_output=True,
+                                    text=True,
+                                    check=False,
+                                    cwd=git_dir,
+                                )
+                                if result.returncode == 0:
+                                    has_test = True
+                                    break
+                            except (FileNotFoundError, subprocess.SubprocessError):
+                                continue
+
+                if has_test:
+                    break
+
             if not has_test:
                 self.errors.append(
                     f"代码文件 {file_path} 缺少对应的测试文件。"
@@ -177,37 +280,98 @@ class CodeChecker:
             if not Path(test_location).exists():
                 self.warnings.append(f"建议为前端文件创建E2E测试: {test_location}")
 
-    def _check_task_link(self, file_path: str):
+    def _check_task_link(self, file_path: str, file_from_git: bool = False):
         """检查Task-Master任务是否存在"""
         # 从文件路径或注释中提取REQ-ID
         req_id = None
+        content = None
+
+        # 尝试读取文件内容
         try:
-            content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-            lines = content.split("\n")[:20]
-            for line in lines:
-                match = re.search(r"REQ-(\d{4})-(\d{3})-", line)
-                if match:
-                    req_id = match.group(0).rstrip("-")
-                    break
+            path = Path(file_path)
+            if not path.is_absolute():
+                possible_paths = [
+                    Path.cwd() / path,
+                    Path("/app") / path,
+                ]
+                for p in possible_paths:
+                    if p.exists():
+                        path = p
+                        break
+
+            if path.exists():
+                content = path.read_text(encoding="utf-8", errors="ignore")
+            elif file_from_git:
+                # 尝试从git获取
+                import subprocess
+
+                git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                for git_dir in git_dirs:
+                    git_path = Path(git_dir) / ".git"
+                    if git_path.exists():
+                        try:
+                            subprocess.run(
+                                [
+                                    "git",
+                                    "config",
+                                    "--global",
+                                    "--add",
+                                    "safe.directory",
+                                    git_dir,
+                                ],
+                                capture_output=True,
+                                check=False,
+                                cwd=git_dir,
+                            )
+                            result = subprocess.run(
+                                ["git", "show", f":{file_path}"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                                cwd=git_dir,
+                            )
+                            if result.returncode == 0 and result.stdout:
+                                content = result.stdout
+                                break
+                        except (FileNotFoundError, subprocess.SubprocessError):
+                            continue
         except Exception:
             pass
+
+        # 从内容中提取REQ-ID
+        if content:
+            lines = content.split("\n")[:20]
+            for line in lines:
+                match = re.search(r"REQ-(\d{4})(-\d{3})?-[A-Z0-9-]+", line)
+                if match:
+                    req_id = match.group(0)
+                    break
 
         # 如果找不到REQ-ID，尝试从文件路径推断
         if not req_id:
             # 从路径中查找REQ-ID模式
-            match = re.search(r"REQ-\d{4}-\d{3}-[a-z0-9-]+", file_path)
+            match = re.search(r"REQ-\d{4}(-\d{3})?-[A-Z0-9-]+", file_path)
             if match:
                 req_id = match.group(0)
 
         if req_id:
             # 检查Task-Master任务目录是否存在
             task_dir = Path(f".taskmaster/tasks/{req_id}")
-            if not task_dir.exists():
+            # 尝试多个可能的路径
+            possible_task_dirs = [
+                Path.cwd() / task_dir,
+                Path("/app") / task_dir,
+                task_dir,
+            ]
+            has_task = any(p.exists() for p in possible_task_dirs)
+
+            if not has_task:
                 # 在strict_mode下，这是错误而非警告
                 self.errors.append(
-                    f"代码文件缺少Task-Master任务关联。"
-                    f"未找到任务目录: {task_dir}。"
-                    "请先运行Task-Master生成任务，或创建对应的任务结构"
+                    f"❌ 代码文件缺少对应的Task-Master任务\n"
+                    f"   文件: {file_path}\n"
+                    f"   REQ-ID: {req_id}\n"
+                    f"   提示: 请在.taskmaster/tasks/目录下创建对应的任务文件"
                 )
         else:
             # 如果没有REQ-ID，无法检查任务关联
