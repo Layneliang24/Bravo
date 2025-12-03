@@ -2,7 +2,10 @@
 
 # 🔥 Husky+Git-Guard 混合保护系统
 echo "[PRECOMMIT] 🛡️ Husky+Git-Guard混合保护系统启动"
-echo "[INFO] 三层检查：防篡改脚本 + 本地测试 + 代码质量"
+echo "[INFO] 四层检查：依赖安全 + 本地测试 + 代码质量 + V4合规"
+
+# 定义关键脚本目录
+GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 
 # 第一层：依赖安全检查（简化版）
 echo ""
@@ -15,12 +18,16 @@ fi
 echo "✅ 依赖安全检查通过"
 
 # 第二层：本地测试通行证验证（推送前必需）
+echo ""
+echo "🎫 [第二层] 本地测试通行证验证..."
 if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
-    echo ""
-    echo "🎫 [第二层] 本地测试通行证验证..."
     if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
         echo "[INFO] 本地测试通行证状态检查（推送前必需完整通行证）"
     fi
+    echo "✅ 本地测试通行证验证完成"
+else
+    echo "[INFO] 本地测试通行证脚本未找到，跳过检查"
+    echo "[INFO] 脚本路径: $GOLDEN_SCRIPTS/local_test_passport.py"
 fi
 
 echo ""
@@ -31,44 +38,27 @@ echo "[INFO] 执行.code-quality-config.yaml中配置的所有检查项目"
 echo "====== 完整代码质量检查开始 ======"
 bash "$(dirname "$(dirname "$0")")/scripts/code-quality-check.sh" --all-files --verbose
 
-# 检查是否有失败的项目
-if [ $? -ne 0 ]; then
-    echo ""
-    echo "[ERROR] ========================="
-    echo "[ERROR] Pre-commit检查失败!"
-    echo "[ERROR] ========================="
-    echo "[HELP] 请根据上述错误信息修复问题："
-    echo "[HELP] - 格式化问题: 运行对应的格式化工具"
-    echo "[HELP] - 代码质量问题: 根据错误提示修复代码"
-    echo "[HELP] - 文件问题: 检查文件格式和大小"
-    echo "[ERROR] 修复后请重新提交"
-    exit 1
-fi
+# 记录代码质量检查结果，但不立即退出（允许第四层检查执行）
+CODE_QUALITY_RESULT=$?
 
-echo ""
-echo "[SUCCESS] ========================================="
-echo "[SUCCESS] 🎉 Husky+Git-Guard混合保护检查全部通过!"
-echo "[SUCCESS] ========================================="
-echo "[INFO] 已执行的检查包括："
-echo "  ✅ 代码质量验证 (comprehensive-check)"
-echo "  ✅ Python格式化 (black, isort)"
-echo "  ✅ Python代码检查 (flake8)"
-echo "  ✅ Python类型检查 (mypy)"
-echo "  ✅ Python安全检查 (bandit)"
-echo "  ✅ 前端格式化 (prettier)"
-echo "  ✅ 通用文件检查 (yaml, json, 合并冲突等)"
-echo "  ✅ Docker文件检查 (hadolint)"
-echo "  ✅ 命名规范检查 (python, typescript, vue)"
-echo "  ✅ 项目保护检查 (根目录守卫, 大文件检查等)"
-echo "  ✅ 提交信息格式检查"
-echo "[INFO] 🛡️ 三层防护全部通过，可以安全提交！"
-echo "[INFO] Git推送时将需要完整的本地测试通行证"
-echo "📝 来自.husky/pre-commit的测试输出"
-echo "✅ 自动同步成功！修改.husky/pre-commit后运行npm run sync-hooks即可"
+# 记录第三层检查状态
+if [ $CODE_QUALITY_RESULT -eq 0 ]; then
+    echo ""
+    echo "✅ [第三层] 代码质量检查通过"
+else
+    echo ""
+    echo "❌ [第三层] 代码质量检查失败"
+fi
 
 # 第四层：V4合规引擎检查
 echo ""
-echo "🔍 [第四层] V4合规引擎检查..."
+echo "========================================"
+echo "🔍 [第四层] V4合规引擎检查"
+echo "========================================"
+
+# 初始化第四层检查结果（默认通过）
+COMPLIANCE_RESULT=0
+
 if [ -f ".compliance/runner.py" ]; then
     # 检查backend服务是否运行
     BACKEND_RUNNING=false
@@ -89,19 +79,14 @@ if [ -f ".compliance/runner.py" ]; then
             echo "✅ V4合规引擎检查通过"
         else
             # 将文件列表传递给容器内的合规引擎
+            echo "[INFO] 执行合规引擎检查..."
             if docker-compose exec -T backend python .compliance/runner.py $STAGED_FILES 2>&1; then
+                echo ""
                 echo "✅ V4合规引擎检查通过"
             else
                 echo ""
-                echo "[ERROR] ========================="
-                echo "[ERROR] V4合规检查失败!"
-                echo "[ERROR] ========================="
-                echo "[HELP] 请根据上述错误信息修复问题："
-                echo "[HELP] - PRD文件: 检查PRD元数据和格式"
-                echo "[HELP] - 测试文件: 确保测试文件存在且符合规范"
-                echo "[HELP] - 代码文件: 检查代码关联和追溯链"
-                echo "[ERROR] 修复后请重新提交"
-                exit 1
+                echo "❌ V4合规检查失败"
+                COMPLIANCE_RESULT=1
             fi
         fi
     else
@@ -113,9 +98,7 @@ if [ -f ".compliance/runner.py" ]; then
             else
                 echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
                 echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
-                echo "[INFO] 或手动运行: docker-compose exec backend python .compliance/runner.py"
-                # 非严格模式：允许继续提交，但给出警告
-                echo "[INFO] 继续提交，但建议修复合规问题"
+                # 非严格模式：警告但不阻止提交
             fi
         elif command -v python > /dev/null 2>&1; then
             if python .compliance/runner.py 2>&1; then
@@ -123,15 +106,82 @@ if [ -f ".compliance/runner.py" ]; then
             else
                 echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
                 echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
-                echo "[INFO] 或手动运行: docker-compose exec backend python .compliance/runner.py"
-                echo "[INFO] 继续提交，但建议修复合规问题"
             fi
         else
             echo "[WARNING] Python未安装，无法执行合规检查"
             echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
-            echo "[INFO] 继续提交，但建议修复合规问题"
         fi
     fi
 else
     echo "[INFO] 合规引擎未安装，跳过V4合规检查"
+fi
+
+# ========================================
+# 统一结果检查和报告
+# ========================================
+echo ""
+echo "========================================"
+echo "📊 四层检查结果汇总"
+echo "========================================"
+
+# 统计失败的检查层数
+FAILED_LAYERS=0
+
+if [ $CODE_QUALITY_RESULT -ne 0 ]; then
+    echo "❌ [第三层] 代码质量检查失败"
+    FAILED_LAYERS=$((FAILED_LAYERS + 1))
+else
+    echo "✅ [第三层] 代码质量检查通过"
+fi
+
+if [ $COMPLIANCE_RESULT -ne 0 ]; then
+    echo "❌ [第四层] V4合规引擎检查失败"
+    FAILED_LAYERS=$((FAILED_LAYERS + 1))
+else
+    echo "✅ [第四层] V4合规引擎检查通过"
+fi
+
+echo "========================================"
+
+# 根据失败层数决定是否允许提交
+if [ $FAILED_LAYERS -gt 0 ]; then
+    echo ""
+    echo "[ERROR] ========================="
+    echo "[ERROR] Pre-commit检查失败!"
+    echo "[ERROR] 失败层数: $FAILED_LAYERS"
+    echo "[ERROR] ========================="
+    echo ""
+    echo "[HELP] 请根据上述错误信息修复问题："
+
+    if [ $CODE_QUALITY_RESULT -ne 0 ]; then
+        echo "[HELP] - 代码质量问题："
+        echo "         • 格式化问题: 运行对应的格式化工具"
+        echo "         • 代码规范: 根据错误提示修复代码"
+        echo "         • 文件问题: 检查文件格式和大小"
+    fi
+
+    if [ $COMPLIANCE_RESULT -ne 0 ]; then
+        echo "[HELP] - V4合规问题："
+        echo "         • PRD文件: 检查PRD元数据和格式"
+        echo "         • 测试文件: 确保测试文件存在且符合规范"
+        echo "         • 代码文件: 检查代码关联和追溯链"
+    fi
+
+    echo ""
+    echo "[ERROR] 修复后请重新提交"
+    exit 1
+else
+    echo ""
+    echo "[SUCCESS] ========================================="
+    echo "[SUCCESS] 🎉 Husky+Git-Guard混合保护检查全部通过!"
+    echo "[SUCCESS] ========================================="
+    echo "[INFO] 已执行的检查包括："
+    echo "  ✅ 第一层：依赖安全检查"
+    echo "  ✅ 第二层：本地测试通行证验证"
+    echo "  ✅ 第三层：代码质量检查"
+    echo "  ✅ 第四层：V4合规引擎检查"
+    echo ""
+    echo "[INFO] 🛡️ 四层防护全部通过，可以安全提交！"
+    echo "[INFO] Git推送时将需要完整的本地测试通行证"
+    exit 0
 fi
