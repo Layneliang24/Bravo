@@ -58,6 +58,7 @@ services:
       - ./backend:/app
       - ./.compliance:/app/.compliance:ro # 只读挂载合规引擎（V4架构）
       - ./.git:/app/.git:ro # 只读挂载git仓库（V4合规引擎需要）
+      - ./docs:/app/docs:ro # 只读挂载docs目录（V4合规引擎需要访问PRD文件）
       - backend_logs:/app/logs
       - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:

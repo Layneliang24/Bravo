@@ -71,10 +71,15 @@ class PRDChecker:
             self.errors.append("PRD文件必须以YAML Frontmatter开始（---）")
             return False
 
-        # 检查Frontmatter结束标记
-        lines = content.split("\n")
-        if len(lines) < 2 or lines[1].strip() != "---":
+        # 使用split检查是否有完整的frontmatter结构
+        parts = content.split("---", 2)
+        if len(parts) < 3:
             self.errors.append("Frontmatter格式错误：缺少结束标记")
+            return False
+
+        # 检查frontmatter内容不为空
+        if not parts[1].strip():
+            self.errors.append("Frontmatter内容为空")
             return False
 
         return True
@@ -113,16 +118,49 @@ class PRDChecker:
             if field not in metadata:
                 self.errors.append(f"缺少必需字段: {field}")
 
-        # 验证PRD状态（T09: PRD状态为draft时不允许开发）
+        # 验证PRD状态（状态机管理）
         status = metadata.get("status", "").lower()
+
+        # 从配置中读取有效状态列表
+        status_validation = self.rule_config.get("metadata_validation", {}).get(
+            "status", {}
+        )
+        valid_states = status_validation.get(
+            "enum",
+            ["draft", "review", "approved", "implementing", "completed", "archived"],
+        )
+
+        # 检查1：状态必须是有效值
+        if status not in valid_states:
+            self.errors.append(
+                f"❌ PRD状态 '{status}' 无效\n"
+                f"有效状态：{', '.join(valid_states)}\n\n"
+                f"📋 PRD状态机流程：\n"
+                f"  draft → review → approved → implementing → completed → archived"
+            )
+            return
+
+        # 检查2：draft状态不允许开发
         if status == "draft":
             self.errors.append(
-                "PRD状态为 'draft'，必须先审核通过（状态改为 'approved'）才能开始开发。\n"
-                "PRD审核流程：draft（草稿）→ review（审核中）→ approved（已批准）"
+                "❌ PRD状态为 'draft'（草稿），不允许开始开发\n\n"
+                "📋 开发前必须完成以下步骤：\n"
+                "  1. 完善PRD内容\n"
+                "  2. 提交审核：将status改为 'review'\n"
+                "  3. 审核通过：将status改为 'approved'\n"
+                "  4. 解析任务：运行 task-master parse-prd\n"
+                "  5. 开始开发：status自动变为 'implementing'\n\n"
+                "⚠️  状态转换只能人工修改，不能自动修改（除了approved→implementing）"
             )
-        elif status not in ["approved", "review", "draft", "archived"]:
+
+        # 检查3：review状态警告（允许修改PRD，但不允许提交实现代码）
+        elif status == "review":
             self.warnings.append(
-                f"PRD状态 '{status}' 不在标准状态列表中：draft, review, approved, archived"
+                "⚠️ PRD状态为 'review'（审核中）\n\n"
+                "📋 当前可以做的：\n"
+                "  ✅ 修改PRD文件本身（完善需求）\n"
+                "  ❌ 提交implementation_files中的代码\n\n"
+                "🔄 审核通过后，将status改为 'approved'，然后运行 task-master parse-prd"
             )
 
         # 验证字段格式

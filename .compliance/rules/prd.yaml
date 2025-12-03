@@ -23,7 +23,12 @@ metadata_validation:
     max_length: 200
   status:
     enum:
-      [draft, refined, reviewed, approved, implementing, completed, archived]
+      - draft # 草稿：PRD初稿，内容未完成
+      - review # 审核中：PRD已完成，等待审核
+      - approved # 已批准：PRD已通过审核，可以开始开发（唯一可parse的状态）
+      - implementing # 实施中：PRD对应功能正在开发（parse后自动设置）
+      - completed # 已完成：PRD对应功能已完成
+      - archived # 已归档：PRD不再使用
     required: true
   test_files:
     type: list

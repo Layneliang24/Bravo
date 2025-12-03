@@ -384,6 +384,13 @@ class Task0Checker:
             # 解析YAML
             metadata = yaml.safe_load(parts[1])
 
+            # ⭐ 新增：PRD状态机检查
+            status_check_result = self._check_prd_status_for_development(
+                prd_path, metadata
+            )
+            if status_check_result:
+                return status_check_result
+
             # 检查必需字段
             required_fields = ["test_files", "implementation_files"]
             missing_fields = []
@@ -636,11 +643,12 @@ class Task0Checker:
                 )
 
         if ordering_issues:
-            return {
-                "level": "warning",
-                "message": "Task Master任务排序建议优化（TDD流程）",
-                "file": ".taskmaster/tasks/tasks.json",
-                "help": (
+            # 从配置中读取帮助信息
+            task_master_config = self.config.get("task_master_checks", {})
+            ordering_config = task_master_config.get("task_ordering", {})
+            help_text = ordering_config.get(
+                "help",
+                (
                     "发现以下排序建议：\n"
                     + "\n".join(f"  - {issue}" for issue in ordering_issues)
                     + "\n\nTDD最佳实践流程：\n"
@@ -651,6 +659,15 @@ class Task0Checker:
                     "- 测试驱动开发\n"
                     "- 防止过度设计\n"
                     "- 持续验证功能正确性"
+                ),
+            )
+
+            return {
+                "level": ordering_config.get("level", "warning"),
+                "message": "Task Master任务排序建议优化（TDD流程）",
+                "file": ".taskmaster/tasks/tasks.json",
+                "help": help_text.replace(
+                    "{issues}", "\n".join(f"  - {issue}" for issue in ordering_issues)
                 ),
             }
 
@@ -686,6 +703,11 @@ class Task0Checker:
 
         unexpanded_tasks = []
 
+        # 从配置中读取最小复杂度阈值
+        task_master_config = self.config.get("task_master_checks", {})
+        expansion_config = task_master_config.get("task_expansion", {})
+        min_complexity = expansion_config.get("min_complexity_for_expansion", 5)
+
         for task in related_tasks:
             subtasks = task.get("subtasks", [])
 
@@ -693,7 +715,7 @@ class Task0Checker:
             if not subtasks or len(subtasks) == 0:
                 # 判断任务复杂度（简单任务可以不展开）
                 complexity = task.get("complexity", 5)
-                if complexity >= 5:  # 中等及以上复杂度
+                if complexity >= min_complexity:  # 使用配置的阈值
                     unexpanded_tasks.append(
                         {
                             "id": task["id"],
@@ -710,11 +732,10 @@ class Task0Checker:
                 ]
             )
 
-            return {
-                "level": "warning",
-                "message": "部分任务未展开为子任务",
-                "file": ".taskmaster/tasks/tasks.json",
-                "help": (
+            # 使用配置的帮助信息
+            help_text = expansion_config.get(
+                "help",
+                (
                     f"以下任务复杂度较高，建议展开为子任务：\n{task_list}\n\n"
                     "展开方法：\n"
                     "1. 分析任务复杂度：task-master analyze-complexity --research\n"
@@ -725,6 +746,13 @@ class Task0Checker:
                     "- 便于跟踪进度\n"
                     "- 降低单个任务的复杂度"
                 ),
+            )
+
+            return {
+                "level": expansion_config.get("level", "warning"),
+                "message": "部分任务未展开为子任务",
+                "file": ".taskmaster/tasks/tasks.json",
+                "help": help_text.replace("{task_list}", task_list),
             }
 
         return None
@@ -775,11 +803,12 @@ class Task0Checker:
                 [f"  - task-{f['id']}.txt ({f['title']})" for f in missing_files]
             )
 
-            return {
-                "level": "info",
-                "message": "部分Task Master任务未生成txt/md文件",
-                "file": ".taskmaster/tasks/",
-                "help": (
+            # 从配置中读取帮助信息
+            task_master_config = self.config.get("task_master_checks", {})
+            files_config = task_master_config.get("task_files_generation", {})
+            help_text = files_config.get(
+                "help",
+                (
                     f"缺少以下任务文件：\n{file_list}\n\n"
                     "生成方法：\n"
                     "  task-master generate\n\n"
@@ -788,6 +817,13 @@ class Task0Checker:
                     "- 提供人类可读的任务描述\n"
                     "- 用于项目文档和任务追踪"
                 ),
+            )
+
+            return {
+                "level": files_config.get("level", "info"),
+                "message": "部分Task Master任务未生成txt/md文件",
+                "file": ".taskmaster/tasks/",
+                "help": help_text.replace("{file_list}", file_list),
             }
 
         return None
@@ -826,6 +862,148 @@ class Task0Checker:
                     related_tasks.append(task)
 
         return related_tasks
+
+    def _check_prd_status_for_development(
+        self, prd_path: Path, metadata: Dict
+    ) -> Dict[str, Any]:
+        """
+        检查PRD状态是否允许开发（状态机校验）
+
+        规则：
+        - draft: 不允许提交任何代码
+        - review: 只允许修改PRD本身，不允许提交实现代码
+        - approved/implementing/completed: 允许开发
+        - archived: 不允许开发
+
+        Args:
+            prd_path: PRD文件路径
+            metadata: PRD元数据
+
+        Returns:
+            检查结果，如果有问题则返回错误信息
+        """
+        status = metadata.get("status", "").lower()
+
+        # 状态1：draft - 完全拒绝
+        if status == "draft":
+            return {
+                "level": "error",
+                "message": "Task-0检查失败: PRD状态为draft，不允许开发",
+                "file": str(prd_path),
+                "help": (
+                    "❌ PRD状态为 'draft'（草稿），不允许提交实现代码\n\n"
+                    "📋 开发前置条件：\n"
+                    "  1. 完善PRD内容\n"
+                    "  2. 提交审核：status改为 'review'\n"
+                    "  3. 审核通过：status改为 'approved'\n"
+                    "  4. 解析任务：task-master parse-prd\n"
+                    "  5. 开始开发：status自动变为 'implementing'\n\n"
+                    "🔄 如果PRD还在草稿阶段，请先完善内容并提交审核\n\n"
+                    "⚠️  状态转换只能人工修改（除了approved→implementing是自动的）"
+                ),
+            }
+
+        # 状态2：review - 检查是否在提交实现代码
+        elif status == "review":
+            impl_files = metadata.get("implementation_files", [])
+
+            # 获取当前提交的文件
+            staged_files = self._get_staged_files()
+
+            # 检查是否有实现代码被提交
+            blocked_files = []
+            for staged_file in staged_files:
+                # 跳过PRD文件本身
+                if "docs/00_product/requirements" in staged_file:
+                    continue
+
+                # 检查是否匹配implementation_files
+                for impl_pattern in impl_files:
+                    # 简单匹配：检查文件路径是否包含impl_pattern
+                    if impl_pattern in staged_file or staged_file in impl_pattern:
+                        blocked_files.append(staged_file)
+                        break
+
+            if blocked_files:
+                blocked_list = "\n".join(f"  - {f}" for f in blocked_files[:5])
+                if len(blocked_files) > 5:
+                    blocked_list += f"\n  - ... 还有 {len(blocked_files) - 5} 个文件"
+
+                return {
+                    "level": "error",
+                    "message": "Task-0检查失败: PRD状态为review，不允许提交实现代码",
+                    "file": str(prd_path),
+                    "help": (
+                        "❌ PRD状态为 'review'（审核中），不允许提交实现代码\n\n"
+                        f"📋 被阻止的文件：\n{blocked_list}\n\n"
+                        "✅ 当前可以做的：\n"
+                        "  - 修改PRD文件本身（完善需求）\n"
+                        "  - 提交文档修改\n\n"
+                        "❌ 不允许做的：\n"
+                        "  - 提交implementation_files中的代码\n\n"
+                        "🔄 等待PRD审核通过后再开发：\n"
+                        "  1. 审核人将status改为 'approved'\n"
+                        "  2. 运行 task-master parse-prd\n"
+                        "  3. 开始开发（status自动变为 'implementing'）"
+                    ),
+                }
+
+        # 状态3：archived - 不允许开发
+        elif status == "archived":
+            return {
+                "level": "warning",
+                "message": "Task-0警告: PRD状态为archived，不建议继续开发",
+                "file": str(prd_path),
+                "help": (
+                    "⚠️ PRD状态为 'archived'（已归档），不建议继续开发\n\n"
+                    "如果需要重新开发，请先评估需求是否仍然有效，"
+                    "并将status改回合适的状态（如draft或review）"
+                ),
+            }
+
+        # 状态4：approved/implementing/completed - 允许开发
+        elif status in ["approved", "implementing", "completed"]:
+            # 通过检查
+            return None
+
+        # 其他未知状态
+        else:
+            return {
+                "level": "warning",
+                "message": f"Task-0警告: PRD状态 '{status}' 不在标准状态列表中",
+                "file": str(prd_path),
+                "help": (
+                    f"⚠️ PRD状态为 '{status}'，不是标准状态\n\n"
+                    "标准状态列表：\n"
+                    "  - draft: 草稿\n"
+                    "  - review: 审核中\n"
+                    "  - approved: 已批准（可parse）\n"
+                    "  - implementing: 实施中（parse后自动设置）\n"
+                    "  - completed: 已完成\n"
+                    "  - archived: 已归档"
+                ),
+            }
+
+    def _get_staged_files(self) -> List[str]:
+        """
+        获取git暂存区的文件列表
+
+        Returns:
+            暂存区文件路径列表
+        """
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip().split("\n")
+            return []
+        except Exception as e:
+            print(f"[Task0Checker] 获取staged files失败: {e}", file=sys.stderr)
+            return []
 
 
 def create_checker(config: Dict[str, Any]) -> Task0Checker:
