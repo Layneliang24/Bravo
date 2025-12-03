@@ -101,7 +101,10 @@ class PRDChecker:
             return None
 
     def _validate_metadata(self, metadata: Dict):
-        """验证元数据"""
+        """验证元数据（增强版）"""
+        # 保存metadata供其他方法使用
+        self.metadata = metadata
+
         required_fields = self.rule_config.get("required_metadata_fields", [])
         validation_rules = self.rule_config.get("metadata_validation", {})
 
@@ -168,10 +171,10 @@ class PRDChecker:
                 self.errors.append(f"缺少必需章节: {section}")
 
     def _validate_content(self, content: str):
-        """验证内容"""
+        """验证内容（增强版）"""
         content_validation = self.rule_config.get("content_validation", {})
 
-        # 检查最小长度
+        # 1. 原有检查：最小长度
         if "min_length" in content_validation:
             min_length = content_validation["min_length"]
             # 排除Frontmatter
@@ -183,7 +186,115 @@ class PRDChecker:
                     f"建议至少 {min_length} 字符"
                 )
 
-        # 检查测试用例
+        # 2. 新增：推荐章节检查
+        recommended_sections = content_validation.get("recommended_sections", [])
+        for section_config in recommended_sections:
+            section_name = section_config["name"]
+            level = section_config.get("level", "warning")
+            applicable = self._is_section_applicable(section_config)
+
+            if not applicable:
+                continue
+
+            # 检查章节是否存在
+            pattern = rf"^#+\s+{re.escape(section_name)}"
+            if not re.search(pattern, content, re.MULTILINE):
+                message = (
+                    f"建议添加章节：{section_name}\n" f"说明：{section_config['description']}"
+                )
+                if level == "error":
+                    self.errors.append(message)
+                else:
+                    self.warnings.append(message)
+
+        # 3. 新增：章节详细度检查
+        section_requirements = content_validation.get("section_detail_requirements", {})
+        for section_name, requirements in section_requirements.items():
+            # 检查章节是否适用
+            if "applicable_when" in requirements:
+                if not self._is_section_applicable(requirements):
+                    continue
+            self._check_section_detail(content, section_name, requirements)
+
+        # 4. 原有检查：测试用例
         if content_validation.get("require_test_cases", False):
             if "测试用例" not in content and "test case" not in content.lower():
                 self.warnings.append("建议包含测试用例部分")
+
+    def _is_section_applicable(self, section_config: dict) -> bool:
+        """
+        判断章节是否适用于当前PRD
+
+        Args:
+            section_config: 章节配置
+
+        Returns:
+            是否适用
+        """
+        applicable_when = section_config.get("applicable_when", [])
+
+        if not applicable_when:
+            return True  # 没有条件限制，总是适用
+
+        # 检查条件（从metadata中获取）
+        if not hasattr(self, "metadata"):
+            return True  # 如果没有metadata，默认适用
+
+        for condition in applicable_when:
+            pattern = condition["pattern"]
+            field = condition["in_field"]
+
+            if field in self.metadata:
+                field_value = str(self.metadata[field])
+                if re.search(pattern, field_value, re.IGNORECASE):
+                    return True
+
+        return False
+
+    def _check_section_detail(
+        self, content: str, section_name: str, requirements: dict
+    ):
+        """
+        检查章节内容详细度
+
+        Args:
+            content: PRD文件内容
+            section_name: 章节名称
+            requirements: 详细度要求
+        """
+        # 提取章节内容
+        section_pattern = rf"^#+\s+{re.escape(section_name)}\s*$(.*?)(?=^#+\s+|\Z)"
+        match = re.search(section_pattern, content, re.MULTILINE | re.DOTALL)
+
+        if not match:
+            return  # 章节不存在，由其他检查处理
+
+        section_content = match.group(1)
+
+        # 检查关键词
+        if "require_keywords" in requirements:
+            keywords = requirements["require_keywords"]
+            missing_keywords = []
+
+            for keyword in keywords:
+                if keyword not in section_content:
+                    missing_keywords.append(keyword)
+
+            if missing_keywords:
+                self.warnings.append(
+                    f"章节 '{section_name}' 建议包含关键内容：{', '.join(missing_keywords)}\n"
+                    f"格式建议：{requirements.get('format', '描述性文本')}"
+                )
+
+        # 检查最小项目数（用于列表类章节）
+        if "min_items" in requirements:
+            min_items = requirements["min_items"]
+            # 统计列表项（- 或 1. 开头）
+            list_items = re.findall(r"^\s*[-\d]+\.", section_content, re.MULTILINE)
+
+            if len(list_items) < min_items:
+                self.warnings.append(
+                    f"章节 '{section_name}' 建议至少包含 {min_items} 条内容，"
+                    f"当前只有 {len(list_items)} 条\n"
+                    f"说明：{requirements.get('description', '')}"
+                )

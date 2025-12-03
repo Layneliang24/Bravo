@@ -1,22 +1,28 @@
 {
   "models": {
     "main": {
-      "provider": "openrouter",
-      "modelId": "qwen/qwen-2.5-72b-instruct",
+      "provider": "openai",
+      "modelId": "gpt-5-chat-latest",
       "maxTokens": 2000,
-      "temperature": 0.2
+      "temperature": 0.2,
+      "baseURL": "https://api.chenmoai.cn/v1",
+      "apiKey": "sk-chhLY3oOJJIWKM3dDaIIrhrFpX7uOrmT2h8jzvNt2YrtEwzV"
     },
     "research": {
-      "provider": "openrouter",
-      "modelId": "qwen/qwen-2.5-72b-instruct",
+      "provider": "openai",
+      "modelId": "Qwen/Qwen2.5-7B-Instruct",
       "maxTokens": 2000,
-      "temperature": 0.1
+      "temperature": 0.1,
+      "baseURL": "https://api.siliconflow.cn/v1",
+      "apiKey": "sk-qcxlwgdycvwptcaipxbiomxxfdsalmtiwvktcravdcnfauit"
     },
     "fallback": {
-      "provider": "openrouter",
-      "modelId": "google/gemini-2.0-flash-exp:free",
+      "provider": "openai",
+      "modelId": "deepseek-coder",
       "maxTokens": 2000,
-      "temperature": 0.2
+      "temperature": 0.2,
+      "baseURL": "https://api.siliconflow.cn/v1",
+      "apiKey": "sk-qcxlwgdycvwptcaipxbiomxxfdsalmtiwvktcravdcnfauit"
     }
   },
   "global": {
@@ -28,7 +34,7 @@
     "projectName": "Taskmaster",
     "ollamaBaseURL": "http://localhost:11434/api",
     "bedrockBaseURL": "https://bedrock.us-east-1.amazonaws.com",
-    "responseLanguage": "English",
+    "responseLanguage": "中文",
     "enableCodebaseAnalysis": true,
     "enableProxy": false,
     "defaultTag": "master",

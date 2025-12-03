@@ -104,12 +104,12 @@ class ComplianceEngine:
 
             # 创建检查器实例（需要规则配置，稍后设置）
             checker_classes = {
+                "task0": Task0Checker,  # Task-0必须最先执行（验证PRD完整性）
                 "prd": PRDChecker,
                 "test": TestChecker,
                 "code": CodeChecker,
                 "commit": CommitChecker,
                 "task": TaskChecker,
-                "task0": Task0Checker,
                 "test_runner": TestRunnerChecker,
             }
 
@@ -122,12 +122,12 @@ class ComplianceEngine:
             print("⚠️ 尝试从文件系统直接导入检查器...", file=sys.stderr)
             # 方法2: 从文件系统直接导入（容器内场景）
             checker_files = {
+                "task0": "task0_checker.py",  # Task-0必须最先执行
                 "prd": "prd_checker.py",
                 "test": "test_checker.py",
                 "code": "code_checker.py",
                 "commit": "commit_checker.py",
                 "task": "task_checker.py",
-                "task0": "task0_checker.py",
                 "test_runner": "test_runner_checker.py",
             }
 

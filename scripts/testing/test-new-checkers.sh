@@ -160,7 +160,7 @@ EOF
 
     # 尝试提交（应被拦截）
     git add docs/00_product/requirements/REQ-TEST-CHECKER/ 2>&1 | tee -a "$LOG_FILE"
-    
+
     log "尝试提交draft状态的PRD..."
     if git commit -m "[REQ-TEST-CHECKER] 测试PRD状态检查" 2>&1 | tee -a "$LOG_FILE"; then
         error "PRD状态为draft，但提交成功了（应该被拦截）"
@@ -245,13 +245,13 @@ main() {
     # 执行测试
     test_checker_loading
     echo ""
-    
+
     test_task0_checker
     echo ""
-    
+
     test_test_runner
     echo ""
-    
+
     test_prd_status
     echo ""
 
@@ -266,4 +266,3 @@ main() {
 
 # 执行主流程
 main
-

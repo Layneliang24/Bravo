@@ -185,7 +185,7 @@ test_t05() {
 
     # 先创建一个完整的功能（PRD + 代码 + 测试）
     mkdir -p docs/00_product/requirements/REQ-T05-TEST backend/apps/test_t05 backend/tests/unit
-    
+
     cat > docs/00_product/requirements/REQ-T05-TEST/REQ-T05-TEST.md << 'EOF'
 ---
 req_id: REQ-T05-TEST
@@ -370,31 +370,31 @@ main() {
     # 执行测试
     test_t01 || true
     cleanup
-    
+
     test_t02 || true
     cleanup
-    
+
     test_t03 || true
     cleanup
-    
+
     test_t04 || true
     cleanup
-    
+
     test_t05 || true
     cleanup
-    
+
     test_t06 || true
     cleanup
-    
+
     test_t07 || true
     cleanup
-    
+
     test_t08 || true
     cleanup
-    
+
     test_t09 || true
     cleanup
-    
+
     test_t10 || true
     cleanup
 
@@ -414,4 +414,3 @@ main() {
 
 # 执行主流程
 main
-

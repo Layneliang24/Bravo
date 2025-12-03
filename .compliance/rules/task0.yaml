@@ -1,41 +1,66 @@
 # Task-0自检规则
-# 确保Task-0是强制入口，所有开发必须先完成Task-0
+# 验证PRD完整性和项目准备就绪（按照V4-PART2文档设计）
 
 name: task0
-description: Task-0自检规则 - 验证开发环境配置和项目自检
+description: Task-0自检规则 - 验证PRD元数据、测试目录、API契约
 version: "1.0"
 enabled: true
-strict_mode: true # 严格模式：Task-0未完成时拒绝提交
+strict_mode: true # 严格模式：PRD不完整时拒绝提交
 
 # 规则配置
 rules:
   - id: TASK0-001
-    name: task0_completion_required
-    description: Task-0必须完成才能开始其他开发工作
+    name: prd_metadata_validation
+    description: 验证PRD元数据完整性
     severity: error
     enabled: true
-    message: "Task-0未完成，必须先完成Task-0自检"
+    message: "Task-0检查失败: PRD元数据不完整"
     help: |
-      Task-0是项目的强制入口，用于验证：
-      1. 开发环境配置正确
-      2. 依赖安装完整
-      3. 数据库连接正常
-      4. 基础服务可用
-      
-      完成Task-0后，运行：
-        task-master set-status --id=0 --status=done
+      PRD的YAML frontmatter必须包含：
+      - req_id: 需求ID
+      - test_files: 测试文件列表（必需）
+      - implementation_files: 实现文件列表（必需）
+      - api_contract: API契约文件路径（建议）
+
+      示例：
+      ---
+      req_id: REQ-2025-001-user-login
+      test_files:
+        - backend/tests/unit/test_user_login.py
+        - backend/tests/integration/test_authentication.py
+      implementation_files:
+        - backend/apps/users/models.py
+        - backend/apps/users/views.py
+      api_contract: docs/01_guideline/api-contracts/REQ-2025-001/REQ-2025-001-api.yaml
+      ---
 
   - id: TASK0-002
-    name: task0_existence_check
-    description: 建议创建Task-0作为项目入口
+    name: test_directories_check
+    description: 检查测试目录是否存在
+    severity: error
+    enabled: true
+    message: "Task-0检查失败: 测试目录不存在"
+    help: |
+      请创建必需的测试目录：
+        mkdir -p backend/tests/unit
+        mkdir -p backend/tests/integration
+        mkdir -p backend/tests/regression
+        mkdir -p e2e/tests/smoke
+        mkdir -p e2e/tests/regression
+
+  - id: TASK0-003
+    name: api_contract_validation
+    description: 验证API契约文件
     severity: warning
     enabled: true
-    message: "Task-0不存在，建议创建Task-0作为项目自检入口"
+    message: "Task-0建议: API契约文件不存在"
     help: |
-      创建Task-0的步骤：
-      1. 使用task-master add-task创建Task-0
-      2. 在Task-0中添加环境自检步骤
-      3. 完成自检后标记为done
+      建议创建API契约文件（OpenAPI 3.0规范）。
+      API契约用于：
+      1. 定义接口规范
+      2. 前后端协作
+      3. 自动生成API文档
+      4. 接口测试
 
 # 检查器配置
 checker:
@@ -44,11 +69,10 @@ checker:
   class: Task0Checker
   enabled: true
 
-# 适用文件类型
+# 适用文件类型（只检查代码文件）
 applies_to:
   - "backend/apps/**/*.py"
   - "frontend/src/**/*.{vue,ts,tsx,js,jsx}"
-  - "backend/**/*.py"
 
 # 排除文件
 excludes:
@@ -58,4 +82,35 @@ excludes:
   - "scripts/**"
   - "node_modules/**"
   - "venv/**"
+  - "migrations/**"
 
+# Task Master任务规划检查
+task_master_checks:
+  task_ordering:
+    enabled: true
+    level: "warning"
+    description: "检查任务排序是否符合TDD流程"
+    help: |
+      TDD最佳实践要求任务按以下顺序排列：
+      1. 编写测试（红色阶段）
+      2. 实现功能（编码）
+      3. 运行测试（绿色阶段）
+      4. 重构优化
+
+  task_expansion:
+    enabled: true
+    level: "warning"
+    min_complexity_for_expansion: 5
+    description: "检查复杂任务是否已展开为子任务"
+    help: |
+      复杂度>=5的任务建议展开为子任务，以便：
+      - 提供更清晰的实施路径
+      - 便于跟踪进度
+      - 降低单个任务的复杂度
+
+  task_files_generation:
+    enabled: true
+    level: "info"
+    description: "检查是否生成了Task Master的txt/md文件"
+    help: |
+      txt/md文件方便AI查看任务详情，无需解析JSON
