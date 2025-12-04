@@ -40,6 +40,7 @@ class LocalTestPassport:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"[{timestamp}] [{level}] {message}\n"
         print(f"📋 {message}")
+        sys.stdout.flush()  # 强制立即输出，实现实时显示
         with open(self.log_file, "a", encoding="utf-8") as f:
             f.write(log_entry)
 
@@ -50,8 +51,10 @@ class LocalTestPassport:
         if output:
             detail_entry += f"  输出:\n{self._indent_text(output, 2)}\n"
         print(f"📋 {message}")
+        sys.stdout.flush()  # 强制立即输出
         if output:
             print(self._indent_text(output, 2))
+            sys.stdout.flush()  # 强制立即输出
         with open(self.log_file, "a", encoding="utf-8") as f:
             f.write(detail_entry)
 
@@ -71,8 +74,10 @@ class LocalTestPassport:
         status = "✅" if result.returncode == 0 else "❌"
         cmd_str = " ".join(command) if isinstance(command, list) else command
         print(f"{status} 命令: {cmd_str} (退出码: {result.returncode})")
+        sys.stdout.flush()  # 强制立即输出
         if result.returncode != 0 and result.stderr:
             print(f"   错误: {result.stderr[:200]}...")
+            sys.stdout.flush()  # 强制立即输出
 
     def _indent_text(self, text, indent=2):
         """为文本添加缩进"""
@@ -200,6 +205,12 @@ class LocalTestPassport:
                 self.log_detail(
                     f"执行命令: act push -W .github/workflows/{workflow} --list"
                 )
+
+                # 实时输出模式
+                self.log_detail(
+                    f"执行命令: act push -W .github/workflows/{workflow} --list"
+                )
+                sys.stdout.flush()
 
                 result = subprocess.run(
                     ["act", "push", "-W", f".github/workflows/{workflow}", "--list"],
@@ -706,16 +717,25 @@ class LocalTestPassport:
             else:
                 # backend容器未运行，使用run（但先启动依赖服务）
                 self.log_detail("backend容器未运行，先启动依赖服务")
+                sys.stdout.flush()
+
                 # 确保MySQL和Redis已启动
+                self.log("  🔄 启动依赖服务（MySQL, Redis）...")
+                sys.stdout.flush()
                 subprocess.run(
                     ["docker-compose", "-p", "bravo", "up", "-d", "mysql", "redis"],
                     capture_output=True,
                     timeout=30,
                 )
                 # 等待服务就绪
+                self.log("  ⏳ 等待服务就绪（3秒）...")
+                sys.stdout.flush()
                 time.sleep(3)
 
                 # 使用run创建临时容器
+                self.log("  🔄 执行Django配置检查...")
+                sys.stdout.flush()
+
                 result = subprocess.run(
                     [
                         "docker-compose",
@@ -891,7 +911,12 @@ class LocalTestPassport:
         frontend_errors = []
         for check_cmd, check_name in frontend_checks:
             self.log_detail(f"尝试执行: {check_name}")
+            sys.stdout.flush()
             try:
+                # 实时输出模式
+                self.log(f"  🔄 执行{check_name}...")
+                sys.stdout.flush()
+
                 result = subprocess.run(
                     check_cmd,
                     capture_output=True,
@@ -987,15 +1012,46 @@ class LocalTestPassport:
                     "--tb=short",
                 ]
 
-            result = subprocess.run(
+            # 使用实时输出模式，像pre-commit那样友好
+            self.log("📊 开始执行测试（实时输出模式）...")
+            sys.stdout.flush()
+
+            # 使用Popen实现实时输出
+            process = subprocess.Popen(
                 pytest_cmd,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # 合并stderr到stdout
                 text=True,
                 encoding="utf-8",
                 errors="ignore",
-                timeout=180,  # 3分钟超时
                 cwd=str(self.workspace),
+                bufsize=1,  # 行缓冲
             )
+
+            # 实时读取并输出
+            output_lines = []
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if line:
+                    # 实时输出测试进度
+                    print(f"  {line.rstrip()}")
+                    sys.stdout.flush()
+                    output_lines.append(line)
+
+            # 等待进程完成
+            returncode = process.wait()
+            result_stdout = "".join(output_lines)
+
+            # 创建类似subprocess.run的result对象
+            class Result:
+                def __init__(self, returncode, stdout):
+                    self.returncode = returncode
+                    self.stdout = stdout
+                    self.stderr = ""
+
+            result = Result(returncode, result_stdout)
 
             self.log_command(
                 ["docker-compose", "run", "--rm", "backend", "pytest", "tests/unit/"],
