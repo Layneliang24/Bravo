@@ -995,13 +995,14 @@ class Task0Checker:
         """
         检查tasks.json对应的PRD状态（pre-commit阶段）
 
-        无论通过命令行还是MCP工具调用parse-prd，最终都会生成tasks.json
-        在pre-commit阶段检查所有标准PRD目录下的PRD状态，确保只有approved状态的PRD才能被parse
+        从tasks.json的metadata中读取source_prd_path或source_prd_paths，
+        只检查这些PRD的状态，避免误报。
 
         策略：
         1. 检查tasks.json是否在files列表中（被修改）
-        2. 如果是，扫描所有标准PRD目录下的PRD文件
-        3. 如果发现任何PRD状态为draft/review，且tasks.json被修改，报错
+        2. 如果是，从tasks.json的metadata读取PRD路径
+        3. 只检查这些相关PRD的状态
+        4. 如果发现任何相关PRD状态为draft/review，报错
 
         Args:
             files: 待检查的文件列表（从check()方法传入）
@@ -1009,6 +1010,8 @@ class Task0Checker:
         Returns:
             检查结果，如果有问题则返回错误信息
         """
+        import json
+
         # 检查tasks.json是否在files列表中（被修改）
         if files:
             tasks_json_staged = any(".taskmaster/tasks/tasks.json" in f for f in files)
@@ -1023,77 +1026,128 @@ class Task0Checker:
         if not tasks_json_staged:
             return None
 
-        # 扫描所有标准PRD目录下的PRD文件
-        prd_base_paths = [
-            Path("docs/00_product/requirements"),
-            Path("/app/docs/00_product/requirements"),  # Docker容器内路径
-        ]
-
-        prd_base = None
-        for base_path in prd_base_paths:
-            if base_path.exists():
-                prd_base = base_path
-                break
-
-        if not prd_base:
+        # 读取tasks.json
+        tasks_json_path = Path(".taskmaster/tasks/tasks.json")
+        if not tasks_json_path.exists():
             return None
 
-        # 遍历所有PRD目录
-        for prd_dir in prd_base.iterdir():
-            if not prd_dir.is_dir():
+        try:
+            with open(tasks_json_path, "r", encoding="utf-8") as f:
+                tasks_data = json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print(
+                f"[Task0Checker] 读取tasks.json失败: {e}",
+                file=sys.stderr,
+            )
+            return None
+
+        # 收集所有需要检查的PRD路径
+        prd_paths_to_check = set()
+
+        for tag_name, tag_data in tasks_data.items():
+            if not isinstance(tag_data, dict):
                 continue
 
-            # 查找PRD文件
-            prd_file = prd_dir / f"{prd_dir.name}.md"
-            if not prd_file.exists():
+            metadata = tag_data.get("metadata", {})
+            if not isinstance(metadata, dict):
                 continue
 
+            # 检查source_prd_path（单个）
+            if "source_prd_path" in metadata:
+                prd_paths_to_check.add(metadata["source_prd_path"])
+
+            # 检查source_prd_paths（数组）
+            if "source_prd_paths" in metadata:
+                prd_paths = metadata["source_prd_paths"]
+                if isinstance(prd_paths, list):
+                    prd_paths_to_check.update(prd_paths)
+
+        # 如果没有找到任何PRD路径，跳过检查
+        if not prd_paths_to_check:
+            return None
+
+        # 检查这些PRD的状态
+        errors = []
+        for prd_path in prd_paths_to_check:
+            prd_file = Path(prd_path)
+
+            # 尝试多个可能的路径
+            possible_paths = [
+                prd_file,
+                Path("docs/00_product/requirements") / prd_file.name,
+                Path("/app/docs/00_product/requirements") / prd_file.name,
+            ]
+
+            prd_file_found = None
+            for path in possible_paths:
+                if path.exists():
+                    prd_file_found = path
+                    break
+
+            if not prd_file_found:
+                errors.append(f"PRD文件不存在: {prd_path}")
+                continue
+
+            # 读取PRD的frontmatter
             try:
-                content = prd_file.read_text(encoding="utf-8")
-                if not content.startswith("---"):
-                    continue
+                with open(prd_file_found, "r", encoding="utf-8") as f:
+                    content = f.read()
 
+                # 解析frontmatter
                 parts = content.split("---", 2)
                 if len(parts) < 3:
+                    errors.append(f"PRD {prd_path} 缺少frontmatter")
                     continue
 
-                metadata = yaml.safe_load(parts[1])
-                status = metadata.get("status", "").lower()
-                req_id = metadata.get("req_id", prd_dir.name)
+                metadata_str = parts[1].strip()
+                if not metadata_str:
+                    errors.append(f"PRD {prd_path} frontmatter为空")
+                    continue
 
-                # 如果PRD状态为draft或review，且tasks.json被修改，报错
+                metadata = yaml.safe_load(metadata_str)
+                if not isinstance(metadata, dict):
+                    errors.append(f"PRD {prd_path} frontmatter格式错误")
+                    continue
+
+                # 检查status字段
+                status = metadata.get("status", "").lower()
                 if status in ["draft", "review"]:
-                    msg1 = (
-                        f"Task-0检查失败: tasks.json被修改，"
-                        f"但PRD '{req_id}' 状态为 '{status}'，不允许parse\n"
-                        f"PRD路径: {prd_file}"
+                    req_id = metadata.get("req_id", prd_file_found.stem)
+                    title = metadata.get("title", "未命名PRD")
+                    error_msg = (
+                        f"PRD '{req_id}' ({title}) 状态为 '{status}'，"
+                        f"不允许修改tasks.json\n"
+                        f"  文件: {prd_path}"
                     )
-                    help_msg = (
-                        f"❌ 检测到tasks.json被修改，"
-                        f"但PRD '{req_id}' 的状态为 '{status}'，不允许parse\n\n"
-                        f"📋 解决方案：\n"
-                        f"  1. 如果PRD应该被parse，请将status改为 'approved'\n"
-                        f"  2. 如果PRD不应该被parse，请撤销tasks.json的修改\n\n"
-                        f"🔄 标准流程：\n"
-                        f"  1. PRD状态改为 'approved'\n"
-                        f"  2. 运行 task-master parse-prd <prd_file>\n"
-                        f"  3. PRD状态自动变为 'implementing'\n"
-                        f"  4. 开始开发\n\n"
-                        f"⚠️  无论通过命令行还是MCP工具调用parse-prd，"
-                        f"都必须确保PRD状态为approved"
-                    )
-                    return {
-                        "level": "error",
-                        "message": msg1,
-                        "file": ".taskmaster/tasks/tasks.json",
-                        "help": help_msg,
-                    }
+                    errors.append(error_msg)
+
             except Exception as e:
-                print(
-                    f"[Task0Checker] 检查PRD {prd_file} 状态失败: {e}",
-                    file=sys.stderr,
-                )
+                errors.append(f"读取PRD失败 {prd_path}: {e}")
                 continue
+
+        if errors:
+            return {
+                "level": "error",
+                "message": (
+                    "tasks.json被修改，但以下PRD状态不是'approved'：\n"
+                    + "\n".join(f"  • {e}" for e in errors)
+                    + "\n\n💡 请先将PRD状态改为'approved'后再修改tasks.json"
+                ),
+                "file": ".taskmaster/tasks/tasks.json",
+                "help": (
+                    "❌ 检测到tasks.json被修改，但相关PRD状态不是'approved'\n\n"
+                    "📋 解决方案：\n"
+                    "  1. 如果PRD应该被parse，请将status改为 'approved'\n"
+                    "  2. 如果PRD不应该被parse，请撤销tasks.json的修改\n\n"
+                    "🔄 标准流程：\n"
+                    "  1. PRD状态改为 'approved'\n"
+                    "  2. 运行 task-master parse-prd <prd_file>\n"
+                    "  3. PRD状态自动变为 'implementing'\n"
+                    "  4. 开始开发\n\n"
+                    "⚠️  无论通过命令行还是MCP工具调用parse-prd，"
+                    "都必须确保PRD状态为approved"
+                ),
+            }
 
         return None
 
