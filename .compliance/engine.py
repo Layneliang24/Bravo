@@ -89,55 +89,54 @@ class ComplianceEngine:
         # 动态导入检查器模块
         # 注意：.compliance目录名以点开头，Python默认不会将其识别为包
         # 因此直接使用文件系统导入方式（更可靠）
-        checker_files = {
-            "task0": "task0_checker.py",  # Task-0必须最先执行
-            "prd": "prd_checker.py",
-            "test": "test_checker.py",
-            "code": "code_checker.py",
-            "commit": "commit_checker.py",
-            "task": "task_checker.py",
-            "test_runner": "test_runner_checker.py",
-        }
+            checker_files = {
+                "task0": "task0_checker.py",  # Task-0必须最先执行
+                "prd": "prd_checker.py",
+                "test": "test_checker.py",
+                "code": "code_checker.py",
+                "commit": "commit_checker.py",
+                "task": "task_checker.py",
+                "test_runner": "test_runner_checker.py",
+            }
 
-        for rule_name, checker_file_name in checker_files.items():
-            if rule_name not in self.rules:
-                continue
+            for rule_name, checker_file_name in checker_files.items():
+                if rule_name not in self.rules:
+                    continue
 
-            checker_file_path = Path(checkers_dir) / checker_file_name
-            if not checker_file_path.exists():
-                print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
-                continue
+                checker_file_path = Path(checkers_dir) / checker_file_name
+                if not checker_file_path.exists():
+                    print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
+                    continue
 
-            try:
-                # 使用importlib.util直接从文件导入
-                spec = importlib.util.spec_from_file_location(
-                    f"checker_{rule_name}", checker_file_path
-                )
-                checker_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(checker_module)
+                try:
+                    # 使用importlib.util直接从文件导入
+                    spec = importlib.util.spec_from_file_location(
+                        f"checker_{rule_name}", checker_file_path
+                    )
+                    checker_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(checker_module)
 
-                # 查找Checker类
-                checker_class = None
-                for attr_name in dir(checker_module):
-                    attr = getattr(checker_module, attr_name)
-                    if (
-                        isinstance(attr, type)
-                        and attr_name.endswith("Checker")
-                        and attr_name != "BaseChecker"
-                    ):
-                        checker_class = attr
-                        break
+                    # 查找Checker类
+                    checker_class = None
+                    for attr_name in dir(checker_module):
+                        attr = getattr(checker_module, attr_name)
+                        if (
+                            isinstance(attr, type)
+                            and attr_name.endswith("Checker")
+                            and attr_name != "BaseChecker"
+                        ):
+                            checker_class = attr
+                            break
 
-                if checker_class:
-                    checkers[rule_name] = checker_class(self.rules[rule_name])
-                    print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
-                else:
-                    print(f"❌ 加载检查器失败 {rule_name}: 未找到Checker类", file=sys.stderr)
-            except Exception as e:
-                print(f"❌ 加载检查器失败 {rule_name}: {e}", file=sys.stderr)
-                import traceback
-
-                traceback.print_exc()
+                    if checker_class:
+                        checkers[rule_name] = checker_class(self.rules[rule_name])
+                        print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
+                    else:
+                        print(f"❌ 加载检查器失败 {rule_name}: 未找到Checker类", file=sys.stderr)
+                except Exception as e:
+                    print(f"❌ 加载检查器失败 {rule_name}: {e}", file=sys.stderr)
+                    import traceback
+                    traceback.print_exc()
 
         return checkers
 

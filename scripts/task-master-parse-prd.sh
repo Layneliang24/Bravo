@@ -47,8 +47,27 @@ echo ""
 # 步骤2：验证PRD状态
 echo -e "${YELLOW}🔍 [步骤2/4] 验证PRD状态...${NC}"
 cd "$PROJECT_ROOT"
-python scripts/task-master/prd_status_validator.py "$PRD_FILE"
-VALIDATOR_EXIT_CODE=$?
+
+# 在Docker容器内执行验证器（避免宿主机Python环境问题）
+if command -v docker-compose >/dev/null 2>&1; then
+    # 转换路径为容器内路径
+    if [[ "$PRD_FILE" == docs/* ]]; then
+        CONTAINER_PRD_PATH="/app/$PRD_FILE"
+    elif [[ "$PRD_FILE" == .taskmaster/* ]]; then
+        CONTAINER_PRD_PATH="/app/$PRD_FILE"
+    else
+        CONTAINER_PRD_PATH="/app/$PRD_FILE"
+    fi
+
+    docker-compose exec -T backend sh -c \
+        "cd /app && python project_scripts/task-master/prd_status_validator.py $CONTAINER_PRD_PATH" \
+        2>&1 | grep -v "WARNING:.*docker-compose" || true
+    VALIDATOR_EXIT_CODE=${PIPESTATUS[0]}
+else
+    # 回退到宿主机执行（不推荐）
+    python scripts/task-master/prd_status_validator.py "$PRD_FILE" 2>&1
+    VALIDATOR_EXIT_CODE=$?
+fi
 
 if [ $VALIDATOR_EXIT_CODE -ne 0 ]; then
     echo ""
@@ -79,23 +98,52 @@ echo ""
 echo -e "${GREEN}✅ parse-prd执行成功${NC}"
 echo ""
 
-# 步骤4：Parse成功后，自动更新PRD状态为implementing
-echo -e "${YELLOW}🔄 [步骤4/4] 更新PRD状态...${NC}"
-python -c "
-import sys
-sys.path.insert(0, '$PROJECT_ROOT/scripts')
-from task_master.prd_status_validator import PRDStatusValidator
+# 步骤4：记录PRD路径到tasks.json的metadata
+echo -e "${YELLOW}📝 [步骤4/5] 记录PRD路径到tasks.json metadata...${NC}"
 
-validator = PRDStatusValidator('$PRD_FILE')
-success = validator.update_status_to_implementing()
-sys.exit(0 if success else 1)
-"
-UPDATE_EXIT_CODE=$?
+# 提取tag参数（如果有）
+TAG_ARG=""
+APPEND_ARG=""
+for arg in "$@"; do
+    if [[ "$arg" == --tag=* ]]; then
+        TAG_ARG="${arg#--tag=}"
+    elif [[ "$arg" == "--append" ]]; then
+        APPEND_ARG="true"
+    fi
+done
+
+# 如果没有指定tag，使用master
+if [ -z "$TAG_ARG" ]; then
+    TAG_ARG="master"
+fi
+
+# 调用Python脚本更新metadata
+docker-compose exec -T backend sh -c \
+    "cd /app && python project_scripts/task-master/update_tasks_metadata.py \
+    --tag='$TAG_ARG' \
+    --prd-path='$CONTAINER_PRD_PATH' \
+    --append='$APPEND_ARG'" \
+    2>&1 | grep -v "WARNING:.*docker-compose" || true
+METADATA_EXIT_CODE=${PIPESTATUS[0]}
+
+if [ $METADATA_EXIT_CODE -eq 0 ]; then
+    echo -e "${GREEN}✅ PRD路径已记录到metadata${NC}"
+else
+    echo -e "${YELLOW}⚠️  metadata更新失败（非阻塞）${NC}"
+fi
+
+# 步骤5：自动更新PRD状态为implementing
+echo ""
+echo -e "${YELLOW}🔄 [步骤5/5] 更新PRD状态...${NC}"
+docker-compose exec -T backend sh -c \
+    "cd /app && python project_scripts/task-master/prd_status_validator.py $CONTAINER_PRD_PATH --update-status" \
+    2>&1 | grep -v "WARNING:.*docker-compose" || true
+UPDATE_EXIT_CODE=${PIPESTATUS[0]}
 
 if [ $UPDATE_EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✅ PRD状态已更新为implementing${NC}"
 else
-    echo -e "${YELLOW}⚠️  PRD状态更新失败（可能是快速需求文件，无需更新）${NC}"
+    echo -e "${YELLOW}⚠️  PRD状态更新失败（非阻塞）${NC}"
 fi
 
 echo ""

@@ -44,11 +44,18 @@ class Task0Checker:
         """
         results = []
 
+        # ⭐ 新增：检查tasks.json文件，验证对应的PRD状态
+        tasks_json_files = [f for f in files if ".taskmaster/tasks/tasks.json" in f]
+        if tasks_json_files:
+            tasks_json_result = self._check_tasks_json_prd_status(files)
+            if tasks_json_result:
+                results.append(tasks_json_result)
+
         # 只检查代码文件（排除PRD、测试、配置文件）
         code_files = self._filter_code_files(files)
         print(f"[Task0Checker DEBUG] 过滤后的代码文件: {code_files}", file=sys.stderr)
-        if not code_files:
-            print("[Task0Checker DEBUG] 没有代码文件，跳过检查", file=sys.stderr)
+        if not code_files and not tasks_json_files:
+            print("[Task0Checker DEBUG] 没有代码文件或tasks.json，跳过检查", file=sys.stderr)
             return results
 
         # 提取所有相关的REQ-ID（只从代码文件中提取）
@@ -983,6 +990,112 @@ class Task0Checker:
                     "  - archived: 已归档"
                 ),
             }
+
+    def _check_tasks_json_prd_status(self, files: List[str] = None) -> Dict[str, Any]:
+        """
+        检查tasks.json对应的PRD状态（pre-commit阶段）
+
+        无论通过命令行还是MCP工具调用parse-prd，最终都会生成tasks.json
+        在pre-commit阶段检查所有标准PRD目录下的PRD状态，确保只有approved状态的PRD才能被parse
+
+        策略：
+        1. 检查tasks.json是否在files列表中（被修改）
+        2. 如果是，扫描所有标准PRD目录下的PRD文件
+        3. 如果发现任何PRD状态为draft/review，且tasks.json被修改，报错
+
+        Args:
+            files: 待检查的文件列表（从check()方法传入）
+
+        Returns:
+            检查结果，如果有问题则返回错误信息
+        """
+        # 检查tasks.json是否在files列表中（被修改）
+        if files:
+            tasks_json_staged = any(".taskmaster/tasks/tasks.json" in f for f in files)
+        else:
+            # 如果没有传入files，尝试从git暂存区获取（兼容性）
+            staged_files = self._get_staged_files()
+            tasks_json_staged = any(
+                ".taskmaster/tasks/tasks.json" in f for f in staged_files
+            )
+
+        # 如果tasks.json没有被修改，跳过检查
+        if not tasks_json_staged:
+            return None
+
+        # 扫描所有标准PRD目录下的PRD文件
+        prd_base_paths = [
+            Path("docs/00_product/requirements"),
+            Path("/app/docs/00_product/requirements"),  # Docker容器内路径
+        ]
+
+        prd_base = None
+        for base_path in prd_base_paths:
+            if base_path.exists():
+                prd_base = base_path
+                break
+
+        if not prd_base:
+            return None
+
+        # 遍历所有PRD目录
+        for prd_dir in prd_base.iterdir():
+            if not prd_dir.is_dir():
+                continue
+
+            # 查找PRD文件
+            prd_file = prd_dir / f"{prd_dir.name}.md"
+            if not prd_file.exists():
+                continue
+
+            try:
+                content = prd_file.read_text(encoding="utf-8")
+                if not content.startswith("---"):
+                    continue
+
+                parts = content.split("---", 2)
+                if len(parts) < 3:
+                    continue
+
+                metadata = yaml.safe_load(parts[1])
+                status = metadata.get("status", "").lower()
+                req_id = metadata.get("req_id", prd_dir.name)
+
+                # 如果PRD状态为draft或review，且tasks.json被修改，报错
+                if status in ["draft", "review"]:
+                    msg1 = (
+                        f"Task-0检查失败: tasks.json被修改，"
+                        f"但PRD '{req_id}' 状态为 '{status}'，不允许parse\n"
+                        f"PRD路径: {prd_file}"
+                    )
+                    help_msg = (
+                        f"❌ 检测到tasks.json被修改，"
+                        f"但PRD '{req_id}' 的状态为 '{status}'，不允许parse\n\n"
+                        f"📋 解决方案：\n"
+                        f"  1. 如果PRD应该被parse，请将status改为 'approved'\n"
+                        f"  2. 如果PRD不应该被parse，请撤销tasks.json的修改\n\n"
+                        f"🔄 标准流程：\n"
+                        f"  1. PRD状态改为 'approved'\n"
+                        f"  2. 运行 task-master parse-prd <prd_file>\n"
+                        f"  3. PRD状态自动变为 'implementing'\n"
+                        f"  4. 开始开发\n\n"
+                        f"⚠️  无论通过命令行还是MCP工具调用parse-prd，"
+                        f"都必须确保PRD状态为approved"
+                    )
+                    return {
+                        "level": "error",
+                        "message": msg1,
+                        "file": ".taskmaster/tasks/tasks.json",
+                        "help": help_msg,
+                    }
+            except Exception as e:
+                print(
+                    f"[Task0Checker] 检查PRD {prd_file} 状态失败: {e}",
+                    file=sys.stderr,
+                )
+                continue
+
+        return None
 
     def _get_staged_files(self) -> List[str]:
         """

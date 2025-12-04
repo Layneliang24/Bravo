@@ -2,120 +2,149 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
-        "title": "项目初始化与环境配置",
-        "description": "设置项目基础结构与开发环境，确保API开发可正常进行。",
-        "details": "1. 使用最新稳定版本的Node.js或Python（取决于团队技术栈）初始化项目。\n2. 建立项目目录结构，例如：src/、tests/、config/。\n3. 安装必要的依赖库（如Express、Flask或其他Web框架）。\n4. 配置代码格式化工具（Prettier/Black）、代码检查工具（ESLint/pylint）。",
-        "testStrategy": "检查项目可以启动本地开发服务器且无错误；运行lint和formatter确保代码规范通过。",
-        "priority": "medium",
+        "id": 11,
+        "title": "数据库模型扩展与迁移",
+        "description": "扩展User模型字段，创建EmailVerification与PasswordReset模型，并配置索引。",
+        "details": "在`backend/apps/users/models.py`中添加`is_email_verified`、`email_verified_at`、`failed_login_attempts`、`locked_until`字段。创建`EmailVerification`和`PasswordReset`模型，设置外键、唯一约束及索引。使用Django迁移命令生成并应用迁移文件。\n```\nclass EmailVerification(models.Model):\n    user = models.ForeignKey(User,...)\n    token = models.CharField(..., unique=True)\n    expires_at = models.DateTimeField(...)\n```\n",
+        "testStrategy": "编写模型单元测试，验证字段存在、默认值正确、索引创建成功，在测试数据库运行迁移并检查结构是否符合设计。",
+        "priority": "high",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 2,
-        "title": "创建基础Web服务框架",
-        "description": "创建可运行的Web服务空壳应用程序。",
-        "details": "1. 在app入口文件（如app.js或main.py）启动Web服务。\n2. 配置监听端口（例如3000或8000）。\n3. 确保启动信息正确输出（如“Server running on...”）。\n伪代码示例（Node.js + Express）：\n```js\nconst express = require('express');\nconst app = express();\napp.listen(3000, () => console.log('Server running on port 3000')); \n```",
-        "testStrategy": "运行服务并通过浏览器或curl访问根路径，确认返回值及服务器正常启动。",
-        "priority": "medium",
-        "dependencies": [1],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 3,
-        "title": "创建GET接口`/api/hello`",
-        "description": "实现一个GET请求接口以返回Hello World消息。",
-        "details": "1. 在路由中定义`/api/hello` GET路径。\n2. 在响应中返回JSON：`{\"message\": \"Hello, World!\"}`。\n3. 确保Content-Type设置为`application/json`。\n伪代码：\n```js\napp.get('/api/hello', (req, res) => {\n  res.json({ message: 'Hello, World!' });\n});\n```",
-        "testStrategy": "使用curl或Postman访问`/api/hello`，验证HTTP状态码200且返回JSON字段message值正确。",
+        "id": 12,
+        "title": "验证码生成与验证模块开发",
+        "description": "实现图形验证码生成、存储至Redis以及验证逻辑。",
+        "details": "使用Pillow生成4位字母数字验证码，添加干扰线与噪点，将结果Base64编码后返回。将验证码答案存储到Redis，Key格式`captcha:{session_id}`，设置5分钟过期。在`backend/apps/users/utils.py`中实现`generate_captcha()`与`validate_captcha()`函数。",
+        "testStrategy": "编写`test_captcha.py`单元测试，验证验证码生成的多样性、Redis存储与过期时间准确性、输入验证正确与错误情况。",
         "priority": "high",
-        "dependencies": [2],
+        "dependencies": [
+          11
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 4,
-        "title": "统一错误处理机制",
-        "description": "为API添加统一错误处理，中间件保证返回格式一致。",
-        "details": "1. 创建错误处理中间件，捕获未处理异常并返回JSON格式错误信息。\n2. 设置标准错误响应结构（如{error: 'Error message'}）。\n3. 接入Express的`app.use`或Flask的全局异常钩子。",
-        "testStrategy": "模拟抛出异常，验证返回格式是否按约定，HTTP状态码正确；确保不会泄漏堆栈信息给客户端。",
-        "priority": "medium",
-        "dependencies": [2],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 5,
-        "title": "添加CORS支持",
-        "description": "根据需求，在API上添加跨域访问支持。",
-        "details": "1. 安装并使用`cors`中间件（Node.js），或Flask-CORS。\n2. 允许特定域或允许所有域（开发调试阶段可用全部）。\n3. 配置支持GET请求。",
-        "testStrategy": "在不同域的前端调用API，确认浏览器无跨域错误且响应正常。",
-        "priority": "low",
-        "dependencies": [2],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 6,
-        "title": "编写单元测试用例",
-        "description": "为`/api/hello`接口编写单元测试验证功能是否正确。",
-        "details": "1. 使用Jest、Mocha或Pytest等测试框架编写测试用例。\n2. 测试内容包括HTTP状态码、返回值格式及message内容。\nNode.js Jest示例：\n```js\nconst request = require('supertest');\nconst app = require('../src/app');\n\ntest('GET /api/hello returns Hello World', async () => {\n  const res = await request(app).get('/api/hello');\n  expect(res.statusCode).toBe(200);\n  expect(res.body.message).toBe('Hello, World!');\n});\n```",
-        "testStrategy": "运行单元测试，确保全部测试用例通过且覆盖率符合标准。",
+        "id": 13,
+        "title": "用户注册API实现",
+        "description": "实现包含邮箱注册、密码强度校验、验证码验证及发送邮箱验证邮件功能。",
+        "details": "在`backend/apps/users/views.py`添加`RegisterView`，使用DRF序列化器验证邮箱、密码，并调用验证码验证接口。密码强度判定要求至少8位且包含字母数字。成功注册后创建EmailVerification记录，并调用Celery任务发送验证邮件。",
+        "testStrategy": "通过`test_auth_api.py`发起注册请求，验证成功返回及错误处理（弱密码、重复邮箱、验证码错误）。检查EmailVerification生成记录与邮件发送队列。",
         "priority": "high",
-        "dependencies": [3],
+        "dependencies": [
+          12
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 7,
-        "title": "集成测试配置",
-        "description": "搭建端到端测试环境，确保整个API运行逻辑正确。",
-        "details": "1. 启动服务器在测试环境运行。\n2. 使用Supertest或pytest-flask发送真实HTTP请求。\n3. 测试包括启动、接口调用、错误处理。\n4. 可结合CI持续集成流水线运行。",
-        "testStrategy": "运行集成测试脚本，确认所有功能流程与依赖条件执行正确；接口返回值满足验收标准。",
+        "id": 14,
+        "title": "用户登录API实现",
+        "description": "实现邮箱+密码登录、验证码校验、失败次数限制及账户锁定机制。",
+        "details": "创建`LoginView`，校验邮箱密码并调用`validate_captcha()`。登录失败次数通过`failed_login_attempts`字段记录，超过5次更新`locked_until`，10分钟后解锁。登录成功生成JWT，支持`remember_me`延长Refresh Token有效期。",
+        "testStrategy": "编写集成测试模拟正确登录、连续错误5次锁定场景、验证码错误提示，验证JWT生成与失效时间符合设计。",
+        "priority": "high",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "邮箱验证流程实现",
+        "description": "实现发送验证邮件、验证链接处理及状态更新逻辑。",
+        "details": "编写`SendEmailVerificationView`与`VerifyEmailView`，前者生成新token并通过Celery发送邮件，后者校验token有效期与用户匹配，更新`is_email_verified`及`email_verified_at`字段。",
+        "testStrategy": "编写单元与集成测试，验证发送的邮件内容、token有效期验证、重复发送限制，确认验证成功后用户状态更新。",
         "priority": "medium",
-        "dependencies": [6],
+        "dependencies": [
+          13
+        ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 8,
-        "title": "配置持续集成（CI）",
-        "description": "在GitHub Actions或GitLab CI中自动运行测试和代码检查。",
-        "details": "1. 使用yml文件配置CI工作流程。\n2. 定义步骤：安装依赖、运行lint、运行测试。\n3. 配置在pull request或push时自动触发。",
-        "testStrategy": "提交代码至远程仓库，确认CI任务自动运行并通过所有步骤。",
-        "priority": "low",
-        "dependencies": [6, 7],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 9,
-        "title": "接口文档编写",
-        "description": "为Hello World API编写Swagger或OpenAPI接口文档。",
-        "details": "1. 安装Swagger UI依赖。\n2. 编写OpenAPI规范文件，描述路径、方法、响应示例。\n3. 集成至项目并可通过浏览器访问文档。",
-        "testStrategy": "在浏览器访问/swagger或文档路径，检查文档内容是否与接口实现一致。",
-        "priority": "low",
-        "dependencies": [3],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 10,
-        "title": "部署与验收",
-        "description": "将API部署至测试或生产环境并进行最终验收。",
-        "details": "1. 选择部署方式（Docker、云平台如Heroku、AWS等）。\n2. 部署并启动服务，配置环境变量。\n3. 在目标环境运行集成测试与单元测试。\n4. 确认接口满足所有验收标准。",
-        "testStrategy": "在线访问部署地址的`/api/hello`接口，验证返回内容和状态码，并运行部署环境下的所有测试确保通过。",
+        "id": 16,
+        "title": "密码找回与重置功能实现",
+        "description": "实现发送密码重置邮件与在链接中完成重置。",
+        "details": "创建`SendPasswordResetView`与`ResetPasswordView`，发送邮件前检查邮箱存在，生成`PasswordReset`记录和token，链接有效期1小时。重置时验证token未使用且未过期，更新用户密码并使token失效。",
+        "testStrategy": "测试邮箱不存在时错误处理、重复发送限制、合法token重置密码成功及无效token错误输出。",
         "priority": "medium",
-        "dependencies": [7, 8, 9],
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "前端登录/注册/密码找回表单开发",
+        "description": "用Vue3 + Pinia实现登录、注册、密码找回表单及状态管理。",
+        "details": "分别开发`LoginForm.vue`、`RegisterForm.vue`、`PasswordResetForm.vue`组件，使用`FloatingInput.vue`实现悬浮式输入框动画，集成`Captcha.vue`显示与刷新验证码，通过Pinia store调用后端API。",
+        "testStrategy": "使用组件测试验证表单渲染、动态交互（悬浮标签、密码强度条）、API调用成功与错误提示展示；E2E模拟完整流程。",
+        "priority": "medium",
+        "dependencies": [
+          13,
+          14,
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "验证码前端组件实现",
+        "description": "实现验证码图片显示、刷新功能及输入框交互。",
+        "details": "开发`Captcha.vue`，接收`captcha_id`和图片Base64，提供刷新按钮调用`/api/auth/captcha/refresh/`，输入框绑定用户输入，在父组件调用API时传递`captcha_id`与输入值。",
+        "testStrategy": "组件测试刷新按钮触发请求、验证码图片更新、输入框校验，E2E验证验证码交互与错误提示是否正确。",
+        "priority": "low",
+        "dependencies": [
+          12,
+          17
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "响应式UI与品牌样式实现",
+        "description": "应用Tailwind CSS及自定义样式实现品牌配色和响应式布局。",
+        "details": "在`LoginView.vue`等页面设置深蓝与金色主色调，背景渐变设计，移动端单列布局与桌面端左右分栏。在Tailwind自定义配置中添加品牌色，并编写CSS动画兼容GSAP标签悬浮效果。",
+        "testStrategy": "人工UI验收检查移动、桌面端是否符合设计稿，CSS单元测试断言关键类存在，E2E测试不同屏幕宽度下布局正常。",
+        "priority": "low",
+        "dependencies": [
+          17
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "安全加固与测试覆盖",
+        "description": "完善JWT安全策略、验证码策略、邮件发送重试机制并确保测试通过率≥80%。",
+        "details": "配置SimpleJWT令牌过期管理，考虑HTTP-only Cookie存储；在验证码验证逻辑中限制尝试次数；Celery邮件发送添加重试与备用服务；运行单元、集成、E2E测试收集覆盖率并优化不足用例。",
+        "testStrategy": "运行完整测试套件并检查安全功能（HTTP-only cookie、验证码尝试限制、邮件重试），使用覆盖率工具生成报告，确保满足验收标准。",
+        "priority": "medium",
+        "dependencies": [
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
         "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-12-02T13:25:13.322Z",
-      "updated": "2025-12-02T13:25:13.322Z",
-      "description": "Tasks for master context"
+      "updated": "2025-12-04T14:23:56.465Z",
+      "description": "Tasks for master context",
+      "source_prd_path": "docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login.md",
+      "source_prd_paths": [
+        "docs/00_product/requirements/REQ-2025-EXAMPLE-demo/REQ-2025-EXAMPLE-demo.md"
+      ]
     }
   }
 }
