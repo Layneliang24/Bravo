@@ -256,14 +256,44 @@ class ComplianceEngine:
                 file_path_str = str(file_path_abs.resolve())
 
                 # 执行检查（使用解析后的绝对路径）
-                passed, errors, warnings = checker.check(file_path_str)
+                # 支持两种返回值格式：
+                # 1. (passed, errors, warnings) - 传统格式
+                # 2. List[Dict[str, Any]] - Task0Checker格式
+                check_result = checker.check(file_path_str)
 
-                if not passed:
+                # 判断返回值类型
+                if isinstance(check_result, tuple) and len(check_result) == 3:
+                    # 传统格式：(passed, errors, warnings)
+                    passed, errors, warnings = check_result
+                    if not passed:
+                        result["status"] = "failed"
+                        result["errors"].extend(errors)
+
+                    if warnings:
+                        result["warnings"].extend(warnings)
+                elif isinstance(check_result, list):
+                    # Task0Checker格式：List[Dict[str, Any]]
+                    has_error = False
+                    for item in check_result:
+                        if not isinstance(item, dict):
+                            continue
+
+                        level = item.get("level", "info")
+                        message = item.get("message", "")
+                        file_name = item.get("file", file_path)
+
+                        if level == "error":
+                            has_error = True
+                            result["errors"].append(f"{file_name}: {message}")
+                        elif level == "warning":
+                            result["warnings"].append(f"{file_name}: {message}")
+
+                    if has_error:
+                        result["status"] = "failed"
+                else:
+                    # 未知格式，报错
                     result["status"] = "failed"
-                    result["errors"].extend(errors)
-
-                if warnings:
-                    result["warnings"].extend(warnings)
+                    result["errors"].append(f"检查器返回了未知格式: {type(check_result)}")
 
             except Exception as e:
                 result["status"] = "failed"
