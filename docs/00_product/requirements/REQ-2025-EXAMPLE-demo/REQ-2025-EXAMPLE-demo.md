@@ -2,7 +2,7 @@
 req_id: REQ-2025-EXAMPLE-demo
 title: V4架构示例需求
 version: "1.0"
-status: draft
+status: approved
 priority: low
 type: feature
 created_at: 2025-11-30T10:00:00Z

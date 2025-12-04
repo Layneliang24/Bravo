@@ -7,4 +7,3 @@ WRAPPER="$SCRIPT_DIR/scripts/task-master-wrapper.sh"
 
 # 使用包装脚本
 exec "$WRAPPER" "$@"
-

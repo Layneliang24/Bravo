@@ -13,7 +13,8 @@
         "SILICONFLOW_API_KEY": "sk-qcxlwgdycvwptcaipxbiomxxfdsalmtiwvktcravdcnfauit",
         "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
         "OPENAI_API_KEY": "sk-chhLY3oOJJIWKM3dDaIIrhrFpX7uOrmT2h8jzvNt2YrtEwzV",
-        "OPENAI_BASE_URL": "https://api.chenmoai.cn/v1"
+        "OPENAI_BASE_URL": "https://api.chenmoai.cn/v1",
+        "TASK_MASTER_WRAPPER": "${workspaceFolder}/scripts/task-master-wrapper.sh"
       }
     }
   },

@@ -86,9 +86,9 @@ class ComplianceEngine:
             print(f"⚠️ 检查器目录不存在: {checkers_dir}", file=sys.stderr)
             return checkers
 
-        # 动态导入检查器模块
-        # 注意：.compliance目录名以点开头，Python默认不会将其识别为包
-        # 因此直接使用文件系统导入方式（更可靠）
+            # 动态导入检查器模块
+            # 注意：.compliance目录名以点开头，Python默认不会将其识别为包
+            # 因此直接使用文件系统导入方式（更可靠）
             checker_files = {
                 "task0": "task0_checker.py",  # Task-0必须最先执行
                 "prd": "prd_checker.py",
@@ -136,6 +136,7 @@ class ComplianceEngine:
                 except Exception as e:
                     print(f"❌ 加载检查器失败 {rule_name}: {e}", file=sys.stderr)
                     import traceback
+
                     traceback.print_exc()
 
         return checkers
