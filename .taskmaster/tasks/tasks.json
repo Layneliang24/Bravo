@@ -19,7 +19,9 @@
         "details": "使用Pillow生成4位字母数字验证码，添加干扰线与噪点，将结果Base64编码后返回。将验证码答案存储到Redis，Key格式`captcha:{session_id}`，设置5分钟过期。在`backend/apps/users/utils.py`中实现`generate_captcha()`与`validate_captcha()`函数。",
         "testStrategy": "编写`test_captcha.py`单元测试，验证验证码生成的多样性、Redis存储与过期时间准确性、输入验证正确与错误情况。",
         "priority": "high",
-        "dependencies": [11],
+        "dependencies": [
+          11
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -30,7 +32,9 @@
         "details": "在`backend/apps/users/views.py`添加`RegisterView`，使用DRF序列化器验证邮箱、密码，并调用验证码验证接口。密码强度判定要求至少8位且包含字母数字。成功注册后创建EmailVerification记录，并调用Celery任务发送验证邮件。",
         "testStrategy": "通过`test_auth_api.py`发起注册请求，验证成功返回及错误处理（弱密码、重复邮箱、验证码错误）。检查EmailVerification生成记录与邮件发送队列。",
         "priority": "high",
-        "dependencies": [12],
+        "dependencies": [
+          12
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -41,7 +45,9 @@
         "details": "创建`LoginView`，校验邮箱密码并调用`validate_captcha()`。登录失败次数通过`failed_login_attempts`字段记录，超过5次更新`locked_until`，10分钟后解锁。登录成功生成JWT，支持`remember_me`延长Refresh Token有效期。",
         "testStrategy": "编写集成测试模拟正确登录、连续错误5次锁定场景、验证码错误提示，验证JWT生成与失效时间符合设计。",
         "priority": "high",
-        "dependencies": [12],
+        "dependencies": [
+          12
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -52,7 +58,9 @@
         "details": "编写`SendEmailVerificationView`与`VerifyEmailView`，前者生成新token并通过Celery发送邮件，后者校验token有效期与用户匹配，更新`is_email_verified`及`email_verified_at`字段。",
         "testStrategy": "编写单元与集成测试，验证发送的邮件内容、token有效期验证、重复发送限制，确认验证成功后用户状态更新。",
         "priority": "medium",
-        "dependencies": [13],
+        "dependencies": [
+          13
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -63,7 +71,9 @@
         "details": "创建`SendPasswordResetView`与`ResetPasswordView`，发送邮件前检查邮箱存在，生成`PasswordReset`记录和token，链接有效期1小时。重置时验证token未使用且未过期，更新用户密码并使token失效。",
         "testStrategy": "测试邮箱不存在时错误处理、重复发送限制、合法token重置密码成功及无效token错误输出。",
         "priority": "medium",
-        "dependencies": [12],
+        "dependencies": [
+          12
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -74,7 +84,11 @@
         "details": "分别开发`LoginForm.vue`、`RegisterForm.vue`、`PasswordResetForm.vue`组件，使用`FloatingInput.vue`实现悬浮式输入框动画，集成`Captcha.vue`显示与刷新验证码，通过Pinia store调用后端API。",
         "testStrategy": "使用组件测试验证表单渲染、动态交互（悬浮标签、密码强度条）、API调用成功与错误提示展示；E2E模拟完整流程。",
         "priority": "medium",
-        "dependencies": [13, 14, 16],
+        "dependencies": [
+          13,
+          14,
+          16
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -85,7 +99,10 @@
         "details": "开发`Captcha.vue`，接收`captcha_id`和图片Base64，提供刷新按钮调用`/api/auth/captcha/refresh/`，输入框绑定用户输入，在父组件调用API时传递`captcha_id`与输入值。",
         "testStrategy": "组件测试刷新按钮触发请求、验证码图片更新、输入框校验，E2E验证验证码交互与错误提示是否正确。",
         "priority": "low",
-        "dependencies": [12, 17],
+        "dependencies": [
+          12,
+          17
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -96,7 +113,9 @@
         "details": "在`LoginView.vue`等页面设置深蓝与金色主色调，背景渐变设计，移动端单列布局与桌面端左右分栏。在Tailwind自定义配置中添加品牌色，并编写CSS动画兼容GSAP标签悬浮效果。",
         "testStrategy": "人工UI验收检查移动、桌面端是否符合设计稿，CSS单元测试断言关键类存在，E2E测试不同屏幕宽度下布局正常。",
         "priority": "low",
-        "dependencies": [17],
+        "dependencies": [
+          17
+        ],
         "status": "pending",
         "subtasks": []
       },
@@ -107,7 +126,13 @@
         "details": "配置SimpleJWT令牌过期管理，考虑HTTP-only Cookie存储；在验证码验证逻辑中限制尝试次数；Celery邮件发送添加重试与备用服务；运行单元、集成、E2E测试收集覆盖率并优化不足用例。",
         "testStrategy": "运行完整测试套件并检查安全功能（HTTP-only cookie、验证码尝试限制、邮件重试），使用覆盖率工具生成报告，确保满足验收标准。",
         "priority": "medium",
-        "dependencies": [12, 13, 14, 15, 16],
+        "dependencies": [
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
         "status": "pending",
         "subtasks": []
       }
@@ -119,7 +144,8 @@
       "source_prd_path": "docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login.md",
       "source_prd_paths": [
         "docs/00_product/requirements/REQ-2025-EXAMPLE-demo/REQ-2025-EXAMPLE-demo.md"
-      ]
+      ],
+      "test_note": "pre-commit拦截测试 - Thu, Dec  4, 2025 11:51:18 PM"
     }
   }
 }
