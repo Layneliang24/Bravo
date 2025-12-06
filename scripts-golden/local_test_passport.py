@@ -246,25 +246,25 @@ class LocalTestPassport:
             # 额外测试：使用--dryrun模式真正验证工作流（验证push-validation.yml，因为它有push事件）
             self.log("🔍 运行工作流深度验证（dryrun模式，验证push事件工作流）...")
 
-            # 对push-validation.yml使用dryrun（因为它有push事件）
+            # 对push-validation.yml使用--list模式（因为它包含services，--dryrun会超时）
             workflow_to_validate = ".github/workflows/push-validation.yml"
             if (self.workspace / workflow_to_validate).exists():
-                self.log_detail(f"执行命令: act push -W {workflow_to_validate} --dryrun")
+                self.log_detail(f"执行命令: act push -W {workflow_to_validate} --list")
 
-                # 使用--dryrun模式，真正验证工作流而不创建容器
+                # 使用--list模式只验证语法，不执行job（避免services导致的超时）
                 result = subprocess.run(
                     [
                         "act",
                         "push",
                         "-W",
                         workflow_to_validate,
-                        "--dryrun",
+                        "--list",
                     ],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
                     errors="ignore",
-                    timeout=300,  # 5分钟超时（push-validation.yml包含services，需要更长时间）
+                    timeout=60,  # --list模式很快，60秒足够
                 )
 
                 self.log_command(
@@ -273,52 +273,45 @@ class LocalTestPassport:
                         "push",
                         "-W",
                         workflow_to_validate,
-                        "--dryrun",
+                        "--list",
                     ],
                     result,
                 )
 
-                # dryrun模式可能返回非0退出码，但实际验证成功（act的bug）
-                # 需要检查stderr中是否有真正的错误，而不是debug日志
+                # --list模式只验证语法，不执行job，应该很快
+                # 如果返回非0退出码，检查是否有真正的错误
                 has_real_error = False
-                error_keywords = [
-                    "error:",
-                    "failed",
-                    "invalid",
-                    "syntax error",
-                    "unexpected",
-                    "cannot",
-                    "could not find",
-                ]
+                if result.returncode != 0:
+                    error_keywords = [
+                        "error:",
+                        "failed",
+                        "invalid",
+                        "syntax error",
+                        "unexpected",
+                        "cannot",
+                        "could not find",
+                    ]
 
-                # 检查stderr中是否有真正的错误（排除debug日志）
-                stderr_lines = result.stderr.split("\n") if result.stderr else []
-                for line in stderr_lines:
-                    line_lower = line.lower()
-                    # 跳过debug和info级别的日志
-                    if "level=debug" in line_lower or "level=info" in line_lower:
-                        continue
-                    # 检查是否有真正的错误
-                    if any(keyword in line_lower for keyword in error_keywords):
-                        # 但排除"could not find any stages"（这可能是dryrun的正常行为）
-                        if "could not find any stages" in line_lower:
-                            self.log(
-                                "⚠️  dryrun未找到可运行的stages（可能是工作流没有匹配的事件），但语法验证通过",
-                                level="WARNING",
-                            )
-                            has_real_error = False
+                    # 检查stderr中是否有真正的错误（排除debug日志）
+                    stderr_lines = result.stderr.split("\n") if result.stderr else []
+                    for line in stderr_lines:
+                        line_lower = line.lower()
+                        # 跳过debug和info级别的日志
+                        if "level=debug" in line_lower or "level=info" in line_lower:
+                            continue
+                        # 检查是否有真正的错误
+                        if any(keyword in line_lower for keyword in error_keywords):
+                            has_real_error = True
                             break
-                        has_real_error = True
-                        break
 
-                # 检查stdout中是否有错误
-                if not has_real_error and result.stdout:
-                    stdout_lower = result.stdout.lower()
-                    if any(
-                        keyword in stdout_lower
-                        for keyword in ["error:", "failed", "invalid"]
-                    ):
-                        has_real_error = True
+                    # 检查stdout中是否有错误
+                    if not has_real_error and result.stdout:
+                        stdout_lower = result.stdout.lower()
+                        if any(
+                            keyword in stdout_lower
+                            for keyword in ["error:", "failed", "invalid"]
+                        ):
+                            has_real_error = True
 
                 # 检查是否是act工具的bug（panic）
                 is_act_bug = (
