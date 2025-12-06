@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# REQ-ID: REQ-2025-INTERNAL-TEST
+# REQ-ID: REQ-2025-002-internal-test
 """简单的集成测试"""
 
 import pytest

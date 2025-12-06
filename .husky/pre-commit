@@ -72,8 +72,8 @@ if [ -f ".compliance/runner.py" ]; then
 
     if [ "$BACKEND_RUNNING" = true ]; then
         echo "[INFO] 在Docker容器内执行合规检查..."
-        # 在宿主机获取暂存文件列表
-        STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | tr '\n' ' ')
+        # 获取暂存文件并转换路径：backend/xxx -> xxx
+        STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | sed 's|^backend/||' | tr '\n' ' ')
         if [ -z "$STAGED_FILES" ]; then
             echo "ℹ️ 没有暂存的文件，跳过合规检查"
             echo "✅ V4合规引擎检查通过"
