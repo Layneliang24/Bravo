@@ -56,6 +56,11 @@ services:
       - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./backend:/app
+      - ./.compliance:/app/.compliance:ro # 只读挂载合规引擎（V4架构）
+      - ./.git:/app/.git:ro # 只读挂载git仓库（V4合规引擎需要）
+      - ./docs:/app/docs:ro # 只读挂载docs目录（V4合规引擎需要访问PRD文件）
+      - ./scripts:/app/project_scripts:ro # 只读挂载scripts目录（PRD状态验证器需要）
+      - ./.taskmaster:/app/.taskmaster # 挂载taskmaster目录（metadata更新需要）
       - backend_logs:/app/logs
       - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:

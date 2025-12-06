@@ -1,0 +1,59 @@
+# 测试运行器规则
+# 在提交前运行测试，确保TDD红绿循环
+
+name: test_runner
+description: 测试运行器规则 - 确保测试通过才能提交
+version: "1.0"
+enabled: true
+strict_mode: true # 严格模式：测试失败时拒绝提交
+
+# 规则配置
+rules:
+  - id: TEST-RUN-001
+    name: tests_must_pass
+    description: 所有测试必须通过才能提交
+    severity: error
+    enabled: true
+    message: "测试失败，不允许提交（TDD红色阶段）"
+    help: |
+      TDD（测试驱动开发）流程：
+      1. 红色阶段：编写失败的测试
+      2. 绿色阶段：编写最少代码使测试通过
+      3. 重构阶段：优化代码
+
+      当前处于红色阶段，测试失败。
+      请修复代码使测试通过后再提交。
+
+  - id: TEST-RUN-002
+    name: test_runner_available
+    description: 测试运行器必须可用
+    severity: warning
+    enabled: true
+    message: "测试运行器不可用，跳过测试"
+    help: |
+      无法运行测试。请确保：
+      1. 在Docker容器内：pytest已安装
+      2. 在宿主机上：docker-compose可用且backend服务正在运行
+
+# 检查器配置
+checker:
+  name: test_runner_checker
+  module: .compliance.checkers.test_runner_checker
+  class: TestRunnerChecker
+  enabled: true
+
+# 适用文件类型
+applies_to:
+  - "backend/apps/**/*.py"
+  - "backend/tests/**/*.py"
+  - "frontend/src/**/*.{vue,ts,tsx,js,jsx}"
+  - "e2e/tests/**/*.{ts,js}"
+
+# 排除文件
+excludes:
+  - "docs/**"
+  - ".compliance/**"
+  - "scripts/**"
+  - "node_modules/**"
+  - "venv/**"
+  - "migrations/**"

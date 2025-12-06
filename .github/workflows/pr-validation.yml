@@ -224,10 +224,87 @@ jobs:
           echo "  - Type: ${{ needs.detect-pr-type.outputs.pr-type }}"
           echo "  - Validation level: ${{ needs.detect-pr-type.outputs.validation-level }}"
 
+  # V4合规引擎验证
+  compliance-validation:
+    name: "V4 Compliance Validation"
+    needs: [detect-pr-type, quick-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml -q
+
+      - name: Run V4 Compliance Check
+        run: |
+          echo "🔍 Running V4 compliance validation..."
+
+          if [ -f ".compliance/runner.py" ]; then
+            # 获取PR中修改的文件
+            git fetch origin ${{ github.base_ref }}:${{ github.base_ref }} --depth=1
+            CHANGED_FILES=$(git diff --name-only --diff-filter=ACM origin/${{ github.base_ref }}...HEAD || echo "")
+
+            if [ -n "$CHANGED_FILES" ]; then
+              echo "📋 Changed files:"
+              echo "$CHANGED_FILES" | head -20
+
+              # 运行合规检查
+              python .compliance/runner.py $(echo "$CHANGED_FILES" | tr '\n' ' ') || {
+                echo ""
+                echo "❌ V4 Compliance validation failed!"
+                echo ""
+                echo "📋 常见问题："
+                echo "  1. 代码文件缺少REQ-ID关联"
+                echo "  2. 代码文件缺少对应的测试文件"
+                echo "  3. 代码文件缺少Task-Master任务"
+                echo "  4. PRD元数据不完整"
+                echo "  5. 删除功能未获得PRD授权"
+                echo ""
+                echo "💡 修复建议："
+                echo "  - 在代码文件头部添加REQ-ID注释"
+                echo "  - 创建对应的测试文件"
+                echo "  - 运行Task-Master生成任务"
+                echo "  - 更新PRD元数据"
+                echo "  - 如果删除功能，更新PRD的deletable字段"
+                exit 1
+              }
+              echo "✅ V4 Compliance validation passed"
+            else
+              echo "ℹ️ No changed files to validate"
+            fi
+          else
+            echo "ℹ️ Compliance engine not installed, skipping validation"
+          fi
+
+      - name: Validate Traceability
+        run: |
+          echo "🔗 Validating traceability chain..."
+
+          # 检查提交消息中是否包含REQ-ID
+          COMMIT_MESSAGES=$(git log --format="%B" origin/${{ github.base_ref }}...HEAD)
+
+          if echo "$COMMIT_MESSAGES" | grep -qE '\[REQ-\d{4}-\d{3}-[a-z0-9-]+\]'; then
+            echo "✅ REQ-ID found in commit messages"
+          else
+            echo "⚠️ No REQ-ID found in commit messages"
+            echo "   Consider using format: [REQ-YYYY-NNN-slug] Task-X description"
+          fi
+
   # 调用测试套件组件
   test-execution:
     name: "Test Suite Execution"
-    needs: [detect-pr-type, quick-validation]
+    needs: [detect-pr-type, quick-validation, compliance-validation]
     uses: ./.github/workflows/test-suite.yml
     with:
       test-level: ${{ needs.detect-pr-type.outputs.test-level }}
@@ -299,7 +376,13 @@ jobs:
   approval-gate:
     name: "Final Approval Gate"
     needs:
-      [detect-pr-type, test-execution, quality-validation, directory-protection]
+      [
+        detect-pr-type,
+        test-execution,
+        quality-validation,
+        directory-protection,
+        compliance-validation,
+      ]
     if: always()
     runs-on: ubuntu-latest
 

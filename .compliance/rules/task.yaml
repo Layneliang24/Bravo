@@ -1,0 +1,27 @@
+name: task
+description: Task-Master任务合规规则
+version: "1.0"
+
+# 任务文件结构要求
+structure:
+  require_task_md: true
+  require_subtask_files: true
+  require_status_tracking: true
+
+# 任务状态要求
+status:
+  valid_states: [pending, in-progress, done, blocked, cancelled]
+  require_status_update: true
+  require_completion_verification: true
+
+# 任务关联要求
+traceability:
+  require_prd_link: true
+  require_test_files_link: true
+  require_implementation_files_link: true
+
+# 任务完成验证
+completion_validation:
+  require_all_subtasks_done: true
+  require_test_passing: true
+  require_code_review: false # 可选

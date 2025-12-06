@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-006-internal-common
 """Common分页模块单元测试"""
 
 import pytest
-
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
 

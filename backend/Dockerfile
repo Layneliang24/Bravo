@@ -16,6 +16,7 @@ RUN apt-get update \
         default-libmysqlclient-dev \
         build-essential \
         pkg-config \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 Python 依赖
