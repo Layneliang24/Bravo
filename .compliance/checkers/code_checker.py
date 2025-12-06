@@ -368,7 +368,9 @@ class CodeChecker:
         if content:
             lines = content.split("\n")[:20]
             for line in lines:
-                match = re.search(r"REQ-(\d{4})(-\d{3})?-[A-Z0-9-]+", line)
+                match = re.search(
+                    r"REQ-(\d{4})(-\d{3})?-[a-zA-Z0-9-]+", line, re.IGNORECASE
+                )
                 if match:
                     req_id = match.group(0)
                     break
@@ -376,7 +378,9 @@ class CodeChecker:
         # 如果找不到REQ-ID，尝试从文件路径推断
         if not req_id:
             # 从路径中查找REQ-ID模式
-            match = re.search(r"REQ-\d{4}(-\d{3})?-[A-Z0-9-]+", file_path)
+            match = re.search(
+                r"REQ-\d{4}(-\d{3})?-[a-zA-Z0-9-]+", file_path, re.IGNORECASE
+            )
             if match:
                 req_id = match.group(0)
 
