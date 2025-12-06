@@ -24,6 +24,7 @@ RUN apt-get update --fix-missing || apt-get update --fix-missing || apt-get upda
         pkg-config \
         curl \
         wget \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 # 配置pip国内源

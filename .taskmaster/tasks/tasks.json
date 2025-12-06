@@ -1,0 +1,1097 @@
+{
+  "master": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T03:11:04.861Z",
+      "description": "Tasks for master context"
+    }
+  },
+  "REQ-2025-003-user-login": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "后端：数据库模型扩展与迁移",
+        "description": "根据PRD要求，扩展现有的User模型，并创建EmailVerification和PasswordReset模型，包含所有指定字段和索引。",
+        "details": "1. **红（Red）**：编写测试用例，验证User模型新增字段、EmailVerification和PasswordReset模型的创建及其字段、索引是否符合预期，预期测试失败。2. **绿（Green）**：在`backend/apps/users/models.py`中扩展`User`模型，添加`is_email_verified`, `email_verified_at`, `last_login`, `failed_login_attempts`, `locked_until`, `avatar`, `display_name`字段。创建`EmailVerification`和`PasswordReset`模型，包含`id`, `user_id`, `email`, `token`, `expires_at`, `verified_at`/`used_at`, `created_at`字段。为`User`表的`email`, `username`, `is_email_verified`字段以及`EmailVerification`和`PasswordReset`表的`token`字段添加唯一索引。运行`makemigrations`和`migrate`。3. **重构（Refactor）**：优化模型定义，确保字段类型和约束正确。",
+        "testStrategy": "编写`backend/tests/unit/test_auth_models.py`单元测试，验证User模型字段是否存在、默认值是否正确、索引是否创建。验证EmailVerification和PasswordReset模型能够被创建、字段类型和外键关系正确、唯一索引生效。",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写数据库模型扩展的单元测试",
+            "description": "根据PRD要求，编写单元测试用例，验证User模型新增字段、EmailVerification和PasswordReset模型的创建及其字段、索引是否符合预期。预期这些测试在模型未实现时会失败。",
+            "dependencies": [],
+            "details": "在`backend/tests/unit/test_auth_models.py`中创建测试文件。编写测试用例以验证`User`模型是否包含`is_email_verified`, `email_verified_at`, `last_login`, `failed_login_attempts`, `locked_until`, `avatar`, `display_name`字段。编写测试用例以验证`EmailVerification`和`PasswordReset`模型是否存在，并包含所有指定字段（`id`, `user_id`, `email`, `token`, `expires_at`, `verified_at`/`used_at`, `created_at`）。验证`User`表的`email`, `username`, `is_email_verified`字段以及`EmailVerification`和`PasswordReset`表的`token`字段的唯一索引是否被正确定义。",
+            "status": "pending",
+            "testStrategy": "运行新编写的单元测试，确保它们在模型未实现时失败，验证测试用例的有效性。"
+          },
+          {
+            "id": 2,
+            "title": "扩展User模型字段",
+            "description": "在`backend/apps/users/models.py`中扩展现有的`User`模型，添加所有指定的新字段。",
+            "dependencies": [1],
+            "details": "修改`backend/apps/users/models.py`文件，在`User`模型中添加`is_email_verified` (BooleanField, default=False), `email_verified_at` (DateTimeField, nullable), `last_login` (DateTimeField, nullable), `failed_login_attempts` (IntegerField, default=0), `locked_until` (DateTimeField, nullable), `avatar` (ImageField/URLField, nullable), `display_name` (CharField, nullable)字段。确保字段类型和默认值设置正确。",
+            "status": "pending",
+            "testStrategy": "暂无特定测试策略，此步骤主要关注代码实现。后续将通过运行Subtask 1的测试来验证。"
+          },
+          {
+            "id": 3,
+            "title": "创建EmailVerification和PasswordReset模型",
+            "description": "在`backend/apps/users/models.py`中创建`EmailVerification`和`PasswordReset`两个新模型，包含所有指定字段。",
+            "dependencies": [2],
+            "details": "在`backend/apps/users/models.py`中定义`EmailVerification`模型，包含`id` (UUIDField/AutoField), `user` (ForeignKey to User), `email` (EmailField), `token` (CharField), `expires_at` (DateTimeField), `verified_at` (DateTimeField, nullable), `created_at` (DateTimeField, auto_now_add=True)字段。定义`PasswordReset`模型，包含`id` (UUIDField/AutoField), `user` (ForeignKey to User), `email` (EmailField), `token` (CharField), `expires_at` (DateTimeField), `used_at` (DateTimeField, nullable), `created_at` (DateTimeField, auto_now_add=True)字段。确保外键关系正确。",
+            "status": "pending",
+            "testStrategy": "暂无特定测试策略，此步骤主要关注代码实现。后续将通过运行Subtask 1的测试来验证。"
+          },
+          {
+            "id": 4,
+            "title": "添加模型索引并执行数据库迁移",
+            "description": "为`User`、`EmailVerification`和`PasswordReset`模型中的指定字段添加唯一索引，并生成和应用数据库迁移文件。",
+            "dependencies": [3],
+            "details": "在`User`模型的`Meta`类中，为`email`和`username`字段添加`unique=True`约束，并考虑为`is_email_verified`添加索引（如果需要查询优化）。在`EmailVerification`和`PasswordReset`模型的`Meta`类中，为`token`字段添加`unique=True`约束。运行`python manage.py makemigrations users`生成迁移文件，然后运行`python manage.py migrate`应用这些迁移到数据库。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的单元测试，确保所有测试通过，验证模型字段、类型、外键和索引都已正确创建。手动检查生成的迁移文件，确认SQL语句符合预期。"
+          },
+          {
+            "id": 5,
+            "title": "优化模型定义和字段约束",
+            "description": "对所有新创建和扩展的模型进行代码审查和优化，确保字段类型、默认值、约束和关系符合最佳实践，提高代码质量。",
+            "dependencies": [4],
+            "details": "审查`User`、`EmailVerification`和`PasswordReset`模型的字段定义，确保使用了最合适的Django字段类型（例如，对于`avatar`字段，考虑使用`ImageField`并配置存储，或者`URLField`）。检查所有`null=True`和`blank=True`的设置是否合理。确保外键关系（`ForeignKey`）的`on_delete`行为正确。添加必要的`__str__`方法以提高模型的可读性。",
+            "status": "pending",
+            "testStrategy": "运行所有单元测试，确保重构没有引入回归错误。进行代码审查，确保模型定义符合项目编码规范和Django最佳实践。"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "后端：验证码生成与API实现",
+        "description": "实现图形验证码的生成、Redis存储、过期管理以及获取和刷新验证码的API接口。",
+        "details": "1. **红（Red）**：编写测试用例，验证验证码生成逻辑、Redis存储、过期机制以及API响应格式，预期测试失败。2. **绿（Green）**：在`backend/apps/users/utils.py`中实现验证码生成逻辑，使用Pillow生成4位数字+字母混合验证码，添加干扰线和噪点，Base64编码图片。在Redis中存储验证码答案，Key格式为`captcha:{session_id}`，设置5分钟过期。在`backend/apps/users/views.py`中创建`GET /api/auth/captcha/`接口用于获取验证码（返回`captcha_id`, `captcha_image`, `expires_in`）和`POST /api/auth/captcha/refresh/`接口用于刷新验证码。3. **重构（Refactor）**：优化验证码生成算法和Redis操作。",
+        "testStrategy": "编写`backend/tests/unit/test_captcha.py`单元测试，测试验证码生成是否符合预期、Redis存储和过期是否正常、验证码验证逻辑是否正确。编写集成测试，验证`/api/auth/captcha/`和`/api/auth/captcha/refresh/`接口的响应数据结构和功能。",
+        "priority": "high",
+        "dependencies": [1],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写验证码模块的单元测试",
+            "description": "为验证码生成逻辑、Redis存储和过期机制以及API响应格式编写初步的单元测试，预期测试失败。",
+            "dependencies": [],
+            "details": "在`backend/tests/unit/test_captcha.py`中创建测试文件。编写测试用例，验证验证码图片生成是否符合预期（例如，长度、字符类型），Redis存储和检索功能，以及验证码过期机制。同时，为API接口的响应结构和数据类型编写测试，确保它们在后续实现中能被正确验证。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，覆盖`utils.py`中的验证码生成函数、Redis操作函数以及`views.py`中API接口的预期响应结构。运行测试并确认它们在功能未实现时失败。"
+          },
+          {
+            "id": 2,
+            "title": "实现验证码生成工具函数",
+            "description": "在`backend/apps/users/utils.py`中实现图形验证码的生成逻辑，包括字符生成、图片绘制和Base64编码。",
+            "dependencies": [1],
+            "details": "使用Pillow库在`backend/apps/users/utils.py`中实现一个函数，该函数能生成一个4位数字+字母混合的随机验证码字符串。同时，利用Pillow绘制包含干扰线和噪点的验证码图片，并将图片Base64编码为字符串返回。该函数应返回验证码文本和Base64编码的图片。",
+            "status": "pending",
+            "testStrategy": "运行子任务1中编写的单元测试，验证验证码生成函数是否能正确生成指定格式的字符和Base64编码的图片，并检查图片质量和干扰效果。"
+          },
+          {
+            "id": 3,
+            "title": "实现验证码Redis存储与过期管理",
+            "description": "实现将生成的验证码答案存储到Redis中，并设置5分钟的过期时间。",
+            "dependencies": [1, 2],
+            "details": "在`backend/apps/users/utils.py`或独立的Redis服务模块中，实现将验证码答案存储到Redis的函数。Redis Key的格式应为`captcha:{session_id}`，其中`session_id`是一个唯一的标识符。设置验证码在Redis中的过期时间为5分钟。同时，实现从Redis获取和删除验证码答案的函数。",
+            "status": "pending",
+            "testStrategy": "运行子任务1中编写的单元测试，验证验证码是否能正确存储到Redis，Key格式是否正确，过期时间是否生效，以及能否正确从Redis中检索和删除验证码。"
+          },
+          {
+            "id": 4,
+            "title": "实现获取验证码API (`GET /api/auth/captcha/`)",
+            "description": "在`backend/apps/users/views.py`中创建`GET /api/auth/captcha/`接口，用于生成、存储并返回新的验证码。",
+            "dependencies": [1, 2, 3],
+            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`GET /api/auth/captcha/`请求。该接口应调用验证码生成工具函数生成新的验证码，将其答案存储到Redis，并返回包含`captcha_id`（用于标识本次验证码）、`captcha_image`（Base64编码的图片）和`expires_in`（过期时间，秒）的JSON响应。",
+            "status": "pending",
+            "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`GET /api/auth/captcha/`接口的响应数据结构、状态码和功能。检查返回的`captcha_id`是否唯一，`captcha_image`是否有效，以及`expires_in`是否正确。"
+          },
+          {
+            "id": 5,
+            "title": "实现刷新验证码API (`POST /api/auth/captcha/refresh/`) 并进行初步重构",
+            "description": "在`backend/apps/users/views.py`中创建`POST /api/auth/captcha/refresh/`接口，用于刷新现有验证码，并对已实现的代码进行初步优化。",
+            "dependencies": [1, 2, 3, 4],
+            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`POST /api/auth/captcha/refresh/`请求。该接口应接收旧的`captcha_id`（可选），生成新的验证码，更新Redis中的存储，并返回新的`captcha_id`、`captcha_image`和`expires_in`。同时，对子任务2、3、4中实现的代码进行初步的代码审查和重构，确保代码清晰、可读性高，并遵循最佳实践，例如，提取重复逻辑到辅助函数中。",
+            "status": "pending",
+            "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`POST /api/auth/captcha/refresh/`接口的功能。测试刷新后是否返回新的验证码信息，旧的验证码是否失效。同时，进行代码审查以验证重构效果。"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "后端：用户注册API实现",
+        "description": "实现用户注册API (`POST /api/auth/register/`)，包括邮箱注册、密码强度验证、动态验证码验证和注册成功后JWT Token生成。",
+        "details": "1. **红（Red）**：编写测试用例，覆盖注册成功、邮箱已存在、密码不符合强度、验证码错误等场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/serializers.py`中创建注册序列化器，包含邮箱、密码、确认密码、验证码ID和答案字段。在`backend/apps/users/views.py`中实现`POST /api/auth/register/`视图，验证邮箱唯一性，使用Django内置PBKDF2哈希密码，验证密码强度（最少8位，包含字母和数字），验证动态验证码。注册成功后，生成JWT Access Token和Refresh Token，并返回用户基本信息。3. **重构（Refactor）**：优化序列化器和视图逻辑，确保错误处理清晰。",
+        "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试注册视图的输入验证、密码哈希、用户创建、Token生成等逻辑。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的注册流程，包括成功注册、重复注册、密码强度不足、验证码错误等场景。",
+        "priority": "high",
+        "dependencies": [1, 2],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写注册API的集成测试用例 (Red)",
+            "description": "根据需求，在`backend/tests/integration/test_auth_api.py`中为注册API (`POST /api/auth/register/`) 编写初始的集成测试用例，覆盖成功、邮箱已存在、密码弱、验证码错误等场景。这些测试在实现功能前预期会失败。",
+            "dependencies": [],
+            "details": "创建测试类 `TestRegisterAPI`。编写测试方法 `test_register_success`, `test_register_email_exists`, `test_register_weak_password`, `test_register_invalid_captcha`。使用 Django REST Framework 的 `APIClient` 来模拟请求。",
+            "status": "pending",
+            "testStrategy": "运行这些初始测试，并确认它们都因功能未实现而失败。这是测试驱动开发（TDD）的第一步。"
+          },
+          {
+            "id": 2,
+            "title": "创建用户注册序列化器 (UserRegisterSerializer)",
+            "description": "在 `backend/apps/users/serializers.py` 文件中创建一个名为 `UserRegisterSerializer` 的序列化器，用于处理注册请求的数据验证，包括邮箱、密码、确认密码和验证码信息。",
+            "dependencies": [1],
+            "details": "序列化器应继承自 `serializers.Serializer`。包含 `email`, `password`, `password2` (用于确认密码), `captcha_id`, `captcha_answer` 字段。`email` 字段应验证唯一性。`password` 字段应为 `write_only=True`。添加 `validate` 方法来检查两次输入的密码是否一致，并验证密码强度（最少8位，包含字母和数字）。",
+            "status": "pending",
+            "testStrategy": "编写 `backend/tests/unit/test_auth_serializers.py` 单元测试，专门验证序列化器的字段验证、密码一致性检查和密码强度验证逻辑。"
+          },
+          {
+            "id": 3,
+            "title": "实现注册API视图 (RegisterAPIView)",
+            "description": "在 `backend/apps/users/views.py` 中创建处理 `POST /api/auth/register/` 请求的视图。该视图将使用 `UserRegisterSerializer` 来验证输入数据，验证验证码，并创建新用户。",
+            "dependencies": [2],
+            "details": "创建一个基于 `generics.GenericAPIView` 的视图，并设置 `serializer_class = UserRegisterSerializer`。在 `post` 方法中，首先验证序列化器数据。然后，调用一个独立的工具函数来验证验证码的正确性（依赖任务2）。如果所有验证通过，则创建新用户实例，并使用 `user.set_password()` 方法对密码进行哈希处理后保存。",
+            "status": "pending",
+            "testStrategy": "在实现过程中，逐步运行之前编写的集成测试，观察它们从失败到部分通过的过程。"
+          },
+          {
+            "id": 4,
+            "title": "集成JWT并为新用户生成Tokens",
+            "description": "在用户成功注册并创建后，为新用户生成 JWT Access Token 和 Refresh Token，并将其包含在成功的API响应中。",
+            "dependencies": [3],
+            "details": "在注册视图成功创建用户的逻辑分支中，使用 `rest_framework_simplejwt.tokens.RefreshToken.for_user(user)` 方法为新用户生成 tokens。将 `access` 和 `refresh` tokens 以及用户基本信息（如邮箱、用户ID）组织成一个字典，并作为 `Response` 返回，HTTP状态码为 `201 Created`。",
+            "status": "pending",
+            "testStrategy": "修改 `test_register_success` 集成测试，断言成功的响应中包含 `access` 和 `refresh` 两个键，并且其值不为空。"
+          },
+          {
+            "id": 5,
+            "title": "重构代码并确保所有测试通过 (Refactor)",
+            "description": "优化注册序列化器和视图的代码结构，改善错误处理逻辑，确保代码清晰可维护，并最终确保所有在第一步中编写的测试用例都能成功通过。",
+            "dependencies": [4],
+            "details": "审查 `UserRegisterSerializer` 和注册视图的代码，将复杂的逻辑（如密码强度验证）提取到独立的工具函数中。统一API的错误响应格式。完整运行 `pytest` 命令，确认 `test_auth_api.py` 和 `test_auth_serializers.py` 中的所有测试用例都通过。",
+            "status": "pending",
+            "testStrategy": "运行所有相关的单元测试和集成测试，并检查测试覆盖率报告，确保新代码的覆盖率达到项目标准（例如80%以上）。"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "后端：用户登录API实现",
+        "description": "实现用户登录API (`POST /api/auth/login/`)，包括邮箱/用户名+密码登录、动态验证码验证、登录失败次数限制和账户锁定机制。",
+        "details": "1. **红（Red）**：编写测试用例，覆盖登录成功、密码错误、验证码错误、账户锁定、未激活邮箱等场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/serializers.py`中创建登录序列化器。在`backend/apps/users/views.py`中实现`POST /api/auth/login/`视图，验证邮箱/用户名和密码，验证动态验证码。实现登录失败次数跟踪（`failed_login_attempts`字段），当失败次数达到5次时，锁定账户10分钟（更新`locked_until`字段）。成功登录后重置失败次数，生成JWT Access Token和Refresh Token。3. **重构（Refactor）**：优化登录逻辑和错误响应，确保安全性和用户体验。",
+        "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试登录视图的认证逻辑、失败次数限制、账户锁定机制。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的登录流程，包括成功登录、多次失败导致锁定、锁定期间尝试登录等场景。",
+        "priority": "high",
+        "dependencies": [1, 2, 3],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写用户登录API测试用例",
+            "description": "编写单元测试和集成测试用例，覆盖用户登录API的各种场景，包括成功登录、密码错误、验证码错误、账户锁定、未激活邮箱等，预期测试失败。",
+            "dependencies": [],
+            "details": "在`backend/tests/unit/test_auth_views.py`中为`POST /api/auth/login/`视图编写单元测试，验证认证逻辑、失败次数限制、账户锁定机制。在`backend/tests/integration/test_auth_api.py`中编写集成测试，测试完整的登录流程，包括成功登录、多次失败导致锁定、锁定期间尝试登录等场景。",
+            "status": "pending",
+            "testStrategy": "运行这些新编写的测试用例，确保它们在当前未实现功能的情况下失败，以此验证测试用例的有效性。"
+          },
+          {
+            "id": 2,
+            "title": "实现登录序列化器与基础视图",
+            "description": "在`backend/apps/users/serializers.py`中创建`LoginSerializer`，并在`backend/apps/users/views.py`中实现`POST /api/auth/login/`视图的基础结构，处理请求数据解析和初步验证。",
+            "dependencies": [1],
+            "details": "创建`LoginSerializer`处理`username/email`、`password`、`captcha_id`和`captcha_code`字段的输入验证。在`LoginView`中，设置允许POST请求，并使用`LoginSerializer`进行数据验证。初步验证`username/email`和`password`的格式有效性。",
+            "status": "pending",
+            "testStrategy": "编写单元测试验证`LoginSerializer`的数据验证逻辑，以及`LoginView`是否能正确解析请求体并返回预期的验证错误。"
+          },
+          {
+            "id": 3,
+            "title": "实现核心认证与验证码验证",
+            "description": "在登录视图中实现用户邮箱/用户名和密码的验证逻辑，并集成动态验证码的验证功能，处理用户未激活邮箱的情况。",
+            "dependencies": [1, 2],
+            "details": "在`LoginView`中，根据`username/email`查找用户，并验证其密码。调用Task 2提供的验证码服务（如Redis）验证`captcha_id`和`captcha_code`是否匹配且未过期。如果用户邮箱未激活，则返回相应的错误信息。",
+            "status": "pending",
+            "testStrategy": "单元测试验证密码验证、验证码验证（包括正确和错误验证码）和未激活邮箱处理的逻辑，确保返回正确的错误响应。"
+          },
+          {
+            "id": 4,
+            "title": "实现登录失败次数限制与账户锁定",
+            "description": "在登录视图中实现登录失败次数跟踪，当失败次数达到预设阈值时锁定用户账户一定时间，并在成功登录后重置失败次数。",
+            "dependencies": [1, 3],
+            "details": "检查`User`模型的`failed_login_attempts`和`locked_until`字段。如果账户已锁定，拒绝登录并返回锁定信息。每次登录失败时，增加`failed_login_attempts`计数。当计数达到5次时，更新`locked_until`字段为当前时间+10分钟。成功登录后，将`failed_login_attempts`重置为0。",
+            "status": "pending",
+            "testStrategy": "单元测试验证失败次数递增、账户锁定、锁定期间尝试登录、成功登录后重置次数的逻辑，确保账户状态更新正确。"
+          },
+          {
+            "id": 5,
+            "title": "生成JWT Token并优化响应",
+            "description": "在用户成功登录后，生成JWT Access Token和Refresh Token，将其作为响应返回。同时对登录逻辑进行错误响应优化和初步重构，确保安全性和用户体验。",
+            "dependencies": [3, 4],
+            "details": "使用JWT库生成Access Token和Refresh Token。将Token和基本用户信息（如`user_id`, `username`, `email`）作为JSON响应返回。优化所有错误响应的格式，确保一致性和清晰度。对登录视图中的代码进行初步重构，提高可读性和安全性。",
+            "status": "pending",
+            "testStrategy": "单元测试验证成功登录后JWT Token的生成和响应格式是否符合预期。集成测试验证完整登录流程的端到端功能，包括Token的获取和使用。"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "后端：JWT Token管理API实现",
+        "description": "实现JWT Token的刷新 (`POST /api/auth/token/refresh/`) 和登出 (`POST /api/auth/logout/`) 功能。",
+        "details": "1. **红（Red）**：编写测试用例，验证Token刷新成功、使用过期Refresh Token刷新失败、登出成功等场景，预期测试失败。2. **绿（Green）：**集成`djangorestframework-simplejwt`。在`backend/apps/users/views.py`中实现`POST /api/auth/token/refresh/`视图，接收Refresh Token并返回新的Access Token。实现`POST /api/auth/logout/`视图，使当前Access Token失效。3. **重构（Refactor）**：优化Token处理逻辑，确保安全和效率。",
+        "testStrategy": "编写`backend/tests/integration/test_auth_api.py`集成测试，测试Token刷新机制是否正常工作，登出后Access Token是否失效。",
+        "priority": "medium",
+        "dependencies": [4],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写JWT Token刷新与登出API的集成测试用例",
+            "description": "按照TDD的“红”阶段要求，在`backend/tests/integration/test_auth_api.py`中编写测试用例，覆盖Token刷新成功、使用过期Refresh Token刷新失败、登出成功、登出后Access Token失效等场景。预期这些测试在功能未实现前会失败。",
+            "dependencies": [],
+            "details": "创建或修改`backend/tests/integration/test_auth_api.py`文件，并添加测试方法，例如`test_token_refresh_success`、`test_token_refresh_with_expired_refresh_token`、`test_logout_success`、`test_access_token_invalid_after_logout`。确保测试用例能够模拟HTTP请求并断言预期的响应和状态码。",
+            "status": "pending",
+            "testStrategy": "运行新编写的集成测试，验证它们在功能未实现时是否按预期失败。"
+          },
+          {
+            "id": 2,
+            "title": "集成`djangorestframework-simplejwt`库",
+            "description": "在Django项目中安装并配置`djangorestframework-simplejwt`库，使其能够处理JWT Token的生成、验证和刷新机制。",
+            "dependencies": [],
+            "details": "在`backend/requirements.txt`中添加`djangorestframework-simplejwt`依赖，并运行`pip install -r requirements.txt`。在`backend/config/settings.py`中配置`REST_FRAMEWORK`以使用`simplejwt`的认证类，并配置`SIMPLE_JWT`设置，例如Access Token和Refresh Token的生命周期。",
+            "status": "pending",
+            "testStrategy": "通过简单的单元测试或手动验证，确保`simplejwt`的配置正确，例如尝试生成一个Token并验证其结构。"
+          },
+          {
+            "id": 3,
+            "title": "实现JWT Token刷新API (`POST /api/auth/token/refresh/`)",
+            "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/token/refresh/`视图，该视图接收一个Refresh Token，并返回一个新的Access Token和Refresh Token。",
+            "dependencies": [2],
+            "details": "在`backend/apps/users/views.py`中创建一个新的视图类，继承自`TokenRefreshView`或自定义视图，处理传入的Refresh Token。验证Refresh Token的有效性，并生成新的Access Token和Refresh Token作为响应。确保API端点在`backend/apps/users/urls.py`中正确注册。",
+            "status": "pending",
+            "testStrategy": "运行`id=1`中编写的Token刷新相关集成测试，确保API功能正常，并处理过期Refresh Token的场景。"
+          },
+          {
+            "id": 4,
+            "title": "实现用户登出API (`POST /api/auth/logout/`)",
+            "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/logout/`视图，该视图使当前用户的Refresh Token失效，从而实现登出功能。",
+            "dependencies": [2],
+            "details": "在`backend/apps/users/views.py`中创建一个新的视图类，继承自`TokenBlacklistView`或自定义视图。该视图应接收Refresh Token（或通过认证头获取），并将其加入黑名单，使其失效。确保API端点在`backend/apps/users/urls.py`中正确注册。",
+            "status": "pending",
+            "testStrategy": "运行`id=1`中编写的登出相关集成测试，验证登出功能是否正常，以及登出后Access Token是否失效。"
+          },
+          {
+            "id": 5,
+            "title": "优化Token处理逻辑并确保所有测试通过",
+            "description": "对已实现的Token刷新和登出逻辑进行代码审查和重构，确保其安全、高效且符合最佳实践。运行所有相关的集成测试，确保所有测试用例通过。",
+            "dependencies": [1, 3, 4],
+            "details": "检查Token的生命周期管理、黑名单机制、错误处理和响应格式。优化数据库查询和Redis操作（如果适用）。运行`python manage.py test backend/tests/integration/test_auth_api.py`，修复所有失败的测试，直到所有测试通过。",
+            "status": "pending",
+            "testStrategy": "运行所有`backend/tests/integration/test_auth_api.py`中的集成测试，确保所有测试用例均通过，并且代码覆盖率符合项目要求。"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "后端：邮箱验证API与异步邮件发送",
+        "description": "实现发送邮箱验证邮件 (`POST /api/auth/email/verify/send/`) 和验证邮箱 (`GET /api/auth/email/verify/{token}/`) 的API接口，并集成Celery进行异步邮件发送。",
+        "details": "1. **红（Red）**：编写测试用例，验证发送邮件API的触发、验证链接的生成、邮箱验证成功和失败（如token过期、无效）的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/email/verify/send/`视图，生成唯一的验证Token，存储到`EmailVerification`表，并使用Celery异步发送包含验证链接的邮件。实现`GET /api/auth/email/verify/{token}/`视图，验证Token的有效性和过期时间，更新用户`is_email_verified`状态，并标记`EmailVerification`记录为已验证。3. **重构（Refactor）**：优化邮件模板、Celery任务定义和错误处理。",
+        "testStrategy": "编写`backend/tests/integration/test_auth_api.py`集成测试，测试发送验证邮件API是否触发Celery任务，验证链接是否正确生成。测试邮箱验证API，验证有效Token和过期/无效Token的响应。",
+        "priority": "high",
+        "dependencies": [1, 5],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写邮箱验证API的测试用例",
+            "description": "编写集成测试用例，覆盖发送邮箱验证邮件API的触发、验证链接的生成，以及邮箱验证API在成功、Token过期、Token无效等场景下的行为。预期这些测试最初会失败。",
+            "dependencies": [1],
+            "details": "在`backend/tests/integration/test_auth_api.py`中创建测试方法，模拟用户请求发送验证邮件，检查响应和数据库状态。模拟用户点击验证链接，测试有效和无效Token的验证流程。",
+            "status": "pending",
+            "testStrategy": "确保编写的测试用例覆盖所有指定场景，并且在代码实现前预期测试失败。"
+          },
+          {
+            "id": 2,
+            "title": "实现发送邮箱验证邮件API",
+            "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/email/verify/send/`视图，负责生成唯一的验证Token，将其存储到`EmailVerification`表，并触发Celery任务异步发送包含验证链接的邮件。",
+            "dependencies": [1, 1],
+            "details": "创建一个序列化器用于接收请求。在视图中，为当前认证用户生成一个加密的、有时效性的Token。将Token和用户邮箱保存到`EmailVerification`模型实例中。调用一个Celery任务来发送邮件。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的测试用例，确保POST /api/auth/email/verify/send/接口功能正常，能正确生成Token并触发Celery任务。"
+          },
+          {
+            "id": 3,
+            "title": "配置Celery异步邮件发送任务和邮件模板",
+            "description": "定义Celery任务来处理异步邮件发送逻辑，并创建用于邮箱验证的邮件模板。",
+            "dependencies": [2],
+            "details": "在`backend/apps/users/tasks.py`中定义`send_verification_email` Celery任务。任务应接收用户邮箱和验证链接作为参数。创建`email_verification.html`或`email_verification.txt`邮件模板，包含动态生成的验证链接。配置Django的邮件后端和Celery。",
+            "status": "pending",
+            "testStrategy": "通过手动触发Celery任务或运行Subtask 2的测试，验证邮件是否能被正确发送，邮件内容和链接是否符合预期。"
+          },
+          {
+            "id": 4,
+            "title": "实现邮箱验证API",
+            "description": "在`backend/apps/users/views.py`中实现`GET /api/auth/email/verify/{token}/`视图，负责接收并验证URL中的Token。如果Token有效且未过期，则更新用户的`is_email_verified`状态为True，并标记`EmailVerification`记录为已验证。",
+            "dependencies": [1, 1, 2],
+            "details": "视图应从URL捕获`token`参数。查询`EmailVerification`表以查找匹配的Token。验证Token的有效性（未过期、未被使用）。如果验证成功，更新相关`User`模型的`is_email_verified`字段和`email_verified_at`字段，并更新`EmailVerification`记录的`verified_at`字段。处理Token无效或过期的情况，返回相应的错误响应。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的测试用例，确保GET /api/auth/email/verify/{token}/接口功能正常，能正确验证Token、更新用户状态，并处理无效/过期Token。"
+          },
+          {
+            "id": 5,
+            "title": "优化邮件模板、Celery任务和API错误处理",
+            "description": "对已实现的邮件模板、Celery任务定义和两个邮箱验证API的错误处理进行审查和优化，确保代码的健壮性、可读性和用户体验。",
+            "dependencies": [2, 3, 4],
+            "details": "检查邮件模板的国际化和可读性。优化Celery任务的重试机制、错误日志记录。统一API的错误响应格式，处理如Token不存在、Token过期、Token已被使用等边界情况。确保所有异常都被妥善捕获和处理。",
+            "status": "pending",
+            "testStrategy": "重新运行所有相关集成测试和单元测试，确保重构没有引入回归问题。进行手动测试以验证错误处理和用户体验的优化。"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "后端：密码找回API与异步邮件发送",
+        "description": "实现发送密码重置邮件 (`POST /api/auth/password/reset/send/`) 和重置密码 (`POST /api/auth/password/reset/`) 的API接口，并集成Celery进行异步邮件发送。",
+        "details": "1. **红（Red）**：编写测试用例，验证发送重置邮件API的触发、重置链接的生成、密码重置成功和失败（如token过期、无效）的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/password/reset/send/`视图，验证邮箱是否存在，生成唯一的重置Token，存储到`PasswordReset`表，并使用Celery异步发送包含重置链接的邮件，该接口需验证码保护。实现`POST /api/auth/password/reset/`视图，验证Token的有效性和未使用状态，更新用户密码，并标记`PasswordReset`记录为已使用。3. **重构（Refactor）**：优化邮件模板、Celery任务定义和错误处理。",
+        "testStrategy": "编写`backend/tests/integration/test_password_reset.py`集成测试，测试发送重置邮件API是否触发Celery任务，验证链接是否正确生成。测试密码重置API，验证有效Token和过期/无效Token的响应，以及密码更新是否成功。",
+        "priority": "high",
+        "dependencies": [1, 2, 5],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写密码找回API集成测试用例",
+            "description": "编写集成测试用例，覆盖发送密码重置邮件API (`POST /api/auth/password/reset/send/`) 和重置密码API (`POST /api/auth/password/reset/`) 的各种场景，包括成功发送邮件、重置链接生成、密码成功重置、Token过期或无效、邮箱不存在等。预期这些测试在API未实现时会失败。",
+            "dependencies": [],
+            "details": "在`backend/tests/integration/test_password_reset.py`中创建测试文件，使用Django测试客户端模拟API请求。测试`POST /api/auth/password/reset/send/`接口，验证其响应和是否触发Celery任务。测试`POST /api/auth/password/reset/`接口，验证有效和无效Token的响应，以及密码更新的正确性。",
+            "status": "pending",
+            "testStrategy": "运行新编写的集成测试，确认它们在当前API未实现的情况下按预期失败。"
+          },
+          {
+            "id": 2,
+            "title": "实现密码重置Token模型与异步邮件发送服务",
+            "description": "定义`PasswordReset`模型用于存储密码重置Token及其状态。创建Celery任务，负责异步发送包含密码重置链接的电子邮件。",
+            "dependencies": [],
+            "details": "在`backend/apps/users/models.py`中创建`PasswordReset`模型，包含`user`外键、`token`字段、`expires_at`字段、`is_used`布尔字段和`created_at`字段。在`backend/apps/users/tasks.py`中定义一个Celery任务，接收用户邮箱和重置链接，使用Django的`send_mail`或类似功能发送邮件。",
+            "status": "pending",
+            "testStrategy": "单元测试`PasswordReset`模型的创建、查询和更新操作。手动测试Celery任务，确保邮件能够被正确发送到指定的邮箱。"
+          },
+          {
+            "id": 3,
+            "title": "实现发送密码重置邮件API",
+            "description": "实现`POST /api/auth/password/reset/send/`接口。该接口应验证请求中的邮箱是否存在，生成唯一的密码重置Token，将其存储到`PasswordReset`表中，并调用Celery任务异步发送包含重置链接的邮件。此接口需集成验证码保护。",
+            "dependencies": [1, 2],
+            "details": "在`backend/apps/users/views.py`中创建`PasswordResetSendView`。使用序列化器验证邮箱和验证码。如果邮箱存在，生成一个安全的、有时效性的Token，保存到`PasswordReset`模型实例中。构建重置链接（例如：`frontend_url/reset-password?token={token}`）。调用之前定义的Celery任务发送邮件。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的集成测试，确保此API的成功和失败场景（如邮箱不存在、验证码错误）均能正确处理，并且Celery任务被正确触发。"
+          },
+          {
+            "id": 4,
+            "title": "实现重置密码API",
+            "description": "实现`POST /api/auth/password/reset/`接口。该接口负责验证提供的重置Token的有效性（未过期且未使用），更新用户的密码，并标记对应的`PasswordReset`记录为已使用。",
+            "dependencies": [1, 2, 3],
+            "details": "在`backend/apps/users/views.py`中创建`PasswordResetConfirmView`。使用序列化器验证Token和新密码。查询`PasswordReset`表，验证Token是否存在、未过期且未使用。如果验证通过，更新对应用户的密码，并使用Django的`set_password`方法哈希新密码。将`PasswordReset`记录的`is_used`字段设置为`True`。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的集成测试，确保此API在有效Token、过期Token、无效Token和已使用Token等场景下均能正确响应，并验证用户密码是否成功更新。"
+          },
+          {
+            "id": 5,
+            "title": "优化邮件模板、Celery任务与错误处理",
+            "description": "优化密码重置邮件的模板，使其更具用户友好性和专业性。审查并优化Celery任务的定义，确保其健壮性和可维护性。统一并完善密码找回相关API的错误处理机制，提供清晰的错误信息。",
+            "dependencies": [3, 4],
+            "details": "创建或修改邮件模板文件（例如，HTML模板），包含品牌信息和清晰的重置说明。检查Celery任务的重试机制、错误日志记录和任务参数传递。审查`PasswordResetSendView`和`PasswordResetConfirmView`中的异常捕获和响应，确保返回一致且有意义的错误码和消息。",
+            "status": "pending",
+            "testStrategy": "手动测试邮件发送，检查邮件内容和格式。通过模拟错误场景（如数据库连接失败、Celery服务不可用）来验证错误处理机制。运行所有集成测试，确保优化没有引入回归问题。"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "后端：登录预验证API与频率限制",
+        "description": "实现登录预验证API (`POST /api/auth/preview/`)，用于在不实际登录的情况下验证账号密码并返回用户头像信息，并实施频率限制。",
+        "details": "1. **红（Red）**：编写测试用例，验证正确账号密码返回头像信息、错误账号密码返回`valid: false`、无头像用户返回默认头像信息、以及频率限制生效的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/preview/`视图。该接口需验证码保护。验证邮箱和密码是否匹配，但不执行实际登录。如果匹配，返回`valid: true`以及用户的`display_name`、`avatar_url`（或`null`）、`default_avatar`（布尔值）、`avatar_letter`（首字母）。如果用户没有设置头像，则根据`display_name`或`username`的首字母生成`avatar_letter`。无论成功失败，均返回200状态码，通过`valid`字段区分。在`backend/apps/users/throttling.py`中实现自定义频率限制，限制同一IP每分钟最多10次请求。3. **重构（Refactor）**：优化预验证逻辑和响应结构，确保安全性和性能。",
+        "testStrategy": "编写`backend/tests/unit/test_auth_preview.py`单元测试，测试预验证逻辑在不同账号密码和头像情况下的响应。编写`backend/tests/integration/test_preview_throttling.py`集成测试，测试预验证API的频率限制是否生效，以及在限制下的行为。",
+        "priority": "high",
+        "dependencies": [1, 2, 4],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写登录预验证API的单元测试",
+            "description": "编写针对登录预验证API (`POST /api/auth/preview/`) 的单元测试，覆盖正确/错误账号密码、有/无头像用户、以及频率限制的场景，预期测试失败。",
+            "dependencies": [1],
+            "details": "在`backend/tests/unit/test_auth_preview.py`中创建测试用例，模拟`POST /api/auth/preview/`请求。测试用例应验证不同输入下的预期响应结构、`valid`字段、`display_name`、`avatar_url`、`default_avatar`和`avatar_letter`字段。同时，编写频率限制的集成测试，预期在未实现功能前测试失败。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，确保测试用例能够捕获未来实现中的错误。编写集成测试，验证频率限制的预期行为。"
+          },
+          {
+            "id": 2,
+            "title": "实现登录预验证API基础逻辑与响应",
+            "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/preview/`视图的基础框架，包括邮箱密码验证、用户头像信息（`avatar_url`, `default_avatar`, `avatar_letter`）的获取和响应。",
+            "dependencies": [1, 1],
+            "details": "创建`PreviewLoginAPIView`，处理`POST`请求。验证邮箱和密码是否匹配（不执行实际登录）。根据用户`avatar`字段判断`avatar_url`，如果为空则根据`display_name`或`username`的首字母生成`avatar_letter`。返回`display_name`、`avatar_url`、`default_avatar`、`avatar_letter`和`valid`字段。无论成功失败，均返回200状态码。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的单元测试，确保基本逻辑和响应符合预期，所有测试通过。"
+          },
+          {
+            "id": 3,
+            "title": "实现登录预验证API频率限制",
+            "description": "在`backend/apps/users/throttling.py`中实现自定义频率限制，并将其应用于登录预验证API，限制同一IP每分钟最多10次请求。",
+            "dependencies": [2],
+            "details": "创建`PreviewLoginThrottle`类，继承Django REST Framework的`SimpleRateThrottle`，配置`scope`和`rate`为每分钟10次。将此限制器应用于`PreviewLoginAPIView`。",
+            "status": "pending",
+            "testStrategy": "运行Subtask 1中编写的频率限制集成测试，模拟多次请求，验证频率限制是否生效，以及在限制下的HTTP状态码和响应是否符合预期。"
+          },
+          {
+            "id": 4,
+            "title": "集成验证码保护到登录预验证API",
+            "description": "将验证码保护机制集成到`POST /api/auth/preview/`接口中，确保在执行预验证逻辑前先验证验证码的有效性。",
+            "dependencies": [2, 2],
+            "details": "在`PreviewLoginAPIView`中添加验证码验证逻辑。从请求中获取`captcha_id`和`captcha_code`，调用后端验证码验证工具进行验证。验证失败时返回相应的错误信息（例如400 Bad Request或自定义错误响应）。",
+            "status": "pending",
+            "testStrategy": "扩展Subtask 1的单元测试，增加验证码失效、验证码错误、缺少验证码参数等场景的测试用例，确保验证码保护机制正常工作。"
+          },
+          {
+            "id": 5,
+            "title": "优化预验证逻辑、响应结构与代码重构",
+            "description": "审查并优化登录预验证API的逻辑和响应结构，确保代码的安全性、性能和可维护性。进行必要的代码重构。",
+            "dependencies": [1, 2, 3, 4],
+            "details": "检查`PreviewLoginAPIView`中的代码，确保异常处理完善，响应数据结构符合最佳实践。优化数据库查询，减少不必要的开销。清理冗余代码，提高代码可读性。确保所有安全最佳实践得到遵循。",
+            "status": "pending",
+            "testStrategy": "运行所有相关的单元测试和集成测试，确保重构没有引入新的bug，并且所有功能依然正常工作。进行代码审查以确保代码质量和安全性。"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "前端：基础UI组件开发 (FloatingInput, DefaultAvatar)",
+        "description": "开发可复用的悬浮式输入框组件 (`FloatingInput.vue`) 和默认头像组件 (`DefaultAvatar.vue`)。",
+        "details": "1. **红（Red）**：编写组件测试，验证`FloatingInput`的标签上浮动画、错误状态显示、图标支持。验证`DefaultAvatar`在有/无`avatar_url`时显示正确头像或首字母。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`FloatingInput.vue`，实现输入时标签上浮动画、错误状态显示、图标支持。创建`DefaultAvatar.vue`，根据传入的`avatar_url`显示真实头像，若无则根据`avatar_letter`显示首字母生成的默认头像。使用Tailwind CSS / 自定义CSS进行样式设计。3. **重构（Refactor）**：优化组件的props、事件和样式，确保可复用性和性能。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/FloatingInput.spec.ts`和`frontend/src/components/auth/__tests__/DefaultAvatar.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写 FloatingInput 组件测试 (Red)",
+            "description": "编写 `FloatingInput.vue` 组件的单元测试，验证其标签上浮动画、错误状态显示和图标支持功能。预期这些测试在组件未实现时会失败。",
+            "dependencies": [],
+            "details": "在 `frontend/src/components/auth/__tests__/FloatingInput.spec.ts` 中创建测试文件。使用 Vue Test Utils 模拟用户输入、聚焦/失焦事件，断言标签的 CSS 类变化、错误消息的显示以及图标的渲染。确保测试覆盖所有关键交互和状态。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，模拟用户交互和不同props，断言组件的渲染和行为是否符合预期。预期测试失败。"
+          },
+          {
+            "id": 2,
+            "title": "编写 DefaultAvatar 组件测试 (Red)",
+            "description": "编写 `DefaultAvatar.vue` 组件的单元测试，验证其在有 `avatar_url` 时显示真实头像，无 `avatar_url` 时根据 `avatar_letter` 显示首字母默认头像。预期这些测试在组件未实现时会失败。",
+            "dependencies": [],
+            "details": "在 `frontend/src/components/auth/__tests__/DefaultAvatar.spec.ts` 中创建测试文件。使用 Vue Test Utils 模拟传入不同 `avatar_url` 和 `avatar_letter` props 的情况，断言 `<img>` 标签的 `src` 属性或显示首字母的 `<span>` 元素内容是否正确。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，模拟不同props，断言组件的渲染内容是否符合预期。预期测试失败。"
+          },
+          {
+            "id": 3,
+            "title": "实现 FloatingInput 组件 (Green)",
+            "description": "在 `frontend/src/components/auth/` 目录下创建并实现 `FloatingInput.vue` 组件，包括标签上浮动画、错误状态显示和图标支持，并确保通过所有相关测试。",
+            "dependencies": [1],
+            "details": "使用 Vue 3 Composition API 实现组件逻辑。利用 Tailwind CSS 或自定义 CSS 实现样式。确保输入框聚焦时标签上浮，输入内容后标签保持上浮。根据 `error` prop 显示错误样式和消息。支持通过 prop 传入图标。运行并确保通过 `FloatingInput` 的所有测试。",
+            "status": "pending",
+            "testStrategy": "运行并确保通过在子任务1中编写的所有单元测试。"
+          },
+          {
+            "id": 4,
+            "title": "实现 DefaultAvatar 组件 (Green)",
+            "description": "在 `frontend/src/components/auth/` 目录下创建并实现 `DefaultAvatar.vue` 组件，根据 `avatar_url` 或 `avatar_letter` 显示头像，并确保通过所有相关测试。",
+            "dependencies": [2],
+            "details": "使用 Vue 3 Composition API 实现组件逻辑。如果传入 `avatar_url`，则显示图片；否则，根据 `avatar_letter` 生成并显示首字母头像。使用 Tailwind CSS 或自定义 CSS 进行样式设计，确保头像的圆形显示和居中对齐。运行并确保通过 `DefaultAvatar` 的所有测试。",
+            "status": "pending",
+            "testStrategy": "运行并确保通过在子任务2中编写的所有单元测试。"
+          },
+          {
+            "id": 5,
+            "title": "优化 FloatingInput 和 DefaultAvatar 组件 (Refactor)",
+            "description": "对 `FloatingInput` 和 `DefaultAvatar` 组件的 props、事件和样式进行优化，提高组件的可复用性、可维护性和性能，同时确保现有测试通过。",
+            "dependencies": [3, 4],
+            "details": "审查组件的 props 定义，确保命名清晰、类型正确且默认值合理。优化事件发射机制。检查并精简 CSS 样式，移除冗余代码，提高性能。确保组件在不同场景下都能良好工作，并考虑无障碍性。重构后需再次运行所有相关测试，确保功能无回归。",
+            "status": "pending",
+            "testStrategy": "运行子任务1和子任务2中编写的所有单元测试，确保重构后功能无回归，所有测试仍然通过。"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "前端：认证相关UI组件开发 (Captcha, PasswordStrength)",
+        "description": "开发验证码组件 (`Captcha.vue`) 和密码强度指示器组件 (`PasswordStrength.vue`)。",
+        "details": "1. **红（Red）**：编写组件测试，验证`Captcha`组件的图片显示、刷新功能、输入框交互。验证`PasswordStrength`组件的实时强度检测和视觉反馈。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`Captcha.vue`，显示验证码图片、刷新按钮和输入框，支持加载状态。创建`PasswordStrength.vue`，实现实时密码强度检测（例如，根据长度、包含字符类型），提供视觉反馈（颜色条）和强度提示文字。3. **重构（Refactor）**：优化组件的逻辑和样式，确保用户体验。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/Captcha.spec.ts`和`frontend/src/components/auth/__tests__/PasswordStrength.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
+        "priority": "medium",
+        "dependencies": [9],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写 Captcha 组件测试 (红)",
+            "description": "为 Captcha.vue 组件编写初始测试用例，验证其图片显示、刷新功能和输入框交互，并确保这些测试在组件未实现时预期失败。",
+            "dependencies": [],
+            "details": "在 `frontend/src/components/auth/__tests__/Captcha.spec.ts` 中创建测试文件。编写测试用例，模拟组件渲染，验证验证码图片是否显示、刷新按钮是否存在且可点击、输入框是否可交互。预期所有测试失败，以遵循测试驱动开发（TDD）的“红”阶段。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，模拟组件的挂载和用户交互，断言组件的渲染输出和方法调用。预期测试失败。"
+          },
+          {
+            "id": 2,
+            "title": "实现 Captcha 组件功能 (绿)",
+            "description": "在 `frontend/src/components/auth/` 目录下创建 `Captcha.vue` 组件，并实现其核心功能，使其通过已编写的测试。",
+            "dependencies": [1],
+            "details": "在 `frontend/src/components/auth/Captcha.vue` 中实现组件。组件应包含一个显示验证码图片的 `img` 标签、一个用于刷新验证码的按钮和一个用于输入验证码的文本框。实现加载状态，例如在图片加载时显示占位符。确保组件通过在子任务1中编写的所有测试。",
+            "status": "pending",
+            "testStrategy": "运行子任务1中编写的测试，确保所有测试通过。"
+          },
+          {
+            "id": 3,
+            "title": "编写 PasswordStrength 组件测试 (红)",
+            "description": "为 PasswordStrength.vue 组件编写初始测试用例，验证其实时强度检测和视觉反馈，并确保这些测试在组件未实现时预期失败。",
+            "dependencies": [],
+            "details": "在 `frontend/src/components/auth/__tests__/PasswordStrength.spec.ts` 中创建测试文件。编写测试用例，模拟不同密码输入，验证组件是否能实时检测密码强度、显示正确的视觉反馈（如颜色条）和强度提示文字。预期所有测试失败，以遵循TDD的“红”阶段。",
+            "status": "pending",
+            "testStrategy": "编写单元测试，模拟组件的挂载和属性更新，断言组件的渲染输出和内部状态。预期测试失败。"
+          },
+          {
+            "id": 4,
+            "title": "实现 PasswordStrength 组件功能 (绿)",
+            "description": "在 `frontend/src/components/auth/` 目录下创建 `PasswordStrength.vue` 组件，并实现其核心功能，使其通过已编写的测试。",
+            "dependencies": [3],
+            "details": "在 `frontend/src/components/auth/PasswordStrength.vue` 中实现组件。组件应接收密码作为 `prop`，并根据密码的长度、包含字符类型（大小写字母、数字、特殊字符）等规则实时计算密码强度。提供视觉反馈（例如，一个根据强度改变颜色的进度条）和相应的强度提示文字。确保组件通过在子任务3中编写的所有测试。",
+            "status": "pending",
+            "testStrategy": "运行子任务3中编写的测试，确保所有测试通过。"
+          },
+          {
+            "id": 5,
+            "title": "优化认证UI组件 (重构)",
+            "description": "对 `Captcha.vue` 和 `PasswordStrength.vue` 组件进行代码重构和优化，提升代码质量、性能和用户体验。",
+            "dependencies": [2, 4],
+            "details": "审查 `Captcha.vue` 和 `PasswordStrength.vue` 的代码，优化逻辑清晰度、可读性和可维护性。改进组件的样式和动画，确保响应式设计和无障碍性。检查并优化性能瓶颈。确保所有现有测试在重构后仍然通过，并考虑添加额外的边缘情况测试。",
+            "status": "pending",
+            "testStrategy": "运行所有现有组件测试，确保重构后功能无回归。进行手动UI测试，验证用户体验和响应式设计。"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "前端：Pinia Auth Store核心实现",
+        "description": "在Pinia中实现`auth` store，定义认证相关的状态和核心动作，包括登录、注册、登出、Token刷新、验证码获取和刷新。",
+        "details": "1. **红（Red）**：编写store测试，验证`auth` store的状态初始化、`login`、`register`、`logout`、`refreshToken`、`fetchCaptcha`、`refreshCaptcha`等action的调用和状态更新。预期测试失败。2. **绿（Green）**：在`frontend/src/stores/auth.ts`中定义`AuthState`接口，包含`user`, `token`, `refreshToken`, `isAuthenticated`, `captcha`等状态。定义`AuthActions`接口，实现`login`, `register`, `logout`, `refreshToken`, `fetchCaptcha`, `refreshCaptcha`等异步action，使用Axios调用后端API。处理Token的存储（例如localStorage或sessionStorage）和`isAuthenticated`状态的更新。3. **重构（Refactor）**：优化store的模块化和错误处理，确保状态管理清晰。",
+        "testStrategy": "编写`frontend/src/stores/__tests__/auth.spec.ts`单元测试，模拟API请求，验证store的状态管理和action的正确性。",
+        "priority": "high",
+        "dependencies": [5, 6, 7, 10],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写Pinia Auth Store初始测试",
+            "description": "编写`auth` store的单元测试，验证其初始状态、`login`、`register`、`logout`、`refreshToken`、`fetchCaptcha`、`refreshCaptcha`等核心action的调用和状态更新逻辑。预期测试失败。",
+            "dependencies": [],
+            "details": "在`frontend/src/stores/__tests__/auth.spec.ts`中创建测试文件。编写测试用例，验证`auth` store的初始状态是否正确。为`login`、`register`、`logout`、`refreshToken`、`fetchCaptcha`、`refreshCaptcha`等action编写测试桩，模拟API调用，并断言store状态的预期变化。确保测试在store未实现时失败。",
+            "status": "pending",
+            "testStrategy": "运行`auth.spec.ts`中的所有测试用例，确认它们在store未实现时能够按照预期失败。"
+          },
+          {
+            "id": 2,
+            "title": "定义Auth Store状态接口与基本结构",
+            "description": "在Pinia中定义`auth` store的初始状态接口(`AuthState`)和动作接口(`AuthActions`)，并设置store的基本结构。",
+            "dependencies": [1],
+            "details": "在`frontend/src/stores/auth.ts`中定义`AuthState`接口，包含`user`, `token`, `refreshToken`, `isAuthenticated`, `captcha`等状态字段及其类型。定义`AuthActions`接口，声明`login`, `register`, `logout`, `refreshToken`, `fetchCaptcha`, `refreshCaptcha`等异步action的签名。初始化`auth` store，设置其`id`和初始状态。",
+            "status": "pending",
+            "testStrategy": "运行`auth.spec.ts`中的测试，确保store的基本结构和初始状态能够通过测试。"
+          },
+          {
+            "id": 3,
+            "title": "实现Auth Store的登录、注册和登出功能",
+            "description": "在`auth` store中实现用户登录、注册和登出功能，包括调用后端API、处理Token存储和`isAuthenticated`状态更新。",
+            "dependencies": [2, 5, 10],
+            "details": "在`frontend/src/stores/auth.ts`中实现`login` action，使用Axios调用后端登录API，成功后将`token`和`refreshToken`存储到`localStorage`或`sessionStorage`，并更新`user`和`isAuthenticated`状态。实现`register` action，调用后端注册API。实现`logout` action，清除存储的Token，重置`user`和`isAuthenticated`状态。",
+            "status": "pending",
+            "testStrategy": "运行`auth.spec.ts`中针对`login`、`register`、`logout`的测试用例，模拟API响应，验证action的正确性、状态更新和Token存储清除逻辑。"
+          },
+          {
+            "id": 4,
+            "title": "实现Auth Store的Token刷新和验证码功能",
+            "description": "在`auth` store中实现Token刷新、获取验证码和刷新验证码的异步动作，并处理相关状态更新。",
+            "dependencies": [3, 2, 6, 10],
+            "details": "在`frontend/src/stores/auth.ts`中实现`refreshToken` action，使用`refreshToken`调用后端API获取新的`token`和`refreshToken`，并更新存储和状态。实现`fetchCaptcha` action，调用后端API获取验证码图片和ID，更新`captcha`状态。实现`refreshCaptcha` action，调用后端API刷新验证码。",
+            "status": "pending",
+            "testStrategy": "运行`auth.spec.ts`中针对`refreshToken`、`fetchCaptcha`、`refreshCaptcha`的测试用例，模拟API响应，验证action的正确性、状态更新和Token刷新逻辑。"
+          },
+          {
+            "id": 5,
+            "title": "优化Auth Store的模块化与错误处理",
+            "description": "对`auth` store进行重构，优化其模块化结构和错误处理机制，确保状态管理清晰、代码健壮。",
+            "dependencies": [4],
+            "details": "审查`auth` store的代码，确保逻辑分离清晰，例如将API调用逻辑封装到单独的服务层。实现统一的错误处理机制，捕获API请求中的错误，并向用户提供友好的反馈。考虑使用Pinia插件或中间件来增强store的功能。确保所有状态更新都是响应式的。",
+            "status": "pending",
+            "testStrategy": "运行所有`auth.spec.ts`测试，确保重构后功能不受影响。手动测试或编写集成测试，验证错误处理机制是否按预期工作，例如API返回错误时是否正确捕获并处理。"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "前端：登录表单开发与集成",
+        "description": "开发`LoginForm.vue`，集成`FloatingInput`和`Captcha`组件，并与`auth` store的登录动作进行集成。",
+        "details": "1. **红（Red）**：编写组件测试，验证`LoginForm`的渲染、表单验证、提交逻辑、错误提示和验证码刷新。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`LoginForm.vue`。使用`FloatingInput`组件处理邮箱和密码输入，使用`Captcha`组件处理验证码。集成VeeValidate进行表单验证。通过Pinia `auth` store调用`login` action。处理登录失败时的错误提示和验证码刷新。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的登录流程。",
+        "priority": "high",
+        "dependencies": [11],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "创建LoginForm骨架并集成FloatingInput",
+            "description": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`文件，并集成`FloatingInput`组件用于邮箱和密码输入字段。",
+            "dependencies": [9],
+            "details": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`。引入`FloatingInput`组件，并将其用于邮箱和密码的输入字段。确保组件能够正确渲染，并且`FloatingInput`的基本功能（如标签上浮）正常工作。",
+            "status": "pending",
+            "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`页面能够加载，并且邮箱和密码输入框（由`FloatingInput`提供）正常显示和交互。"
+          },
+          {
+            "id": 2,
+            "title": "集成Captcha组件与基础表单结构",
+            "description": "在`LoginForm.vue`中集成`Captcha`组件，并构建包含邮箱、密码和验证码输入的基础HTML表单结构。",
+            "dependencies": [1],
+            "details": "在`LoginForm.vue`中引入并集成`Captcha`组件。构建一个完整的`<form>`元素，包含邮箱输入（使用`FloatingInput`）、密码输入（使用`FloatingInput`）、验证码输入（使用`Captcha`）以及一个提交按钮。实现一个空的表单提交方法，为后续逻辑集成做准备。",
+            "status": "pending",
+            "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`中`Captcha`组件能够正确渲染，表单的整体布局和所有输入字段、提交按钮都可见且可交互。"
+          },
+          {
+            "id": 3,
+            "title": "实现表单验证逻辑 (VeeValidate)",
+            "description": "使用VeeValidate库为`LoginForm.vue`中的邮箱、密码和验证码字段实现客户端验证规则，并显示相应的错误信息。",
+            "dependencies": [2],
+            "details": "在`LoginForm.vue`中集成VeeValidate。为邮箱字段添加有效的邮箱格式验证规则。为密码字段添加最小长度（例如8位）和必填验证。为验证码字段添加必填验证。配置VeeValidate以在用户输入无效时显示错误提示信息。",
+            "status": "pending",
+            "testStrategy": "编写组件测试，模拟用户输入无效的邮箱、过短的密码或空验证码，验证VeeValidate是否正确显示错误信息，并在所有字段有效前阻止表单提交。手动测试不同验证场景。"
+          },
+          {
+            "id": 4,
+            "title": "集成Pinia Auth Store登录动作与错误处理",
+            "description": "将`LoginForm`与Pinia `auth` store的`login` action进行集成，处理登录成功后的导航、登录失败时的错误提示和验证码刷新。",
+            "dependencies": [3],
+            "details": "在`LoginForm.vue`中，通过Pinia `useAuthStore`调用`login` action，将表单的邮箱、密码和验证码数据作为参数传递。处理`login` action返回的成功或失败结果。登录成功后，执行页面导航（例如，跳转到仪表盘）。登录失败时，捕获错误信息，显示用户友好的错误提示，并触发`Captcha`组件刷新验证码。",
+            "status": "pending",
+            "testStrategy": "编写组件测试，模拟`auth` store的`login` action的成功和失败场景。验证成功时是否触发正确导航，失败时是否显示错误信息并调用`Captcha`刷新方法。"
+          },
+          {
+            "id": 5,
+            "title": "编写组件测试与表单重构优化",
+            "description": "为`LoginForm.vue`编写全面的组件测试，覆盖渲染、表单验证、提交逻辑、错误提示和验证码刷新。根据测试结果和最佳实践，对表单的交互逻辑和代码结构进行重构和优化。",
+            "dependencies": [4],
+            "details": "在`frontend/src/components/auth/__tests__/LoginForm.spec.ts`中编写组件测试。测试用例应包括：组件的正确渲染、输入有效/无效数据时的验证行为、成功提交后的行为、提交失败时的错误提示和验证码刷新机制。根据测试覆盖率和代码审查，优化表单的交互逻辑、错误消息的显示方式、状态管理和代码可读性。",
+            "status": "pending",
+            "testStrategy": "运行所有编写的组件测试，确保它们全部通过。进行端到端测试，验证完整的登录流程，包括成功登录、错误凭据、验证码错误等场景。确保重构后的代码没有引入新的缺陷。"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "前端：注册表单开发与集成",
+        "description": "开发`RegisterForm.vue`，集成`FloatingInput`、`Captcha`和`PasswordStrength`组件，并与`auth` store的注册动作进行集成。",
+        "details": "1. **红（Red）**：编写组件测试，验证`RegisterForm`的渲染、表单验证、密码强度显示、提交逻辑、错误提示和验证码刷新。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`RegisterForm.vue`。使用`FloatingInput`处理邮箱、密码和确认密码输入，使用`Captcha`组件处理验证码，集成`PasswordStrength`组件显示密码强度。通过Pinia `auth` store调用`register` action。处理注册失败时的错误提示和验证码刷新。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的注册流程。",
+        "priority": "high",
+        "dependencies": [11],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写 `RegisterForm` 组件测试骨架",
+            "description": "创建 `RegisterForm.spec.ts` 文件，编写测试用例以验证组件的渲染、表单验证规则、密码强度显示、提交逻辑、错误提示和验证码刷新。预期这些测试最初会失败。",
+            "dependencies": [],
+            "details": "在 `frontend/src/components/auth/__tests__/` 目录下创建 `RegisterForm.spec.ts`。使用 Vue Test Utils 编写测试，模拟用户输入，断言组件状态和渲染输出。重点关注表单字段的存在、验证消息、密码强度组件的显示、提交按钮状态以及错误提示的显示。",
+            "status": "pending",
+            "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的渲染、验证规则、密码强度显示、提交按钮状态和错误提示。预期测试失败。"
+          },
+          {
+            "id": 2,
+            "title": "开发 `RegisterForm` 基础结构与 `FloatingInput` 集成",
+            "description": "在 `frontend/src/components/auth/` 目录下创建 `RegisterForm.vue`，并使用 `FloatingInput` 组件实现邮箱、密码和确认密码的输入字段。",
+            "dependencies": [9],
+            "details": "创建 `RegisterForm.vue` 文件。定义表单的响应式数据模型（例如，email, password, confirmPassword）。集成 `FloatingInput` 组件，为邮箱、密码和确认密码创建输入框，并绑定到数据模型。实现基本的客户端表单验证逻辑（例如，邮箱格式、密码长度、两次密码一致性）。",
+            "status": "pending",
+            "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，验证`FloatingInput`组件是否正确渲染，表单数据绑定是否正常，以及基本的客户端验证是否生效。"
+          },
+          {
+            "id": 3,
+            "title": "集成 `PasswordStrength` 和 `Captcha` 组件",
+            "description": "将 `PasswordStrength` 组件集成到密码输入字段下方以显示密码强度，并集成 `Captcha` 组件以处理验证码的显示和输入。",
+            "dependencies": [2],
+            "details": "在 `RegisterForm.vue` 中，将 `PasswordStrength` 组件放置在密码输入框下方，并将其 `password` 属性绑定到表单的密码字段。集成 `Captcha` 组件，处理验证码的显示、用户输入和刷新机制。确保验证码组件能够获取新的验证码ID和图片。",
+            "status": "pending",
+            "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，验证`PasswordStrength`组件是否根据密码输入正确显示强度，`Captcha`组件是否正确渲染，以及验证码刷新功能是否可触发。"
+          },
+          {
+            "id": 4,
+            "title": "实现 `auth` store 注册逻辑与错误处理",
+            "description": "将表单提交逻辑与 Pinia `auth` store 的 `register` action 进行集成，并处理注册成功与失败的响应，包括错误提示和验证码刷新。",
+            "dependencies": [3],
+            "details": "在 `RegisterForm.vue` 中，创建一个提交方法，该方法将收集表单数据（邮箱、密码、确认密码、验证码ID和答案）。通过 Pinia `auth` store 调用 `register` action，并传递表单数据。根据 `register` action 的返回结果，显示成功消息或处理注册失败时的错误提示（例如，邮箱已存在、密码强度不足、验证码错误）。在注册失败时，触发 `Captcha` 组件的刷新。",
+            "status": "pending",
+            "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，模拟`auth` store的`register` action的成功和失败场景，验证表单提交后是否正确调用store action，并根据响应显示成功消息或错误提示，以及在失败时是否刷新验证码。"
+          },
+          {
+            "id": 5,
+            "title": "优化表单交互、错误处理与测试验证",
+            "description": "优化 `RegisterForm` 的用户体验，包括表单的交互逻辑、错误提示的清晰度、加载状态的显示，并确保所有组件测试和E2E测试通过。",
+            "dependencies": [1, 2, 3, 4],
+            "details": "审查并改进表单的UI/UX，例如在提交过程中禁用按钮、显示加载指示器。确保所有验证消息和后端错误提示都以用户友好的方式显示。运行并确保所有为 `RegisterForm` 编写的组件测试通过。如果需要，编写或更新E2E测试以验证完整的注册流程。",
+            "status": "pending",
+            "testStrategy": "运行所有`RegisterForm.spec.ts`组件测试，确保所有测试用例通过。进行手动测试以验证表单的整体交互和用户体验。考虑编写或更新E2E测试以验证完整的注册流程。"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "前端：密码找回表单开发与集成",
+        "description": "开发密码找回相关表单，包括发送重置邮件表单和重置密码表单，并与`auth` store的相应动作进行集成。",
+        "details": "1. **红（Red）**：编写组件测试，验证发送重置邮件表单的提交、错误提示。验证重置密码表单的提交、密码强度、错误提示。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`PasswordResetForm.vue`用于发送重置邮件，集成`FloatingInput`和`Captcha`，通过`auth` store调用`sendPasswordReset` action。创建单独的重置密码页面/组件，接收URL中的token，集成`FloatingInput`和`PasswordStrength`，通过`auth` store调用`resetPassword` action。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`组件测试，验证表单的渲染、提交和与store的交互。编写E2E测试，验证完整的密码找回流程。",
+        "priority": "medium",
+        "dependencies": [11],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "实现`auth` store中的密码重置请求动作",
+            "description": "在`auth` store中添加或修改`sendPasswordReset` action，使其能够调用后端API发送密码重置邮件。这是前端表单提交的基础。",
+            "dependencies": [11],
+            "details": "在`frontend/src/store/auth.js`中定义`sendPasswordReset` action。该action应接收用户邮箱和验证码作为参数，并调用后端`/api/auth/password/reset/request/`接口。需要处理API响应，包括成功和错误情况。",
+            "status": "pending",
+            "testStrategy": "单元测试`auth` store的`sendPasswordReset` action，模拟API调用并验证状态更新和错误处理逻辑。"
+          },
+          {
+            "id": 2,
+            "title": "开发发送密码重置邮件表单组件",
+            "description": "在前端创建`PasswordResetForm.vue`组件，用于收集用户邮箱和验证码，并触发密码重置邮件发送。",
+            "dependencies": [1, 2],
+            "details": "在`frontend/src/components/auth/`目录下创建`PasswordResetForm.vue`。集成`FloatingInput`用于邮箱输入，集成`Captcha`组件用于验证码输入。表单提交时，调用`auth` store的`sendPasswordReset` action。需要实现客户端表单验证和错误提示。",
+            "status": "pending",
+            "testStrategy": "编写组件测试`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`，验证表单渲染、输入、提交行为、错误提示以及与`auth` store的交互。"
+          },
+          {
+            "id": 3,
+            "title": "实现`auth` store中的密码重置确认动作",
+            "description": "在`auth` store中添加或修改`resetPassword` action，使其能够调用后端API完成密码重置。这是重置密码页面提交的基础。",
+            "dependencies": [11],
+            "details": "在`frontend/src/store/auth.js`中定义`resetPassword` action。该action应接收token、新密码和确认密码作为参数，并调用后端`/api/auth/password/reset/confirm/`接口。需要处理API响应，包括成功和错误情况。",
+            "status": "pending",
+            "testStrategy": "单元测试`auth` store的`resetPassword` action，模拟API调用并验证状态更新和错误处理逻辑。"
+          },
+          {
+            "id": 4,
+            "title": "开发重置密码页面/组件",
+            "description": "创建一个独立的页面或组件，用于用户通过重置链接访问时输入新密码并完成密码重置。",
+            "dependencies": [3],
+            "details": "创建一个路由（例如`/reset-password?token=...`）和对应的Vue组件。组件应从URL中获取`token`参数。集成`FloatingInput`用于新密码和确认密码输入，集成`PasswordStrength`组件显示密码强度。表单提交时，调用`auth` store的`resetPassword` action。需要实现客户端表单验证、密码强度显示和错误提示。",
+            "status": "pending",
+            "testStrategy": "编写组件测试，验证重置密码页面的渲染、token解析、输入、提交行为、密码强度显示、错误提示以及与`auth` store的交互。"
+          },
+          {
+            "id": 5,
+            "title": "编写密码找回流程的组件与E2E测试",
+            "description": "编写针对发送重置邮件表单和重置密码页面的组件测试，并编写端到端测试以验证完整的密码找回流程。",
+            "dependencies": [2, 4],
+            "details": "完善`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`，确保覆盖发送重置邮件表单的提交、错误提示、验证码交互等场景。为重置密码页面/组件编写组件测试，验证其提交、密码强度、错误提示、token处理等场景。编写E2E测试（例如在`e2e/tests/auth/password-reset.spec.ts`），模拟用户从请求重置邮件到点击链接、输入新密码并成功重置的完整流程。",
+            "status": "pending",
+            "testStrategy": "运行所有编写的组件测试和E2E测试，确保所有测试通过，验证密码找回功能的完整性和健壮性。"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "前端：用户预览组件开发与登录表单集成",
+        "description": "开发`UserPreview.vue`组件，并在`auth` store中实现登录预验证动作，将其集成到`LoginForm.vue`中。",
+        "details": "1. **红（Red）**：编写组件测试，验证`UserPreview`在不同状态（加载中、有效、无效、无头像）下的显示。编写store测试，验证`previewLogin` action的调用和`preview`状态的更新。编写集成测试，验证`LoginForm`中预验证的触发和`UserPreview`的显示。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`UserPreview.vue`，显示圆形头像（真实头像或首字母默认头像）、用户显示名称，支持加载中状态和淡入动画。在`frontend/src/stores/auth.ts`的`AuthState`中添加`preview`状态，实现`previewLogin` action，调用后端`/api/auth/preview/`接口，并更新`preview`状态。在`LoginForm.vue`中，监听密码输入框的失焦事件或停止输入500ms后触发`previewLogin` action，并将`UserPreview.vue`集成到表单上方。3. **重构（Refactor）**：优化组件的动画效果和与store的交互逻辑。",
+        "testStrategy": "编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`组件测试。编写`frontend/src/stores/__tests__/auth.spec.ts`单元测试，模拟`previewLogin`的API响应。编写`e2e/tests/auth/login-preview.spec.ts`E2E测试，验证登录预验证的触发、头像显示、默认头像显示、错误处理和频率限制。",
+        "priority": "high",
+        "dependencies": [8, 9, 11, 12],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "开发UserPreview组件及其单元测试",
+            "description": "在`frontend/src/components/auth/`目录下创建`UserPreview.vue`组件，实现圆形头像（真实头像或首字母默认头像）、用户显示名称，支持加载中状态和淡入动画。同时，编写组件测试，验证`UserPreview`在不同状态（加载中、有效、无效、无头像）下的显示。",
+            "dependencies": [],
+            "details": "创建`frontend/src/components/auth/UserPreview.vue`。实现Vue组件的模板、样式和逻辑，以显示用户头像和名称。头像应支持加载中状态和淡入动画。编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`，使用Vue Test Utils模拟不同props和状态，验证组件的渲染和行为。",
+            "status": "pending",
+            "testStrategy": "编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`，覆盖加载中、有效用户（带头像、无头像）、无效用户等状态下的组件渲染和样式。"
+          },
+          {
+            "id": 2,
+            "title": "实现auth store的预验证状态和动作及其单元测试",
+            "description": "在`frontend/src/stores/auth.ts`的`AuthState`中添加`preview`状态，并实现`previewLogin` action。该action将调用后端`/api/auth/preview/`接口，并根据接口响应更新`preview`状态。同时，编写store单元测试，验证`previewLogin` action的调用和`preview`状态的更新。",
+            "dependencies": [],
+            "details": "修改`frontend/src/stores/auth.ts`，添加`preview`状态（例如，一个包含用户数据或错误信息的对象）。实现`previewLogin`异步action，使用`axios`或其他HTTP客户端调用`/api/auth/preview/`接口。处理API响应，更新`preview`状态。编写`frontend/src/stores/__tests__/auth.spec.ts`，模拟API调用，验证`previewLogin` action的逻辑和状态更新。",
+            "status": "pending",
+            "testStrategy": "编写`frontend/src/stores/__tests__/auth.spec.ts`，使用`vi.spyOn`或`mock-service-worker`模拟`/api/auth/preview/`接口的成功和失败响应，验证`previewLogin` action是否正确调用API并更新`preview`状态。"
+          },
+          {
+            "id": 3,
+            "title": "将UserPreview集成到LoginForm并触发预验证",
+            "description": "在`LoginForm.vue`中，监听密码输入框的失焦事件或停止输入500ms后触发`previewLogin` action。将`UserPreview.vue`组件集成到`LoginForm`的表单上方，并根据`auth` store的`preview`状态显示用户预览信息。同时，编写集成测试，验证`LoginForm`中预验证的触发和`UserPreview`的显示。",
+            "dependencies": [1, 2, 12],
+            "details": "修改`frontend/src/components/auth/LoginForm.vue`。在密码输入框上添加事件监听器（例如`@blur`或使用`debounce`处理`@input`事件），在满足条件时调用`auth` store的`previewLogin` action。在`LoginForm`模板中引入并使用`UserPreview`组件，通过props将`auth` store中的`preview`状态传递给`UserPreview`。编写集成测试，验证`LoginForm`的交互逻辑。",
+            "status": "pending",
+            "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`或新的集成测试文件，模拟用户在密码输入框中输入并失焦，验证`previewLogin` action是否被触发，以及`UserPreview`组件是否根据模拟的`preview`状态正确显示。"
+          },
+          {
+            "id": 4,
+            "title": "优化UserPreview组件动画与store交互",
+            "description": "审查并优化`UserPreview.vue`组件的淡入动画效果，确保用户体验流畅。同时，优化`UserPreview`组件与`auth` store之间的数据流和交互逻辑，减少不必要的渲染或提高响应速度。",
+            "dependencies": [1, 3],
+            "details": "检查`UserPreview.vue`中的CSS动画或Vue过渡效果，进行调整以达到最佳视觉效果。分析组件的`props`、`computed`属性和`watchers`，确保与`auth` store的`preview`状态同步高效。考虑使用`v-memo`或`keep-alive`等Vue优化策略（如果适用）。",
+            "status": "pending",
+            "testStrategy": "手动测试组件的动画效果和数据更新流畅性。如果需要，可以添加或修改组件测试，以验证特定交互模式下的性能或动画行为。"
+          },
+          {
+            "id": 5,
+            "title": "编写端到端（E2E）测试",
+            "description": "编写E2E测试，验证完整的登录预验证流程。包括验证用户在密码输入后预验证是否触发、`UserPreview`组件是否正确显示用户头像（真实头像或默认头像）、错误处理是否正确显示以及频率限制是否生效。",
+            "dependencies": [3],
+            "details": "在`e2e/tests/auth/`目录下创建`login-preview.spec.ts`。使用Cypress或Playwright等E2E测试框架，模拟用户访问登录页面、输入用户名和密码、触发预验证。断言`UserPreview`组件的可见性、显示内容（头像URL、显示名称）、加载状态和错误提示。模拟后端响应以测试频率限制等场景。",
+            "status": "pending",
+            "testStrategy": "编写`e2e/tests/auth/login-preview.spec.ts`，覆盖以下场景：1. 成功预验证并显示用户头像。2. 成功预验证但用户无头像，显示默认头像。3. 预验证失败，显示错误信息。4. 频繁触发预验证，验证频率限制。"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "前端：邮箱验证流程实现",
+        "description": "实现前端邮箱验证流程，包括发送验证邮件的UI触发和验证链接的处理。",
+        "details": "1. **红（Red）**：编写E2E测试，验证用户注册后收到验证邮件，点击链接后页面跳转并显示验证结果。预期测试失败。2. **绿（Green）**：在`auth` store中实现`sendEmailVerification`和`verifyEmail` action。在注册成功后，提示用户查收验证邮件，并提供重新发送验证邮件的UI入口。实现一个专门的路由/页面来处理邮箱验证链接（例如`/verify-email?token=...`），在该页面中调用`verifyEmail` action并显示验证结果。3. **重构（Refactor）**：优化用户提示和页面跳转逻辑。",
+        "testStrategy": "编写`e2e/tests/auth/register.spec.ts`和`e2e/tests/auth/email-verification.spec.ts`E2E测试，验证注册后邮箱验证流程的完整性，包括邮件发送、链接点击和状态更新。",
+        "priority": "medium",
+        "dependencies": [6, 11, 13],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "编写邮箱验证E2E测试",
+            "description": "编写端到端测试，验证用户注册后收到验证邮件，点击链接后页面跳转并显示验证结果。此为红阶段测试，预期测试失败。",
+            "dependencies": [],
+            "details": "在`e2e/tests/auth/email-verification.spec.ts`中编写E2E测试用例。测试应模拟用户注册流程，检查模拟的邮件服务中是否收到验证邮件，模拟点击邮件中的验证链接，并验证页面是否正确跳转以及是否显示了预期的验证结果。预期此测试在当前阶段会失败。",
+            "status": "pending",
+            "testStrategy": "运行新编写的E2E测试，确认其在当前未实现功能的情况下失败。"
+          },
+          {
+            "id": 2,
+            "title": "实现邮箱验证相关的Auth Store Action",
+            "description": "在`auth` store中实现`sendEmailVerification`和`verifyEmail`两个action，用于与后端API进行交互，处理邮箱验证的发送和验证逻辑。",
+            "dependencies": [],
+            "details": "在`frontend/src/stores/auth.js`中实现`sendEmailVerification` action，该action负责调用后端发送验证邮件的API。同时，实现`verifyEmail` action，该action负责调用后端验证邮箱的API，并根据API响应更新用户状态或显示结果。",
+            "status": "pending",
+            "testStrategy": "编写单元测试或集成测试，验证`sendEmailVerification`和`verifyEmail`这两个action能够正确地调用后端API并处理响应数据，包括成功和失败场景。"
+          },
+          {
+            "id": 3,
+            "title": "实现注册成功后的邮箱验证UI提示和重发入口",
+            "description": "在用户注册成功后，前端页面应显示明确的提示信息，引导用户查收验证邮件，并提供一个UI入口（如按钮或链接）允许用户重新发送验证邮件。",
+            "dependencies": [2],
+            "details": "修改注册成功后的页面或组件，添加一个信息提示框，告知用户已发送验证邮件，并提醒用户检查收件箱。集成一个“重新发送验证邮件”按钮，点击时调用`auth` store中的`sendEmailVerification` action，并处理发送成功或失败的反馈。",
+            "status": "pending",
+            "testStrategy": "手动测试注册流程，验证注册成功后提示信息的显示是否正确，以及“重新发送验证邮件”按钮的功能是否正常，包括点击后是否调用了相应的action并显示了反馈。"
+          },
+          {
+            "id": 4,
+            "title": "实现邮箱验证链接处理页面及逻辑",
+            "description": "创建一个专门的路由和页面（例如`/verify-email?token=...`），用于接收邮箱验证链接中的token，调用`verifyEmail` action处理验证逻辑，并向用户显示验证结果。",
+            "dependencies": [2],
+            "details": "创建`frontend/src/views/VerifyEmailView.vue`组件，并配置相应的路由`/verify-email`。在该页面中，从URL查询参数中获取`token`，然后调用`auth` store中的`verifyEmail` action。根据`verifyEmail` action的返回结果，显示邮箱验证成功或失败的消息，并提供适当的导航选项（如跳转到登录页或个人中心）。",
+            "status": "pending",
+            "testStrategy": "手动构造带有有效和无效token的URL，访问`/verify-email`页面，验证页面是否能正确解析token，调用`verifyEmail` action，并根据验证结果显示正确的UI和执行相应的页面跳转。"
+          },
+          {
+            "id": 5,
+            "title": "优化邮箱验证的用户提示和页面跳转逻辑",
+            "description": "对整个邮箱验证流程中的用户提示信息进行优化，使其更清晰、友好，并改进页面跳转逻辑，以提升整体用户体验。",
+            "dependencies": [3, 4],
+            "details": "审查并优化注册成功后的提示信息、重新发送邮件的反馈、以及邮箱验证页面上的成功/失败提示文案，确保其清晰、易懂且具有指导性。优化验证成功或失败后的页面跳转逻辑，例如验证成功后自动跳转到用户仪表盘或登录页，验证失败后提供重试、联系支持或重新发送验证邮件的选项。",
+            "status": "pending",
+            "testStrategy": "进行全面的用户体验测试，确保所有提示信息准确、及时，页面跳转逻辑符合预期，用户在整个邮箱验证流程中能够获得流畅且友好的体验。"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "前端：UI/UX增强与响应式设计",
+        "description": "根据PRD的UI设计规范，对所有认证相关页面和组件进行美化，实现品牌配色方案、悬浮式输入框动画和响应式布局。",
+        "details": "1. **红（Red）**：进行视觉验收，验证配色方案、动画效果和响应式布局是否符合设计稿和PRD要求。预期不完全符合。2. **绿（Green）**：应用PRD中指定的品牌配色方案（深蓝、金色、渐变背景等）。使用CSS transform和transition为`FloatingInput`实现标签上浮动画。调整`LoginView.vue`的布局，实现桌面端的左右分栏和移动端的单列全屏布局，设置断点（768px, 1024px, 1440px）。为`UserPreview`等组件添加淡入动画效果。3. **重构（Refactor）**：优化CSS结构，确保样式一致性和可维护性。",
+        "testStrategy": "进行全面的UI/UX验收测试，包括在不同设备和屏幕尺寸下检查页面布局、元素对齐、颜色、字体和动画效果。确保所有交互流畅，无视觉缺陷。",
+        "priority": "medium",
+        "dependencies": [9, 10, 12, 13, 14, 15, 16],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "初始UI/UX视觉验收与环境准备",
+            "description": "根据PRD设计规范，对当前所有认证相关页面和组件进行初步视觉验收，识别与设计稿不符之处，并准备开发环境。",
+            "dependencies": [],
+            "details": "审查所有认证相关页面（如LoginView, RegisterView, ForgotPasswordView等）和组件（如FloatingInput, UserPreview）的当前UI/UX，记录与PRD品牌配色、布局、动画效果不符的地方。确认开发环境已配置，可以开始进行样式修改。",
+            "status": "pending",
+            "testStrategy": "手动进行视觉检查，与PRD设计稿进行比对，列出不符合项。"
+          },
+          {
+            "id": 2,
+            "title": "应用品牌配色方案",
+            "description": "根据PRD中指定的品牌配色方案（深蓝、金色、渐变背景等），更新所有认证相关页面和组件的颜色样式。",
+            "dependencies": [1],
+            "details": "在全局CSS或Vue组件的`style`块中定义并应用PRD中指定的深蓝、金色、渐变背景等品牌颜色变量。更新`LoginView.vue`, `RegisterView.vue`以及其他相关组件的背景色、文本颜色、按钮颜色等，使其符合品牌规范。",
+            "status": "pending",
+            "testStrategy": "在不同页面和组件中检查颜色应用是否正确，与设计稿进行比对。"
+          },
+          {
+            "id": 3,
+            "title": "实现悬浮式输入框动画",
+            "description": "为`FloatingInput`组件实现标签上浮动画效果，提升用户体验。",
+            "dependencies": [1],
+            "details": "修改`FloatingInput`组件的CSS，使用`CSS transform`和`transition`属性，当输入框获得焦点或有内容时，使其标签（placeholder/label）向上浮动并缩小，实现平滑的动画效果。",
+            "status": "pending",
+            "testStrategy": "手动测试`FloatingInput`组件，验证焦点和输入内容时标签上浮动画的流畅性和准确性。"
+          },
+          {
+            "id": 4,
+            "title": "实现响应式布局与组件淡入动画",
+            "description": "调整`LoginView.vue`的布局以支持桌面端和移动端响应式设计，并为`UserPreview`等组件添加淡入动画效果。",
+            "dependencies": [1],
+            "details": "修改`LoginView.vue`的CSS，使用媒体查询（`@media`）设置断点（768px, 1024px, 1440px）。在桌面端实现左右分栏布局，在移动端实现单列全屏布局。为`UserPreview`组件以及其他需要视觉增强的组件添加`CSS opacity`和`transition`实现的淡入动画效果。",
+            "status": "pending",
+            "testStrategy": "在不同屏幕尺寸（模拟器或真实设备）下测试`LoginView.vue`的布局，验证断点是否生效。检查`UserPreview`等组件的淡入动画是否按预期触发和显示。"
+          },
+          {
+            "id": 5,
+            "title": "优化CSS结构与最终视觉验收",
+            "description": "优化整个前端项目的CSS结构，确保样式的一致性和可维护性，并进行最终的UI/UX视觉验收。",
+            "dependencies": [2, 3, 4],
+            "details": "审查并重构认证相关页面和组件的CSS代码，移除冗余样式，统一命名规范，使用CSS变量或预处理器变量管理可复用样式。确保样式模块化和可维护性。完成所有样式修改后，在不同设备和浏览器上进行全面的视觉验收，验证所有配色、动画和响应式布局是否完全符合PRD设计稿要求。",
+            "status": "pending",
+            "testStrategy": "进行全面的UI/UX验收测试，包括在不同设备和屏幕尺寸下检查页面布局、元素对齐、颜色、字体和动画效果。确保所有交互流畅，无视觉缺陷。同时进行代码审查，确保CSS结构优化到位。"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "整体测试与代码重构优化",
+        "description": "执行所有后端单元测试、集成测试和前端组件测试、E2E测试，确保代码覆盖率达到80%以上，并进行全面的代码重构和优化。",
+        "details": "1. **红（Red）**：运行所有测试，检查是否有失败的测试用例或代码覆盖率未达标。2. **绿（Green）**：修复所有测试失败的问题，确保所有单元测试、集成测试和E2E测试通过。使用代码覆盖率工具（如Coverage.py for Django, Vitest for Vue）检查并提升代码覆盖率至80%以上。对后端API、序列化器、模型和前端组件、store进行代码审查和重构，消除冗余代码，提高可读性和性能。3. **重构（Refactor）**：持续优化代码结构，确保遵循最佳实践，提高系统的可维护性和扩展性。",
+        "testStrategy": "运行所有已编写的测试用例，包括`backend/tests/unit/`、`backend/tests/integration/`、`frontend/src/components/auth/__tests__/`和`e2e/tests/auth/`下的所有测试文件。生成代码覆盖率报告，确保达到80%的最低要求。进行全面的功能验收和安全验收，确保所有PRD中的验收标准均已满足。",
+        "priority": "high",
+        "dependencies": [
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "执行所有现有测试并分析结果",
+            "description": "运行所有后端单元测试、集成测试以及前端组件测试、E2E测试，收集测试报告和初始代码覆盖率报告，识别失败用例和覆盖率不足的区域。",
+            "dependencies": [],
+            "details": "使用`pytest`运行`backend/tests/`下的所有测试，使用`vitest`运行`frontend/src/components/__tests__/`下的所有测试，使用`cypress run`运行`e2e/tests/`下的所有E2E测试。生成`coverage.py`和`vitest --coverage`报告。",
+            "status": "pending",
+            "testStrategy": "验证测试报告是否生成，并记录失败的测试用例列表和初始代码覆盖率百分比。"
+          },
+          {
+            "id": 2,
+            "title": "修复所有测试失败问题",
+            "description": "根据Subtask 1的测试报告，修复所有失败的后端单元测试、集成测试、前端组件测试和E2E测试用例，确保所有测试均能通过。",
+            "dependencies": [1],
+            "details": "逐一排查Subtask 1中识别出的失败测试用例，调试相关代码，修复bug。在修复后重新运行受影响的测试，确保其通过。",
+            "status": "pending",
+            "testStrategy": "重新运行所有测试，确保所有后端和前端测试用例均成功通过，无任何失败。"
+          },
+          {
+            "id": 3,
+            "title": "提升代码覆盖率至80%以上",
+            "description": "分析当前代码覆盖率报告，针对覆盖率不足的模块和功能编写或补充测试用例，确保整体代码覆盖率达到80%以上。",
+            "dependencies": [2],
+            "details": "使用`coverage.py`和`vitest --coverage`工具分析详细的覆盖率报告，找出未被测试代码覆盖的行和分支。为这些区域补充新的单元测试、集成测试或E2E测试，直到后端和前端的整体代码覆盖率均达到80%以上。",
+            "status": "pending",
+            "testStrategy": "重新生成代码覆盖率报告，验证后端和前端的整体代码覆盖率均达到或超过80%。"
+          },
+          {
+            "id": 4,
+            "title": "后端代码重构与优化",
+            "description": "对后端API接口、序列化器、模型、视图和业务逻辑进行全面的代码审查、重构和优化，消除冗余代码，提高代码可读性、性能和可维护性。",
+            "dependencies": [3],
+            "details": "审查`backend/apps/`下所有模块的代码，特别是认证相关的API、序列化器和模型。优化数据库查询，减少不必要的计算，确保遵循Django/DRF的最佳实践。使用linter和formatter工具（如Black, flake8）确保代码风格一致。",
+            "status": "pending",
+            "testStrategy": "进行功能回归测试，确保重构后所有后端API功能正常。进行性能基准测试（如使用`locust`或`jmeter`），验证性能没有下降反而提升。"
+          },
+          {
+            "id": 5,
+            "title": "前端代码重构与优化",
+            "description": "对前端组件、Vuex/Pinia Store、路由和工具函数进行全面的代码审查、重构和优化，消除冗余代码，提高代码可读性、性能和用户体验。",
+            "dependencies": [3],
+            "details": "审查`frontend/src/`下所有组件、store模块和工具函数。优化组件渲染逻辑，减少不必要的重新渲染。优化状态管理，确保数据流清晰。使用linter和formatter工具（如ESLint, Prettier）确保代码风格一致。",
+            "status": "pending",
+            "testStrategy": "进行功能回归测试，确保重构后所有前端页面和交互功能正常。进行性能分析（如使用浏览器开发者工具），验证页面加载速度和响应性没有下降反而提升。"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-12-06T03:28:12.663Z",
+      "updated": "2025-12-06T03:28:12.663Z",
+      "description": "Tasks for REQ-2025-003-user-login context",
+      "source_prd_path": "docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login.md",
+      "development_methodology": "TDD (Test-Driven Development)"
+    }
+  },
+  "REQ-2025-001": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-001 context"
+    }
+  },
+  "REQ-2025-002": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-002 context"
+    }
+  },
+  "REQ-2025-004": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-004 context"
+    }
+  },
+  "REQ-2025-005": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-005 context"
+    }
+  },
+  "REQ-2025-006": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-006 context"
+    }
+  },
+  "REQ-2025-007": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-007 context"
+    }
+  },
+  "REQ-2025-008": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-008 context"
+    }
+  }
+}
