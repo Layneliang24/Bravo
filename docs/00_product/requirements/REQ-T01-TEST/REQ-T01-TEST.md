@@ -1,14 +1,37 @@
 ---
-req_id: REQ-T01-TEST
+req_id: REQ-2025-005-t01-test
 title: T01测试场景
+version: "1.0"
 status: approved
+priority: low
+type: test
+created_at: 2025-11-30T10:00:00Z
+updated_at: 2025-11-30T10:00:00Z
+author: system
+task_master_task: .taskmaster/tasks/REQ-2025-005-t01-test/tasks.json
 test_files:
   - backend/tests/unit/test_t01.py
 implementation_files:
   - backend/apps/test_t01/views.py
+api_contract: docs/01_guideline/api-contracts/REQ-2025-005-t01-test/api.yaml
 deletable: false
 ---
 
-# T01测试场景
+# REQ-2025-005-t01-test: T01测试场景
+
+## 功能概述
 
 测试有PRD但无Task-Master任务的情况。
+
+## 用户故事
+
+作为开发者，我需要确保代码文件与Task-Master任务关联。
+
+## 验收标准
+
+- [ ] 代码文件包含REQ-ID关联
+- [ ] 存在对应的Task-Master任务
+
+## 测试用例
+
+测试Task-Master任务关联验证功能。

@@ -1,5 +1,5 @@
 ---
-req_id: REQ-2025-EXAMPLE-demo
+req_id: REQ-2025-001-example-demo
 title: V4架构示例需求
 version: "1.0"
 status: approved
@@ -8,19 +8,19 @@ type: feature
 created_at: 2025-11-30T10:00:00Z
 updated_at: 2025-11-30T10:00:00Z
 author: system
-task_master_task: .taskmaster/tasks/REQ-2025-EXAMPLE-demo/tasks.json
+task_master_task: .taskmaster/tasks/REQ-2025-001-example-demo/tasks.json
 test_files:
   - backend/tests/unit/test_example.py
   - e2e/tests/test-example.spec.ts
 implementation_files:
   - backend/apps/example/views.py
   - frontend/src/components/Example.vue
-api_contract: docs/01_guideline/api-contracts/REQ-2025-EXAMPLE-demo/api.yaml
+api_contract: docs/01_guideline/api-contracts/REQ-2025-001-example-demo/api.yaml
 deletable: true
 delete_requires_review: false
 ---
 
-# REQ-2025-EXAMPLE-demo: V4架构示例需求
+# REQ-2025-001-example-demo: V4架构示例需求
 
 这是一个示例PRD，用于演示V4架构工作流。
 
