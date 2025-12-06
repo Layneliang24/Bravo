@@ -155,7 +155,7 @@ restore_protection() {
     local cherry_pick_head="$PROJECT_ROOT/.git/CHERRY_PICK_HEAD"
     local rebase_apply="$PROJECT_ROOT/.git/rebase-apply"
     local rebase_merge="$PROJECT_ROOT/.git/rebase-merge"
-    
+
     if [[ -f "$merge_head" ]] || [[ -f "$cherry_pick_head" ]] || [[ -d "$rebase_apply" ]] || [[ -d "$rebase_merge" ]]; then
         log_message "⏸️  SKIP | 检测到正在合并/变基操作，跳过更新 .git-protection-config 以避免冲突"
     else
