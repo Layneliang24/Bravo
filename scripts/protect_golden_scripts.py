@@ -263,9 +263,7 @@ def main():
     if os.environ.get("CI") == "true":
         print("ERROR: 检测到CI环境中的修改尝试")
         print("INFO: AI无法在CI环境中修改保护脚本")
-        log_security_violation(
-            "CI环境修改尝试", "文件: {}".format(", ".join(actually_modified))
-        )
+        log_security_violation("CI环境修改尝试", "文件: {}".format(", ".join(golden_files)))
         sys.exit(1)
 
     # 要求授权
