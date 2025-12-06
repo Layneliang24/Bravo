@@ -284,7 +284,8 @@ jobs:
   # 条件测试执行 (基于分支类型)
   conditional-test-execution:
     name: "Conditional Test Execution"
-    needs: [detect-branch-context, quick-health-check]
+    needs:
+      [detect-branch-context, quick-health-check, compliance-check-and-rollback]
     if: needs.detect-branch-context.outputs.skip-validation != 'true'
     uses: ./.github/workflows/test-suite.yml
     with:
@@ -303,10 +304,210 @@ jobs:
       min-coverage: ${{ needs.detect-branch-context.outputs.coverage-required }}
       target-branch: ${{ github.ref_name }}
 
+  # V4合规引擎验证和自动回滚
+  compliance-check-and-rollback:
+    name: "V4 Compliance Check & Auto Rollback"
+    needs: [detect-branch-context, branch-protection-check]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml -q
+
+      - name: Run V4 Compliance Check
+        id: compliance
+        run: |
+          echo "🔍 Running V4 compliance validation..."
+
+          if [ -f ".compliance/runner.py" ]; then
+            # 获取推送中修改的文件
+            PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            if [ -n "$PREV_SHA" ]; then
+              CHANGED_FILES=$(git diff --name-only --diff-filter=ACM $PREV_SHA...HEAD || echo "")
+            else
+              CHANGED_FILES=$(git diff --name-only --diff-filter=ACM HEAD~1...HEAD || echo "")
+            fi
+
+            if [ -n "$CHANGED_FILES" ]; then
+              echo "📋 Changed files:"
+              echo "$CHANGED_FILES" | head -20
+
+              # 运行合规检查
+              python .compliance/runner.py $(echo "$CHANGED_FILES" | tr '\n' ' ') || {
+                echo "compliance_failed=true" >> $GITHUB_OUTPUT
+                echo ""
+                echo "❌ V4 Compliance validation failed!"
+                exit 1
+              }
+              echo "compliance_failed=false" >> $GITHUB_OUTPUT
+            else
+              echo "ℹ️ No changed files to validate"
+              echo "compliance_failed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ℹ️ Compliance engine not installed, skipping validation"
+            echo "compliance_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Unauthorized Deletions
+        id: check_deletions
+        run: |
+          echo "🔍 Checking for unauthorized function deletions..."
+
+          # 检查是否有代码文件被删除
+          PREV_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+          if [ -n "$PREV_SHA" ]; then
+            DELETED_FILES=$(git diff --name-only --diff-filter=D $PREV_SHA...HEAD | grep -E '\.(py|vue|ts|js)$' || echo "")
+          else
+            DELETED_FILES=$(git diff --name-only --diff-filter=D HEAD~1...HEAD | grep -E '\.(py|vue|ts|js)$' || echo "")
+          fi
+
+          if [ -n "$DELETED_FILES" ]; then
+            echo "⚠️ Code files deleted:"
+            echo "$DELETED_FILES"
+            echo ""
+            echo "🔍 Checking if deletions are authorized by PRD..."
+
+            # 检查提交消息中是否提到删除原因
+            COMMIT_MSG=$(git log -1 --format="%B")
+            if echo "$COMMIT_MSG" | grep -qiE "(remove|delete|deprecate|refactor|cleanup)"; then
+              echo "✅ Deletion mentioned in commit message"
+              echo "deletion_authorized=true" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️ Deletion not clearly explained in commit message"
+              echo "deletion_authorized=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "✅ No code files deleted"
+            echo "deletion_authorized=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Severe Violations
+        id: check_violations
+        run: |
+          echo "🔍 Checking for severe violations using rollback.py..."
+
+          CURRENT_SHA="${{ github.sha }}"
+
+          # 使用rollback.py检查严重违规
+          if [ -f ".compliance/rollback.py" ]; then
+            python .compliance/rollback.py "$CURRENT_SHA" || {
+              VIOLATION_EXIT_CODE=$?
+              if [ $VIOLATION_EXIT_CODE -eq 1 ]; then
+                echo "severe_violation=true" >> $GITHUB_OUTPUT
+                echo "❌ Severe violation detected by rollback.py"
+              else
+                echo "severe_violation=false" >> $GITHUB_OUTPUT
+                echo "✅ No severe violations detected"
+              fi
+            }
+          else
+            echo "⚠️ rollback.py not found, using basic checks"
+            echo "severe_violation=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 检查合规检查结果
+          if [ "${{ steps.compliance.outputs.compliance_failed }}" == "true" ]; then
+            echo "severe_violation=true" >> $GITHUB_OUTPUT
+            echo "❌ Compliance check failed"
+          fi
+
+          # 检查删除授权
+          if [ "${{ steps.check_deletions.outputs.deletion_authorized }}" == "false" ]; then
+            echo "severe_violation=true" >> $GITHUB_OUTPUT
+            echo "❌ Unauthorized deletion detected"
+          fi
+
+      - name: Auto Rollback on Violation
+        if: steps.compliance.outputs.compliance_failed == 'true' || steps.check_deletions.outputs.deletion_authorized == 'false' || steps.check_violations.outputs.severe_violation == 'true'
+        run: |
+          echo "🚨 V4 Compliance violation detected!"
+          echo ""
+          echo "📋 Violation details:"
+          echo "  - Compliance check: ${{ steps.compliance.outputs.compliance_failed }}"
+          echo "  - Deletion authorized: ${{ steps.check_deletions.outputs.deletion_authorized }}"
+          echo "  - Severe violation: ${{ steps.check_violations.outputs.severe_violation }}"
+          echo ""
+
+          CURRENT_SHA="${{ github.sha }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          # 对于main和dev分支的合并提交，执行更严格的检查
+          if [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "dev" ]]; then
+            echo "🚨 CRITICAL: Violation on protected branch ($BRANCH_NAME)"
+            echo ""
+            echo "📋 V4架构要求："
+            echo "  - 所有代码必须关联PRD"
+            echo "  - 所有代码必须有测试文件"
+            echo "  - 所有代码必须有Task-Master任务"
+            echo "  - 删除功能必须获得PRD授权"
+            echo ""
+            echo "🔄 自动回滚机制："
+
+            # 尝试使用rollback.py执行回滚
+            if [ -f ".compliance/rollback.py" ]; then
+              echo "  使用rollback.py执行回滚..."
+              python .compliance/rollback.py "$CURRENT_SHA" && {
+                echo "✅ 自动回滚成功"
+                echo ""
+                echo "📋 回滚后的操作："
+                echo "  1. 修复合规问题"
+                echo "  2. 更新PRD（如需要）"
+                echo "  3. 重新提交"
+              } || {
+                echo "⚠️ 自动回滚失败，需要手动处理"
+                echo ""
+                echo "📋 手动回滚步骤："
+                echo "  git revert $CURRENT_SHA"
+                echo "  git push origin $BRANCH_NAME"
+              }
+            else
+              echo "⚠️ rollback.py not found, providing manual instructions"
+              echo ""
+              echo "📋 手动回滚步骤："
+              echo "  git revert $CURRENT_SHA"
+              echo "  git push origin $BRANCH_NAME"
+            fi
+
+            # 记录到审计日志
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] V4合规违规 - 分支:$BRANCH_NAME - 提交:$CURRENT_SHA - 操作人:${{ github.actor }}" >> .compliance/audit.log || true
+
+            exit 1
+          else
+            # 对于feature分支，只警告
+            echo "⚠️ Compliance violation on feature branch"
+            echo "   This will block PR merge"
+            echo ""
+            echo "📋 修复建议："
+            echo "  1. 检查PRD元数据是否完整"
+            echo "  2. 确保有对应的测试文件"
+            echo "  3. 确保有Task-Master任务"
+            echo "  4. 如果删除功能，更新PRD的deletable字段"
+            exit 1
+          fi
+
   # 分支特定的额外检查
   branch-specific-checks:
     name: "Branch-Specific Additional Checks"
-    needs: [detect-branch-context, conditional-test-execution]
+    needs:
+      [
+        detect-branch-context,
+        conditional-test-execution,
+        compliance-check-and-rollback,
+      ]
     if: needs.detect-branch-context.outputs.branch-type == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 8

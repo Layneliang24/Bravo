@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-006-internal-common
 """Common视图模块单元测试"""
 
 import json
 
 import pytest
-
-from django.test import Client, TestCase
-
 from apps.common.views import api_info, health_check
+from django.test import Client, TestCase
 
 # URL导入根据需要添加
 
