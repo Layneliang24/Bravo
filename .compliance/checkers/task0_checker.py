@@ -489,6 +489,7 @@ class Task0Checker:
             # 如果目录不存在，检查git中是否有该目录下的文件（merge commit阶段）
             if not found:
                 import subprocess
+
                 git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
                 for git_dir in git_dirs:
                     git_path = Path(git_dir) / ".git"
@@ -496,7 +497,14 @@ class Task0Checker:
                         try:
                             # 检查git中是否有该目录下的文件
                             result = subprocess.run(
-                                ["git", "ls-tree", "-r", "--name-only", "HEAD", f"{dir_path}"],
+                                [
+                                    "git",
+                                    "ls-tree",
+                                    "-r",
+                                    "--name-only",
+                                    "HEAD",
+                                    f"{dir_path}",
+                                ],
                                 capture_output=True,
                                 text=True,
                                 check=False,
@@ -505,7 +513,14 @@ class Task0Checker:
                             # 也检查暂存区
                             if result.returncode != 0 or not result.stdout.strip():
                                 result = subprocess.run(
-                                    ["git", "diff", "--cached", "--name-only", "--diff-filter=A", f"{dir_path}"],
+                                    [
+                                        "git",
+                                        "diff",
+                                        "--cached",
+                                        "--name-only",
+                                        "--diff-filter=A",
+                                        f"{dir_path}",
+                                    ],
                                     capture_output=True,
                                     text=True,
                                     check=False,
