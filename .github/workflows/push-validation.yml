@@ -298,6 +298,91 @@ jobs:
       target-branch: ${{ github.ref_name }}
       coverage-required: ${{ needs.detect-branch-context.outputs.coverage-required }}
 
+  # run-tests job (用于匹配分支保护规则，仅在PR事件时运行以避免重复)
+  run-tests:
+    name: "run-tests"
+    needs:
+      [detect-branch-context, quick-health-check, compliance-check-and-rollback]
+    if: needs.detect-branch-context.outputs.skip-validation != 'true' && github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ["backend-unit-tests", "frontend-unit-tests"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bravo_test
+          MYSQL_USER: bravo_user
+          MYSQL_PASSWORD: bravo_password
+          MYSQL_ROOT_PASSWORD: root_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot_password" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js with cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python with cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          echo "📦 Installing project dependencies..."
+          npm ci --prefer-offline --no-audit
+
+      - name: Run Backend Unit Tests
+        if: matrix.component == 'backend-unit-tests'
+        run: |
+          echo "🧪 Running backend unit tests..."
+          cd backend
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip wheel
+          pip install -r requirements/test.txt
+
+          # 等待数据库准备就绪
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u bravo_user -pbravo_password --silent; do
+            echo "等待MySQL启动..."
+            sleep 2
+          done
+
+          # 运行迁移
+          python manage.py migrate --noinput --settings=bravo.settings.test
+
+          # 运行测试with覆盖率
+          python -m pytest tests/unit/ \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=term \
+            --maxfail=5 \
+            --tb=short
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: bravo_test
+          DB_USER: bravo_user
+          DB_PASSWORD: bravo_password
+          DJANGO_SETTINGS_MODULE: bravo.settings.test
+
+      - name: Run Frontend Unit Tests
+        if: matrix.component == 'frontend-unit-tests'
+        run: |
+          echo "🧪 Running frontend unit tests..."
+          npm run test:ci --workspace=frontend
+
   # 条件质量检查 (基于分支类型)
   conditional-quality-check:
     name: "Conditional Quality Check"
