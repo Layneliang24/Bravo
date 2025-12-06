@@ -264,7 +264,7 @@ class LocalTestPassport:
                     text=True,
                     encoding="utf-8",
                     errors="ignore",
-                    timeout=180,  # 3分钟超时
+                    timeout=300,  # 5分钟超时（push-validation.yml包含services，需要更长时间）
                 )
 
                 self.log_command(
