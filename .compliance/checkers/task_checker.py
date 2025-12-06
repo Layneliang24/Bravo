@@ -31,26 +31,93 @@ class TaskChecker:
         self.warnings = []
 
         path = Path(file_path)
+        file_from_git = False
 
+        # 如果文件不存在，尝试从git暂存区读取（pre-commit阶段）
         if not path.exists():
-            self.errors.append(f"文件不存在: {file_path}")
-            return False, self.errors, self.warnings
+            import subprocess
+
+            # 尝试多个可能的git工作目录
+            git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+            for git_dir in git_dirs:
+                git_path = Path(git_dir) / ".git"
+                if git_path.exists():
+                    try:
+                        # 配置git safe.directory（避免权限问题）
+                        subprocess.run(
+                            [
+                                "git",
+                                "config",
+                                "--global",
+                                "--add",
+                                "safe.directory",
+                                git_dir,
+                            ],
+                            capture_output=True,
+                            check=False,
+                            cwd=git_dir,
+                        )
+                        # 使用git show获取暂存文件内容
+                        result = subprocess.run(
+                            ["git", "show", f":{file_path}"],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            cwd=git_dir,
+                        )
+                        if result.returncode == 0:
+                            # 文件在git暂存区中，可以继续检查
+                            file_from_git = True
+                            break
+                    except (FileNotFoundError, subprocess.SubprocessError):
+                        continue
+
+            if not file_from_git:
+                self.errors.append(f"文件不存在: {file_path}")
+                return False, self.errors, self.warnings
 
         # 根据文件类型选择检查方法
         if file_path.endswith(".json"):
-            self._check_json_task(file_path)
+            self._check_json_task(file_path, file_from_git)
         elif file_path.endswith(".md"):
-            self._check_markdown_task(file_path)
+            self._check_markdown_task(file_path, file_from_git)
         else:
             self.warnings.append(f"未知的任务文件类型: {file_path}")
 
         return len(self.errors) == 0, self.errors, self.warnings
 
-    def _check_json_task(self, file_path: str):
+    def _check_json_task(self, file_path: str, file_from_git: bool = False):
         """检查JSON格式的任务文件"""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if file_from_git:
+                # 从git暂存区读取
+                import subprocess
+
+                git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                content = None
+                for git_dir in git_dirs:
+                    git_path = Path(git_dir) / ".git"
+                    if git_path.exists():
+                        try:
+                            result = subprocess.run(
+                                ["git", "show", f":{file_path}"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                                cwd=git_dir,
+                            )
+                            if result.returncode == 0:
+                                content = result.stdout
+                                break
+                        except (FileNotFoundError, subprocess.SubprocessError):
+                            continue
+                if content is None:
+                    self.errors.append(f"无法从git暂存区读取文件: {file_path}")
+                    return
+                data = json.loads(content)
+            else:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
         except json.JSONDecodeError as e:
             self.errors.append(f"JSON格式错误: {e}")
             return
@@ -70,10 +137,36 @@ class TaskChecker:
                     if "status" not in task:
                         self.warnings.append("任务缺少status字段")
 
-    def _check_markdown_task(self, file_path: str):
+    def _check_markdown_task(self, file_path: str, file_from_git: bool = False):
         """检查Markdown格式的任务文件"""
         try:
-            content = Path(file_path).read_text(encoding="utf-8")
+            if file_from_git:
+                # 从git暂存区读取
+                import subprocess
+
+                git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                content = None
+                for git_dir in git_dirs:
+                    git_path = Path(git_dir) / ".git"
+                    if git_path.exists():
+                        try:
+                            result = subprocess.run(
+                                ["git", "show", f":{file_path}"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                                cwd=git_dir,
+                            )
+                            if result.returncode == 0:
+                                content = result.stdout
+                                break
+                        except (FileNotFoundError, subprocess.SubprocessError):
+                            continue
+                if content is None:
+                    self.errors.append(f"无法从git暂存区读取文件: {file_path}")
+                    return
+            else:
+                content = Path(file_path).read_text(encoding="utf-8")
         except Exception as e:
             self.errors.append(f"无法读取文件: {e}")
             return
