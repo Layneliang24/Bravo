@@ -298,12 +298,12 @@ jobs:
       target-branch: ${{ github.ref_name }}
       coverage-required: ${{ needs.detect-branch-context.outputs.coverage-required }}
 
-  # run-tests job (用于匹配分支保护规则)
+  # run-tests job (用于匹配分支保护规则，仅在PR事件时运行以避免重复)
   run-tests:
     name: "run-tests"
     needs:
       [detect-branch-context, quick-health-check, compliance-check-and-rollback]
-    if: needs.detect-branch-context.outputs.skip-validation != 'true'
+    if: needs.detect-branch-context.outputs.skip-validation != 'true' && github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
