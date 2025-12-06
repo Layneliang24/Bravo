@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-INTERNAL-COMMON
 """用户模型单元测试"""
 
 import pytest
