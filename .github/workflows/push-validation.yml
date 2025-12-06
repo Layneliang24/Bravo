@@ -9,6 +9,11 @@ on:
       - release/*
       - dev
       - main
+  pull_request:
+    branches:
+      - dev
+      - main
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       force-full-validation:
