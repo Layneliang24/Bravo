@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """测试环境URL配置 - 简化版本，不依赖外部包"""
 
+from apps.common.views import api_info, health_check
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
-
-from apps.common.views import api_info, health_check
 
 
 def home_view(_request):

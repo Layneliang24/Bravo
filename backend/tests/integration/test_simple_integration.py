@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-002-internal-test
 """简单的集成测试"""
 
 import pytest
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 

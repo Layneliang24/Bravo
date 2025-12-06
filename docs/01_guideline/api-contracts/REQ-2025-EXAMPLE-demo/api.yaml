@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Example API
+  version: 1.0.0
+  description: V4架构示例API契约
+  contact:
+    name: Bravo Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: 本地开发服务器
+
+paths:
+  /example/:
+    get:
+      summary: 获取示例消息
+      description: 返回一个示例消息，用于演示V4架构
+      operationId: getExample
+      tags:
+        - example
+      responses:
+        "200":
+          description: 成功返回示例消息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Hello from V4 Architecture"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-11-30T10:00:00Z"
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误消息
+        code:
+          type: integer
+          description: 错误代码

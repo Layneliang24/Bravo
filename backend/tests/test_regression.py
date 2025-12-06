@@ -11,9 +11,8 @@
 
 import os
 
-import pytest
-
 import django
+import pytest
 from django.conf import settings
 
 # 配置 Django 设置用于测试
