@@ -1,0 +1,145 @@
+name: prd
+description: PRD文件合规规则
+version: "1.0"
+
+# 必需的元数据字段
+required_metadata_fields:
+  - req_id
+  - title
+  - status
+  - test_files
+  - implementation_files
+  - api_contract
+  - deletable
+
+# 元数据验证规则
+metadata_validation:
+  req_id:
+    pattern: "^REQ-\\d{4}-\\d{3}-.+$"
+    required: true
+  title:
+    required: true
+    min_length: 5
+    max_length: 200
+  status:
+    enum:
+      - draft # 草稿：PRD初稿，内容未完成
+      - review # 审核中：PRD已完成，等待审核
+      - approved # 已批准：PRD已通过审核，可以开始开发（唯一可parse的状态）
+      - implementing # 实施中：PRD对应功能正在开发（parse后自动设置）
+      - completed # 已完成：PRD对应功能已完成
+      - archived # 已归档：PRD不再使用
+    required: true
+  test_files:
+    type: list
+    required: true
+    min_items: 1
+  implementation_files:
+    type: list
+    required: true
+    min_items: 1
+  api_contract:
+    type: string
+    required: false
+  deletable:
+    type: boolean
+    required: true
+
+# 文件结构验证
+file_structure:
+  require_frontmatter: true
+  frontmatter_format: yaml
+
+  # 必需章节（ERROR级别）
+  require_sections:
+    - "功能概述"
+    - "用户故事"
+    - "验收标准" # 新增
+    - "测试用例"
+
+  # 章节顺序建议
+  recommended_order:
+    - "功能概述"
+    - "业务背景"
+    - "用户故事"
+    - "验收标准"
+    - "技术方案"
+    - "数据库设计"
+    - "API接口定义"
+    - "前端UI/UX设计"
+    - "测试策略"
+    - "测试用例"
+
+# 内容验证
+content_validation:
+  min_length: 500
+  require_test_cases: true
+  require_implementation_plan: true
+
+  # 推荐章节（WARNING级别）
+  recommended_sections:
+    - name: "业务背景"
+      description: "说明功能的业务价值和上下文"
+      level: "warning"
+
+    - name: "数据库设计"
+      description: "定义表结构、字段、关系"
+      level: "warning"
+      applicable_when:
+        - pattern: "backend|models|database"
+          in_field: "implementation_files"
+
+    - name: "API接口定义"
+      description: "定义API端点、请求/响应格式"
+      level: "warning"
+      applicable_when:
+        - pattern: "api|views|controllers|routes"
+          in_field: "implementation_files"
+
+    - name: "前端UI/UX设计"
+      description: "定义交互流程、视觉规范"
+      level: "warning"
+      applicable_when:
+        - pattern: "frontend|vue|react|components"
+          in_field: "implementation_files"
+
+  # 章节详细度要求
+  section_detail_requirements:
+    "验收标准":
+      min_items: 3
+      format: "列表"
+      description: "至少3条可测试的验收标准"
+
+    "数据库设计":
+      require_keywords:
+        ["表名", "字段", "类型", "主键", "外键", "table", "field", "column"]
+      format: "表格或代码块"
+      applicable_when:
+        - pattern: "backend|models|database"
+          in_field: "implementation_files"
+
+    "API接口定义":
+      require_keywords:
+        [
+          "路径",
+          "方法",
+          "请求",
+          "响应",
+          "状态码",
+          "path",
+          "method",
+          "request",
+          "response",
+        ]
+      format: "代码块或表格"
+      applicable_when:
+        - pattern: "api|views|controllers"
+          in_field: "implementation_files"
+
+    "前端UI/UX设计":
+      require_keywords:
+        ["页面", "组件", "交互", "状态", "page", "component", "interaction"]
+      format: "描述或图表"
+      applicable_when:
+        - pattern: "frontend|vue|react"
+          in_field: "implementation_files"
