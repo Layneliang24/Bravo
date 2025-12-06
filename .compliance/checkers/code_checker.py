@@ -202,11 +202,28 @@ class CodeChecker:
         if "backend/apps/" in file_path or "backend/bravo/" in file_path:
             # 提取模块名
             module_name = path.stem
-            # 可能的测试文件位置
+
+            # 如果文件在apps/下，提取app名称
+            app_name = None
+            if "backend/apps/" in file_path:
+                parts = file_path.split("backend/apps/")[1].split("/")
+                if len(parts) > 0:
+                    app_name = parts[0]
+
+            # 可能的测试文件位置（包括带app前缀的命名）
             test_locations = [
                 f"backend/tests/unit/test_{module_name}.py",
                 f"backend/tests/integration/test_{module_name}.py",
             ]
+
+            # 如果有app名称，也接受 test_{app}_{module}.py 的命名
+            if app_name:
+                test_locations.extend(
+                    [
+                        f"backend/tests/unit/test_{app_name}_{module_name}.py",
+                        f"backend/tests/integration/test_{app_name}_{module_name}.py",
+                    ]
+                )
 
             # 检查是否存在测试文件（包括从git检查）
             has_test = False
@@ -265,11 +282,20 @@ class CodeChecker:
                     break
 
             if not has_test:
-                self.errors.append(
-                    f"代码文件 {file_path} 缺少对应的测试文件。"
-                    f"请创建: backend/tests/unit/test_{module_name}.py 或 "
-                    f"backend/tests/integration/test_{module_name}.py"
-                )
+                # 构建更准确的错误信息
+                if app_name:
+                    self.errors.append(
+                        f"代码文件 {file_path} 缺少对应的测试文件。"
+                        f"请创建: backend/tests/unit/test_{app_name}_{module_name}.py 或 "
+                        f"backend/tests/integration/test_{app_name}_{module_name}.py 或 "
+                        f"backend/tests/unit/test_{module_name}.py"
+                    )
+                else:
+                    self.errors.append(
+                        f"代码文件 {file_path} 缺少对应的测试文件。"
+                        f"请创建: backend/tests/unit/test_{module_name}.py 或 "
+                        f"backend/tests/integration/test_{module_name}.py"
+                    )
 
         # 如果是frontend代码文件，查找对应的E2E测试
         elif "frontend/src/" in file_path:

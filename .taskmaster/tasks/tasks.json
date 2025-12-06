@@ -1044,5 +1044,54 @@
       "source_prd_path": "docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login.md",
       "development_methodology": "TDD (Test-Driven Development)"
     }
+  },
+  "REQ-2025-001": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-001 context"
+    }
+  },
+  "REQ-2025-002": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-002 context"
+    }
+  },
+  "REQ-2025-004": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-004 context"
+    }
+  },
+  "REQ-2025-005": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-005 context"
+    }
+  },
+  "REQ-2025-006": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-006 context"
+    }
+  },
+  "REQ-2025-007": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-007 context"
+    }
+  },
+  "REQ-2025-008": {
+    "tasks": [],
+    "metadata": {
+      "created": "2025-12-06T13:00:00Z",
+      "description": "Tasks for REQ-2025-008 context"
+    }
   }
 }
