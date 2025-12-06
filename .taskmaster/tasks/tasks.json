@@ -145,7 +145,8 @@
       "source_prd_paths": [
         "docs/00_product/requirements/REQ-2025-EXAMPLE-demo/REQ-2025-EXAMPLE-demo.md"
       ],
-      "test_note": "pre-commit拦截测试 - Sat, Dec  6, 2025 10:22:51 AM"
+      "test_note": "pre-commit拦截测试 - Sat, Dec  6, 2025 10:35:43 AM",
+      "test_debug": "debug_test"
     }
   }
 }
