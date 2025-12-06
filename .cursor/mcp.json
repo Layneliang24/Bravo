@@ -1,20 +1,10 @@
 {
   "mcpServers": {
-    "taskmaster": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "task-master-ai",
-        "mcp"
-      ],
+    "task-master-ai": {
+      "args": [],
       "env": {
-        "CHENMOAI_API_KEY": "sk-chhLY3oOJJIWKM3dDaIIrhrFpX7uOrmT2h8jzvNt2YrtEwzV",
-        "CHENMOAI_BASE_URL": "https://api.chenmoai.cn/v1",
-        "SILICONFLOW_API_KEY": "sk-qcxlwgdycvwptcaipxbiomxxfdsalmtiwvktcravdcnfauit",
-        "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
-        "OPENAI_API_KEY": "sk-chhLY3oOJJIWKM3dDaIIrhrFpX7uOrmT2h8jzvNt2YrtEwzV",
-        "OPENAI_BASE_URL": "https://api.chenmoai.cn/v1",
-        "TASK_MASTER_WRAPPER": "${workspaceFolder}/scripts/task-master-wrapper.sh"
+        "OPENAI_API_KEY": "sk-zfgptsqmcesptnszlkdrlttgwfmmiilwrahdcdolshqkxnhm",
+        "OPENAI_BASE_URL": "https://api.siliconflow.cn/v1"
       }
     }
   },

@@ -86,58 +86,58 @@ class ComplianceEngine:
             print(f"⚠️ 检查器目录不存在: {checkers_dir}", file=sys.stderr)
             return checkers
 
-            # 动态导入检查器模块
-            # 注意：.compliance目录名以点开头，Python默认不会将其识别为包
-            # 因此直接使用文件系统导入方式（更可靠）
-            checker_files = {
-                "task0": "task0_checker.py",  # Task-0必须最先执行
-                "prd": "prd_checker.py",
-                "test": "test_checker.py",
-                "code": "code_checker.py",
-                "commit": "commit_checker.py",
-                "task": "task_checker.py",
-                "test_runner": "test_runner_checker.py",
-            }
+        # 动态导入检查器模块
+        # 注意：.compliance目录名以点开头，Python默认不会将其识别为包
+        # 因此直接使用文件系统导入方式（更可靠）
+        checker_files = {
+            "task0": "task0_checker.py",  # Task-0必须最先执行
+            "prd": "prd_checker.py",
+            "test": "test_checker.py",
+            "code": "code_checker.py",
+            "commit": "commit_checker.py",
+            "task": "task_checker.py",
+            "test_runner": "test_runner_checker.py",
+        }
 
-            for rule_name, checker_file_name in checker_files.items():
-                if rule_name not in self.rules:
-                    continue
+        for rule_name, checker_file_name in checker_files.items():
+            if rule_name not in self.rules:
+                continue
 
-                checker_file_path = Path(checkers_dir) / checker_file_name
-                if not checker_file_path.exists():
-                    print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
-                    continue
+            checker_file_path = Path(checkers_dir) / checker_file_name
+            if not checker_file_path.exists():
+                print(f"⚠️ 检查器文件不存在: {checker_file_name}", file=sys.stderr)
+                continue
 
-                try:
-                    # 使用importlib.util直接从文件导入
-                    spec = importlib.util.spec_from_file_location(
-                        f"checker_{rule_name}", checker_file_path
-                    )
-                    checker_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(checker_module)
+            try:
+                # 使用importlib.util直接从文件导入
+                spec = importlib.util.spec_from_file_location(
+                    f"checker_{rule_name}", checker_file_path
+                )
+                checker_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(checker_module)
 
-                    # 查找Checker类
-                    checker_class = None
-                    for attr_name in dir(checker_module):
-                        attr = getattr(checker_module, attr_name)
-                        if (
-                            isinstance(attr, type)
-                            and attr_name.endswith("Checker")
-                            and attr_name != "BaseChecker"
-                        ):
-                            checker_class = attr
-                            break
+                # 查找Checker类
+                checker_class = None
+                for attr_name in dir(checker_module):
+                    attr = getattr(checker_module, attr_name)
+                    if (
+                        isinstance(attr, type)
+                        and attr_name.endswith("Checker")
+                        and attr_name != "BaseChecker"
+                    ):
+                        checker_class = attr
+                        break
 
-                    if checker_class:
-                        checkers[rule_name] = checker_class(self.rules[rule_name])
-                        print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
-                    else:
-                        print(f"❌ 加载检查器失败 {rule_name}: 未找到Checker类", file=sys.stderr)
-                except Exception as e:
-                    print(f"❌ 加载检查器失败 {rule_name}: {e}", file=sys.stderr)
-                    import traceback
+                if checker_class:
+                    checkers[rule_name] = checker_class(self.rules[rule_name])
+                    print(f"✅ 加载检查器: {rule_name}", file=sys.stderr)
+                else:
+                    print(f"❌ 加载检查器失败 {rule_name}: 未找到Checker类", file=sys.stderr)
+            except Exception as e:
+                print(f"❌ 加载检查器失败 {rule_name}: {e}", file=sys.stderr)
+                import traceback
 
-                    traceback.print_exc()
+                traceback.print_exc()
 
         return checkers
 
@@ -163,6 +163,63 @@ class ComplianceEngine:
             },
         }
 
+        # ⭐ 关键修复：Task0Checker需要完整的文件列表来进行跨文件分析
+        # 如果file_paths中包含tasks.json，则先对所有文件执行Task0检查
+        if any(".taskmaster/tasks/tasks.json" in f for f in file_paths):
+            if "task0" in self.checkers:
+                task0_checker = self.checkers["task0"]  # 从checkers字典获取实例
+                try:
+                    # 传递完整的文件列表给Task0Checker
+                    task0_results = task0_checker.check(file_paths)
+
+                    # 处理Task0Checker的返回结果
+                    if isinstance(task0_results, list):
+                        for item in task0_results:
+                            if not isinstance(item, dict):
+                                continue
+
+                            level = item.get("level", "info")
+                            message = item.get("message", "")
+                            file_name = item.get("file", ".taskmaster/tasks/tasks.json")
+
+                            file_result = {
+                                "file": file_name,
+                                "rules_applied": ["task0"],
+                                "status": "failed"
+                                if level == "error"
+                                else ("warning" if level == "warning" else "passed"),
+                                "errors": [message] if level == "error" else [],
+                                "warnings": [message] if level == "warning" else [],
+                            }
+
+                            if file_result["status"] == "passed":
+                                results["passed"].append(file_result)
+                                results["summary"]["passed"] += 1
+                            elif file_result["status"] == "failed":
+                                results["failed"].append(file_result)
+                                results["summary"]["failed"] += 1
+                            elif file_result["status"] == "warning":
+                                results["warnings"].append(file_result)
+                                results["summary"]["warnings"] += 1
+
+                except Exception as e:
+                    # Task0检查失败时记录错误
+                    print(f"[Engine] Task0检查失败: {e}", file=sys.stderr)
+                    import traceback
+
+                    traceback.print_exc()
+
+                    results["failed"].append(
+                        {
+                            "file": ".taskmaster/tasks/tasks.json",
+                            "rules_applied": ["task0"],
+                            "status": "failed",
+                            "errors": [f"Task0检查执行失败: {str(e)}"],
+                            "warnings": [],
+                        }
+                    )
+                    results["summary"]["failed"] += 1
+
         for file_path in file_paths:
             # 检查是否在排除路径中
             if self._is_excluded(file_path):
@@ -173,6 +230,11 @@ class ComplianceEngine:
 
             if not matched_rules:
                 # 没有匹配的规则，跳过
+                continue
+
+            # ⭐ 排除task0规则，因为已经在上面单独处理过了
+            matched_rules = [r for r in matched_rules if r != "task0"]
+            if not matched_rules:
                 continue
 
             # 执行检查

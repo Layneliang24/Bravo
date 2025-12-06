@@ -5,27 +5,33 @@ status: approved
 priority: high
 type: feature
 created_at: 2025-12-03T10:00:00Z
-updated_at: 2025-12-03T10:00:00Z
+updated_at: 2025-12-06T10:34:00Z
 author: human
-refined_by: cursor
+refined_by: claude-opus-4
 test_files:
   - backend/tests/unit/test_auth_views.py
   - backend/tests/unit/test_captcha.py
+  - backend/tests/unit/test_auth_preview.py
   - backend/tests/integration/test_auth_api.py
   - backend/tests/integration/test_password_reset.py
+  - backend/tests/integration/test_preview_throttling.py
   - e2e/tests/auth/login.spec.ts
   - e2e/tests/auth/register.spec.ts
   - e2e/tests/auth/password-reset.spec.ts
+  - e2e/tests/auth/login-preview.spec.ts
 implementation_files:
   - backend/apps/users/models.py
   - backend/apps/users/views.py
   - backend/apps/users/serializers.py
   - backend/apps/users/utils.py
+  - backend/apps/users/throttling.py
   - frontend/src/views/Login.vue
   - frontend/src/components/auth/LoginForm.vue
   - frontend/src/components/auth/RegisterForm.vue
   - frontend/src/components/auth/PasswordResetForm.vue
   - frontend/src/components/auth/Captcha.vue
+  - frontend/src/components/auth/UserPreview.vue
+  - frontend/src/components/auth/DefaultAvatar.vue
   - frontend/src/stores/auth.ts
   - frontend/src/api/auth.ts
 api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml
@@ -45,6 +51,40 @@ deletable: false
 ## 业务背景
 
 用户认证是网站的核心功能，需要提供安全、便捷、美观的登录体验。现代用户对UI设计要求较高，需要避免千篇一律的AI生成配色方案，打造独特的品牌视觉风格。
+
+## 开发方法论
+
+### TDD（测试驱动开发）
+
+本项目**必须**采用TDD（Test-Driven Development）开发方法论，严格遵循以下流程：
+
+1. **红（Red）**：先编写失败的测试用例
+2. **绿（Green）**：编写最少量的代码使测试通过
+3. **重构（Refactor）**：优化代码结构，保持测试通过
+
+### 任务组织原则
+
+- **每个功能模块**必须按以下顺序组织任务：
+
+  1. 编写单元测试（预期失败）
+  2. 实现功能代码（使测试通过）
+  3. 编写集成测试
+  4. 重构和优化
+
+- **后端先于前端**：后端API开发完成并通过测试后，再开发前端
+- **测试覆盖率**：代码覆盖率必须 >= 80%
+- **禁止跳过测试**：不允许先实现功能后补测试
+
+### 已有项目约束
+
+本项目是在**已有项目基础上扩展**，不是从零开始：
+
+- Django项目已初始化，无需重新创建
+- Vue 3项目已初始化，无需重新创建
+- 已有`backend/apps/users/`目录和基础User模型
+- 已有`frontend/src/views/Login.vue`页面
+
+任务应聚焦于**扩展和增强**现有代码，而非重新初始化项目。
 
 ## 用户故事
 
@@ -67,6 +107,10 @@ deletable: false
 ### US-5: 邮箱验证
 
 作为一个新注册用户，我希望能够验证邮箱，以便激活账户。
+
+### US-6: 登录预览头像
+
+作为一个用户，当我在登录页面输入正确的账号密码后（尚未点击登录），我希望能看到我的头像和用户名，以便确认我登录的是正确的账户，增强安全感和用户体验。
 
 ## 功能需求
 
@@ -107,6 +151,19 @@ deletable: false
 - 验证状态标记
 - 重新发送验证邮件
 
+### 6. 登录预览头像（实时验证）
+
+- **触发时机**：用户输入邮箱和密码后，密码框失焦或停止输入500ms后触发
+- **预验证API**：调用预验证接口检查账号密码是否正确（不实际登录）
+- **成功显示**：账号密码正确时，在登录表单上方/旁边显示用户头像和用户名
+- **头像来源**：有头像显示用户头像，无头像显示基于用户名首字母生成的默认头像
+- **失败处理**：账号密码错误时，不显示头像区域或显示占位符
+- **安全防护**：
+  - 预验证API需要验证码保护，防止暴力枚举
+  - 限制预验证请求频率（同一IP每分钟最多10次）
+  - 预验证不返回详细错误信息（只返回成功/失败+用户信息）
+- **用户体验**：头像加载时显示loading动画，增强交互反馈
+
 ## 数据库设计
 
 ### User表（已存在，需要扩展）
@@ -123,6 +180,8 @@ deletable: false
 | last_login            | TIMESTAMP    | 最后登录时间 | NULL             |
 | failed_login_attempts | INTEGER      | 登录失败次数 | DEFAULT 0        |
 | locked_until          | TIMESTAMP    | 锁定到期时间 | NULL             |
+| avatar                | VARCHAR(500) | 头像URL      | NULL             |
+| display_name          | VARCHAR(100) | 显示名称     | NULL             |
 | created_at            | TIMESTAMP    | 创建时间     | DEFAULT NOW()    |
 | updated_at            | TIMESTAMP    | 更新时间     | DEFAULT NOW()    |
 
@@ -182,6 +241,63 @@ deletable: false
 ```
 
 ## API接口定义
+
+### 0. 登录预验证（获取头像）
+
+**POST** `/api/auth/preview/`
+
+**描述**: 验证账号密码是否正确，正确则返回用户头像和显示名称（不实际登录）
+
+**请求体**:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123",
+  "captcha_id": "uuid",
+  "captcha_answer": "A3B7"
+}
+```
+
+**成功响应** (200):
+
+```json
+{
+  "valid": true,
+  "user": {
+    "display_name": "张三",
+    "avatar_url": "https://example.com/avatars/user.jpg",
+    "default_avatar": false
+  }
+}
+```
+
+**无头像时响应** (200):
+
+```json
+{
+  "valid": true,
+  "user": {
+    "display_name": "张三",
+    "avatar_url": null,
+    "default_avatar": true,
+    "avatar_letter": "张"
+  }
+}
+```
+
+**验证失败响应** (200):
+
+```json
+{
+  "valid": false,
+  "user": null
+}
+```
+
+**注意**: 为防止用户枚举攻击，无论邮箱是否存在，密码是否正确，都返回200状态码，仅通过`valid`字段区分。
+
+**频率限制**: 同一IP每分钟最多10次请求
 
 ### 1. 获取验证码
 
@@ -283,6 +399,8 @@ deletable: false
     "id": "uuid",
     "email": "user@example.com",
     "username": "user",
+    "display_name": "张三",
+    "avatar_url": "https://example.com/avatars/user.jpg",
     "is_email_verified": true
   },
   "token": "jwt-access-token",
@@ -447,7 +565,8 @@ LoginView.vue (登录主页面)
 ├── LoginForm.vue (登录表单)
 │   ├── FloatingInput.vue (悬浮式输入框组件)
 │   ├── Captcha.vue (验证码组件)
-│   └── RememberMe.vue (记住我复选框)
+│   ├── RememberMe.vue (记住我复选框)
+│   └── UserPreview.vue (用户预览组件 - 显示头像和用户名)
 ├── RegisterForm.vue (注册表单)
 │   ├── FloatingInput.vue
 │   ├── PasswordStrength.vue (密码强度指示器)
@@ -484,6 +603,15 @@ LoginView.vue (登录主页面)
 - 视觉反馈（颜色条）
 - 强度提示文字
 
+**UserPreview.vue** (用户预览组件)
+
+- 圆形头像显示（有头像显示真实头像，无头像显示首字母）
+- 用户显示名称
+- 加载中状态（骨架屏/spinner）
+- 验证失败状态（隐藏或显示占位）
+- 淡入动画效果
+- 位置：登录表单上方居中
+
 ### 状态管理
 
 **Pinia Store: `stores/auth.ts`**
@@ -498,6 +626,14 @@ interface AuthState {
     id: string | null;
     image: string | null;
   };
+  // 登录预览状态
+  preview: {
+    isLoading: boolean;
+    isValid: boolean | null; // null=未验证, true=验证通过, false=验证失败
+    displayName: string | null;
+    avatarUrl: string | null;
+    avatarLetter: string | null; // 默认头像显示的首字母
+  };
 }
 
 interface AuthActions {
@@ -511,6 +647,14 @@ interface AuthActions {
   verifyEmail(token: string): Promise<void>;
   fetchCaptcha(): Promise<void>;
   refreshCaptcha(): Promise<void>;
+  // 登录预验证（获取头像）
+  previewLogin(
+    email: string,
+    password: string,
+    captchaId: string,
+    captchaAnswer: string,
+  ): Promise<void>;
+  clearPreview(): void;
 }
 ```
 
@@ -521,11 +665,15 @@ interface AuthActions {
 1. 用户访问 `/login`
 2. 自动获取验证码
 3. 用户填写邮箱、密码、验证码
-4. 点击"登录"按钮
-5. 前端验证（格式、非空）
-6. 调用API: `POST /api/auth/login/`
-7. 成功：保存token，跳转首页
-8. 失败：显示错误，刷新验证码
+4. **预验证触发**（密码框失焦或停止输入500ms）：
+   - 调用API: `POST /api/auth/preview/`
+   - 成功：在表单上方显示用户头像和显示名称
+   - 失败：隐藏头像区域或显示占位符
+5. 用户确认头像正确，点击"登录"按钮
+6. 前端验证（格式、非空）
+7. 调用API: `POST /api/auth/login/`
+8. 成功：保存token，跳转首页
+9. 失败：显示错误，刷新验证码，清除预览
 
 #### 注册流程
 
@@ -787,6 +935,9 @@ interface AuthActions {
 - [ ] 登录失败5次后账户被锁定
 - [ ] 密码强度验证正常工作
 - [ ] 所有API接口返回正确的JSON格式
+- [ ] **登录预览头像**：输入正确账号密码后显示用户头像和名称
+- [ ] **默认头像**：无头像用户显示首字母默认头像
+- [ ] **预验证安全**：预验证API受验证码保护，频率限制正常工作
 
 ### UI/UX验收
 
@@ -796,6 +947,8 @@ interface AuthActions {
 - [ ] 错误提示清晰明确
 - [ ] 加载状态有视觉反馈
 - [ ] 表单验证实时提示
+- [ ] **头像预览**：头像显示位置合理，淡入动画流畅
+- [ ] **默认头像**：首字母头像样式美观，与整体设计协调
 
 ### 安全验收
 
@@ -828,6 +981,9 @@ interface AuthActions {
 - 邮箱验证功能
 - 悬浮式输入框动画
 - 密码强度指示器
+- **登录预验证API实现**
+- **头像预览组件开发**
+- **默认头像生成逻辑**
 
 ### Phase 3 (优化 - 1周)
 
@@ -851,8 +1007,15 @@ interface AuthActions {
    - 缓解: 提供备用邮件服务
 
 3. **Token泄露**
+
    - 缓解: 使用HTTP-only Cookie
    - 缓解: 设置合理的过期时间
+
+4. **预验证API被滥用（用户枚举攻击）**
+   - 缓解: 必须携带有效验证码才能调用
+   - 缓解: 频率限制（每IP每分钟10次）
+   - 缓解: 无论成功失败都返回200，仅通过valid字段区分
+   - 缓解: 不返回详细错误信息
 
 ### 产品风险
 
@@ -876,9 +1039,18 @@ interface AuthActions {
    - 测试用户状态管理
 
 2. **认证视图测试**
+
    - 测试登录API端点
    - 测试注册API端点
    - 测试密码重置API端点
+   - 测试预验证API端点
+
+3. **预验证功能测试**
+   - 测试正确账号密码返回头像和用户名
+   - 测试错误账号密码返回valid=false
+   - 测试无头像用户返回首字母
+   - 测试频率限制（超过10次/分钟被拒绝）
+   - 测试无验证码时请求被拒绝
 
 ### 集成测试
 
@@ -908,9 +1080,18 @@ interface AuthActions {
    - 测试密码强度检查
 
 3. **密码重置测试**
+
    - 测试密码重置请求
    - 测试密码重置确认
    - 测试密码重置成功跳转
+
+4. **登录预览头像测试**
+   - 测试输入正确账号密码后头像显示
+   - 测试头像加载动画
+   - 测试无头像用户显示默认首字母头像
+   - 测试输入错误账号密码头像不显示
+   - 测试修改密码后头像消失
+   - 测试预验证后点击登录的完整流程
 
 ## 附录
 
