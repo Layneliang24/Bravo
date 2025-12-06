@@ -187,7 +187,7 @@ class Task0Checker:
             # 1. 从文件路径中提取REQ-ID
             match = req_id_pattern.search(file)
             if match:
-                req_id = match.group(0).upper()  # 统一转为大写
+                req_id = match.group(0)  # 保持原样，不转换大小写
                 print(f"[Task0Checker DEBUG] 从路径提取到REQ-ID: {req_id}", file=sys.stderr)
                 req_ids.add(req_id)
                 continue
@@ -262,7 +262,7 @@ class Task0Checker:
                         # 先尝试匹配标准格式
                         match = req_id_pattern.search(line)
                         if match:
-                            req_id = match.group(0).upper()
+                            req_id = match.group(0)  # 保持原样
                             msg = (
                                 f"[Task0Checker DEBUG] 第{line_num}行匹配到"
                                 f"标准格式REQ-ID: {req_id}"
@@ -863,9 +863,9 @@ class Task0Checker:
                         str(task.get("description", "")),
                         str(task.get("details", "")),
                     ]
-                ).upper()
+                )
 
-                if req_id.upper() in task_text:
+                if req_id in task_text:
                     related_tasks.append(task)
 
         return related_tasks
