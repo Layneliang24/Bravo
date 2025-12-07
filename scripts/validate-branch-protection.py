@@ -4,6 +4,7 @@
 确保分支保护规则中要求的所有job名称都在工作流中存在
 """
 
+import io
 import json
 import os
 import subprocess
@@ -12,6 +13,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 import yaml
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 def extract_job_names_from_workflow(workflow_file: Path) -> Set[str]:
@@ -22,9 +28,14 @@ def extract_job_names_from_workflow(workflow_file: Path) -> Set[str]:
     jobs = workflow.get("jobs", {})
     job_names = set()
 
-    for job_name, job_config in jobs.items():
-        # 基础job名称
-        job_names.add(job_name)
+    for job_id, job_config in jobs.items():
+        # 优先使用job的name字段，如果没有则使用job_id
+        job_display_name = job_config.get("name", job_id)
+
+        # 添加job ID（用于向后兼容）
+        job_names.add(job_id)
+        # 添加job的显示名称（GitHub实际使用的名称）
+        job_names.add(job_display_name)
 
         # 如果使用matrix策略，生成所有组合
         strategy = job_config.get("strategy", {})
@@ -52,9 +63,11 @@ def extract_job_names_from_workflow(workflow_file: Path) -> Set[str]:
                 first_key = matrix_keys[0]
                 if first_key in matrix_values:
                     for value in matrix_values[first_key]:
-                        # 生成格式: job_name (value)
-                        combined_name = f"{job_name} ({value})"
-                        job_names.add(combined_name)
+                        # 生成格式: job_name (value) 和 job_id (value)
+                        combined_name_id = f"{job_id} ({value})"
+                        combined_name_display = f"{job_display_name} ({value})"
+                        job_names.add(combined_name_id)
+                        job_names.add(combined_name_display)
 
     return job_names
 
