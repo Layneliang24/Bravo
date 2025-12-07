@@ -85,7 +85,7 @@
         "testStrategy": "编写`backend/tests/unit/test_captcha.py`单元测试，测试验证码生成是否符合预期、Redis存储和过期是否正常、验证码验证逻辑是否正确。编写集成测试，验证`/api/auth/captcha/`和`/api/auth/captcha/refresh/`接口的响应数据结构和功能。",
         "priority": "high",
         "dependencies": ["1"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -136,14 +136,14 @@
             "title": "实现刷新验证码API (`POST /api/auth/captcha/refresh/`) 并进行初步重构",
             "description": "在`backend/apps/users/views.py`中创建`POST /api/auth/captcha/refresh/`接口，用于刷新现有验证码，并对已实现的代码进行初步优化。",
             "dependencies": [1, 2, 3, 4],
-            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`POST /api/auth/captcha/refresh/`请求。该接口应接收旧的`captcha_id`（可选），生成新的验证码，更新Redis中的存储，并返回新的`captcha_id`、`captcha_image`和`expires_in`。同时，对子任务2、3、4中实现的代码进行初步的代码审查和重构，确保代码清晰、可读性高，并遵循最佳实践，例如，提取重复逻辑到辅助函数中。",
-            "status": "in-progress",
+            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`POST /api/auth/captcha/refresh/`请求。该接口应接收旧的`captcha_id`（可选），生成新的验证码，更新Redis中的存储，并返回新的`captcha_id`、`captcha_image`和`expires_in`。同时，对子任务2、3、4中实现的代码进行初步的代码审查和重构，确保代码清晰、可读性高，并遵循最佳实践，例如，提取重复逻辑到辅助函数中。\n<info added on 2025-12-07T06:04:44.187Z>\n完成内容：\n- 代码重构：\n  * 创建BaseCaptchaView基类，提取公共方法_create_captcha_response()\n  * 提取CAPTCHA_EXPIRES_IN常量（300秒），避免硬编码\n  * CaptchaRefreshAPIView支持删除旧验证码（如果提供了captcha_id）\n  * 消除代码重复，提高可维护性\n- 代码审查：\n  * 代码结构清晰，遵循DRY原则\n  * 使用基类共享公共逻辑\n  * 常量提取，便于维护\n  * 所有方法都有清晰的文档字符串\n\n测试结果：所有21个测试通过 ✅\n\n提交信息：\n- commit: 待确认\n- 文件：backend/apps/users/views.py\n</info added on 2025-12-07T06:04:44.187Z>",
+            "status": "done",
             "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`POST /api/auth/captcha/refresh/`接口的功能。测试刷新后是否返回新的验证码信息，旧的验证码是否失效。同时，进行代码审查以验证重构效果。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T05:59:42.571Z"
+            "updatedAt": "2025-12-07T06:04:57.555Z"
           }
         ],
-        "updatedAt": "2025-12-07T05:59:42.571Z"
+        "updatedAt": "2025-12-07T06:04:57.555Z"
       },
       {
         "id": "3",
@@ -1158,9 +1158,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:59:42.577Z",
+      "lastModified": "2025-12-07T06:04:57.562Z",
       "taskCount": 18,
-      "completedCount": 1,
+      "completedCount": 2,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
