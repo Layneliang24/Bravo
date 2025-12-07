@@ -150,3 +150,31 @@ def verify_captcha(captcha_id: str, answer: str) -> bool:
         return True
 
     return False
+
+
+def find_user_by_email_or_username(email_or_username):
+    """
+    通过邮箱或用户名查找用户
+
+    Args:
+        email_or_username: 邮箱地址或用户名
+
+    Returns:
+        User实例或None: 找到的用户，如果不存在则返回None
+    """
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+
+    if "@" in email_or_username:
+        # 通过邮箱查找
+        try:
+            return User.objects.get(email=email_or_username)
+        except User.DoesNotExist:
+            return None
+    else:
+        # 通过用户名查找
+        try:
+            return User.objects.get(username=email_or_username)
+        except User.DoesNotExist:
+            return None

@@ -30,6 +30,27 @@ class BaseCaptchaView(APIView):
 
     permission_classes = []  # 允许匿名访问
 
+    def _handle_captcha_error(self, errors):
+        """
+        处理验证码错误（公共方法）
+
+        Args:
+            errors: 序列化器错误字典
+
+        Returns:
+            Response或None: 如果是验证码错误则返回Response，否则返回None
+        """
+        if "captcha_answer" in errors:
+            captcha_error = errors["captcha_answer"]
+            if isinstance(captcha_error, list) and any(
+                "验证码错误" in str(e) for e in captcha_error
+            ):
+                return Response(
+                    {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return None
+
     def _create_captcha_response(self):
         """
         创建验证码响应（公共方法）
@@ -230,7 +251,7 @@ class RegisterAPIView(APIView):
         )
 
 
-class LoginAPIView(APIView):
+class LoginAPIView(BaseCaptchaView):
     """用户登录API视图"""
 
     permission_classes = []  # 允许匿名访问
@@ -257,15 +278,9 @@ class LoginAPIView(APIView):
             errors = serializer.errors
 
             # 检查验证码错误
-            if "captcha_answer" in errors:
-                captcha_error = errors["captcha_answer"]
-                if isinstance(captcha_error, list) and any(
-                    "验证码错误" in str(e) for e in captcha_error
-                ):
-                    return Response(
-                        {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            captcha_error_response = self._handle_captcha_error(errors)
+            if captcha_error_response:
+                return captcha_error_response
 
             # 检查认证错误（密码错误或用户不存在）
             if "error" in errors:
@@ -284,19 +299,11 @@ class LoginAPIView(APIView):
                 if is_credential_error:
                     # 尝试从序列化器的validated_data中获取用户（如果存在）
                     # 注意：如果验证失败，validated_data可能为空，需要手动查找用户
+                    from apps.users.utils import find_user_by_email_or_username
+
                     email_or_username = request.data.get("email")
                     if email_or_username:
-                        user = None
-                        if "@" in email_or_username:
-                            try:
-                                user = User.objects.get(email=email_or_username)
-                            except User.DoesNotExist:
-                                pass
-                        else:
-                            try:
-                                user = User.objects.get(username=email_or_username)
-                            except User.DoesNotExist:
-                                pass
+                        user = find_user_by_email_or_username(email_or_username)
 
                         if user:
                             # 增加失败次数
@@ -396,7 +403,7 @@ class LoginAPIView(APIView):
         return str(refresh.access_token), str(refresh)
 
 
-class PreviewAPIView(APIView):
+class PreviewAPIView(BaseCaptchaView):
     """登录预验证API视图（用于获取用户头像）"""
 
     permission_classes = []  # 允许匿名访问
@@ -467,15 +474,9 @@ class PreviewAPIView(APIView):
             errors = serializer.errors
 
             # 检查验证码错误
-            if "captcha_answer" in errors:
-                captcha_error = errors["captcha_answer"]
-                if isinstance(captcha_error, list) and any(
-                    "验证码错误" in str(e) for e in captcha_error
-                ):
-                    return Response(
-                        {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            captcha_error_response = self._handle_captcha_error(errors)
+            if captcha_error_response:
+                return captcha_error_response
 
             # 其他错误直接返回
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

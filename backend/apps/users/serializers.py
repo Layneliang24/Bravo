@@ -4,7 +4,7 @@
 
 import re
 
-from apps.users.utils import verify_captcha
+from apps.users.utils import find_user_by_email_or_username, verify_captcha
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -141,19 +141,7 @@ class UserLoginSerializer(serializers.Serializer):
         password = attrs.get("password")
 
         # 尝试通过邮箱或用户名查找用户
-        user = None
-        if "@" in email_or_username:
-            # 通过邮箱查找
-            try:
-                user = User.objects.get(email=email_or_username)
-            except User.DoesNotExist:
-                pass
-        else:
-            # 通过用户名查找
-            try:
-                user = User.objects.get(username=email_or_username)
-            except User.DoesNotExist:
-                pass
+        user = find_user_by_email_or_username(email_or_username)
 
         if user is None:
             raise serializers.ValidationError(
@@ -203,19 +191,7 @@ class PreviewLoginSerializer(serializers.Serializer):
         password = attrs.get("password")
 
         # 尝试通过邮箱或用户名查找用户
-        user = None
-        if "@" in email_or_username:
-            # 通过邮箱查找
-            try:
-                user = User.objects.get(email=email_or_username)
-            except User.DoesNotExist:
-                pass
-        else:
-            # 通过用户名查找
-            try:
-                user = User.objects.get(username=email_or_username)
-            except User.DoesNotExist:
-                pass
+        user = find_user_by_email_or_username(email_or_username)
 
         if user is None:
             # 用户不存在，但不抛出错误，让视图返回valid: false
