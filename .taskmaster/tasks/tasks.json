@@ -548,7 +548,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/FloatingInput.spec.ts`和`frontend/src/components/auth/__tests__/DefaultAvatar.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
         "priority": "medium",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -600,12 +600,13 @@
             "description": "对 `FloatingInput` 和 `DefaultAvatar` 组件的 props、事件和样式进行优化，提高组件的可复用性、可维护性和性能，同时确保现有测试通过。",
             "dependencies": [3, 4],
             "details": "审查组件的 props 定义，确保命名清晰、类型正确且默认值合理。优化事件发射机制。检查并精简 CSS 样式，移除冗余代码，提高性能。确保组件在不同场景下都能良好工作，并考虑无障碍性。重构后需再次运行所有相关测试，确保功能无回归。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行子任务1和子任务2中编写的所有单元测试，确保重构后功能无回归，所有测试仍然通过。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T09:19:06.846Z"
           }
         ],
-        "updatedAt": "2025-12-07T09:11:27.906Z"
+        "updatedAt": "2025-12-07T09:19:06.846Z"
       },
       {
         "id": "10",
@@ -1186,9 +1187,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T09:11:27.908Z",
+      "lastModified": "2025-12-07T09:19:06.850Z",
       "taskCount": 18,
-      "completedCount": 6,
+      "completedCount": 7,
       "tags": ["REQ-2025-003-user-login"]
     }
   },

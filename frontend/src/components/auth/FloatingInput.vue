@@ -2,7 +2,7 @@
 <template>
   <div class="floating-input-wrapper">
     <div class="input-container" :class="{ 'has-icon': icon, error: error }">
-      <span v-if="icon" class="input-icon">{{ icon }}</span>
+      <span v-if="icon" class="input-icon" aria-hidden="true">{{ icon }}</span>
       <input
         :id="inputId"
         :type="type"
@@ -10,8 +10,12 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :class="{ error: error }"
+        :aria-label="label"
+        :aria-describedby="error ? errorId : undefined"
+        :aria-invalid="!!error"
+        :aria-required="required"
         @input="handleInput"
-        @focus="isFocused = true"
+        @focus="handleFocus"
         @blur="handleBlur"
       />
       <label
@@ -22,7 +26,15 @@
         {{ labelText }}
       </label>
     </div>
-    <div v-if="error" class="error-message">{{ error }}</div>
+    <div
+      v-if="error"
+      :id="errorId"
+      class="error-message"
+      role="alert"
+      aria-live="polite"
+    >
+      {{ error }}
+    </div>
   </div>
 </template>
 
@@ -30,10 +42,19 @@
 // REQ-ID: REQ-2025-003-user-login
 import { computed, ref } from 'vue'
 
+type InputType =
+  | 'text'
+  | 'password'
+  | 'email'
+  | 'number'
+  | 'tel'
+  | 'url'
+  | 'search'
+
 interface Props {
   label: string
   modelValue: string | number
-  type?: string
+  type?: InputType
   placeholder?: string
   disabled?: boolean
   error?: string
@@ -52,9 +73,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  blur: [event: FocusEvent]
+  focus: [event: FocusEvent]
 }>()
 
-const inputId = `floating-input-${Math.random().toString(36).substring(2, 9)}`
+// 使用稳定的ID生成方式（如果Vue 3.3+支持useId，否则使用固定前缀+随机数）
+const baseId = `floating-input-${Date.now().toString(36)}`
+const inputId = computed(() => `${baseId}-input`)
+const errorId = computed(() => `${baseId}-error`)
+
 const isFocused = ref(false)
 
 const labelText = computed(() => {
@@ -62,7 +89,11 @@ const labelText = computed(() => {
 })
 
 const isLabelActive = computed(() => {
-  return isFocused.value || !!props.modelValue || !!String(props.modelValue).trim()
+  return (
+    isFocused.value ||
+    !!props.modelValue ||
+    !!String(props.modelValue).trim()
+  )
 })
 
 const handleInput = (event: Event) => {
@@ -70,8 +101,14 @@ const handleInput = (event: Event) => {
   emit('update:modelValue', target.value)
 }
 
-const handleBlur = () => {
+const handleBlur = (event: FocusEvent) => {
   isFocused.value = false
+  emit('blur', event)
+}
+
+const handleFocus = (event: FocusEvent) => {
+  isFocused.value = true
+  emit('focus', event)
 }
 </script>
 
@@ -109,12 +146,19 @@ input {
   border-radius: 0.375rem;
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s ease;
   background-color: transparent;
 }
 
 input:focus {
   border-color: #3b82f6;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 input.error {
@@ -124,6 +168,7 @@ input.error {
 input:disabled {
   background-color: #f3f4f6;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .floating-label {
@@ -134,7 +179,7 @@ input:disabled {
   font-size: 1rem;
   color: #6b7280;
   pointer-events: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background-color: white;
   padding: 0 0.25rem;
 }
@@ -162,5 +207,6 @@ input.error + .floating-label {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: #ef4444;
+  line-height: 1.25rem;
 }
 </style>
