@@ -397,9 +397,10 @@
             "description": "在`backend/apps/users/views.py`中实现`GET /api/auth/email/verify/{token}/`视图，负责接收并验证URL中的Token。如果Token有效且未过期，则更新用户的`is_email_verified`状态为True，并标记`EmailVerification`记录为已验证。",
             "dependencies": [1, 1, 2],
             "details": "视图应从URL捕获`token`参数。查询`EmailVerification`表以查找匹配的Token。验证Token的有效性（未过期、未被使用）。如果验证成功，更新相关`User`模型的`is_email_verified`字段和`email_verified_at`字段，并更新`EmailVerification`记录的`verified_at`字段。处理Token无效或过期的情况，返回相应的错误响应。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行Subtask 1中编写的测试用例，确保GET /api/auth/email/verify/{token}/接口功能正常，能正确验证Token、更新用户状态，并处理无效/过期Token。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T09:58:38.064Z"
           },
           {
             "id": 5,
@@ -412,7 +413,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T09:52:45.728Z"
+        "updatedAt": "2025-12-07T09:58:38.064Z"
       },
       {
         "id": "7",
@@ -1191,7 +1192,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T09:52:45.732Z",
+      "lastModified": "2025-12-07T09:58:38.069Z",
       "taskCount": 18,
       "completedCount": 7,
       "tags": ["REQ-2025-003-user-login"]

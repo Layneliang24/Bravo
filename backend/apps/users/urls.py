@@ -11,6 +11,7 @@ from apps.users.views import (
     RegisterAPIView,
     SendEmailVerificationAPIView,
     TokenRefreshAPIView,
+    VerifyEmailAPIView,
 )
 from django.urls import path
 
@@ -28,5 +29,10 @@ urlpatterns = [
         "email/verify/send/",
         SendEmailVerificationAPIView.as_view(),
         name="email-verify-send",
+    ),
+    path(
+        "email/verify/<str:token>/",
+        VerifyEmailAPIView.as_view(),
+        name="email-verify",
     ),
 ]

@@ -667,3 +667,57 @@ class SendEmailVerificationAPIView(APIView):
             {"message": "验证邮件已发送，请查收"},
             status=status.HTTP_200_OK,
         )
+
+
+class VerifyEmailAPIView(APIView):
+    """邮箱验证API视图"""
+
+    permission_classes = []  # 允许匿名访问（通过token验证）
+
+    def get(self, request, token):
+        """
+        验证邮箱
+
+        URL参数:
+            token: 验证令牌
+
+        返回:
+            Response: 包含成功或错误消息的JSON响应
+        """
+        try:
+            # 查找验证记录
+            verification = EmailVerification.objects.get(token=token)
+        except EmailVerification.DoesNotExist:
+            return Response(
+                {"error": "无效的验证令牌", "code": "INVALID_TOKEN"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 检查是否已过期
+        if verification.is_expired():
+            return Response(
+                {"error": "验证令牌已过期", "code": "TOKEN_EXPIRED"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 检查是否已验证
+        if verification.is_verified():
+            return Response(
+                {"error": "该验证令牌已被使用（已验证）", "code": "TOKEN_ALREADY_VERIFIED"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 验证成功，更新用户状态
+        user = verification.user
+        user.is_email_verified = True
+        user.email_verified_at = timezone.now()
+        user.save()
+
+        # 标记验证记录为已验证
+        verification.verified_at = timezone.now()
+        verification.save()
+
+        return Response(
+            {"message": "邮箱验证成功"},
+            status=status.HTTP_200_OK,
+        )
