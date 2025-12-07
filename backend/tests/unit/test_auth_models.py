@@ -275,8 +275,8 @@ class EmailVerificationModelTests(TestCase):
 
         # 验证外键关系
         self.assertEqual(verification.user, user)
-        # 验证可以通过user反向查询
-        self.assertIn(verification, user.emailverification_set.all())
+        # 验证可以通过user反向查询（使用related_name）
+        self.assertIn(verification, user.email_verifications.all())
 
 
 @pytest.mark.unit
@@ -385,5 +385,5 @@ class PasswordResetModelTests(TestCase):
 
         # 验证外键关系
         self.assertEqual(password_reset.user, user)
-        # 验证可以通过user反向查询
-        self.assertIn(password_reset, user.passwordreset_set.all())
+        # 验证可以通过user反向查询（使用related_name）
+        self.assertIn(password_reset, user.password_resets.all())

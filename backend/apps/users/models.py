@@ -14,6 +14,13 @@ class User(AbstractUser):
     groups = None  # type: ignore
     user_permissions = None  # type: ignore
 
+    # 重写email字段，添加唯一约束（根据PRD要求）
+    email = models.EmailField(
+        unique=True,
+        verbose_name="邮箱",
+        help_text="用户邮箱地址，必须唯一",
+    )
+
     # 邮箱验证相关字段
     is_email_verified = models.BooleanField(
         default=False,
