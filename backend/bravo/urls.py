@@ -19,7 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 
 
 def health_check(request):
@@ -56,6 +56,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health_check, name="health-check"),
     path("api/", api_root, name="api-root"),
+    path("api/auth/", include("apps.users.urls")),  # 用户认证相关API
     # 在这里添加其他app的URLs
     # path('api/v1/', include('your_app.urls')),
 ]

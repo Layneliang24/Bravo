@@ -125,10 +125,11 @@
             "title": "实现获取验证码API (`GET /api/auth/captcha/`)",
             "description": "在`backend/apps/users/views.py`中创建`GET /api/auth/captcha/`接口，用于生成、存储并返回新的验证码。",
             "dependencies": [1, 2, 3],
-            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`GET /api/auth/captcha/`请求。该接口应调用验证码生成工具函数生成新的验证码，将其答案存储到Redis，并返回包含`captcha_id`（用于标识本次验证码）、`captcha_image`（Base64编码的图片）和`expires_in`（过期时间，秒）的JSON响应。",
-            "status": "pending",
+            "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`GET /api/auth/captcha/`请求。该接口应调用验证码生成工具函数生成新的验证码，将其答案存储到Redis，并返回包含`captcha_id`（用于标识本次验证码）、`captcha_image`（Base64编码的图片）和`expires_in`（过期时间，秒）的JSON响应。\n<info added on 2025-12-07T05:59:17.092Z>\n完成内容：\n- 在backend/apps/users/views.py中创建了CaptchaAPIView (GET方法) 和 CaptchaRefreshAPIView (POST方法)。\n- 配置了URL路由：\n  * backend/apps/users/urls.py：定义了captcha/和captcha/refresh/路由。\n  * backend/bravo/urls.py：添加了api/auth/路由（生产环境）。\n  * backend/bravo/urls_test.py：添加了api/auth/路由（测试环境）。\n- 创建了集成测试backend/tests/integration/test_captcha_api.py，包含6个测试用例。\n\n测试结果：\n- 15个单元测试通过。\n- 6个集成测试通过。\n- 总计21个测试通过。\n\n提交信息：\n- commit: 待确认\n- 涉及文件：views.py, urls.py, urls_test.py, test_captcha_api.py\n</info added on 2025-12-07T05:59:17.092Z>",
+            "status": "done",
             "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`GET /api/auth/captcha/`接口的响应数据结构、状态码和功能。检查返回的`captcha_id`是否唯一，`captcha_image`是否有效，以及`expires_in`是否正确。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:59:30.750Z"
           },
           {
             "id": 5,
@@ -136,12 +137,13 @@
             "description": "在`backend/apps/users/views.py`中创建`POST /api/auth/captcha/refresh/`接口，用于刷新现有验证码，并对已实现的代码进行初步优化。",
             "dependencies": [1, 2, 3, 4],
             "details": "在`backend/apps/users/views.py`中实现一个视图函数，处理`POST /api/auth/captcha/refresh/`请求。该接口应接收旧的`captcha_id`（可选），生成新的验证码，更新Redis中的存储，并返回新的`captcha_id`、`captcha_image`和`expires_in`。同时，对子任务2、3、4中实现的代码进行初步的代码审查和重构，确保代码清晰、可读性高，并遵循最佳实践，例如，提取重复逻辑到辅助函数中。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`POST /api/auth/captcha/refresh/`接口的功能。测试刷新后是否返回新的验证码信息，旧的验证码是否失效。同时，进行代码审查以验证重构效果。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:59:42.571Z"
           }
         ],
-        "updatedAt": "2025-12-07T05:48:57.949Z"
+        "updatedAt": "2025-12-07T05:59:42.571Z"
       },
       {
         "id": "3",
@@ -1156,7 +1158,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:48:57.954Z",
+      "lastModified": "2025-12-07T05:59:42.577Z",
       "taskCount": 18,
       "completedCount": 1,
       "tags": ["REQ-2025-003-user-login"]
