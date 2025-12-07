@@ -85,17 +85,18 @@
         "testStrategy": "编写`backend/tests/unit/test_captcha.py`单元测试，测试验证码生成是否符合预期、Redis存储和过期是否正常、验证码验证逻辑是否正确。编写集成测试，验证`/api/auth/captcha/`和`/api/auth/captcha/refresh/`接口的响应数据结构和功能。",
         "priority": "high",
         "dependencies": ["1"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
             "title": "编写验证码模块的单元测试",
             "description": "为验证码生成逻辑、Redis存储和过期机制以及API响应格式编写初步的单元测试，预期测试失败。",
             "dependencies": [],
-            "details": "在`backend/tests/unit/test_captcha.py`中创建测试文件。编写测试用例，验证验证码图片生成是否符合预期（例如，长度、字符类型），Redis存储和检索功能，以及验证码过期机制。同时，为API接口的响应结构和数据类型编写测试，确保它们在后续实现中能被正确验证。",
-            "status": "pending",
+            "details": "在`backend/tests/unit/test_captcha.py`中创建测试文件。编写测试用例，验证验证码图片生成是否符合预期（例如，长度、字符类型），Redis存储和检索功能，以及验证码过期机制。同时，为API接口的响应结构和数据类型编写测试，确保它们在后续实现中能被正确验证。\n<info added on 2025-12-07T05:43:50.282Z>\n✅ 子任务2.1已完成\n\n完成内容：\n- 创建了backend/tests/unit/test_captcha.py测试文件\n- 包含15个测试用例，分为3个测试类：\n  * CaptchaGenerationTests: 验证码生成功能测试（5个）\n  * CaptchaRedisStorageTests: Redis存储功能测试（4个）\n  * CaptchaVerificationTests: 验证码验证功能测试（6个）\n- 测试覆盖：\n  * 验证码生成：4位字符、Base64编码、UUID格式、每次生成不同\n  * Redis存储：Key格式captcha:{session_id}、5分钟过期\n  * 验证功能：正确/错误答案、不存在的ID、不区分大小写、验证后删除\n- 测试结果：15个测试全部失败（符合TDD Red阶段）\n\n提交信息：\n- commit: 待确认\n- 文件：backend/tests/unit/test_captcha.py\n\n下一步：子任务2.2 - 实现验证码生成工具函数\n</info added on 2025-12-07T05:43:50.282Z>",
+            "status": "done",
             "testStrategy": "编写单元测试，覆盖`utils.py`中的验证码生成函数、Redis操作函数以及`views.py`中API接口的预期响应结构。运行测试并确认它们在功能未实现时失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:44:02.142Z"
           },
           {
             "id": 2,
@@ -137,7 +138,8 @@
             "testStrategy": "运行子任务1中编写的API相关单元测试，并编写集成测试来验证`POST /api/auth/captcha/refresh/`接口的功能。测试刷新后是否返回新的验证码信息，旧的验证码是否失效。同时，进行代码审查以验证重构效果。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T05:44:02.142Z"
       },
       {
         "id": "3",
@@ -1152,7 +1154,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:35:24.215Z",
+      "lastModified": "2025-12-07T05:44:02.146Z",
       "taskCount": 18,
       "completedCount": 1,
       "tags": ["REQ-2025-003-user-login"]
