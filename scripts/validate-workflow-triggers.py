@@ -4,11 +4,17 @@
 确保所有用于分支保护的工作流都同时支持push和pull_request事件
 """
 
+import io
 import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
 import yaml
+
+# 修复Windows终端中文乱码问题
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 def parse_workflow_triggers(workflow_file: Path) -> Dict[str, Set[str]]:
@@ -16,7 +22,13 @@ def parse_workflow_triggers(workflow_file: Path) -> Dict[str, Set[str]]:
     with open(workflow_file, encoding="utf-8") as f:
         workflow = yaml.safe_load(f)
 
+    # YAML解析器可能把'on:'解析为True键（因为'on'在YAML中是布尔值）
+    # 需要同时检查'on'键和True键
     triggers = workflow.get("on", {})
+    if not triggers and True in workflow:
+        # 如果'on'键不存在但存在True键，说明YAML解析器把'on:'解析为True
+        triggers = workflow.get(True, {})
+
     trigger_types = set()
 
     # 处理不同的触发器格式

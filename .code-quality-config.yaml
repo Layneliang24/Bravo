@@ -158,6 +158,22 @@ repos:
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
 
+      - id: validate-workflow-triggers
+        name: Validate Workflow Triggers
+        entry: python scripts/validate-workflow-triggers.py
+        language: system
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        pass_filenames: false
+        always_run: false
+
+      - id: validate-branch-protection
+        name: Validate Branch Protection Rules
+        entry: python scripts/validate-branch-protection.py
+        language: system
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        pass_filenames: false
+        always_run: false
+
       # TypeScript命名检查 - 暂时禁用，需要前端服务运行
       # - id: typescript-naming-check
       #   name: TypeScript Naming Convention Check
