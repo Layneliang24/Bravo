@@ -66,3 +66,108 @@ class User(AbstractUser):
         ]
         # 注意：email和username的唯一约束由AbstractUser的字段定义提供
         # 这里只需要添加is_email_verified的普通索引
+
+    def __str__(self):
+        """用户模型的字符串表示"""
+        return self.username or self.email or str(self.id)
+
+
+class EmailVerification(models.Model):
+    """邮箱验证模型"""
+
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="email_verifications",
+        verbose_name="用户",
+        help_text="关联的用户",
+    )
+    email = models.EmailField(
+        max_length=255,
+        verbose_name="验证邮箱",
+        help_text="需要验证的邮箱地址",
+    )
+    token = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name="验证令牌",
+        help_text="邮箱验证的唯一令牌",
+    )
+    expires_at = models.DateTimeField(
+        verbose_name="过期时间",
+        help_text="验证令牌的过期时间",
+    )
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="验证时间",
+        help_text="邮箱验证完成的时间",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="创建时间",
+        help_text="记录创建的时间",
+    )
+
+    class Meta:
+        db_table = "users_email_verification"
+        verbose_name = "邮箱验证"
+        verbose_name_plural = "邮箱验证"
+        indexes = [
+            models.Index(fields=["token"], name="idx_email_verification_token"),
+            models.Index(
+                fields=["user", "email"], name="idx_email_verification_user_email"
+            ),
+        ]
+
+    def __str__(self):
+        """邮箱验证模型的字符串表示"""
+        return f"EmailVerification for {self.email} (user: {self.user_id})"
+
+
+class PasswordReset(models.Model):
+    """密码重置模型"""
+
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="password_resets",
+        verbose_name="用户",
+        help_text="关联的用户",
+    )
+    token = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name="重置令牌",
+        help_text="密码重置的唯一令牌",
+    )
+    expires_at = models.DateTimeField(
+        verbose_name="过期时间",
+        help_text="重置令牌的过期时间",
+    )
+    used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="使用时间",
+        help_text="密码重置令牌被使用的时间",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="创建时间",
+        help_text="记录创建的时间",
+    )
+
+    class Meta:
+        db_table = "users_password_reset"
+        verbose_name = "密码重置"
+        verbose_name_plural = "密码重置"
+        indexes = [
+            models.Index(fields=["token"], name="idx_pwd_reset_token"),
+            models.Index(fields=["user"], name="idx_pwd_reset_user"),
+        ]
+
+    def __str__(self):
+        """密码重置模型的字符串表示"""
+        return f"PasswordReset for user {self.user_id}"

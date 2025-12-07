@@ -35,11 +35,11 @@
             "title": "扩展User模型字段",
             "description": "在`backend/apps/users/models.py`中扩展现有的`User`模型，添加所有指定的新字段。",
             "dependencies": [1],
-            "details": "修改`backend/apps/users/models.py`文件，在`User`模型中添加`is_email_verified` (BooleanField, default=False), `email_verified_at` (DateTimeField, nullable), `last_login` (DateTimeField, nullable), `failed_login_attempts` (IntegerField, default=0), `locked_until` (DateTimeField, nullable), `avatar` (ImageField/URLField, nullable), `display_name` (CharField, nullable)字段。确保字段类型和默认值设置正确。",
-            "status": "in-progress",
+            "details": "修改`backend/apps/users/models.py`文件，在`User`模型中添加`is_email_verified` (BooleanField, default=False), `email_verified_at` (DateTimeField, nullable), `last_login` (DateTimeField, nullable), `failed_login_attempts` (IntegerField, default=0), `locked_until` (DateTimeField, nullable), `avatar` (ImageField/URLField, nullable), `display_name` (CharField, nullable)字段。确保字段类型和默认值设置正确。\n<info added on 2025-12-07T05:08:19.703Z>\n✅ 子任务1.2已完成\n\n完成内容：\n- 在User模型中添加了7个新字段：\n  * is_email_verified: BooleanField, default=False\n  * email_verified_at: DateTimeField, nullable\n  * failed_login_attempts: IntegerField, default=0\n  * locked_until: DateTimeField, nullable\n  * avatar: URLField, max_length=500, nullable\n  * display_name: CharField, max_length=100, nullable\n  * is_email_verified索引（在Meta中定义）\n\n注意事项：\n- AbstractUser已有last_login字段，无需重复添加\n- email和username的唯一约束由AbstractUser基类提供\n- 数据库迁移将在子任务1.4中执行\n\n提交信息：\n- commit: 待确认\n- 文件：backend/apps/users/models.py\n\n下一步：子任务1.3 - 创建EmailVerification和PasswordReset模型\n</info added on 2025-12-07T05:08:19.703Z>",
+            "status": "done",
             "testStrategy": "暂无特定测试策略，此步骤主要关注代码实现。后续将通过运行Subtask 1的测试来验证。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T05:01:38.485Z"
+            "updatedAt": "2025-12-07T05:08:32.831Z"
           },
           {
             "id": 3,
@@ -47,9 +47,10 @@
             "description": "在`backend/apps/users/models.py`中创建`EmailVerification`和`PasswordReset`两个新模型，包含所有指定字段。",
             "dependencies": [2],
             "details": "在`backend/apps/users/models.py`中定义`EmailVerification`模型，包含`id` (UUIDField/AutoField), `user` (ForeignKey to User), `email` (EmailField), `token` (CharField), `expires_at` (DateTimeField), `verified_at` (DateTimeField, nullable), `created_at` (DateTimeField, auto_now_add=True)字段。定义`PasswordReset`模型，包含`id` (UUIDField/AutoField), `user` (ForeignKey to User), `email` (EmailField), `token` (CharField), `expires_at` (DateTimeField), `used_at` (DateTimeField, nullable), `created_at` (DateTimeField, auto_now_add=True)字段。确保外键关系正确。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "暂无特定测试策略，此步骤主要关注代码实现。后续将通过运行Subtask 1的测试来验证。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:08:59.646Z"
           },
           {
             "id": 4,
@@ -72,7 +73,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T05:01:38.485Z"
+        "updatedAt": "2025-12-07T05:08:59.646Z"
       },
       {
         "id": "2",
@@ -1149,7 +1150,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:01:38.491Z",
+      "lastModified": "2025-12-07T05:08:59.650Z",
       "taskCount": 18,
       "completedCount": 0,
       "tags": ["REQ-2025-003-user-login"]
