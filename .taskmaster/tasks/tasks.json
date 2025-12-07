@@ -171,10 +171,11 @@
             "title": "创建用户注册序列化器 (UserRegisterSerializer)",
             "description": "在 `backend/apps/users/serializers.py` 文件中创建一个名为 `UserRegisterSerializer` 的序列化器，用于处理注册请求的数据验证，包括邮箱、密码、确认密码和验证码信息。",
             "dependencies": [1],
-            "details": "序列化器应继承自 `serializers.Serializer`。包含 `email`, `password`, `password2` (用于确认密码), `captcha_id`, `captcha_answer` 字段。`email` 字段应验证唯一性。`password` 字段应为 `write_only=True`。添加 `validate` 方法来检查两次输入的密码是否一致，并验证密码强度（最少8位，包含字母和数字）。",
-            "status": "pending",
+            "details": "序列化器应继承自 `serializers.Serializer`。包含 `email`, `password`, `password2` (用于确认密码), `captcha_id`, `captcha_answer` 字段。`email` 字段应验证唯一性。`password` 字段应为 `write_only=True`。添加 `validate` 方法来检查两次输入的密码是否一致，并验证密码强度（最少8位，包含字母和数字）。\n<info added on 2025-12-07T07:03:20.364Z>\n✅ 子任务3.2已完成\n\n完成内容：\n- 创建了backend/apps/users/serializers.py文件\n- 实现了UserRegisterSerializer序列化器：\n  * email字段：EmailField，验证唯一性\n  * password字段：CharField，最少8位，验证强度（包含字母和数字）\n  * password_confirm字段：验证与password一致\n  * captcha_id和captcha_answer字段：验证验证码\n  * validate_email()：验证邮箱唯一性\n  * validate_password()：验证密码强度（8位+字母+数字）\n  * validate()：验证密码匹配和验证码\n  * create()：创建用户，使用email前缀作为username（确保唯一）\n\n测试结果：序列化器创建成功，Django系统检查通过\n\n提交信息：\n- commit: 待确认\n- 文件：backend/apps/users/serializers.py\n</info added on 2025-12-07T07:03:20.364Z>",
+            "status": "done",
             "testStrategy": "编写 `backend/tests/unit/test_auth_serializers.py` 单元测试，专门验证序列化器的字段验证、密码一致性检查和密码强度验证逻辑。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:03:32.022Z"
           },
           {
             "id": 3,
@@ -182,9 +183,10 @@
             "description": "在 `backend/apps/users/views.py` 中创建处理 `POST /api/auth/register/` 请求的视图。该视图将使用 `UserRegisterSerializer` 来验证输入数据，验证验证码，并创建新用户。",
             "dependencies": [2],
             "details": "创建一个基于 `generics.GenericAPIView` 的视图，并设置 `serializer_class = UserRegisterSerializer`。在 `post` 方法中，首先验证序列化器数据。然后，调用一个独立的工具函数来验证验证码的正确性（依赖任务2）。如果所有验证通过，则创建新用户实例，并使用 `user.set_password()` 方法对密码进行哈希处理后保存。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "在实现过程中，逐步运行之前编写的集成测试，观察它们从失败到部分通过的过程。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:03:42.104Z"
           },
           {
             "id": 4,
@@ -207,7 +209,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T06:55:13.068Z"
+        "updatedAt": "2025-12-07T07:03:42.104Z"
       },
       {
         "id": "4",
@@ -1160,7 +1162,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T06:55:13.075Z",
+      "lastModified": "2025-12-07T07:03:42.107Z",
       "taskCount": 18,
       "completedCount": 2,
       "tags": ["REQ-2025-003-user-login"]
