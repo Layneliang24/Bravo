@@ -34,7 +34,9 @@ class UserRegisterSerializer(serializers.Serializer):
     def validate_email(self, value):
         """验证邮箱唯一性"""
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("该邮箱已被注册")
+            raise serializers.ValidationError(
+                {"error": "该邮箱已被注册", "code": "EMAIL_EXISTS"}
+            )
         return value
 
     def validate_password(self, value):
@@ -48,7 +50,9 @@ class UserRegisterSerializer(serializers.Serializer):
         has_digit = bool(re.search(r"\d", value))
 
         if not (has_letter and has_digit):
-            raise serializers.ValidationError("密码必须包含字母和数字")
+            raise serializers.ValidationError(
+                {"error": "密码必须包含字母和数字", "code": "WEAK_PASSWORD"}
+            )
 
         # 使用Django内置密码验证器
         try:
@@ -65,7 +69,9 @@ class UserRegisterSerializer(serializers.Serializer):
         password_confirm = attrs.get("password_confirm")
 
         if password != password_confirm:
-            raise serializers.ValidationError({"password_confirm": "密码和确认密码不一致"})
+            raise serializers.ValidationError(
+                {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"}
+            )
 
         # 验证验证码
         captcha_id = attrs.get("captcha_id")

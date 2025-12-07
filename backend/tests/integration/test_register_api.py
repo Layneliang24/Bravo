@@ -271,7 +271,7 @@ class RegisterAPITests(TestCase):
 
     def test_register_with_expired_captcha_fails(self):
         """测试使用过期的验证码时注册失败"""
-        captcha_id, captcha_answer = generate_captcha()
+        captcha_id, captcha_image, captcha_answer = generate_captcha()
         # 存储验证码但立即过期（expires_in=0）
         store_captcha(captcha_id, captcha_answer, expires_in=0)
 
