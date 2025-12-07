@@ -356,7 +356,7 @@
         "testStrategy": "编写`backend/tests/integration/test_auth_api.py`集成测试，测试发送验证邮件API是否触发Celery任务，验证链接是否正确生成。测试邮箱验证API，验证有效Token和过期/无效Token的响应。",
         "priority": "high",
         "dependencies": ["1", "5"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -408,12 +408,13 @@
             "description": "对已实现的邮件模板、Celery任务定义和两个邮箱验证API的错误处理进行审查和优化，确保代码的健壮性、可读性和用户体验。",
             "dependencies": [2, 3, 4],
             "details": "检查邮件模板的国际化和可读性。优化Celery任务的重试机制、错误日志记录。统一API的错误响应格式，处理如Token不存在、Token过期、Token已被使用等边界情况。确保所有异常都被妥善捕获和处理。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "重新运行所有相关集成测试和单元测试，确保重构没有引入回归问题。进行手动测试以验证错误处理和用户体验的优化。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T10:03:29.590Z"
           }
         ],
-        "updatedAt": "2025-12-07T09:58:38.064Z"
+        "updatedAt": "2025-12-07T10:03:29.590Z"
       },
       {
         "id": "7",
@@ -1192,9 +1193,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T09:58:38.069Z",
+      "lastModified": "2025-12-07T10:03:29.594Z",
       "taskCount": 18,
-      "completedCount": 7,
+      "completedCount": 8,
       "tags": ["REQ-2025-003-user-login"]
     }
   },

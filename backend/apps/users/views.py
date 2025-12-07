@@ -623,50 +623,67 @@ class SendEmailVerificationAPIView(APIView):
         返回:
             Response: 包含成功消息的JSON响应
         """
-        serializer = SendEmailVerificationSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
+        try:
+            serializer = SendEmailVerificationSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            email = serializer.validated_data["email"]
+
+            # 验证邮箱是否属于当前用户
+            if request.user.email != email:
+                return Response(
+                    {"error": "邮箱不属于当前用户", "code": "EMAIL_MISMATCH"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 生成唯一的验证token
+            token = secrets.token_urlsafe(32)
+
+            # 设置过期时间（24小时）
+            expires_at = timezone.now() + timedelta(hours=24)
+
+            # 创建或更新EmailVerification记录
+            verification, created = EmailVerification.objects.update_or_create(
+                user=request.user,
+                email=email,
+                defaults={
+                    "token": token,
+                    "expires_at": expires_at,
+                    "verified_at": None,  # 重置验证状态
+                },
             )
 
-        email = serializer.validated_data["email"]
-
-        # 验证邮箱是否属于当前用户
-        if request.user.email != email:
-            return Response(
-                {"error": "邮箱不属于当前用户", "code": "EMAIL_MISMATCH"},
-                status=status.HTTP_400_BAD_REQUEST,
+            # 调用Celery任务发送邮件
+            send_email_verification.delay(
+                user_id=request.user.id,
+                email=email,
+                token=token,
             )
 
-        # 生成唯一的验证token
-        token = secrets.token_urlsafe(32)
+            return Response(
+                {"message": "验证邮件已发送，请查收"},
+                status=status.HTTP_200_OK,
+            )
 
-        # 设置过期时间（24小时）
-        expires_at = timezone.now() + timedelta(hours=24)
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
 
-        # 创建或更新EmailVerification记录
-        verification, created = EmailVerification.objects.update_or_create(
-            user=request.user,
-            email=email,
-            defaults={
-                "token": token,
-                "expires_at": expires_at,
-                "verified_at": None,  # 重置验证状态
-            },
-        )
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"发送邮箱验证邮件时发生错误: user_id={request.user.id}, "
+                f"email={request.data.get('email')}, error={str(e)}",
+                exc_info=True,
+            )
 
-        # 调用Celery任务发送邮件
-        send_email_verification.delay(
-            user_id=request.user.id,
-            email=email,
-            token=token,
-        )
-
-        return Response(
-            {"message": "验证邮件已发送，请查收"},
-            status=status.HTTP_200_OK,
-        )
+            return Response(
+                {"error": "发送验证邮件失败，请稍后重试", "code": "EMAIL_SEND_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class VerifyEmailAPIView(APIView):
@@ -686,38 +703,54 @@ class VerifyEmailAPIView(APIView):
         """
         try:
             # 查找验证记录
-            verification = EmailVerification.objects.get(token=token)
-        except EmailVerification.DoesNotExist:
+            try:
+                verification = EmailVerification.objects.get(token=token)
+            except EmailVerification.DoesNotExist:
+                return Response(
+                    {"error": "无效的验证令牌", "code": "INVALID_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已过期
+            if verification.is_expired():
+                return Response(
+                    {"error": "验证令牌已过期", "code": "TOKEN_EXPIRED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已验证
+            if verification.is_verified():
+                return Response(
+                    {"error": "该验证令牌已被使用（已验证）", "code": "TOKEN_ALREADY_VERIFIED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 验证成功，更新用户状态
+            user = verification.user
+            user.is_email_verified = True
+            user.email_verified_at = timezone.now()
+            user.save()
+
+            # 标记验证记录为已验证
+            verification.verified_at = timezone.now()
+            verification.save()
+
             return Response(
-                {"error": "无效的验证令牌", "code": "INVALID_TOKEN"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"message": "邮箱验证成功"},
+                status=status.HTTP_200_OK,
             )
 
-        # 检查是否已过期
-        if verification.is_expired():
-            return Response(
-                {"error": "验证令牌已过期", "code": "TOKEN_EXPIRED"},
-                status=status.HTTP_400_BAD_REQUEST,
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"邮箱验证时发生错误: token={token}, error={str(e)}",
+                exc_info=True,
             )
 
-        # 检查是否已验证
-        if verification.is_verified():
             return Response(
-                {"error": "该验证令牌已被使用（已验证）", "code": "TOKEN_ALREADY_VERIFIED"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "邮箱验证失败，请稍后重试", "code": "VERIFICATION_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        # 验证成功，更新用户状态
-        user = verification.user
-        user.is_email_verified = True
-        user.email_verified_at = timezone.now()
-        user.save()
-
-        # 标记验证记录为已验证
-        verification.verified_at = timezone.now()
-        verification.save()
-
-        return Response(
-            {"message": "邮箱验证成功"},
-            status=status.HTTP_200_OK,
-        )
