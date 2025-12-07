@@ -115,10 +115,8 @@ class EmailVerification(models.Model):
         verbose_name = "邮箱验证"
         verbose_name_plural = "邮箱验证"
         indexes = [
-            models.Index(fields=["token"], name="idx_email_verification_token"),
-            models.Index(
-                fields=["user", "email"], name="idx_email_verification_user_email"
-            ),
+            models.Index(fields=["token"], name="idx_email_verify_token"),
+            models.Index(fields=["user", "email"], name="idx_email_verify_user"),
         ]
 
     def __str__(self):
