@@ -9,6 +9,7 @@ from apps.users.views import (
     LogoutAPIView,
     PreviewAPIView,
     RegisterAPIView,
+    SendEmailVerificationAPIView,
     TokenRefreshAPIView,
 )
 from django.urls import path
@@ -23,4 +24,9 @@ urlpatterns = [
     path("preview/", PreviewAPIView.as_view(), name="preview"),
     path("token/refresh/", TokenRefreshAPIView.as_view(), name="token-refresh"),
     path("logout/", LogoutAPIView.as_view(), name="logout"),
+    path(
+        "email/verify/send/",
+        SendEmailVerificationAPIView.as_view(),
+        name="email-verify-send",
+    ),
 ]

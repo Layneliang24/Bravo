@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import Client, TestCase
 from django.utils import timezone
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -37,13 +38,20 @@ class EmailVerificationAPITests(TestCase):
             is_email_verified=False,
         )
 
+    def _get_auth_headers(self):
+        """获取JWT认证头"""
+        refresh = RefreshToken.for_user(self.test_user)
+        access_token = str(refresh.access_token)
+        return {"HTTP_AUTHORIZATION": f"Bearer {access_token}"}
+
     def test_send_verification_email_api_endpoint_exists(self):
         """测试发送验证邮件API端点存在"""
-        self.client.force_login(self.test_user)
+        headers = self._get_auth_headers()
         response = self.client.post(
             "/api/auth/email/verify/send/",
             data=json.dumps({"email": "test@example.com"}),
             content_type="application/json",
+            **headers,
         )
         # 预期端点存在（即使返回错误，也应该是400/401/403，而不是404）
         self.assertNotEqual(response.status_code, 404)
@@ -62,11 +70,12 @@ class EmailVerificationAPITests(TestCase):
 
     def test_send_verification_email_creates_verification_record(self):
         """测试发送验证邮件会创建EmailVerification记录"""
-        self.client.force_login(self.test_user)
+        headers = self._get_auth_headers()
         self.client.post(
             "/api/auth/email/verify/send/",
             data=json.dumps({"email": "test@example.com"}),
             content_type="application/json",
+            **headers,
         )
 
         # 预期创建了EmailVerification记录
@@ -80,11 +89,12 @@ class EmailVerificationAPITests(TestCase):
 
     def test_send_verification_email_triggers_celery_task(self):
         """测试发送验证邮件会触发Celery任务发送邮件"""
-        self.client.force_login(self.test_user)
+        headers = self._get_auth_headers()
         self.client.post(
             "/api/auth/email/verify/send/",
             data=json.dumps({"email": "test@example.com"}),
             content_type="application/json",
+            **headers,
         )
 
         # 预期邮件被发送（测试环境CELERY_TASK_ALWAYS_EAGER=True，会同步执行）
@@ -95,11 +105,12 @@ class EmailVerificationAPITests(TestCase):
 
     def test_send_verification_email_contains_verification_link(self):
         """测试验证邮件包含验证链接"""
-        self.client.force_login(self.test_user)
+        headers = self._get_auth_headers()
         self.client.post(
             "/api/auth/email/verify/send/",
             data=json.dumps({"email": "test@example.com"}),
             content_type="application/json",
+            **headers,
         )
 
         # 预期邮件包含验证链接
@@ -110,11 +121,12 @@ class EmailVerificationAPITests(TestCase):
 
     def test_send_verification_email_returns_success_message(self):
         """测试发送验证邮件返回成功消息"""
-        self.client.force_login(self.test_user)
+        headers = self._get_auth_headers()
         response = self.client.post(
             "/api/auth/email/verify/send/",
             data=json.dumps({"email": "test@example.com"}),
             content_type="application/json",
+            **headers,
         )
 
         # 预期返回200和成功消息

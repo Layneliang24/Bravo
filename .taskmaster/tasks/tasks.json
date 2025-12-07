@@ -375,9 +375,10 @@
             "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/email/verify/send/`视图，负责生成唯一的验证Token，将其存储到`EmailVerification`表，并触发Celery任务异步发送包含验证链接的邮件。",
             "dependencies": [1, 1],
             "details": "创建一个序列化器用于接收请求。在视图中，为当前认证用户生成一个加密的、有时效性的Token。将Token和用户邮箱保存到`EmailVerification`模型实例中。调用一个Celery任务来发送邮件。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行Subtask 1中编写的测试用例，确保POST /api/auth/email/verify/send/接口功能正常，能正确生成Token并触发Celery任务。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T09:46:04.779Z"
           },
           {
             "id": 3,
@@ -410,7 +411,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T09:29:13.816Z"
+        "updatedAt": "2025-12-07T09:46:04.779Z"
       },
       {
         "id": "7",
@@ -1189,7 +1190,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T09:29:13.823Z",
+      "lastModified": "2025-12-07T09:46:04.784Z",
       "taskCount": 18,
       "completedCount": 7,
       "tags": ["REQ-2025-003-user-login"]

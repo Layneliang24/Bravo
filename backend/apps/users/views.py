@@ -2,13 +2,17 @@
 # REQ-ID: REQ-2025-003-user-login
 """用户认证相关视图"""
 
+import secrets
 from datetime import timedelta
 
+from apps.users.models import EmailVerification
 from apps.users.serializers import (
     PreviewLoginSerializer,
+    SendEmailVerificationSerializer,
     UserLoginSerializer,
     UserRegisterSerializer,
 )
+from apps.users.tasks import send_email_verification
 from apps.users.throttling import PreviewLoginThrottle
 from apps.users.utils import generate_captcha, store_captcha
 from django.contrib.auth import get_user_model
@@ -597,3 +601,69 @@ class LogoutAPIView(APIView):
                 {"message": "登出成功"},
                 status=status.HTTP_200_OK,
             )
+
+
+class SendEmailVerificationAPIView(APIView):
+    """发送邮箱验证邮件API视图"""
+
+    permission_classes = [IsAuthenticated]  # 需要认证
+
+    def post(self, request):
+        """
+        发送邮箱验证邮件
+
+        请求头:
+            Authorization: Bearer <access_token>
+
+        请求体:
+            {
+                "email": "user@example.com"
+            }
+
+        返回:
+            Response: 包含成功消息的JSON响应
+        """
+        serializer = SendEmailVerificationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = serializer.validated_data["email"]
+
+        # 验证邮箱是否属于当前用户
+        if request.user.email != email:
+            return Response(
+                {"error": "邮箱不属于当前用户", "code": "EMAIL_MISMATCH"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 生成唯一的验证token
+        token = secrets.token_urlsafe(32)
+
+        # 设置过期时间（24小时）
+        expires_at = timezone.now() + timedelta(hours=24)
+
+        # 创建或更新EmailVerification记录
+        verification, created = EmailVerification.objects.update_or_create(
+            user=request.user,
+            email=email,
+            defaults={
+                "token": token,
+                "expires_at": expires_at,
+                "verified_at": None,  # 重置验证状态
+            },
+        )
+
+        # 调用Celery任务发送邮件
+        send_email_verification.delay(
+            user_id=request.user.id,
+            email=email,
+            token=token,
+        )
+
+        return Response(
+            {"message": "验证邮件已发送，请查收"},
+            status=status.HTTP_200_OK,
+        )

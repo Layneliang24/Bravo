@@ -210,3 +210,14 @@ class PreviewLoginSerializer(serializers.Serializer):
         attrs["user"] = user
         attrs["valid"] = True
         return attrs
+
+
+class SendEmailVerificationSerializer(serializers.Serializer):
+    """发送邮箱验证邮件序列化器"""
+
+    email = serializers.EmailField(required=True, help_text="用户邮箱地址")
+
+    def validate_email(self, value):
+        """验证邮箱是否属于当前用户"""
+        # 这个验证会在视图中进行，因为需要访问request.user
+        return value
