@@ -157,6 +157,22 @@ repos:
         entry: bash -c 'echo "检查workflow语法..." && find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs -I {} python -c "import yaml; yaml.safe_load(open(\"{}\", \"r\", encoding=\"utf-8\"))" && echo "语法检查通过"'
         language: system
         files: ^\.github/workflows/.*\.(yml|yaml)$
+
+      - id: validate-workflow-triggers
+        name: Validate Workflow Triggers
+        entry: python scripts/validate-workflow-triggers.py
+        language: system
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        pass_filenames: false
+        always_run: false
+
+      - id: validate-branch-protection
+        name: Validate Branch Protection Rules
+        entry: python scripts/validate-branch-protection.py
+        language: system
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        pass_filenames: false
+        always_run: false
         pass_filenames: false
 
       # TypeScript和Vue命名检查 - 暂时禁用，ESLint依赖问题
