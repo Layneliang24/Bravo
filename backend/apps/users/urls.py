@@ -6,6 +6,7 @@ from apps.users.views import (
     CaptchaAPIView,
     CaptchaRefreshAPIView,
     LoginAPIView,
+    PreviewAPIView,
     RegisterAPIView,
 )
 from django.urls import path
@@ -17,4 +18,5 @@ urlpatterns = [
     path("captcha/refresh/", CaptchaRefreshAPIView.as_view(), name="captcha-refresh"),
     path("register/", RegisterAPIView.as_view(), name="register"),
     path("login/", LoginAPIView.as_view(), name="login"),
+    path("preview/", PreviewAPIView.as_view(), name="preview"),
 ]

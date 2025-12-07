@@ -4,7 +4,11 @@
 
 from datetime import timedelta
 
-from apps.users.serializers import UserLoginSerializer, UserRegisterSerializer
+from apps.users.serializers import (
+    PreviewLoginSerializer,
+    UserLoginSerializer,
+    UserRegisterSerializer,
+)
 from apps.users.utils import generate_captcha, store_captcha
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -389,3 +393,107 @@ class LoginAPIView(APIView):
         """
         refresh = RefreshToken.for_user(user)
         return str(refresh.access_token), str(refresh)
+
+
+class PreviewAPIView(APIView):
+    """登录预验证API视图（用于获取用户头像）"""
+
+    permission_classes = []  # 允许匿名访问
+
+    def _get_avatar_letter(self, user):
+        """
+        获取用户头像首字母
+
+        Args:
+            user: User实例
+
+        Returns:
+            str: 首字母（优先使用display_name，否则使用username）
+        """
+        if user.display_name:
+            # 使用display_name的首字符
+            return user.display_name[0].upper()
+        else:
+            # 使用username的首字符
+            return user.username[0].upper() if user.username else "?"
+
+    def _format_user_preview_data(self, user):
+        """
+        格式化用户预览数据
+
+        Args:
+            user: User实例
+
+        Returns:
+            dict: 用户预览数据
+        """
+        if user.avatar:
+            # 有头像
+            return {
+                "display_name": user.display_name or user.username,
+                "avatar_url": user.avatar,
+                "default_avatar": False,
+            }
+        else:
+            # 无头像，返回默认头像信息
+            return {
+                "display_name": user.display_name or user.username,
+                "avatar_url": None,
+                "default_avatar": True,
+                "avatar_letter": self._get_avatar_letter(user),
+            }
+
+    def post(self, request):
+        """
+        登录预验证（获取用户头像）
+
+        请求体:
+            {
+                "email": "user@example.com" 或 "username",
+                "password": "SecurePass123",
+                "captcha_id": "uuid",
+                "captcha_answer": "A3B7"
+            }
+
+        返回:
+            Response: 包含valid和user信息的JSON响应（始终返回200状态码）
+        """
+        serializer = PreviewLoginSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            # 处理错误响应格式
+            errors = serializer.errors
+
+            # 检查验证码错误
+            if "captcha_answer" in errors:
+                captcha_error = errors["captcha_answer"]
+                if isinstance(captcha_error, list) and any(
+                    "验证码错误" in str(e) for e in captcha_error
+                ):
+                    return Response(
+                        {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # 其他错误直接返回
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 获取验证结果
+        validated_data = serializer.validated_data
+        is_valid = validated_data.get("valid", False)
+        user = validated_data.get("user")
+
+        if not is_valid or user is None:
+            # 账号密码错误，返回valid: false（安全考虑，不返回详细错误）
+            return Response(
+                {"valid": False, "user": None},
+                status=status.HTTP_200_OK,
+            )
+
+        # 账号密码正确，返回用户信息
+        user_data = self._format_user_preview_data(user)
+
+        return Response(
+            {"valid": True, "user": user_data},
+            status=status.HTTP_200_OK,
+        )

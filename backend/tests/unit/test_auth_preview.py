@@ -180,8 +180,8 @@ class PreviewAPITests(TestCase):
         user_data = data["user"]
         # display_name应该为None或username
         self.assertIn("avatar_letter", user_data)
-        # 应该返回username的首字母
-        self.assertEqual(user_data["avatar_letter"], "t")
+        # 应该返回username的首字母（大写）
+        self.assertEqual(user_data["avatar_letter"], "T")
 
     def test_preview_with_wrong_password_returns_invalid(self):
         """测试错误密码返回valid: false"""
