@@ -71,12 +71,21 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=["is_email_verified"], name="idx_email_verified"),
         ]
+        ordering = ["-date_joined"]  # 按注册时间倒序排列
         # 注意：email和username的唯一约束由AbstractUser的字段定义提供
-        # 这里只需要添加is_email_verified的普通索引
+        # AbstractUser已有date_joined字段作为created_at，无需额外添加
 
     def __str__(self):
         """用户模型的字符串表示"""
         return self.username or self.email or str(self.id)
+
+    def is_locked(self):
+        """检查账户是否被锁定"""
+        if self.locked_until is None:
+            return False
+        from django.utils import timezone
+
+        return timezone.now() < self.locked_until
 
 
 class EmailVerification(models.Model):
@@ -125,10 +134,21 @@ class EmailVerification(models.Model):
             models.Index(fields=["token"], name="idx_email_verify_token"),
             models.Index(fields=["user", "email"], name="idx_email_verify_user"),
         ]
+        ordering = ["-created_at"]  # 按创建时间倒序排列
 
     def __str__(self):
         """邮箱验证模型的字符串表示"""
         return f"EmailVerification for {self.email} (user: {self.user_id})"
+
+    def is_expired(self):
+        """检查验证令牌是否过期"""
+        from django.utils import timezone
+
+        return self.expires_at < timezone.now()
+
+    def is_verified(self):
+        """检查是否已验证"""
+        return self.verified_at is not None
 
 
 class PasswordReset(models.Model):
@@ -172,7 +192,18 @@ class PasswordReset(models.Model):
             models.Index(fields=["token"], name="idx_pwd_reset_token"),
             models.Index(fields=["user"], name="idx_pwd_reset_user"),
         ]
+        ordering = ["-created_at"]  # 按创建时间倒序排列
 
     def __str__(self):
         """密码重置模型的字符串表示"""
         return f"PasswordReset for user {self.user_id}"
+
+    def is_expired(self):
+        """检查重置令牌是否过期"""
+        from django.utils import timezone
+
+        return self.expires_at < timezone.now()
+
+    def is_used(self):
+        """检查重置令牌是否已使用"""
+        return self.used_at is not None

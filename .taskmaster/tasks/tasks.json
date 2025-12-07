@@ -17,7 +17,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_models.py`单元测试，验证User模型字段是否存在、默认值是否正确、索引是否创建。验证EmailVerification和PasswordReset模型能够被创建、字段类型和外键关系正确、唯一索引生效。",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -68,13 +68,14 @@
             "title": "优化模型定义和字段约束",
             "description": "对所有新创建和扩展的模型进行代码审查和优化，确保字段类型、默认值、约束和关系符合最佳实践，提高代码质量。",
             "dependencies": [4],
-            "details": "审查`User`、`EmailVerification`和`PasswordReset`模型的字段定义，确保使用了最合适的Django字段类型（例如，对于`avatar`字段，考虑使用`ImageField`并配置存储，或者`URLField`）。检查所有`null=True`和`blank=True`的设置是否合理。确保外键关系（`ForeignKey`）的`on_delete`行为正确。添加必要的`__str__`方法以提高模型的可读性。",
-            "status": "pending",
+            "details": "审查`User`、`EmailVerification`和`PasswordReset`模型的字段定义，确保使用了最合适的Django字段类型（例如，对于`avatar`字段，考虑使用`ImageField`并配置存储，或者`URLField`）。检查所有`null=True`和`blank=True`的设置是否合理。确保外键关系（`ForeignKey`）的`on_delete`行为正确。添加必要的`__str__`方法以提高模型的可读性。\n<info added on 2025-12-07T05:35:11.351Z>\n✅ 子任务1.5已完成\n\n完成内容：\n- 代码审查和优化：\n  * 字段类型：avatar使用URLField（符合PRD要求），其他字段类型合理\n  * null/blank设置：所有可选字段的null=True和blank=True设置合理\n  * on_delete行为：EmailVerification和PasswordReset使用CASCADE（用户删除时删除相关记录）\n  * __str__方法：所有模型已有__str__方法\n- 添加ordering到Meta类：\n  * User: 按date_joined倒序（AbstractUser已有date_joined作为created_at）\n  * EmailVerification: 按created_at倒序\n  * PasswordReset: 按created_at倒序\n- 添加辅助方法：\n  * User.is_locked(): 检查账户是否被锁定\n  * EmailVerification.is_expired(): 检查令牌是否过期\n  * EmailVerification.is_verified(): 检查是否已验证\n  * PasswordReset.is_expired(): 检查令牌是否过期\n  * PasswordReset.is_used(): 检查令牌是否已使用\n\n验证结果：所有20个测试通过 ✅\n\n提交信息：\n- commit: 待确认\n- 文件：backend/apps/users/models.py\n</info added on 2025-12-07T05:35:11.351Z>",
+            "status": "done",
             "testStrategy": "运行所有单元测试，确保重构没有引入回归错误。进行代码审查，确保模型定义符合项目编码规范和Django最佳实践。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:35:24.211Z"
           }
         ],
-        "updatedAt": "2025-12-07T05:29:44.463Z"
+        "updatedAt": "2025-12-07T05:35:24.211Z"
       },
       {
         "id": "2",
@@ -1151,9 +1152,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:29:44.468Z",
+      "lastModified": "2025-12-07T05:35:24.215Z",
       "taskCount": 18,
-      "completedCount": 0,
+      "completedCount": 1,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
