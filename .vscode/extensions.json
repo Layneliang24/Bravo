@@ -1,0 +1,11 @@
+{
+	"recommendations": [
+		"ms-python.black-formatter",
+		"ms-python.isort",
+		"esbenp.prettier-vscode",
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"Vue.volar",
+		"Vue.vscode-typescript-vue-plugin"
+	]
+}
