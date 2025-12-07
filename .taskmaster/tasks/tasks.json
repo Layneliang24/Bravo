@@ -475,7 +475,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_preview.py`单元测试，测试预验证逻辑在不同账号密码和头像情况下的响应。编写`backend/tests/integration/test_preview_throttling.py`集成测试，测试预验证API的频率限制是否生效，以及在限制下的行为。",
         "priority": "high",
         "dependencies": ["1", "2", "4"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -527,13 +527,13 @@
             "description": "审查并优化登录预验证API的逻辑和响应结构，确保代码的安全性、性能和可维护性。进行必要的代码重构。",
             "dependencies": [1, 2, 3, 4],
             "details": "检查`PreviewLoginAPIView`中的代码，确保异常处理完善，响应数据结构符合最佳实践。优化数据库查询，减少不必要的开销。清理冗余代码，提高代码可读性。确保所有安全最佳实践得到遵循。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行所有相关的单元测试和集成测试，确保重构没有引入新的bug，并且所有功能依然正常工作。进行代码审查以确保代码质量和安全性。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T08:07:21.694Z"
+            "updatedAt": "2025-12-07T08:17:38.130Z"
           }
         ],
-        "updatedAt": "2025-12-07T08:07:21.694Z"
+        "updatedAt": "2025-12-07T08:17:38.130Z"
       },
       {
         "id": "9",
@@ -543,7 +543,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/FloatingInput.spec.ts`和`frontend/src/components/auth/__tests__/DefaultAvatar.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -551,9 +551,10 @@
             "description": "编写 `FloatingInput.vue` 组件的单元测试，验证其标签上浮动画、错误状态显示和图标支持功能。预期这些测试在组件未实现时会失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/FloatingInput.spec.ts` 中创建测试文件。使用 Vue Test Utils 模拟用户输入、聚焦/失焦事件，断言标签的 CSS 类变化、错误消息的显示以及图标的渲染。确保测试覆盖所有关键交互和状态。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "编写单元测试，模拟用户交互和不同props，断言组件的渲染和行为是否符合预期。预期测试失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:24:23.871Z"
           },
           {
             "id": 2,
@@ -561,9 +562,10 @@
             "description": "编写 `DefaultAvatar.vue` 组件的单元测试，验证其在有 `avatar_url` 时显示真实头像，无 `avatar_url` 时根据 `avatar_letter` 显示首字母默认头像。预期这些测试在组件未实现时会失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/DefaultAvatar.spec.ts` 中创建测试文件。使用 Vue Test Utils 模拟传入不同 `avatar_url` 和 `avatar_letter` props 的情况，断言 `<img>` 标签的 `src` 属性或显示首字母的 `<span>` 元素内容是否正确。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "编写单元测试，模拟不同props，断言组件的渲染内容是否符合预期。预期测试失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:24:34.426Z"
           },
           {
             "id": 3,
@@ -571,9 +573,10 @@
             "description": "在 `frontend/src/components/auth/` 目录下创建并实现 `FloatingInput.vue` 组件，包括标签上浮动画、错误状态显示和图标支持，并确保通过所有相关测试。",
             "dependencies": [1],
             "details": "使用 Vue 3 Composition API 实现组件逻辑。利用 Tailwind CSS 或自定义 CSS 实现样式。确保输入框聚焦时标签上浮，输入内容后标签保持上浮。根据 `error` prop 显示错误样式和消息。支持通过 prop 传入图标。运行并确保通过 `FloatingInput` 的所有测试。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行并确保通过在子任务1中编写的所有单元测试。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:24:44.312Z"
           },
           {
             "id": 4,
@@ -595,7 +598,8 @@
             "testStrategy": "运行子任务1和子任务2中编写的所有单元测试，确保重构后功能无回归，所有测试仍然通过。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T08:24:44.312Z"
       },
       {
         "id": "10",
@@ -1176,9 +1180,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T08:07:21.696Z",
+      "lastModified": "2025-12-07T08:24:44.316Z",
       "taskCount": 18,
-      "completedCount": 4,
+      "completedCount": 5,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
