@@ -392,7 +392,7 @@ class PasswordResetAPITests(TestCase):
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.content)
         self.assertIn("error", data)
-        self.assertIn("已使用", data["error"])
+        self.assertIn("已被使用", data["error"])
 
     def test_reset_password_with_password_mismatch_fails(self):
         """测试密码和确认密码不匹配时重置失败"""

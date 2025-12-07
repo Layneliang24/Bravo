@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from apps.users.models import EmailVerification, PasswordReset
 from apps.users.serializers import (
+    PasswordResetSerializer,
     PreviewLoginSerializer,
     SendEmailVerificationSerializer,
     SendPasswordResetSerializer,
@@ -841,5 +842,108 @@ class SendPasswordResetAPIView(BaseCaptchaView):
 
             return Response(
                 {"error": "发送重置邮件失败，请稍后重试", "code": "EMAIL_SEND_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class PasswordResetAPIView(APIView):
+    """重置密码API视图"""
+
+    permission_classes = []  # 允许匿名访问（通过token验证）
+
+    def post(self, request):
+        """
+        重置密码
+
+        请求体:
+            {
+                "token": "reset-token",
+                "password": "NewSecurePass123",
+                "password_confirm": "NewSecurePass123"
+            }
+
+        返回:
+            Response: 包含成功或错误消息的JSON响应
+        """
+        try:
+            serializer = PasswordResetSerializer(data=request.data)
+            if not serializer.is_valid():
+                # 统一处理密码错误格式
+                errors = serializer.errors
+                if "password" in errors:
+                    password_errors = errors["password"]
+                    if isinstance(password_errors, list):
+                        # 处理Django的min_length验证错误
+                        for error in password_errors:
+                            if "at least 8 characters" in str(error):
+                                return Response(
+                                    {"error": "密码长度至少为8位", "code": "WEAK_PASSWORD"},
+                                    status=status.HTTP_400_BAD_REQUEST,
+                                )
+                    elif (
+                        isinstance(password_errors, dict) and "error" in password_errors
+                    ):
+                        # 处理自定义验证错误
+                        return Response(
+                            password_errors,
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                return Response(
+                    errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            token = serializer.validated_data["token"]
+            new_password = serializer.validated_data["password"]
+
+            # 查找重置记录
+            try:
+                reset = PasswordReset.objects.get(token=token)
+            except PasswordReset.DoesNotExist:
+                return Response(
+                    {"error": "无效的重置令牌", "code": "INVALID_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已过期
+            if reset.is_expired():
+                return Response(
+                    {"error": "重置令牌已过期", "code": "TOKEN_EXPIRED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已使用
+            if reset.is_used():
+                return Response(
+                    {"error": "该重置令牌已被使用", "code": "TOKEN_ALREADY_USED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 重置密码成功，更新用户密码
+            user = reset.user
+            user.set_password(new_password)
+            user.save()
+
+            # 标记重置记录为已使用
+            reset.used_at = timezone.now()
+            reset.save()
+
+            return Response(
+                {"message": "密码重置成功，请使用新密码登录"},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"重置密码时发生错误: token={request.data.get('token')}, error={str(e)}",
+                exc_info=True,
+            )
+
+            return Response(
+                {"error": "密码重置失败，请稍后重试", "code": "RESET_FAILED"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

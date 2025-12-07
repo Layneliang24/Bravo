@@ -7,6 +7,7 @@ from apps.users.views import (
     CaptchaRefreshAPIView,
     LoginAPIView,
     LogoutAPIView,
+    PasswordResetAPIView,
     PreviewAPIView,
     RegisterAPIView,
     SendEmailVerificationAPIView,
@@ -40,5 +41,10 @@ urlpatterns = [
         "password/reset/send/",
         SendPasswordResetAPIView.as_view(),
         name="password-reset-send",
+    ),
+    path(
+        "password/reset/",
+        PasswordResetAPIView.as_view(),
+        name="password-reset",
     ),
 ]

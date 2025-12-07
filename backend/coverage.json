@@ -2,7 +2,7 @@
   "meta": {
     "format": 3,
     "version": "7.12.0",
-    "timestamp": "2025-12-07T18:42:06.516396",
+    "timestamp": "2025-12-07T19:03:48.507990",
     "branch_coverage": false,
     "show_contexts": false
   },
@@ -971,21 +971,19 @@
         3, 5, 6, 9, 10, 14, 15, 18, 25, 30, 39, 44, 52, 59, 67, 68, 69, 70, 71,
         74, 78, 82, 91, 92, 94, 95, 102, 107, 113, 117, 123, 129, 130, 131, 132,
         133, 137, 139, 143, 149, 154, 155, 157, 158, 165, 171, 175, 181, 187,
-        188, 189, 190, 191, 195, 197, 201, 207
+        188, 189, 190, 191, 195, 197, 201, 203, 205, 207, 209
       ],
       "summary": {
-        "covered_lines": 53,
+        "covered_lines": 56,
         "num_statements": 66,
-        "percent_covered": 80.3030303030303,
-        "percent_covered_display": "80.30",
-        "missing_lines": 13,
+        "percent_covered": 84.84848484848484,
+        "percent_covered_display": "84.85",
+        "missing_lines": 10,
         "excluded_lines": 0,
-        "percent_statements_covered": 80.3030303030303,
-        "percent_statements_covered_display": "80.30"
+        "percent_statements_covered": 84.84848484848484,
+        "percent_statements_covered_display": "84.85"
       },
-      "missing_lines": [
-        80, 84, 85, 86, 88, 141, 145, 147, 151, 199, 203, 205, 209
-      ],
+      "missing_lines": [80, 84, 85, 86, 88, 141, 145, 147, 151, 199],
       "excluded_lines": [],
       "functions": {
         "User.__str__": {
@@ -1079,33 +1077,33 @@
           "excluded_lines": []
         },
         "PasswordReset.is_expired": {
-          "executed_lines": [],
+          "executed_lines": [203, 205],
           "summary": {
-            "covered_lines": 0,
+            "covered_lines": 2,
             "num_statements": 2,
-            "percent_covered": 0.0,
-            "percent_covered_display": "0.00",
-            "missing_lines": 2,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100.00",
+            "missing_lines": 0,
             "excluded_lines": 0,
-            "percent_statements_covered": 0.0,
-            "percent_statements_covered_display": "0.00"
+            "percent_statements_covered": 100.0,
+            "percent_statements_covered_display": "100.00"
           },
-          "missing_lines": [203, 205],
+          "missing_lines": [],
           "excluded_lines": []
         },
         "PasswordReset.is_used": {
-          "executed_lines": [],
+          "executed_lines": [209],
           "summary": {
-            "covered_lines": 0,
+            "covered_lines": 1,
             "num_statements": 1,
-            "percent_covered": 0.0,
-            "percent_covered_display": "0.00",
-            "missing_lines": 1,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100.00",
+            "missing_lines": 0,
             "excluded_lines": 0,
-            "percent_statements_covered": 0.0,
-            "percent_statements_covered_display": "0.00"
+            "percent_statements_covered": 100.0,
+            "percent_statements_covered_display": "100.00"
           },
-          "missing_lines": [209],
+          "missing_lines": [],
           "excluded_lines": []
         },
         "": {
@@ -1191,18 +1189,18 @@
           "excluded_lines": []
         },
         "PasswordReset": {
-          "executed_lines": [],
+          "executed_lines": [203, 205, 209],
           "summary": {
-            "covered_lines": 0,
+            "covered_lines": 3,
             "num_statements": 4,
-            "percent_covered": 0.0,
-            "percent_covered_display": "0.00",
-            "missing_lines": 4,
+            "percent_covered": 75.0,
+            "percent_covered_display": "75.00",
+            "missing_lines": 1,
             "excluded_lines": 0,
-            "percent_statements_covered": 0.0,
-            "percent_statements_covered_display": "0.00"
+            "percent_statements_covered": 75.0,
+            "percent_statements_covered_display": "75.00"
           },
-          "missing_lines": [199, 203, 205, 209],
+          "missing_lines": [199],
           "excluded_lines": []
         },
         "PasswordReset.Meta": {
@@ -1247,24 +1245,25 @@
         3, 5, 7, 8, 9, 10, 11, 13, 16, 17, 19, 20, 26, 31, 32, 34, 42, 65, 87,
         114, 115, 117, 120, 125, 126, 128, 164, 165, 167, 170, 175, 176, 178,
         215, 216, 218, 220, 226, 227, 229, 230, 231, 233, 235, 237, 238, 240,
-        241, 245
+        241, 245, 248, 249, 251, 252, 258, 264, 266, 272, 273, 275, 280, 282,
+        284, 285, 287, 288, 292
       ],
       "summary": {
-        "covered_lines": 43,
-        "num_statements": 109,
-        "percent_covered": 39.44954128440367,
-        "percent_covered_display": "39.45",
-        "missing_lines": 66,
+        "covered_lines": 59,
+        "num_statements": 127,
+        "percent_covered": 46.45669291338583,
+        "percent_covered_display": "46.46",
+        "missing_lines": 68,
         "excluded_lines": 0,
-        "percent_statements_covered": 39.44954128440367,
-        "percent_statements_covered_display": "39.45"
+        "percent_statements_covered": 46.45669291338583,
+        "percent_statements_covered_display": "46.46"
       },
       "missing_lines": [
         36, 37, 40, 45, 46, 49, 50, 52, 53, 58, 59, 60, 61, 63, 68, 69, 71, 72,
         77, 78, 80, 81, 85, 89, 90, 94, 97, 98, 99, 100, 101, 104, 111, 131,
         132, 134, 135, 140, 141, 144, 146, 147, 152, 153, 156, 157, 161, 181,
         182, 184, 185, 190, 191, 194, 196, 198, 199, 200, 203, 205, 206, 207,
-        210, 211, 212, 223
+        210, 211, 212, 223, 267, 276
       ],
       "excluded_lines": [],
       "functions": {
@@ -1393,15 +1392,46 @@
           "missing_lines": [],
           "excluded_lines": []
         },
+        "PasswordResetSerializer.validate_password": {
+          "executed_lines": [266, 272, 273, 275, 280],
+          "summary": {
+            "covered_lines": 5,
+            "num_statements": 7,
+            "percent_covered": 71.42857142857143,
+            "percent_covered_display": "71.43",
+            "missing_lines": 2,
+            "excluded_lines": 0,
+            "percent_statements_covered": 71.42857142857143,
+            "percent_statements_covered_display": "71.43"
+          },
+          "missing_lines": [267, 276],
+          "excluded_lines": []
+        },
+        "PasswordResetSerializer.validate": {
+          "executed_lines": [284, 285, 287, 288, 292],
+          "summary": {
+            "covered_lines": 5,
+            "num_statements": 5,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100.00",
+            "missing_lines": 0,
+            "excluded_lines": 0,
+            "percent_statements_covered": 100.0,
+            "percent_statements_covered_display": "100.00"
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
         "": {
           "executed_lines": [
             3, 5, 7, 8, 9, 10, 11, 13, 16, 17, 19, 20, 26, 31, 32, 34, 42, 65,
             87, 114, 115, 117, 120, 125, 126, 128, 164, 165, 167, 170, 175, 176,
-            178, 215, 216, 218, 220, 226, 227, 229, 230, 231, 233
+            178, 215, 216, 218, 220, 226, 227, 229, 230, 231, 233, 248, 249,
+            251, 252, 258, 264, 282
           ],
           "summary": {
-            "covered_lines": 37,
-            "num_statements": 37,
+            "covered_lines": 43,
+            "num_statements": 43,
             "percent_covered": 100.0,
             "percent_covered_display": "100.00",
             "missing_lines": 0,
@@ -1497,15 +1527,31 @@
           "missing_lines": [],
           "excluded_lines": []
         },
+        "PasswordResetSerializer": {
+          "executed_lines": [266, 272, 273, 275, 280, 284, 285, 287, 288, 292],
+          "summary": {
+            "covered_lines": 10,
+            "num_statements": 12,
+            "percent_covered": 83.33333333333333,
+            "percent_covered_display": "83.33",
+            "missing_lines": 2,
+            "excluded_lines": 0,
+            "percent_statements_covered": 83.33333333333333,
+            "percent_statements_covered_display": "83.33"
+          },
+          "missing_lines": [267, 276],
+          "excluded_lines": []
+        },
         "": {
           "executed_lines": [
             3, 5, 7, 8, 9, 10, 11, 13, 16, 17, 19, 20, 26, 31, 32, 34, 42, 65,
             87, 114, 115, 117, 120, 125, 126, 128, 164, 165, 167, 170, 175, 176,
-            178, 215, 216, 218, 220, 226, 227, 229, 230, 231, 233
+            178, 215, 216, 218, 220, 226, 227, 229, 230, 231, 233, 248, 249,
+            251, 252, 258, 264, 282
           ],
           "summary": {
-            "covered_lines": 37,
-            "num_statements": 37,
+            "covered_lines": 43,
+            "num_statements": 43,
             "percent_covered": 100.0,
             "percent_covered_display": "100.00",
             "missing_lines": 0,
@@ -1519,21 +1565,23 @@
       }
     },
     "apps/users/tasks.py": {
-      "executed_lines": [3, 5, 7, 8, 9, 10, 12, 15, 24, 98, 107],
+      "executed_lines": [
+        3, 5, 7, 8, 9, 10, 12, 15, 24, 98, 107, 119, 122, 123, 126, 129, 135,
+        141, 144, 150, 153, 156
+      ],
       "summary": {
-        "covered_lines": 10,
+        "covered_lines": 21,
         "num_statements": 44,
-        "percent_covered": 22.727272727272727,
-        "percent_covered_display": "22.73",
-        "missing_lines": 34,
+        "percent_covered": 47.72727272727273,
+        "percent_covered_display": "47.73",
+        "missing_lines": 23,
         "excluded_lines": 0,
-        "percent_statements_covered": 22.727272727272727,
-        "percent_statements_covered_display": "22.73"
+        "percent_statements_covered": 47.72727272727273,
+        "percent_statements_covered_display": "47.73"
       },
       "missing_lines": [
-        36, 39, 40, 43, 46, 52, 58, 61, 67, 70, 73, 78, 80, 87, 88, 91, 95, 119,
-        122, 123, 126, 129, 135, 141, 144, 150, 153, 156, 161, 163, 170, 171,
-        174, 178
+        36, 39, 40, 43, 46, 52, 58, 61, 67, 70, 73, 78, 80, 87, 88, 91, 95, 161,
+        163, 170, 171, 174, 178
       ],
       "excluded_lines": [],
       "functions": {
@@ -1555,21 +1603,20 @@
           "excluded_lines": []
         },
         "send_password_reset_email": {
-          "executed_lines": [],
-          "summary": {
-            "covered_lines": 0,
-            "num_statements": 17,
-            "percent_covered": 0.0,
-            "percent_covered_display": "0.00",
-            "missing_lines": 17,
-            "excluded_lines": 0,
-            "percent_statements_covered": 0.0,
-            "percent_statements_covered_display": "0.00"
-          },
-          "missing_lines": [
-            119, 122, 123, 126, 129, 135, 141, 144, 150, 153, 156, 161, 163,
-            170, 171, 174, 178
+          "executed_lines": [
+            119, 122, 123, 126, 129, 135, 141, 144, 150, 153, 156
           ],
+          "summary": {
+            "covered_lines": 11,
+            "num_statements": 17,
+            "percent_covered": 64.70588235294117,
+            "percent_covered_display": "64.71",
+            "missing_lines": 6,
+            "excluded_lines": 0,
+            "percent_statements_covered": 64.70588235294117,
+            "percent_statements_covered_display": "64.71"
+          },
+          "missing_lines": [161, 163, 170, 171, 174, 178],
           "excluded_lines": []
         },
         "": {
@@ -1590,21 +1637,23 @@
       },
       "classes": {
         "": {
-          "executed_lines": [3, 5, 7, 8, 9, 10, 12, 15, 24, 98, 107],
+          "executed_lines": [
+            3, 5, 7, 8, 9, 10, 12, 15, 24, 98, 107, 119, 122, 123, 126, 129,
+            135, 141, 144, 150, 153, 156
+          ],
           "summary": {
-            "covered_lines": 10,
+            "covered_lines": 21,
             "num_statements": 44,
-            "percent_covered": 22.727272727272727,
-            "percent_covered_display": "22.73",
-            "missing_lines": 34,
+            "percent_covered": 47.72727272727273,
+            "percent_covered_display": "47.73",
+            "missing_lines": 23,
             "excluded_lines": 0,
-            "percent_statements_covered": 22.727272727272727,
-            "percent_statements_covered_display": "22.73"
+            "percent_statements_covered": 47.72727272727273,
+            "percent_statements_covered_display": "47.73"
           },
           "missing_lines": [
             36, 39, 40, 43, 46, 52, 58, 61, 67, 70, 73, 78, 80, 87, 88, 91, 95,
-            119, 122, 123, 126, 129, 135, 141, 144, 150, 153, 156, 161, 163,
-            170, 171, 174, 178
+            161, 163, 170, 171, 174, 178
           ],
           "excluded_lines": []
         }
@@ -1690,7 +1739,7 @@
       }
     },
     "apps/users/urls.py": {
-      "executed_lines": [3, 5, 17, 19, 21],
+      "executed_lines": [3, 5, 18, 20, 22],
       "summary": {
         "covered_lines": 4,
         "num_statements": 4,
@@ -1705,7 +1754,7 @@
       "excluded_lines": [],
       "functions": {
         "": {
-          "executed_lines": [3, 5, 17, 19, 21],
+          "executed_lines": [3, 5, 18, 20, 22],
           "summary": {
             "covered_lines": 4,
             "num_statements": 4,
@@ -1722,7 +1771,7 @@
       },
       "classes": {
         "": {
-          "executed_lines": [3, 5, 17, 19, 21],
+          "executed_lines": [3, 5, 18, 20, 22],
           "summary": {
             "covered_lines": 4,
             "num_statements": 4,
@@ -1865,54 +1914,56 @@
     },
     "apps/users/views.py": {
       "executed_lines": [
-        3, 5, 6, 8, 9, 16, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 36,
-        39, 40, 42, 44, 54, 55, 56, 59, 65, 89, 90, 92, 102, 103, 105, 126, 127,
-        129, 131, 203, 216, 265, 266, 268, 270, 403, 417, 418, 420, 421, 423,
-        440, 466, 516, 517, 519, 521, 562, 563, 565, 567, 611, 612, 614, 616,
-        694, 695, 697, 699, 764, 765, 767, 769, 783, 784, 785, 787, 788, 789,
-        796, 799, 802, 827
+        3, 5, 6, 8, 9, 17, 18, 19, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 37,
+        40, 41, 43, 45, 55, 56, 57, 60, 64, 66, 90, 91, 93, 103, 104, 106, 127,
+        128, 130, 132, 204, 217, 266, 267, 269, 271, 404, 418, 419, 421, 422,
+        424, 441, 467, 517, 518, 520, 522, 563, 564, 566, 568, 612, 613, 615,
+        617, 695, 696, 698, 700, 765, 766, 768, 770, 784, 785, 786, 788, 789,
+        790, 792, 797, 800, 803, 805, 808, 811, 821, 828, 849, 850, 852, 854,
+        868, 869, 870, 872, 873, 874, 875, 877, 878, 879, 889, 894, 895, 898,
+        899, 900, 901, 907, 908, 914, 915, 921, 922, 923, 926, 927, 929
       ],
       "summary": {
-        "covered_lines": 70,
-        "num_statements": 254,
-        "percent_covered": 27.559055118110237,
-        "percent_covered_display": "27.56",
-        "missing_lines": 184,
+        "covered_lines": 106,
+        "num_statements": 291,
+        "percent_covered": 36.42611683848797,
+        "percent_covered_display": "36.43",
+        "missing_lines": 185,
         "excluded_lines": 0,
-        "percent_statements_covered": 27.559055118110237,
-        "percent_statements_covered_display": "27.56"
+        "percent_statements_covered": 36.42611683848797,
+        "percent_statements_covered_display": "36.43"
       },
       "missing_lines": [
-        63, 73, 76, 79, 99, 118, 119, 120, 123, 142, 143, 144, 147, 153, 154,
-        155, 158, 162, 163, 166, 167, 168, 169, 176, 183, 184, 187, 188, 191,
-        194, 198, 199, 201, 213, 214, 232, 234, 236, 237, 238, 241, 244, 247,
-        250, 285, 287, 289, 292, 293, 294, 297, 298, 299, 300, 303, 304, 305,
-        306, 307, 310, 313, 315, 316, 317, 319, 321, 323, 324, 327, 334, 339,
-        346, 352, 353, 356, 359, 362, 363, 368, 369, 370, 371, 374, 375, 381,
-        382, 383, 384, 387, 390, 413, 414, 433, 435, 438, 450, 452, 459, 481,
-        483, 485, 488, 489, 490, 493, 496, 497, 498, 500, 502, 508, 510, 531,
-        533, 534, 539, 541, 542, 545, 550, 551, 555, 556, 578, 579, 584, 586,
-        588, 589, 591, 592, 593, 595, 598, 603, 605, 631, 632, 633, 634, 639,
-        642, 643, 649, 652, 655, 666, 672, 677, 679, 681, 682, 688, 709, 711,
-        712, 713, 714, 720, 721, 727, 728, 734, 735, 736, 737, 740, 741, 743,
-        748, 750, 752, 753, 758, 791, 804, 807, 810, 820, 832, 834, 836, 837,
-        843
+        74, 77, 80, 100, 119, 120, 121, 124, 143, 144, 145, 148, 154, 155, 156,
+        159, 163, 164, 167, 168, 169, 170, 177, 184, 185, 188, 189, 192, 195,
+        199, 200, 202, 214, 215, 233, 235, 237, 238, 239, 242, 245, 248, 251,
+        286, 288, 290, 293, 294, 295, 298, 299, 300, 301, 304, 305, 306, 307,
+        308, 311, 314, 316, 317, 318, 320, 322, 324, 325, 328, 335, 340, 347,
+        353, 354, 357, 360, 363, 364, 369, 370, 371, 372, 375, 376, 382, 383,
+        384, 385, 388, 391, 414, 415, 434, 436, 439, 451, 453, 460, 482, 484,
+        486, 489, 490, 491, 494, 497, 498, 499, 501, 503, 509, 511, 532, 534,
+        535, 540, 542, 543, 546, 551, 552, 556, 557, 579, 580, 585, 587, 589,
+        590, 592, 593, 594, 596, 599, 604, 606, 632, 633, 634, 635, 640, 643,
+        644, 650, 653, 656, 667, 673, 678, 680, 682, 683, 689, 710, 712, 713,
+        714, 715, 721, 722, 728, 729, 735, 736, 737, 738, 741, 742, 744, 749,
+        751, 753, 754, 759, 833, 835, 837, 838, 843, 883, 885, 934, 936, 938,
+        939, 944
       ],
       "excluded_lines": [],
       "functions": {
         "BaseCaptchaView._handle_captcha_error": {
-          "executed_lines": [54, 55, 56, 59],
+          "executed_lines": [55, 56, 57, 60, 64],
           "summary": {
-            "covered_lines": 4,
+            "covered_lines": 5,
             "num_statements": 5,
-            "percent_covered": 80.0,
-            "percent_covered_display": "80.00",
-            "missing_lines": 1,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100.00",
+            "missing_lines": 0,
             "excluded_lines": 0,
-            "percent_statements_covered": 80.0,
-            "percent_statements_covered_display": "80.00"
+            "percent_statements_covered": 100.0,
+            "percent_statements_covered_display": "100.00"
           },
-          "missing_lines": [63],
+          "missing_lines": [],
           "excluded_lines": []
         },
         "BaseCaptchaView._create_captcha_response": {
@@ -1927,7 +1978,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [73, 76, 79],
+          "missing_lines": [74, 77, 80],
           "excluded_lines": []
         },
         "CaptchaAPIView.get": {
@@ -1942,7 +1993,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [99],
+          "missing_lines": [100],
           "excluded_lines": []
         },
         "CaptchaRefreshAPIView.post": {
@@ -1957,7 +2008,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [118, 119, 120, 123],
+          "missing_lines": [119, 120, 121, 124],
           "excluded_lines": []
         },
         "RegisterAPIView._format_error_response": {
@@ -1973,8 +2024,8 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            142, 143, 144, 147, 153, 154, 155, 158, 162, 163, 166, 167, 168,
-            169, 176, 183, 184, 187, 188, 191, 194, 198, 199, 201
+            143, 144, 145, 148, 154, 155, 156, 159, 163, 164, 167, 168, 169,
+            170, 177, 184, 185, 188, 189, 192, 195, 199, 200, 202
           ],
           "excluded_lines": []
         },
@@ -1990,7 +2041,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [213, 214],
+          "missing_lines": [214, 215],
           "excluded_lines": []
         },
         "RegisterAPIView.post": {
@@ -2005,7 +2056,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [232, 234, 236, 237, 238, 241, 244, 247, 250],
+          "missing_lines": [233, 235, 237, 238, 239, 242, 245, 248, 251],
           "excluded_lines": []
         },
         "LoginAPIView.post": {
@@ -2021,10 +2072,10 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            285, 287, 289, 292, 293, 294, 297, 298, 299, 300, 303, 304, 305,
-            306, 307, 310, 313, 315, 316, 317, 319, 321, 323, 324, 327, 334,
-            339, 346, 352, 353, 356, 359, 362, 363, 368, 369, 370, 371, 374,
-            375, 381, 382, 383, 384, 387, 390
+            286, 288, 290, 293, 294, 295, 298, 299, 300, 301, 304, 305, 306,
+            307, 308, 311, 314, 316, 317, 318, 320, 322, 324, 325, 328, 335,
+            340, 347, 353, 354, 357, 360, 363, 364, 369, 370, 371, 372, 375,
+            376, 382, 383, 384, 385, 388, 391
           ],
           "excluded_lines": []
         },
@@ -2040,7 +2091,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [413, 414],
+          "missing_lines": [414, 415],
           "excluded_lines": []
         },
         "PreviewAPIView._get_avatar_letter": {
@@ -2055,7 +2106,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [433, 435, 438],
+          "missing_lines": [434, 436, 439],
           "excluded_lines": []
         },
         "PreviewAPIView._format_user_preview_data": {
@@ -2070,7 +2121,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [450, 452, 459],
+          "missing_lines": [451, 453, 460],
           "excluded_lines": []
         },
         "PreviewAPIView.post": {
@@ -2086,7 +2137,7 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            481, 483, 485, 488, 489, 490, 493, 496, 497, 498, 500, 502, 508, 510
+            482, 484, 486, 489, 490, 491, 494, 497, 498, 499, 501, 503, 509, 511
           ],
           "excluded_lines": []
         },
@@ -2103,7 +2154,7 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            531, 533, 534, 539, 541, 542, 545, 550, 551, 555, 556
+            532, 534, 535, 540, 542, 543, 546, 551, 552, 556, 557
           ],
           "excluded_lines": []
         },
@@ -2120,7 +2171,7 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            578, 579, 584, 586, 588, 589, 591, 592, 593, 595, 598, 603, 605
+            579, 580, 585, 587, 589, 590, 592, 593, 594, 596, 599, 604, 606
           ],
           "excluded_lines": []
         },
@@ -2137,8 +2188,8 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            631, 632, 633, 634, 639, 642, 643, 649, 652, 655, 666, 672, 677,
-            679, 681, 682, 688
+            632, 633, 634, 635, 640, 643, 644, 650, 653, 656, 667, 673, 678,
+            680, 682, 683, 689
           ],
           "excluded_lines": []
         },
@@ -2155,37 +2206,58 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            709, 711, 712, 713, 714, 720, 721, 727, 728, 734, 735, 736, 737,
-            740, 741, 743, 748, 750, 752, 753, 758
+            710, 712, 713, 714, 715, 721, 722, 728, 729, 735, 736, 737, 738,
+            741, 742, 744, 749, 751, 753, 754, 759
           ],
           "excluded_lines": []
         },
         "SendPasswordResetAPIView.post": {
-          "executed_lines": [783, 784, 785, 787, 788, 789, 796, 799, 802, 827],
+          "executed_lines": [
+            784, 785, 786, 788, 789, 790, 792, 797, 800, 803, 805, 808, 811,
+            821, 828
+          ],
           "summary": {
-            "covered_lines": 10,
+            "covered_lines": 15,
             "num_statements": 20,
-            "percent_covered": 50.0,
-            "percent_covered_display": "50.00",
-            "missing_lines": 10,
+            "percent_covered": 75.0,
+            "percent_covered_display": "75.00",
+            "missing_lines": 5,
             "excluded_lines": 0,
-            "percent_statements_covered": 50.0,
-            "percent_statements_covered_display": "50.00"
+            "percent_statements_covered": 75.0,
+            "percent_statements_covered_display": "75.00"
           },
-          "missing_lines": [791, 804, 807, 810, 820, 832, 834, 836, 837, 843],
+          "missing_lines": [833, 835, 837, 838, 843],
+          "excluded_lines": []
+        },
+        "PasswordResetAPIView.post": {
+          "executed_lines": [
+            868, 869, 870, 872, 873, 874, 875, 877, 878, 879, 889, 894, 895,
+            898, 899, 900, 901, 907, 908, 914, 915, 921, 922, 923, 926, 927, 929
+          ],
+          "summary": {
+            "covered_lines": 27,
+            "num_statements": 34,
+            "percent_covered": 79.41176470588235,
+            "percent_covered_display": "79.41",
+            "missing_lines": 7,
+            "excluded_lines": 0,
+            "percent_statements_covered": 79.41176470588235,
+            "percent_statements_covered_display": "79.41"
+          },
+          "missing_lines": [883, 885, 934, 936, 938, 939, 944],
           "excluded_lines": []
         },
         "": {
           "executed_lines": [
-            3, 5, 6, 8, 9, 16, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33,
-            36, 39, 40, 42, 44, 65, 89, 90, 92, 102, 103, 105, 126, 127, 129,
-            131, 203, 216, 265, 266, 268, 270, 403, 417, 418, 420, 421, 423,
-            440, 466, 516, 517, 519, 521, 562, 563, 565, 567, 611, 612, 614,
-            616, 694, 695, 697, 699, 764, 765, 767, 769
+            3, 5, 6, 8, 9, 17, 18, 19, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34,
+            37, 40, 41, 43, 45, 66, 90, 91, 93, 103, 104, 106, 127, 128, 130,
+            132, 204, 217, 266, 267, 269, 271, 404, 418, 419, 421, 422, 424,
+            441, 467, 517, 518, 520, 522, 563, 564, 566, 568, 612, 613, 615,
+            617, 695, 696, 698, 700, 765, 766, 768, 770, 849, 850, 852, 854
           ],
           "summary": {
-            "covered_lines": 56,
-            "num_statements": 56,
+            "covered_lines": 59,
+            "num_statements": 59,
             "percent_covered": 100.0,
             "percent_covered_display": "100.00",
             "missing_lines": 0,
@@ -2199,18 +2271,18 @@
       },
       "classes": {
         "BaseCaptchaView": {
-          "executed_lines": [54, 55, 56, 59],
+          "executed_lines": [55, 56, 57, 60, 64],
           "summary": {
-            "covered_lines": 4,
+            "covered_lines": 5,
             "num_statements": 8,
-            "percent_covered": 50.0,
-            "percent_covered_display": "50.00",
-            "missing_lines": 4,
+            "percent_covered": 62.5,
+            "percent_covered_display": "62.50",
+            "missing_lines": 3,
             "excluded_lines": 0,
-            "percent_statements_covered": 50.0,
-            "percent_statements_covered_display": "50.00"
+            "percent_statements_covered": 62.5,
+            "percent_statements_covered_display": "62.50"
           },
-          "missing_lines": [63, 73, 76, 79],
+          "missing_lines": [74, 77, 80],
           "excluded_lines": []
         },
         "CaptchaAPIView": {
@@ -2225,7 +2297,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [99],
+          "missing_lines": [100],
           "excluded_lines": []
         },
         "CaptchaRefreshAPIView": {
@@ -2240,7 +2312,7 @@
             "percent_statements_covered": 0.0,
             "percent_statements_covered_display": "0.00"
           },
-          "missing_lines": [118, 119, 120, 123],
+          "missing_lines": [119, 120, 121, 124],
           "excluded_lines": []
         },
         "RegisterAPIView": {
@@ -2256,9 +2328,9 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            142, 143, 144, 147, 153, 154, 155, 158, 162, 163, 166, 167, 168,
-            169, 176, 183, 184, 187, 188, 191, 194, 198, 199, 201, 213, 214,
-            232, 234, 236, 237, 238, 241, 244, 247, 250
+            143, 144, 145, 148, 154, 155, 156, 159, 163, 164, 167, 168, 169,
+            170, 177, 184, 185, 188, 189, 192, 195, 199, 200, 202, 214, 215,
+            233, 235, 237, 238, 239, 242, 245, 248, 251
           ],
           "excluded_lines": []
         },
@@ -2275,10 +2347,10 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            285, 287, 289, 292, 293, 294, 297, 298, 299, 300, 303, 304, 305,
-            306, 307, 310, 313, 315, 316, 317, 319, 321, 323, 324, 327, 334,
-            339, 346, 352, 353, 356, 359, 362, 363, 368, 369, 370, 371, 374,
-            375, 381, 382, 383, 384, 387, 390, 413, 414
+            286, 288, 290, 293, 294, 295, 298, 299, 300, 301, 304, 305, 306,
+            307, 308, 311, 314, 316, 317, 318, 320, 322, 324, 325, 328, 335,
+            340, 347, 353, 354, 357, 360, 363, 364, 369, 370, 371, 372, 375,
+            376, 382, 383, 384, 385, 388, 391, 414, 415
           ],
           "excluded_lines": []
         },
@@ -2295,8 +2367,8 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            433, 435, 438, 450, 452, 459, 481, 483, 485, 488, 489, 490, 493,
-            496, 497, 498, 500, 502, 508, 510
+            434, 436, 439, 451, 453, 460, 482, 484, 486, 489, 490, 491, 494,
+            497, 498, 499, 501, 503, 509, 511
           ],
           "excluded_lines": []
         },
@@ -2313,7 +2385,7 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            531, 533, 534, 539, 541, 542, 545, 550, 551, 555, 556
+            532, 534, 535, 540, 542, 543, 546, 551, 552, 556, 557
           ],
           "excluded_lines": []
         },
@@ -2330,7 +2402,7 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            578, 579, 584, 586, 588, 589, 591, 592, 593, 595, 598, 603, 605
+            579, 580, 585, 587, 589, 590, 592, 593, 594, 596, 599, 604, 606
           ],
           "excluded_lines": []
         },
@@ -2347,8 +2419,8 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            631, 632, 633, 634, 639, 642, 643, 649, 652, 655, 666, 672, 677,
-            679, 681, 682, 688
+            632, 633, 634, 635, 640, 643, 644, 650, 653, 656, 667, 673, 678,
+            680, 682, 683, 689
           ],
           "excluded_lines": []
         },
@@ -2365,37 +2437,58 @@
             "percent_statements_covered_display": "0.00"
           },
           "missing_lines": [
-            709, 711, 712, 713, 714, 720, 721, 727, 728, 734, 735, 736, 737,
-            740, 741, 743, 748, 750, 752, 753, 758
+            710, 712, 713, 714, 715, 721, 722, 728, 729, 735, 736, 737, 738,
+            741, 742, 744, 749, 751, 753, 754, 759
           ],
           "excluded_lines": []
         },
         "SendPasswordResetAPIView": {
-          "executed_lines": [783, 784, 785, 787, 788, 789, 796, 799, 802, 827],
+          "executed_lines": [
+            784, 785, 786, 788, 789, 790, 792, 797, 800, 803, 805, 808, 811,
+            821, 828
+          ],
           "summary": {
-            "covered_lines": 10,
+            "covered_lines": 15,
             "num_statements": 20,
-            "percent_covered": 50.0,
-            "percent_covered_display": "50.00",
-            "missing_lines": 10,
+            "percent_covered": 75.0,
+            "percent_covered_display": "75.00",
+            "missing_lines": 5,
             "excluded_lines": 0,
-            "percent_statements_covered": 50.0,
-            "percent_statements_covered_display": "50.00"
+            "percent_statements_covered": 75.0,
+            "percent_statements_covered_display": "75.00"
           },
-          "missing_lines": [791, 804, 807, 810, 820, 832, 834, 836, 837, 843],
+          "missing_lines": [833, 835, 837, 838, 843],
+          "excluded_lines": []
+        },
+        "PasswordResetAPIView": {
+          "executed_lines": [
+            868, 869, 870, 872, 873, 874, 875, 877, 878, 879, 889, 894, 895,
+            898, 899, 900, 901, 907, 908, 914, 915, 921, 922, 923, 926, 927, 929
+          ],
+          "summary": {
+            "covered_lines": 27,
+            "num_statements": 34,
+            "percent_covered": 79.41176470588235,
+            "percent_covered_display": "79.41",
+            "missing_lines": 7,
+            "excluded_lines": 0,
+            "percent_statements_covered": 79.41176470588235,
+            "percent_statements_covered_display": "79.41"
+          },
+          "missing_lines": [883, 885, 934, 936, 938, 939, 944],
           "excluded_lines": []
         },
         "": {
           "executed_lines": [
-            3, 5, 6, 8, 9, 16, 17, 18, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33,
-            36, 39, 40, 42, 44, 65, 89, 90, 92, 102, 103, 105, 126, 127, 129,
-            131, 203, 216, 265, 266, 268, 270, 403, 417, 418, 420, 421, 423,
-            440, 466, 516, 517, 519, 521, 562, 563, 565, 567, 611, 612, 614,
-            616, 694, 695, 697, 699, 764, 765, 767, 769
+            3, 5, 6, 8, 9, 17, 18, 19, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34,
+            37, 40, 41, 43, 45, 66, 90, 91, 93, 103, 104, 106, 127, 128, 130,
+            132, 204, 217, 266, 267, 269, 271, 404, 418, 419, 421, 422, 424,
+            441, 467, 517, 518, 520, 522, 563, 564, 566, 568, 612, 613, 615,
+            617, 695, 696, 698, 700, 765, 766, 768, 770, 849, 850, 852, 854
           ],
           "summary": {
-            "covered_lines": 56,
-            "num_statements": 56,
+            "covered_lines": 59,
+            "num_statements": 59,
             "percent_covered": 100.0,
             "percent_covered_display": "100.00",
             "missing_lines": 0,
@@ -2666,13 +2759,13 @@
     }
   },
   "totals": {
-    "covered_lines": 281,
-    "num_statements": 657,
-    "percent_covered": 42.77016742770167,
-    "percent_covered_display": "42.77",
-    "missing_lines": 376,
+    "covered_lines": 347,
+    "num_statements": 712,
+    "percent_covered": 48.735955056179776,
+    "percent_covered_display": "48.74",
+    "missing_lines": 365,
     "excluded_lines": 3,
-    "percent_statements_covered": 42.77016742770167,
-    "percent_statements_covered_display": "42.77"
+    "percent_statements_covered": 48.735955056179776,
+    "percent_statements_covered_display": "48.74"
   }
 }

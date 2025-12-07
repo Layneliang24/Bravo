@@ -243,3 +243,50 @@ class SendPasswordResetSerializer(serializers.Serializer):
             )
 
         return attrs
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    """重置密码序列化器"""
+
+    token = serializers.CharField(required=True, help_text="重置令牌")
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        min_length=8,
+        help_text="新密码（至少8位，包含字母和数字）",
+    )
+    password_confirm = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="确认密码",
+    )
+
+    def validate_password(self, value):
+        """验证密码强度"""
+        if len(value) < 8:
+            raise serializers.ValidationError(
+                {"error": "密码长度至少为8位", "code": "WEAK_PASSWORD"}
+            )
+
+        # 检查是否包含字母和数字
+        has_letter = any(c.isalpha() for c in value)
+        has_digit = any(c.isdigit() for c in value)
+
+        if not (has_letter and has_digit):
+            raise serializers.ValidationError(
+                {"error": "密码必须包含字母和数字", "code": "WEAK_PASSWORD"}
+            )
+
+        return value
+
+    def validate(self, attrs):
+        """验证密码和确认密码是否匹配"""
+        password = attrs.get("password")
+        password_confirm = attrs.get("password_confirm")
+
+        if password != password_confirm:
+            raise serializers.ValidationError(
+                {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"}
+            )
+
+        return attrs
