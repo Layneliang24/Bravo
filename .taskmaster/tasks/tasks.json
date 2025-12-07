@@ -424,7 +424,7 @@
         "testStrategy": "编写`backend/tests/integration/test_password_reset.py`集成测试，测试发送重置邮件API是否触发Celery任务，验证链接是否正确生成。测试密码重置API，验证有效Token和过期/无效Token的响应，以及密码更新是否成功。",
         "priority": "high",
         "dependencies": ["1", "2", "5"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -476,12 +476,13 @@
             "description": "优化密码重置邮件的模板，使其更具用户友好性和专业性。审查并优化Celery任务的定义，确保其健壮性和可维护性。统一并完善密码找回相关API的错误处理机制，提供清晰的错误信息。",
             "dependencies": [3, 4],
             "details": "创建或修改邮件模板文件（例如，HTML模板），包含品牌信息和清晰的重置说明。检查Celery任务的重试机制、错误日志记录和任务参数传递。审查`PasswordResetSendView`和`PasswordResetConfirmView`中的异常捕获和响应，确保返回一致且有意义的错误码和消息。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "手动测试邮件发送，检查邮件内容和格式。通过模拟错误场景（如数据库连接失败、Celery服务不可用）来验证错误处理机制。运行所有集成测试，确保优化没有引入回归问题。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T15:23:14.761Z"
           }
         ],
-        "updatedAt": "2025-12-07T10:50:40.398Z"
+        "updatedAt": "2025-12-07T15:23:14.761Z"
       },
       {
         "id": "8",
@@ -1198,9 +1199,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T10:50:40.403Z",
+      "lastModified": "2025-12-07T15:23:14.765Z",
       "taskCount": 18,
-      "completedCount": 8,
+      "completedCount": 9,
       "tags": ["REQ-2025-003-user-login"]
     }
   },

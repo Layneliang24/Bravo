@@ -789,8 +789,21 @@ class SendPasswordResetAPIView(BaseCaptchaView):
                 if captcha_error:
                     return captcha_error
 
+                # 统一处理其他验证错误，确保所有错误都有code字段
+                errors = serializer.errors
+                if "email" in errors:
+                    return Response(
+                        {"error": "邮箱格式不正确", "code": "INVALID_EMAIL"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # 其他验证错误，统一格式
                 return Response(
-                    serializer.errors,
+                    {
+                        "error": "请求参数验证失败",
+                        "code": "VALIDATION_ERROR",
+                        "details": errors,
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -868,8 +881,10 @@ class PasswordResetAPIView(APIView):
         try:
             serializer = PasswordResetSerializer(data=request.data)
             if not serializer.is_valid():
-                # 统一处理密码错误格式
+                # 统一处理错误格式，确保所有错误都有code字段
                 errors = serializer.errors
+
+                # 处理密码错误
                 if "password" in errors:
                     password_errors = errors["password"]
                     if isinstance(password_errors, list):
@@ -883,13 +898,42 @@ class PasswordResetAPIView(APIView):
                     elif (
                         isinstance(password_errors, dict) and "error" in password_errors
                     ):
-                        # 处理自定义验证错误
+                        # 处理自定义验证错误，确保有code字段
+                        error_response = password_errors.copy()
+                        if "code" not in error_response:
+                            error_response["code"] = "WEAK_PASSWORD"
                         return Response(
-                            password_errors,
+                            error_response,
                             status=status.HTTP_400_BAD_REQUEST,
                         )
+
+                # 处理token错误
+                if "token" in errors:
+                    return Response(
+                        {"error": "重置令牌不能为空", "code": "TOKEN_REQUIRED"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # 处理密码确认错误
+                if "password_confirm" in errors or "non_field_errors" in errors:
+                    mismatch_error = errors.get("password_confirm") or errors.get(
+                        "non_field_errors"
+                    )
+                    if isinstance(mismatch_error, list) and any(
+                        "密码" in str(e) and "不一致" in str(e) for e in mismatch_error
+                    ):
+                        return Response(
+                            {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                # 其他验证错误，统一格式
                 return Response(
-                    errors,
+                    {
+                        "error": "请求参数验证失败",
+                        "code": "VALIDATION_ERROR",
+                        "details": errors,
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 

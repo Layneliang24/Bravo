@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
     retry_backoff=True,  # 指数退避
     retry_backoff_max=600,  # 最大退避时间600秒
     retry_jitter=True,  # 添加随机抖动避免同时重试
+    time_limit=300,  # 任务超时时间：5分钟
+    soft_time_limit=240,  # 软超时时间：4分钟（允许优雅退出）
 )
 def send_email_verification(self, user_id, email, token):
     """
@@ -76,11 +78,19 @@ def send_email_verification(self, user_id, email, token):
         )
 
     except Exception as exc:
-        # 记录错误日志
+        # 记录错误日志（包含更多上下文信息）
+        error_context = {
+            "user_id": user_id,
+            "email": email,
+            "error": str(exc),
+            "error_type": type(exc).__name__,
+            "retry_count": self.request.retries,
+            "max_retries": self.max_retries,
+        }
         logger.error(
-            f"邮箱验证邮件发送失败: user_id={user_id}, email={email}, "
-            f"error={str(exc)}, retry_count={self.request.retries}",
+            f"邮箱验证邮件发送失败: {error_context}",
             exc_info=True,
+            extra=error_context,
         )
 
         # 如果重试次数未达到上限，则重新抛出异常触发重试
@@ -90,7 +100,9 @@ def send_email_verification(self, user_id, email, token):
             # 达到最大重试次数，记录严重错误
             logger.critical(
                 f"邮箱验证邮件发送最终失败（已重试{self.max_retries}次）: "
-                f"user_id={user_id}, email={email}, error={str(exc)}"
+                f"user_id={user_id}, email={email}, error={str(exc)}, "
+                f"error_type={type(exc).__name__}",
+                extra=error_context,
             )
             raise  # 重新抛出异常，让Celery记录任务失败
 
@@ -103,6 +115,8 @@ def send_email_verification(self, user_id, email, token):
     retry_backoff=True,  # 指数退避
     retry_backoff_max=600,  # 最大退避时间600秒
     retry_jitter=True,  # 添加随机抖动避免同时重试
+    time_limit=300,  # 任务超时时间：5分钟
+    soft_time_limit=240,  # 软超时时间：4分钟（允许优雅退出）
 )
 def send_password_reset_email(self, user_id, email, token):
     """
@@ -159,11 +173,19 @@ def send_password_reset_email(self, user_id, email, token):
         )
 
     except Exception as exc:
-        # 记录错误日志
+        # 记录错误日志（包含更多上下文信息）
+        error_context = {
+            "user_id": user_id,
+            "email": email,
+            "error": str(exc),
+            "error_type": type(exc).__name__,
+            "retry_count": self.request.retries,
+            "max_retries": self.max_retries,
+        }
         logger.error(
-            f"密码重置邮件发送失败: user_id={user_id}, email={email}, "
-            f"error={str(exc)}, retry_count={self.request.retries}",
+            f"密码重置邮件发送失败: {error_context}",
             exc_info=True,
+            extra=error_context,
         )
 
         # 如果重试次数未达到上限，则重新抛出异常触发重试
@@ -173,6 +195,8 @@ def send_password_reset_email(self, user_id, email, token):
             # 达到最大重试次数，记录严重错误
             logger.critical(
                 f"密码重置邮件发送最终失败（已重试{self.max_retries}次）: "
-                f"user_id={user_id}, email={email}, error={str(exc)}"
+                f"user_id={user_id}, email={email}, error={str(exc)}, "
+                f"error_type={type(exc).__name__}",
+                extra=error_context,
             )
             raise  # 重新抛出异常，让Celery记录任务失败
