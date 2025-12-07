@@ -276,13 +276,17 @@ class LoginAPIView(APIView):
         # 获取验证后的用户对象
         user = serializer.validated_data["user"]
 
-        # 检查账户是否被锁定（暂时跳过，将在子任务4.4实现）
+        # 检查账户是否被锁定（将在子任务4.4实现）
         # TODO: 实现账户锁定检查
 
-        # 检查邮箱是否已验证（暂时跳过，将在子任务4.3实现）
-        # TODO: 实现邮箱验证检查
+        # 检查邮箱是否已验证
+        if not user.is_email_verified:
+            return Response(
+                {"error": "邮箱未验证，请先验证邮箱", "code": "EMAIL_NOT_VERIFIED"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-        # 处理登录失败次数（暂时跳过，将在子任务4.4实现）
+        # 处理登录失败次数（将在子任务4.4实现）
         # TODO: 实现登录失败次数跟踪
 
         # 生成JWT Token
