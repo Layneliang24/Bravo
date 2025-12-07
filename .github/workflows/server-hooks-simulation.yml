@@ -34,7 +34,7 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Event: ${{ github.event_name }}"
 
-      # 检查1：分支保护
+      # 检查1：分支保护（仅对push事件，PR时跳过）
       - name: Check 1 - Branch Protection
         if: github.event_name == 'push'
         run: |

@@ -2,7 +2,6 @@
 """应用URLs配置测试"""
 
 import pytest
-
 from django.test import Client, TestCase
 
 # URLs配置相关导入根据需要添加

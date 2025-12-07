@@ -1,18 +1,10 @@
 {
   "mcpServers": {
-    "bravo-ai": {
-      "command": "python",
-      "args": ["-m", "bravo.ai.mcp_server"],
+    "task-master-ai": {
+      "args": [],
       "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-        "BRAVO_ENV": "development"
-      }
-    },
-    "bravo-tools": {
-      "command": "node",
-      "args": ["dist/mcp-tools.js"],
-      "env": {
-        "NODE_ENV": "development"
+        "OPENAI_API_KEY": "sk-zfgptsqmcesptnszlkdrlttgwfmmiilwrahdcdolshqkxnhm",
+        "OPENAI_BASE_URL": "https://api.siliconflow.cn/v1"
       }
     }
   },
@@ -22,7 +14,11 @@
       "parameters": {
         "type": {
           "type": "string",
-          "enum": ["django_model", "vue_component", "api_endpoint"],
+          "enum": [
+            "django_model",
+            "vue_component",
+            "api_endpoint"
+          ],
           "description": "代码生成类型"
         },
         "name": {
@@ -44,7 +40,11 @@
         },
         "test_type": {
           "type": "string",
-          "enum": ["unit", "integration", "e2e"],
+          "enum": [
+            "unit",
+            "integration",
+            "e2e"
+          ],
           "description": "测试类型"
         }
       }
@@ -54,7 +54,11 @@
       "parameters": {
         "scan_type": {
           "type": "string",
-          "enum": ["static", "dependency", "runtime"],
+          "enum": [
+            "static",
+            "dependency",
+            "runtime"
+          ],
           "description": "扫描类型"
         },
         "target": {
@@ -68,7 +72,12 @@
       "parameters": {
         "doc_type": {
           "type": "string",
-          "enum": ["product", "guideline", "test_report", "operate"],
+          "enum": [
+            "product",
+            "guideline",
+            "test_report",
+            "operate"
+          ],
           "description": "文档类型，决定放置的子目录"
         },
         "title": {

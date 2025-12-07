@@ -17,16 +17,11 @@ on:
         type: string
         required: false
         default: "80"
-    outputs:
-      test-results:
-        description: "Test execution results"
-        value: ${{ jobs.test-summary.outputs.results }}
-      coverage-backend:
-        description: "Backend coverage percentage"
-        value: ${{ jobs.unit-tests.outputs.backend-coverage }}
-      coverage-frontend:
-        description: "Frontend coverage percentage"
-        value: ${{ jobs.unit-tests.outputs.frontend-coverage }}
+  pull_request:
+    branches:
+      - dev
+      - main
+    types: [opened, synchronize, reopened]
 
 env:
   NODE_VERSION: "20"
@@ -189,7 +184,7 @@ jobs:
 
   # 条件执行的集成测试
   integration-tests:
-    if: inputs.test-level != 'fast'
+    if: ${{ inputs.test-level != 'fast' || github.event_name == 'pull_request' }}
     needs: unit-tests
     runs-on: ubuntu-latest
     timeout-minutes: 6
@@ -315,7 +310,7 @@ jobs:
 
   # 智能E2E测试 (基于Docker Build Cache优化)
   e2e-tests:
-    if: inputs.test-level == 'full'
+    if: ${{ inputs.test-level == 'full' || github.event_name == 'pull_request' }}
     needs: integration-tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -399,7 +394,7 @@ jobs:
           echo "| Integration | $INTEGRATION_STATUS | - | Medium+ |" >> $GITHUB_STEP_SUMMARY
           echo "| E2E Tests | $E2E_STATUS | - | Full Only |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Total Coverage**: ${TOTAL_COV}% (Target: ${{ inputs.coverage-required }}%)" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Coverage**: ${TOTAL_COV}% (Target: ${{ inputs.coverage-required || '80' }}%)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 判断测试结果
@@ -410,20 +405,20 @@ jobs:
             echo "❌ Unit tests failed" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ inputs.test-level }}" != "fast" && "$INTEGRATION_STATUS" != "success" ]]; then
+          if [[ "${{ inputs.test-level || 'medium' }}" != "fast" && "$INTEGRATION_STATUS" != "success" ]]; then
             TESTS_PASSED=false
             echo "❌ Integration tests failed" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ inputs.test-level }}" == "full" && "$E2E_STATUS" != "success" ]]; then
+          if [[ "${{ inputs.test-level || 'medium' }}" == "full" && "$E2E_STATUS" != "success" ]]; then
             TESTS_PASSED=false
             echo "❌ E2E tests failed" >> $GITHUB_STEP_SUMMARY
           fi
 
           # 检查覆盖率要求
-          if (( $(echo "$TOTAL_COV < ${{ inputs.coverage-required }}" | bc -l) )); then
+          if (( $(echo "$TOTAL_COV < ${{ inputs.coverage-required || '80' }}" | bc -l) )); then
             TESTS_PASSED=false
-            echo "❌ Coverage below threshold: ${TOTAL_COV}% < ${{ inputs.coverage-required }}%" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Coverage below threshold: ${TOTAL_COV}% < ${{ inputs.coverage-required || '80' }}%" >> $GITHUB_STEP_SUMMARY
           fi
 
           # 输出结果
@@ -432,7 +427,7 @@ jobs:
           if [[ "$TESTS_PASSED" == "true" ]]; then
             echo "results=success" >> $GITHUB_OUTPUT
             echo "✅ **All required tests passed!**" >> $GITHUB_STEP_SUMMARY
-            echo "🎯 Test level: ${{ inputs.test-level }}" >> $GITHUB_STEP_SUMMARY
+            echo "🎯 Test level: ${{ inputs.test-level || 'medium' }}" >> $GITHUB_STEP_SUMMARY
             echo "📊 Coverage: ${TOTAL_COV}% (✅ meets ${COVERAGE_REQUIRED}% requirement)" >> $GITHUB_STEP_SUMMARY
           else
             echo "results=failure" >> $GITHUB_OUTPUT

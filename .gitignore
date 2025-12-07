@@ -62,6 +62,10 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# MCP配置（包含API密钥）
+.cursor/mcp.json
+.mcp.json
+
 # IDE
 .vscode/
 .idea/

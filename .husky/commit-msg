@@ -1,33 +1,53 @@
 #!/bin/sh
 
-# 提交信息格式检查
-commit_regex='^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\(.+\))?: .{1,50}'
+# 提交信息格式检查（支持两种格式）
+# 格式1: 传统格式 type(scope): description
+# 格式2: V4格式 [REQ-ID] Task-X 描述
 
 # 读取提交信息
 commit_msg=$(cat "$1")
 
-# 检查格式
-if ! echo "$commit_msg" | grep -qE "$commit_regex"; then
+# V4格式检查（优先）
+# 支持格式: [REQ-YYYY-XXX-name] 或 [REQ-YYYY-NAME] 或 [BUGFIX|REFACTOR|HOTFIX]
+# 注意：grep -E 不支持 \d，需要使用 [0-9]
+v4_regex='^\[(REQ-[0-9]{4}(-[0-9]{3})?-[A-Z0-9-]+|BUGFIX|REFACTOR|HOTFIX)\].*'
+
+if echo "$commit_msg" | grep -qE "$v4_regex"; then
+    echo "✅ V4格式提交信息检查通过"
+    # V4格式通过，继续检查长度
+elif echo "$commit_msg" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\(.+\))?: .{1,50}'; then
+    echo "✅ 传统格式提交信息检查通过"
+    # 传统格式通过，继续检查长度
+else
     echo "❌ 提交信息格式错误！"
     echo ""
-    echo "📋 正确格式: type(scope): description"
-    echo "🎯 类型说明:"
-    echo "  feat     - 新功能"
-    echo "  fix      - 修复bug"
-    echo "  docs     - 文档更新"
-    echo "  style    - 代码格式调整"
-    echo "  refactor - 代码重构"
-    echo "  test     - 测试相关"
-    echo "  chore    - 构建/工具相关"
-    echo "  ci       - CI/CD相关"
-    echo "  build    - 构建相关"
-    echo "  perf     - 性能优化"
-    echo "  revert   - 回滚提交"
+    echo "📋 支持两种格式："
+    echo ""
+    echo "🎯 格式1: V4格式（推荐用于需求开发）"
+    echo "  [REQ-2025-001-user-login] Task-1 Subtask-2 实现登录API"
+    echo "  [BUGFIX] 修复登录失败的问题"
+    echo "  [REFACTOR] 重构用户认证模块"
+    echo "  [HOTFIX] 紧急修复生产环境问题"
+    echo ""
+    echo "🎯 格式2: 传统格式（用于其他提交）"
+    echo "  type(scope): description"
+    echo "  类型说明:"
+    echo "    feat     - 新功能"
+    echo "    fix      - 修复bug"
+    echo "    docs     - 文档更新"
+    echo "    style    - 代码格式调整"
+    echo "    refactor - 代码重构"
+    echo "    test     - 测试相关"
+    echo "    chore    - 构建/工具相关"
+    echo "    ci       - CI/CD相关"
+    echo "    build    - 构建相关"
+    echo "    perf     - 性能优化"
+    echo "    revert   - 回滚提交"
     echo ""
     echo "💡 示例:"
+    echo "  [REQ-2025-001-user-login] Task-1 实现登录功能"
     echo "  feat(auth): add user login functionality"
     echo "  fix(api): resolve authentication timeout issue"
-    echo "  docs(readme): update installation instructions"
     echo ""
     echo "🔍 当前提交信息: $commit_msg"
     exit 1

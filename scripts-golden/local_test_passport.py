@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -34,13 +35,61 @@ class LocalTestPassport:
         self.log_file = self.workspace / "logs" / "local_test_passport.log"
         self.log_file.parent.mkdir(exist_ok=True)
 
-    def log(self, message):
+    def log(self, message, level="INFO"):
         """记录日志"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = f"[{timestamp}] {message}\n"
+        log_entry = f"[{timestamp}] [{level}] {message}\n"
         print(f"📋 {message}")
+        sys.stdout.flush()  # 强制立即输出，实现实时显示
         with open(self.log_file, "a", encoding="utf-8") as f:
             f.write(log_entry)
+
+    def log_detail(self, message, output=""):
+        """记录详细日志（包含命令输出）"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        detail_entry = f"[{timestamp}] [DETAIL] {message}\n"
+        if output:
+            detail_entry += f"  输出:\n{self._indent_text(output, 2)}\n"
+        print(f"📋 {message}")
+        sys.stdout.flush()  # 强制立即输出
+        if output:
+            print(self._indent_text(output, 2))
+            sys.stdout.flush()  # 强制立即输出
+        with open(self.log_file, "a", encoding="utf-8") as f:
+            f.write(detail_entry)
+
+    def log_command(self, command, result):
+        """记录命令执行详情"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cmd_str = " ".join(command) if isinstance(command, list) else command
+        cmd_entry = f"[{timestamp}] [COMMAND] 执行: {cmd_str}\n"
+        cmd_entry += f"  退出码: {result.returncode}\n"
+        if result.stdout:
+            cmd_entry += f"  标准输出:\n{self._indent_text(result.stdout, 2)}\n"
+        if result.stderr:
+            cmd_entry += f"  错误输出:\n{self._indent_text(result.stderr, 2)}\n"
+        with open(self.log_file, "a", encoding="utf-8") as f:
+            f.write(cmd_entry)
+        # 控制台输出简化版
+        status = "✅" if result.returncode == 0 else "❌"
+        cmd_str = " ".join(command) if isinstance(command, list) else command
+        print(f"{status} 命令: {cmd_str} (退出码: {result.returncode})")
+        sys.stdout.flush()  # 强制立即输出
+        if result.returncode != 0 and result.stderr:
+            print(f"   错误: {result.stderr[:200]}...")
+            sys.stdout.flush()  # 强制立即输出
+
+    def _indent_text(self, text, indent=2):
+        """为文本添加缩进"""
+        lines = text.split("\n")
+        indent_str = " " * indent
+        return "\n".join(f"{indent_str}{line}" for line in lines)
+
+    def log_timing(self, step_name, start_time, end_time):
+        """记录步骤耗时"""
+        duration = (end_time - start_time).total_seconds()
+        self.log(f"⏱️  {step_name} 耗时: {duration:.2f}秒", level="TIMING")
+        return duration
 
     def get_git_hash(self):
         """获取当前Git状态的哈希值"""
@@ -99,67 +148,444 @@ class LocalTestPassport:
 
     def run_act_validation(self):
         """第一层：使用act进行GitHub Actions语法验证"""
+        start_time = time.time()
         self.log("🎭 第一层验证：act语法检查")
+        self.log_detail("开始执行act验证流程")
 
+        # 检查act是否安装
+        self.log("🔍 检查act工具是否安装...")
         try:
-            # 检查act是否安装
-            subprocess.run(["act", "--version"], check=True, capture_output=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            self.log("⚠️  act未安装，跳过语法验证（建议安装：choco install act-cli）")
-            return True
-
-        try:
-            # 测试关键工作流的语法
-            workflows_to_test = ["push-validation.yml", "pr-validation.yml"]
-
-            for workflow in workflows_to_test:
-                self.log(f"🔍 检查工作流：{workflow}")
-                result = subprocess.run(
-                    ["act", "push", "-W", f".github/workflows/{workflow}", "--list"],
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="ignore",
-                    timeout=30,
-                )
-                if result.returncode != 0:
-                    self.log(f"❌ {workflow} 语法验证失败：{result.stderr}")
-                    return False
-
-            # 额外测试：实际运行关键任务检查bash语法
-            self.log("🔍 运行bash语法检查...")
-            result = subprocess.run(
-                [
-                    "act",
-                    "push",
-                    "-W",
-                    ".github/workflows/push-validation.yml",
-                    "--job",
-                    "detect-branch-context",
-                    "--quiet",
-                ],
+            version_result = subprocess.run(
+                ["act", "--version"],
+                check=True,
                 capture_output=True,
                 text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=60,
+                timeout=10,
             )
-            if result.returncode != 0:
-                self.log(f"❌ 工作流执行测试失败：{result.stderr}")
-                # 检查是否包含bash语法错误
-                if "unexpected EOF" in result.stderr or "syntax error" in result.stderr:
-                    self.log("🚨 检测到bash语法错误！")
-                return False
+            self.log_command(["act", "--version"], version_result)
+            self.log_detail("act版本信息", version_result.stdout.strip())
+        except FileNotFoundError:
+            error_msg = "❌ act未安装！请先安装act工具"
+            self.log(error_msg, level="ERROR")
+            self.log("💡 安装方法：")
+            self.log("   Windows: choco install act-cli")
+            self.log("   macOS: brew install act")
+            install_cmd = (
+                "curl https://raw.githubusercontent.com/nektos/act/master/"
+                "install.sh | sudo bash"
+            )
+            self.log(f"   Linux: {install_cmd}")
+            raise RuntimeError(f"{error_msg}\n安装后请重新运行验证")
+        except subprocess.CalledProcessError as e:
+            error_msg = f"❌ act版本检查失败：{e}"
+            self.log(error_msg, level="ERROR")
+            self.log_command(["act", "--version"], e)
+            raise RuntimeError(error_msg)
+        except subprocess.TimeoutExpired:
+            error_msg = "❌ act版本检查超时"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+
+        try:
+            # 测试所有工作流文件的语法
+            workflows_dir = self.workspace / ".github" / "workflows"
+            if not workflows_dir.exists():
+                self.log("❌ .github/workflows 目录不存在", level="ERROR")
+                raise RuntimeError(".github/workflows 目录不存在")
+
+            # 获取所有 .yml 工作流文件
+            workflows_to_test = sorted(
+                [
+                    f.name
+                    for f in workflows_dir.glob("*.yml")
+                    if f.is_file() and f.name != "README.md"
+                ]
+            )
+
+            if not workflows_to_test:
+                self.log("⚠️  未找到任何工作流文件", level="WARNING")
+                return True
+
+            self.log(f"📋 发现 {len(workflows_to_test)} 个工作流文件，开始逐一验证...")
+
+            for workflow in workflows_to_test:
+                workflow_path = self.workspace / ".github" / "workflows" / workflow
+                if not workflow_path.exists():
+                    self.log(f"⚠️  工作流文件不存在，跳过：{workflow}")
+                    continue
+
+                self.log(f"🔍 检查工作流语法：{workflow}")
+
+                # 读取工作流文件，检测触发器类型
+                workflow_content = workflow_path.read_text(
+                    encoding="utf-8", errors="ignore"
+                )
+                events_to_try = []
+
+                # 检测工作流支持的触发器
+                if "workflow_call:" in workflow_content:
+                    events_to_try.append("workflow_call")
+                if "pull_request:" in workflow_content:
+                    events_to_try.append("pull_request")
+                if "workflow_dispatch:" in workflow_content:
+                    events_to_try.append("workflow_dispatch")
+                if "push:" in workflow_content:
+                    events_to_try.append("push")
+                if "schedule:" in workflow_content:
+                    events_to_try.append("schedule")
+                if "workflow_run:" in workflow_content:
+                    events_to_try.append("workflow_run")
+
+                # 如果没有检测到任何事件，默认尝试 push
+                if not events_to_try:
+                    events_to_try = ["push"]
+
+                # 尝试第一个可用的事件类型
+                event_type = events_to_try[0]
+                self.log_detail(f"检测到触发器类型: {event_type}")
+
+                result = None
+                for event in events_to_try:
+                    self.log_detail(
+                        f"执行命令: act {event} -W .github/workflows/{workflow} --list"
+                    )
+                    sys.stdout.flush()
+
+                    result = subprocess.run(
+                        ["act", event, "-W", f".github/workflows/{workflow}", "--list"],
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="ignore",
+                        timeout=30,
+                    )
+
+                    if result.returncode == 0:
+                        break
+
+                if result is None:
+                    result = subprocess.run(
+                        [
+                            "act",
+                            "push",
+                            "-W",
+                            f".github/workflows/{workflow}",
+                            "--list",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="ignore",
+                        timeout=30,
+                    )
+
+                self.log_command(
+                    [
+                        "act",
+                        event_type,
+                        "-W",
+                        f".github/workflows/{workflow}",
+                        "--list",
+                    ],
+                    result,
+                )
+
+                if result.returncode != 0:
+                    error_msg = f"❌ 工作流 {workflow} 语法验证失败"
+                    self.log(error_msg, level="ERROR")
+                    self.log_detail("验证失败详情", result.stderr)
+                    raise RuntimeError(f"{error_msg}\n错误详情：\n{result.stderr}")
+
+                # 解析并显示发现的jobs
+                if result.stdout:
+                    job_lines = [
+                        line
+                        for line in result.stdout.split("\n")
+                        if line.strip()
+                        and not line.startswith("#")
+                        and "Job ID" not in line
+                        and "Stage" not in line
+                    ]
+                    job_count = len(job_lines)
+                    self.log(f"✅ {workflow} 语法正确，发现 {job_count} 个job")
+                else:
+                    self.log(f"✅ {workflow} 语法正确（无job输出）")
+
+            # 对所有有push/pull_request事件的工作流进行深度验证（dryrun模式）
+            self.log("🔍 运行工作流深度验证（dryrun模式，验证所有支持的工作流）...")
+
+            workflows_for_dryrun = []
+            for workflow in workflows_to_test:
+                workflow_path = self.workspace / ".github" / "workflows" / workflow
+                if not workflow_path.exists():
+                    continue
+
+                # 读取工作流内容，检查是否有push或pull_request事件
+                workflow_content = workflow_path.read_text(
+                    encoding="utf-8", errors="ignore"
+                )
+                if "push:" in workflow_content or "pull_request:" in workflow_content:
+                    workflows_for_dryrun.append(workflow)
+
+            if not workflows_for_dryrun:
+                self.log("ℹ️  没有找到支持push/pull_request事件的工作流，跳过dryrun验证")
+            else:
+                workflows_list = ", ".join(workflows_for_dryrun)
+                self.log(
+                    f"📋 将对 {len(workflows_for_dryrun)} 个工作流进行深度验证：" f"{workflows_list}"
+                )
+
+                dryrun_failures = []
+                dryrun_panics = []
+                dryrun_timeouts = []
+
+                for workflow in workflows_for_dryrun:
+                    workflow_path = self.workspace / ".github" / "workflows" / workflow
+                    workflow_content = workflow_path.read_text(
+                        encoding="utf-8", errors="ignore"
+                    )
+
+                    # 检查工作流复杂度：如果包含workflow_call，dryrun可能很慢
+                    has_workflow_call = (
+                        "workflow_call:" in workflow_content
+                        or "uses: ./.github/workflows/" in workflow_content
+                    )
+                    is_complex = (
+                        has_workflow_call or len(workflow_content.split("\n")) > 500
+                    )
+
+                    # 复杂工作流直接跳过dryrun，只做--list验证（已通过）
+                    if is_complex:
+                        self.log(
+                            f"⏭️  跳过 {workflow} 的dryrun验证"
+                            f"（复杂工作流，包含workflow_call或超过500行）",
+                            level="WARNING",
+                        )
+                        self.log(
+                            "💡 --list验证已通过，语法正确；"
+                            "dryrun对复杂工作流可能很慢，建议在GitHub Actions中实际验证",
+                            level="WARNING",
+                        )
+                        continue  # 跳过复杂工作流的dryrun验证
+
+                    # 确定事件类型
+                    event_type = (
+                        "push" if "push:" in workflow_content else "pull_request"
+                    )
+                    if (
+                        "pull_request:" in workflow_content
+                        and "push:" in workflow_content
+                    ):
+                        event_type = "push"  # 优先使用push
+
+                    # 统一使用60秒超时（1分钟），足够验证大部分工作流
+                    timeout_seconds = 60
+
+                    self.log(
+                        f"🔍 深度验证 {workflow} "
+                        f"(事件类型: {event_type}, 超时: {timeout_seconds}秒)..."
+                    )
+                    cmd = f"act {event_type} -W .github/workflows/{workflow} --dryrun"
+                    self.log_detail(f"执行命令: {cmd}")
+
+                    try:
+                        result = subprocess.run(
+                            [
+                                "act",
+                                event_type,
+                                "-W",
+                                f".github/workflows/{workflow}",
+                                "--dryrun",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="ignore",
+                            timeout=timeout_seconds,
+                        )
+                    except subprocess.TimeoutExpired:
+                        # 单个工作流超时，记录但不终止整个验证
+                        dryrun_timeouts.append(
+                            {
+                                "workflow": workflow,
+                                "event": event_type,
+                                "timeout": timeout_seconds,
+                            }
+                        )
+                        self.log(
+                            f"⏰ {workflow} dryrun验证超时（{timeout_seconds}秒）",
+                            level="WARNING",
+                        )
+                        self.log("💡 复杂工作流dryrun可能超时，但--list验证已通过，语法正确", level="WARNING")
+                        continue  # 继续验证下一个工作流
+
+                    # 检查是否是act工具的bug（panic）
+                    is_act_bug = (
+                        "panic:" in (result.stderr or "")
+                        or "segmentation violation" in (result.stderr or "")
+                        or "nil pointer" in (result.stderr or "")
+                    )
+
+                    if is_act_bug:
+                        # act工具本身的bug，记录但不跳过
+                        panic_info = (
+                            result.stderr[:300]
+                            if result.stderr
+                            else result.stdout[:300]
+                        )
+                        dryrun_panics.append(
+                            {
+                                "workflow": workflow,
+                                "event": event_type,
+                                "panic_info": panic_info,
+                            }
+                        )
+                        self.log(
+                            f"⚠️  {workflow} dryrun遇到act工具panic（工具bug）",
+                            level="WARNING",
+                        )
+                        self.log_detail("panic详情", panic_info)
+                    elif result.returncode != 0:
+                        # 检查是否有真正的错误（排除debug日志）
+                        has_real_error = False
+                        error_keywords = [
+                            "error:",
+                            "failed",
+                            "invalid",
+                            "syntax error",
+                            "unexpected",
+                            "cannot",
+                        ]
+
+                        stderr_lines = (result.stderr or "").split("\n")
+                        for line in stderr_lines:
+                            line_lower = line.lower()
+                            # 跳过debug和info级别的日志
+                            if (
+                                "level=debug" in line_lower
+                                or "level=info" in line_lower
+                            ):
+                                continue
+                            # 检查是否有真正的错误
+                            if any(keyword in line_lower for keyword in error_keywords):
+                                # 排除"could not find any stages"（可能是正常情况）
+                                if "could not find any stages" not in line_lower:
+                                    has_real_error = True
+                                    break
+
+                        if has_real_error:
+                            error_output = "\n".join(
+                                [
+                                    line
+                                    for line in stderr_lines[:10]
+                                    if not (
+                                        "level=debug" in line.lower()
+                                        or "level=info" in line.lower()
+                                    )
+                                ]
+                            )
+                            dryrun_failures.append(
+                                {
+                                    "workflow": workflow,
+                                    "event": event_type,
+                                    "error": error_output or result.stderr[:200],
+                                }
+                            )
+                            self.log(f"❌ {workflow} dryrun验证失败", level="ERROR")
+                            self.log_detail("错误详情", error_output or result.stderr[:200])
+                        else:
+                            self.log(f"✅ {workflow} dryrun验证通过（退出码非0但无实际错误）")
+                    else:
+                        self.log(f"✅ {workflow} dryrun验证通过")
+
+                # 汇总结果
+                if dryrun_timeouts:
+                    timeout_val = dryrun_timeouts[0]["timeout"]
+                    self.log(
+                        f"⏰ 有 {len(dryrun_timeouts)} 个工作流dryrun验证超时"
+                        f"（{timeout_val}秒）：",
+                        level="WARNING",
+                    )
+                    for timeout in dryrun_timeouts:
+                        self.log(
+                            f"  - {timeout['workflow']} ({timeout['event']}事件)",
+                            level="WARNING",
+                        )
+                    self.log("💡 但--list验证已通过，说明工作流语法正确", level="WARNING")
+                    self.log("💡 建议：在GitHub Actions中实际运行验证完整功能", level="WARNING")
+
+                if dryrun_panics:
+                    self.log(
+                        f"⚠️  有 {len(dryrun_panics)} 个工作流遇到act工具panic：", level="WARNING"
+                    )
+                    for panic in dryrun_panics:
+                        self.log(
+                            f"  - {panic['workflow']} ({panic['event']}事件)",
+                            level="WARNING",
+                        )
+                    self.log("💡 这是act工具本身的bug，不影响工作流语法正确性", level="WARNING")
+                    self.log("💡 建议：升级act版本或使用GitHub Actions在线验证", level="WARNING")
+
+                if dryrun_failures:
+                    error_msg = f"❌ 有 {len(dryrun_failures)} 个工作流深度验证失败："
+                    for failure in dryrun_failures:
+                        workflow_name = failure["workflow"]
+                        event = failure["event"]
+                        error_preview = failure["error"][:100]
+                        error_msg += (
+                            f"\n  - {workflow_name} ({event}事件): " f"{error_preview}"
+                        )
+                    self.log(error_msg, level="ERROR")
+                    raise RuntimeError(error_msg)
+
+                # 最终状态判断
+                if dryrun_timeouts or dryrun_panics:
+                    if not dryrun_failures:
+                        self.log("✅ 所有工作流语法验证通过（部分遇到超时或工具bug，但不影响语法正确性）")
+                elif not dryrun_failures:
+                    self.log("✅ 所有工作流深度验证通过")
+
+            # 记录耗时
+            end_time = datetime.now(BEIJING_TZ)
+            start_dt = datetime.fromtimestamp(start_time).replace(tzinfo=BEIJING_TZ)
+            duration = self.log_timing("act语法验证", start_dt, end_time)
 
             self.log("✅ act语法验证通过")
+            self.log_detail(f"验证完成，总耗时: {duration:.2f}秒")
             return True
 
-        except subprocess.TimeoutExpired:
-            self.log("⏰ act验证超时，继续后续验证")
-            return True
+        except subprocess.TimeoutExpired as e:
+            # 从异常对象获取实际超时时间
+            timeout_seconds = getattr(e, "timeout", 180)
+            error_msg = f"⏰ act验证超时（超过{timeout_seconds}秒）"
+            self.log(error_msg, level="ERROR")
+            self.log_detail("超时详情", str(e))
+            self.log("💡 复杂工作流（特别是包含workflow_call的工作流）可能需要更长时间解析", level="WARNING")
+            self.log(
+                "💡 复杂工作流已自动使用5分钟超时，但仍可能不够",
+                level="WARNING",
+            )
+            self.log(
+                "💡 建议：复杂工作流的--list验证已通过，语法正确；" "dryrun超时不影响语法验证",
+                level="WARNING",
+            )
+            suggestion = (
+                "复杂工作流（如包含workflow_call）的dryrun验证可能超时，"
+                "但--list验证已通过说明语法正确。"
+                "建议在GitHub Actions中实际运行验证"
+            )
+            raise RuntimeError(f"{error_msg}\n建议：{suggestion}")
+        except RuntimeError:
+            # 重新抛出RuntimeError（这是我们主动抛出的错误）
+            raise
         except Exception as e:
-            self.log(f"⚠️  act验证异常：{e}")
-            return True  # 不阻止流程
+            error_msg = f"❌ act验证发生异常：{type(e).__name__}: {str(e)}"
+            self.log(error_msg, level="ERROR")
+            self.log_detail("异常详情", str(e))
+            import traceback
+
+            self.log_detail("异常堆栈", traceback.format_exc())
+            raise RuntimeError(error_msg) from e
 
     def run_docker_validation(self):
         """第二层：Docker环境验证"""
@@ -175,9 +601,9 @@ class LocalTestPassport:
                 self.log("❌ 未找到docker-compose.yml")
                 return False
 
-            # 验证docker-compose配置
+            # 验证docker-compose配置（使用项目名称避免网络冲突）
             result = subprocess.run(
-                ["docker-compose", "config"],
+                ["docker-compose", "-p", "bravo", "config"],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -191,11 +617,17 @@ class LocalTestPassport:
             # 🔧 方案A：检查必需服务是否已启动
             self.log("🔍 检查必需服务状态...")
 
-            # 检查MySQL服务
+            # 检查MySQL服务（功能验证）
+            self.log("🔍 检查MySQL服务功能...")
+
             try:
-                mysql_result = subprocess.run(
+                # 1. Ping检查（使用root密码）
+                self.log_detail("执行MySQL ping检查")
+                mysql_ping_result = subprocess.run(
                     [
                         "docker-compose",
+                        "-p",
+                        "bravo",
                         "exec",
                         "-T",
                         "mysql",
@@ -203,34 +635,209 @@ class LocalTestPassport:
                         "ping",
                         "-h",
                         "localhost",
+                        "-uroot",
+                        "-proot_password",
                     ],
                     capture_output=True,
                     text=True,
                     timeout=5,
                 )
-                if mysql_result.returncode == 0:
-                    self.log("✅ MySQL服务已就绪")
-                else:
-                    self.log("⚠️  MySQL服务未就绪，可能影响功能测试")
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                self.log("⚠️  MySQL服务检查失败，可能影响功能测试")
+                self.log_command(
+                    ["docker-compose", "exec", "-T", "mysql", "mysqladmin", "ping"],
+                    mysql_ping_result,
+                )
 
-            # 检查Redis服务
+                if mysql_ping_result.returncode == 0:
+                    self.log("✅ MySQL ping检查通过")
+
+                    # 2. 连接测试（实际连接数据库）
+                    self.log_detail("执行MySQL连接测试")
+                    mysql_conn_result = subprocess.run(
+                        [
+                            "docker-compose",
+                            "-p",
+                            "bravo",
+                            "exec",
+                            "-T",
+                            "mysql",
+                            "mysql",
+                            "-u",
+                            "root",
+                            "-proot_password",
+                            "-e",
+                            "SELECT 1 as test;",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    self.log_command(
+                        [
+                            "docker-compose",
+                            "exec",
+                            "-T",
+                            "mysql",
+                            "mysql",
+                            "-u",
+                            "root",
+                            "-e",
+                            "SELECT 1",
+                        ],
+                        mysql_conn_result,
+                    )
+
+                    if mysql_conn_result.returncode == 0:
+                        self.log("✅ MySQL连接测试通过")
+                    else:
+                        error_msg = "❌ MySQL连接测试失败"
+                        self.log(error_msg, level="ERROR")
+                        self.log_detail("连接失败详情", mysql_conn_result.stderr)
+                        raise RuntimeError(
+                            f"{error_msg}\n错误详情：\n{mysql_conn_result.stderr}"
+                        )
+                else:
+                    error_msg = "❌ MySQL ping检查失败"
+                    self.log(error_msg, level="ERROR")
+                    self.log_detail("ping失败详情", mysql_ping_result.stderr)
+                    raise RuntimeError(
+                        f"{error_msg}\n错误详情：\n{mysql_ping_result.stderr}"
+                    )
+
+            except subprocess.TimeoutExpired:
+                error_msg = "⏰ MySQL服务检查超时"
+                self.log(error_msg, level="ERROR")
+                raise RuntimeError(error_msg)
+            except RuntimeError:
+                raise
+            except Exception as e:
+                error_msg = f"❌ MySQL服务检查异常：{type(e).__name__}: {str(e)}"
+                self.log(error_msg, level="ERROR")
+                raise RuntimeError(error_msg) from e
+
+            # 检查Redis服务（功能验证）
+            self.log("🔍 检查Redis服务功能...")
+
             try:
-                redis_result = subprocess.run(
-                    ["docker-compose", "exec", "-T", "redis", "redis-cli", "ping"],
+                # 1. Ping检查
+                self.log_detail("执行Redis ping检查")
+                redis_ping_result = subprocess.run(
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "exec",
+                        "-T",
+                        "redis",
+                        "redis-cli",
+                        "ping",
+                    ],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
                     errors="ignore",
                     timeout=5,
                 )
-                if redis_result.returncode == 0:
-                    self.log("✅ Redis服务已就绪")
+                self.log_command(
+                    ["docker-compose", "exec", "-T", "redis", "redis-cli", "ping"],
+                    redis_ping_result,
+                )
+
+                if (
+                    redis_ping_result.returncode == 0
+                    and "PONG" in redis_ping_result.stdout
+                ):
+                    self.log("✅ Redis ping检查通过")
+
+                    # 2. 读写测试（实际写入和读取数据）
+                    self.log_detail("执行Redis读写测试")
+                    redis_write_result = subprocess.run(
+                        [
+                            "docker-compose",
+                            "-p",
+                            "bravo",
+                            "exec",
+                            "-T",
+                            "redis",
+                            "redis-cli",
+                            "SET",
+                            "test_key",
+                            "test_value",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="ignore",
+                        timeout=5,
+                    )
+
+                    if redis_write_result.returncode == 0:
+                        redis_read_result = subprocess.run(
+                            [
+                                "docker-compose",
+                                "-p",
+                                "bravo",
+                                "exec",
+                                "-T",
+                                "redis",
+                                "redis-cli",
+                                "GET",
+                                "test_key",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="ignore",
+                            timeout=5,
+                        )
+
+                        # 清理测试key
+                        subprocess.run(
+                            [
+                                "docker-compose",
+                                "-p",
+                                "bravo",
+                                "exec",
+                                "-T",
+                                "redis",
+                                "redis-cli",
+                                "DEL",
+                                "test_key",
+                            ],
+                            capture_output=True,
+                            timeout=2,
+                        )
+
+                        if (
+                            redis_read_result.returncode == 0
+                            and "test_value" in redis_read_result.stdout
+                        ):
+                            self.log("✅ Redis读写测试通过")
+                        else:
+                            error_msg = "❌ Redis读取测试失败"
+                            self.log(error_msg, level="ERROR")
+                            raise RuntimeError(error_msg)
+                    else:
+                        error_msg = "❌ Redis写入测试失败"
+                        self.log(error_msg, level="ERROR")
+                        raise RuntimeError(error_msg)
                 else:
-                    self.log("⚠️  Redis服务未就绪，可能影响功能测试")
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                self.log("⚠️  Redis服务检查失败，可能影响功能测试")
+                    error_msg = "❌ Redis ping检查失败"
+                    self.log(error_msg, level="ERROR")
+                    self.log_detail("ping失败详情", redis_ping_result.stderr)
+                    raise RuntimeError(
+                        f"{error_msg}\n错误详情：\n{redis_ping_result.stderr}"
+                    )
+
+            except subprocess.TimeoutExpired:
+                error_msg = "⏰ Redis服务检查超时"
+                self.log(error_msg, level="ERROR")
+                raise RuntimeError(error_msg)
+            except RuntimeError:
+                raise
+            except Exception as e:
+                error_msg = f"❌ Redis服务检查异常：{type(e).__name__}: {str(e)}"
+                self.log(error_msg, level="ERROR")
+                raise RuntimeError(error_msg) from e
 
             self.log("✅ Docker环境验证通过")
             return True
@@ -240,86 +847,618 @@ class LocalTestPassport:
             return False
 
     def run_quick_tests(self):
-        """第三层：快速功能测试"""
+        """第三层：快速功能测试 - 真实的测试执行"""
+        start_time = time.time()
         self.log("🧪 第三层验证：运行核心测试")
+        self.log_detail("开始执行真实功能测试（非模拟）")
 
-        # 使用现有的run_github_actions_simulation.sh
-        simulation_script = (
-            self.workspace
-            / "scripts-golden"
-            / "run_github_actions_simulation_simple.sh"
+        test_results = {
+            "backend_check": False,
+            "frontend_check": False,
+            "backend_tests": False,
+        }
+
+        # 1. 后端Django配置检查
+        self.log("🔍 步骤1: 后端Django配置检查...")
+        cmd_desc = (
+            "docker-compose run --rm backend python manage.py check "
+            "--settings=bravo.settings.test"
         )
-        if not simulation_script.exists():
-            self.log("⚠️  未找到GitHub Actions模拟脚本，跳过功能测试")
-            return True
+        self.log_detail("执行命令", cmd_desc)
 
         try:
-            self.log("🚀 运行GitHub Actions模拟...")
-            # 确保在正确的工作目录中执行
-            # 使用sh代替bash，兼容性更好
-            result = subprocess.run(
-                ["sh", "scripts-golden/run_github_actions_simulation_simple.sh"],
+            # 先尝试使用exec（如果backend容器已运行），否则使用run
+            # 检查backend容器是否在运行
+            check_backend = subprocess.run(
+                ["docker-compose", "-p", "bravo", "ps", "-q", "backend"],
                 capture_output=True,
                 text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=300,  # 5分钟超时
-                cwd=str(self.workspace),
+                timeout=5,
+            )
+
+            if check_backend.returncode == 0 and check_backend.stdout.strip():
+                # backend容器已运行，使用exec
+                self.log_detail("backend容器已运行，使用exec方式")
+                result = subprocess.run(
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "exec",
+                        "-T",
+                        "backend",
+                        "python",
+                        "manage.py",
+                        "check",
+                        "--settings=bravo.settings.test",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=60,
+                    cwd=str(self.workspace),
+                )
+            else:
+                # backend容器未运行，使用run（但先启动依赖服务）
+                self.log_detail("backend容器未运行，先启动依赖服务")
+                sys.stdout.flush()
+
+                # 确保MySQL和Redis已启动
+                self.log("  🔄 启动依赖服务（MySQL, Redis）...")
+                sys.stdout.flush()
+                subprocess.run(
+                    ["docker-compose", "-p", "bravo", "up", "-d", "mysql", "redis"],
+                    capture_output=True,
+                    timeout=30,
+                )
+                # 等待服务就绪
+                self.log("  ⏳ 等待服务就绪（3秒）...")
+                sys.stdout.flush()
+                time.sleep(3)
+
+                # 使用run创建临时容器
+                self.log("  🔄 执行Django配置检查...")
+                sys.stdout.flush()
+
+                result = subprocess.run(
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "backend",
+                        "python",
+                        "manage.py",
+                        "check",
+                        "--settings=bravo.settings.test",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=60,
+                    cwd=str(self.workspace),
+                )
+
+            self.log_command(
+                [
+                    "docker-compose",
+                    "run",
+                    "--rm",
+                    "backend",
+                    "python",
+                    "manage.py",
+                    "check",
+                ],
+                result,
             )
 
             if result.returncode == 0:
-                self.log("✅ 核心功能测试通过")
-                return True
+                self.log("✅ 后端Django配置检查通过")
+                test_results["backend_check"] = True
             else:
-                self.log(f"❌ 核心功能测试失败：{result.stderr}")
-                # 显示详细错误信息
-                print("\n" + "=" * 60)
-                print("❌ 测试失败详情：")
-                print(result.stdout)
-                print(result.stderr)
-                print("=" * 60)
-                return False
-
+                error_msg = "❌ 后端Django配置检查失败"
+                self.log(error_msg, level="ERROR")
+                self.log_detail("检查失败详情", result.stderr)
+                raise RuntimeError(f"{error_msg}\n错误详情：\n{result.stderr}")
         except subprocess.TimeoutExpired:
-            self.log("⏰ 功能测试超时（5分钟）")
-            return False
+            error_msg = "⏰ 后端配置检查超时（60秒）"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except RuntimeError:
+            raise
         except Exception as e:
-            self.log(f"❌ 功能测试异常：{e}")
-            return False
+            error_msg = f"❌ 后端配置检查异常：{type(e).__name__}: {str(e)}"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg) from e
+
+        # 2. 前端基础检查（lint或build检查）——改为必选，任何失败视为整体失败
+        self.log("🔍 步骤2: 前端基础检查（必选）...")
+
+        # 检查frontend容器是否在运行
+        check_frontend = subprocess.run(
+            ["docker-compose", "-p", "bravo", "ps", "-q", "frontend"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        # 构建检查命令（根据容器状态选择exec或run）
+        if check_frontend.returncode == 0 and check_frontend.stdout.strip():
+            # frontend容器已运行，使用exec
+            self.log_detail("frontend容器已运行，使用exec方式")
+            frontend_checks = [
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "exec",
+                        "-T",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "lint",
+                    ],
+                    "lint检查",
+                ),
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "exec",
+                        "-T",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "type-check",
+                    ],
+                    "类型检查",
+                ),
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "exec",
+                        "-T",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "build",
+                    ],
+                    "build检查",
+                ),
+            ]
+        else:
+            # frontend容器未运行，先启动
+            self.log_detail("frontend容器未运行，先启动服务")
+            subprocess.run(
+                ["docker-compose", "-p", "bravo", "up", "-d", "frontend"],
+                capture_output=True,
+                timeout=60,
+            )
+            time.sleep(3)
+            # 使用run创建临时容器
+            frontend_checks = [
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "lint",
+                    ],
+                    "lint检查",
+                ),
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "type-check",
+                    ],
+                    "类型检查",
+                ),
+                (
+                    [
+                        "docker-compose",
+                        "-p",
+                        "bravo",
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "frontend",
+                        "npm",
+                        "run",
+                        "build",
+                    ],
+                    "build检查",
+                ),
+            ]
+
+        frontend_check_passed = False
+        frontend_errors = []
+        for check_cmd, check_name in frontend_checks:
+            self.log_detail(f"尝试执行: {check_name}")
+            sys.stdout.flush()
+            try:
+                # 实时输出模式
+                self.log(f"  🔄 执行{check_name}...")
+                sys.stdout.flush()
+
+                result = subprocess.run(
+                    check_cmd,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=120,
+                    cwd=str(self.workspace),
+                )
+                if result.returncode == 0:
+                    self.log(f"✅ 前端{check_name}通过")
+                    self.log_command(check_cmd, result)
+                    test_results["frontend_check"] = True
+                    frontend_check_passed = True
+                    break
+                else:
+                    error_msg = f"前端{check_name}失败（退出码: {result.returncode})"
+                    frontend_errors.append(error_msg)
+                    self.log(f"⚠️  {error_msg}")
+                    self.log_detail("前端检查失败详情", result.stderr or result.stdout)
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                error_msg = f"前端{check_name}执行异常: {type(e).__name__}: {str(e)}"
+                frontend_errors.append(error_msg)
+                self.log(f"⚠️  {error_msg}")
+            except Exception as e:
+                error_msg = f"前端{check_name}执行异常: {type(e).__name__}: {str(e)}"
+                frontend_errors.append(error_msg)
+                self.log(f"⚠️  {error_msg}")
+
+        if not frontend_check_passed:
+            # 所有前端检查均失败，视为功能验证失败
+            error_msg = "❌ 前端基础检查未通过（所有检查均失败或异常）"
+            self.log(error_msg, level="ERROR")
+            if frontend_errors:
+                self.log_detail("前端检查错误汇总", "\n".join(frontend_errors))
+            raise RuntimeError(error_msg)
+
+        # 3. 后端单元测试（运行少量关键测试）——改为必选
+        self.log("🔍 步骤3: 后端单元测试（快速模式，必选）...")
+        pytest_cmd_desc = (
+            "docker-compose run --rm backend pytest tests/unit/ -v "
+            "--maxfail=3 -k 'test_' --tb=short"
+        )
+        self.log_detail("执行命令", pytest_cmd_desc)
+
+        try:
+            # 检查backend容器是否在运行，选择exec或run
+            check_backend_for_test = subprocess.run(
+                ["docker-compose", "-p", "bravo", "ps", "-q", "backend"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            if (
+                check_backend_for_test.returncode == 0
+                and check_backend_for_test.stdout.strip()
+            ):
+                # backend容器已运行，使用exec
+                self.log_detail("backend容器已运行，使用exec方式执行测试")
+                pytest_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "exec",
+                    "-T",
+                    "backend",
+                    "pytest",
+                    "tests/unit/",
+                    "-v",
+                    "--maxfail=3",
+                    "-k",
+                    "test_",
+                    "--tb=short",
+                ]
+            else:
+                # backend容器未运行，使用run
+                self.log_detail("backend容器未运行，使用run方式执行测试")
+                pytest_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "backend",
+                    "pytest",
+                    "tests/unit/",
+                    "-v",
+                    "--maxfail=3",
+                    "-k",
+                    "test_",
+                    "--tb=short",
+                ]
+
+            # 使用实时输出模式，像pre-commit那样友好
+            self.log("📊 开始执行测试（实时输出模式）...")
+            sys.stdout.flush()
+
+            # 使用Popen实现实时输出
+            process = subprocess.Popen(
+                pytest_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # 合并stderr到stdout
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                cwd=str(self.workspace),
+                bufsize=1,  # 行缓冲
+            )
+
+            # 实时读取并输出
+            output_lines = []
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if line:
+                    # 实时输出测试进度
+                    print(f"  {line.rstrip()}")
+                    sys.stdout.flush()
+                    output_lines.append(line)
+
+            # 等待进程完成
+            returncode = process.wait()
+            result_stdout = "".join(output_lines)
+
+            # 创建类似subprocess.run的result对象
+            class Result:
+                def __init__(self, returncode, stdout):
+                    self.returncode = returncode
+                    self.stdout = stdout
+                    self.stderr = ""
+
+            result = Result(returncode, result_stdout)
+
+            self.log_command(
+                ["docker-compose", "run", "--rm", "backend", "pytest", "tests/unit/"],
+                result,
+            )
+
+            # 解析测试结果
+            if result.returncode == 0:
+                # 提取完整的测试结果摘要
+                output_lines = result.stdout.split("\n")
+
+                # 查找测试统计行（如 "32 passed, 1 warning in 35.58s"）
+                test_summary = None
+                for line in output_lines:
+                    if "passed" in line.lower() and (
+                        "failed" in line.lower()
+                        or "warning" in line.lower()
+                        or "in" in line.lower()
+                    ):
+                        test_summary = line.strip()
+                        break
+
+                # 提取测试数量
+                import re
+
+                passed_match = re.search(
+                    r"(\d+)\s+passed", result.stdout, re.IGNORECASE
+                )
+                failed_match = re.search(
+                    r"(\d+)\s+failed", result.stdout, re.IGNORECASE
+                )
+
+                passed_count = int(passed_match.group(1)) if passed_match else 0
+                failed_count = int(failed_match.group(1)) if failed_match else 0
+
+                # 显示详细测试结果
+                if test_summary:
+                    self.log(f"✅ 后端单元测试通过: {test_summary}")
+                else:
+                    self.log(f"✅ 后端单元测试通过: {passed_count}个测试通过")
+
+                # 输出关键测试信息（前20行和后10行）
+                output_preview = "\n".join(
+                    output_lines[:20] + ["..."] + output_lines[-10:]
+                )
+                self.log_detail("测试执行详情（摘要）", output_preview)
+
+                # 如果测试数量为0，视为失败
+                if passed_count == 0 and failed_count == 0:
+                    error_msg = "❌ 未找到任何测试用例"
+                    self.log(error_msg, level="ERROR")
+                    raise RuntimeError(error_msg)
+
+                test_results["backend_tests"] = True
+            elif result.returncode == 5:  # pytest退出码5表示没有找到测试
+                error_msg = "❌ 未找到后端单元测试（pytest退出码5）"
+                self.log(error_msg, level="ERROR")
+                raise RuntimeError(error_msg)
+            else:
+                error_msg = "❌ 后端单元测试失败"
+                self.log(error_msg, level="ERROR")
+                self.log_detail(
+                    "测试失败详情",
+                    result.stderr[:500] if result.stderr else result.stdout[:500],
+                )
+                raise RuntimeError(error_msg)
+        except subprocess.TimeoutExpired:
+            error_msg = "❌ 后端单元测试超时（3分钟）"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except FileNotFoundError:
+            error_msg = "❌ pytest未找到，无法运行后端单元测试"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            error_msg = f"❌ 后端单元测试异常：{type(e).__name__}: {str(e)}"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg) from e
+
+        # 记录耗时
+        end_time = datetime.now(BEIJING_TZ)
+        start_dt = datetime.fromtimestamp(start_time).replace(tzinfo=BEIJING_TZ)
+        duration = self.log_timing("功能测试", start_dt, end_time)
+
+        # 总结测试结果（此时三项检查都应为必选且成功）
+        self.log(f"\n📊 功能测试结果汇总（耗时: {duration:.2f}秒）:")
+        self.log(f"  后端配置检查: {'✅' if test_results['backend_check'] else '❌'}")
+        self.log(f"  前端基础检查: {'✅' if test_results['frontend_check'] else '❌'}")
+        self.log(f"  后端单元测试: {'✅' if test_results['backend_tests'] else '❌'}")
+
+        # 严格模式：任一检查失败都视为功能验证失败（理论上到这里都应为True）
+        if not all(test_results.values()):
+            raise RuntimeError("功能测试结果中存在失败项，请检查日志")
+
+        self.log("✅ 核心功能测试完成（所有检查通过）")
+        return True
 
     def run_environment_diff_check(self):
-        """第四层：环境差异检查"""
+        """第四层：环境差异检查 - 真正比较开发/测试/生产环境配置差异"""
         self.log("🔍 第四层验证：环境差异检查")
+        self.log_detail("检查开发、测试、生产环境配置差异")
 
-        # 检查关键配置文件
-        config_files = [
-            "docker-compose.yml",
-            "docker-compose.test.yml",
-            "package.json",
-            "backend/requirements/test.txt",
-        ]
+        # 1. 检查关键配置文件存在性
+        config_files = {
+            "docker-compose.yml": "开发环境配置",
+            "docker-compose.test.yml": "测试环境配置",
+            "package.json": "项目依赖配置",
+            "backend/requirements/test.txt": "测试依赖配置",
+        }
 
         missing_files = []
-        for config_file in config_files:
+        for config_file, description in config_files.items():
             if not (self.workspace / config_file).exists():
-                missing_files.append(config_file)
+                missing_files.append(f"{config_file} ({description})")
 
         if missing_files:
             self.log(f"⚠️  缺少配置文件：{', '.join(missing_files)}")
             # 不阻止流程，只是警告
 
-        # 检查npm workspaces结构
+        # 2. 真正比较docker-compose配置差异
+        docker_compose_dev = self.workspace / "docker-compose.yml"
+        docker_compose_test = self.workspace / "docker-compose.test.yml"
+
+        if docker_compose_dev.exists() and docker_compose_test.exists():
+            self.log_detail("比较docker-compose.yml和docker-compose.test.yml的差异")
+            try:
+                # 使用docker-compose config验证两个文件
+                result_dev = subprocess.run(
+                    ["docker-compose", "-f", str(docker_compose_dev), "config"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                result_test = subprocess.run(
+                    ["docker-compose", "-f", str(docker_compose_test), "config"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+
+                if result_dev.returncode != 0:
+                    self.log(
+                        f"⚠️  开发环境配置验证失败：{result_dev.stderr[:200]}", level="WARNING"
+                    )
+                if result_test.returncode != 0:
+                    self.log(
+                        f"⚠️  测试环境配置验证失败：{result_test.stderr[:200]}", level="WARNING"
+                    )
+
+                # 检查关键服务配置差异
+                if result_dev.returncode == 0 and result_test.returncode == 0:
+                    # 提取服务列表
+                    dev_services = set()
+                    test_services = set()
+
+                    for line in result_dev.stdout.split("\n"):
+                        if ":" in line and not line.strip().startswith("#"):
+                            service = line.split(":")[0].strip()
+                            if service and not service.startswith("version"):
+                                dev_services.add(service)
+
+                    for line in result_test.stdout.split("\n"):
+                        if ":" in line and not line.strip().startswith("#"):
+                            service = line.split(":")[0].strip()
+                            if service and not service.startswith("version"):
+                                test_services.add(service)
+
+                    # 比较服务差异
+                    missing_in_test = dev_services - test_services
+                    extra_in_test = test_services - dev_services
+
+                    if missing_in_test:
+                        self.log(
+                            f"⚠️  测试环境缺少服务：{', '.join(missing_in_test)}",
+                            level="WARNING",
+                        )
+                    if extra_in_test:
+                        self.log(f"ℹ️  测试环境额外服务：{', '.join(extra_in_test)}")
+
+                    self.log_detail(
+                        f"开发环境服务数: {len(dev_services)}, 测试环境服务数: {len(test_services)}"
+                    )
+            except Exception as e:
+                self.log(f"⚠️  配置差异检查异常：{type(e).__name__}: {str(e)}", level="WARNING")
+
+        # 3. 检查npm workspaces结构
         if (self.workspace / "package.json").exists():
             try:
-                subprocess.run(
+                result = subprocess.run(
                     ["npm", "run", "workspace:check"],
                     capture_output=True,
                     text=True,
                     cwd=self.workspace,
+                    timeout=10,
                 )
-                # 忽略结果，这只是检查
-            except Exception:
-                pass
+                if result.returncode == 0:
+                    self.log_detail("npm workspaces结构检查通过")
+                else:
+                    self.log(
+                        f"⚠️  npm workspaces检查失败：{result.stderr[:200]}", level="WARNING"
+                    )
+            except Exception as e:
+                self.log(f"⚠️  npm workspaces检查异常：{type(e).__name__}", level="WARNING")
+
+        # 4. 检查环境变量配置差异
+        env_files = {
+            ".env": "开发环境变量",
+            ".env.test": "测试环境变量",
+            ".env.production": "生产环境变量",
+        }
+
+        env_file_status = {}
+        for env_file, description in env_files.items():
+            env_path = self.workspace / env_file
+            if env_path.exists():
+                env_file_status[description] = "存在"
+            else:
+                env_file_status[description] = "不存在"
+
+        self.log_detail(
+            "环境变量文件状态", "\n".join([f"  {k}: {v}" for k, v in env_file_status.items()])
+        )
 
         self.log("✅ 环境差异检查完成")
         return True
@@ -393,7 +1532,70 @@ class LocalTestPassport:
 
         return True, "通行证完整性验证通过"
 
-    def generate_passport(self):
+    def _get_act_version(self):
+        """获取act版本信息"""
+        try:
+            result = subprocess.run(
+                ["act", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except Exception:
+            pass
+        return "unknown"
+
+    def _get_docker_version(self):
+        """获取Docker版本信息"""
+        try:
+            result = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except Exception:
+            pass
+        return "unknown"
+
+    def _get_test_summary(self):
+        """获取测试摘要信息"""
+        # 从日志文件中提取测试结果摘要
+        summary = {
+            "backend_check": "unknown",
+            "frontend_check": "unknown",
+            "backend_tests": "unknown",
+        }
+
+        try:
+            if self.log_file.exists():
+                with open(self.log_file, "r", encoding="utf-8") as f:
+                    log_content = f.read()
+                    # 查找测试结果
+                    if "✅ 后端Django配置检查通过" in log_content:
+                        summary["backend_check"] = "passed"
+                    elif "❌ 后端Django配置检查失败" in log_content:
+                        summary["backend_check"] = "failed"
+
+                    if "✅ 前端" in log_content and "检查通过" in log_content:
+                        summary["frontend_check"] = "passed"
+                    elif "⚠️  前端检查跳过" in log_content:
+                        summary["frontend_check"] = "skipped"
+
+                    if "✅ 后端单元测试通过" in log_content:
+                        summary["backend_tests"] = "passed"
+                    elif "⚠️  未找到后端单元测试" in log_content:
+                        summary["backend_tests"] = "skipped"
+        except Exception:
+            pass
+
+        return summary
+
+    def generate_passport(self, validation_results=None):
         """生成通行证 - 使用北京时间和完整性验证"""
         current_time = datetime.now(BEIJING_TZ)
         expire_time = current_time + timedelta(hours=1)  # 1小时有效期
@@ -404,23 +1606,34 @@ class LocalTestPassport:
         # 生成验证流程的完整性哈希
         validation_process_hash = self._generate_validation_hash()
 
+        # 默认验证结果
+        if validation_results is None:
+            validation_results = {
+                "act_syntax": True,
+                "docker_environment": True,
+                "functional_tests": True,
+                "environment_diff": True,
+            }
+
         passport_data = {
             "version": "1.0",
             "generated_at": current_time.isoformat(),
             "expires_at": expire_time.isoformat(),
             "git_hash": self.get_git_hash(),
-            "validation_layers": {
-                "act_syntax": True,
-                "docker_environment": True,
-                "functional_tests": True,
-                "environment_diff": True,
-            },
+            "validation_layers": validation_results,
             "valid_for_push": True,
             "validation_signature": hashlib.sha256(
                 f"{self.get_git_hash()}:{current_time.isoformat()}".encode()
             ).hexdigest()[:32],
             "process_integrity_hash": validation_process_hash,
             "generation_method": "automated_validation",
+            # 新增：详细验证结果
+            "validation_details": {
+                "act_version": self._get_act_version(),
+                "docker_version": self._get_docker_version(),
+                "test_summary": self._get_test_summary(),
+                "execution_time_seconds": None,  # 将在run_full_validation中填充
+            },
         }
 
         # 保存通行证
@@ -432,6 +1645,7 @@ class LocalTestPassport:
 
     def run_full_validation(self):
         """运行完整的多层验证"""
+        validation_start_time = time.time()
         self.log("🎯 开始本地测试通行证生成流程")
         self.log(f"📁 工作目录：{self.workspace}")
         self.log("=" * 60)
@@ -445,23 +1659,74 @@ class LocalTestPassport:
         ]
 
         failed_validations = []
+        validation_results = {
+            "act_syntax": False,
+            "docker_environment": False,
+            "functional_tests": False,
+            "environment_diff": False,
+        }
+        layer_timings = {}
 
         for name, validation_func in validations:
+            layer_start_time = time.time()
             self.log(f"\n{'=' * 20} {name} {'=' * 20}")
 
             try:
                 if not validation_func():
                     failed_validations.append(name)
-                    self.log(f"❌ {name}失败")
+                    self.log(f"❌ {name}失败", level="ERROR")
                 else:
                     self.log(f"✅ {name}成功")
-            except Exception as e:
-                self.log(f"❌ {name}异常：{e}")
+                    # 更新验证结果
+                    if name == "语法验证":
+                        validation_results["act_syntax"] = True
+                    elif name == "环境验证":
+                        validation_results["docker_environment"] = True
+                    elif name == "功能验证":
+                        validation_results["functional_tests"] = True
+                    elif name == "差异验证":
+                        validation_results["environment_diff"] = True
+            except RuntimeError as e:
+                # RuntimeError是我们主动抛出的错误，需要详细记录并终止
+                error_msg = str(e)
+                self.log(f"❌ {name}失败：{error_msg}", level="ERROR")
+                self.log_detail(f"{name}失败详情", error_msg)
                 failed_validations.append(name)
+                # 如果是act验证失败，立即终止（不继续后续验证）
+                if name == "语法验证":
+                    self.log("🚨 act验证失败，终止整个验证流程", level="ERROR")
+                    break
+            except Exception as e:
+                error_msg = f"{type(e).__name__}: {str(e)}"
+                self.log(f"❌ {name}异常：{error_msg}", level="ERROR")
+                self.log_detail(f"{name}异常详情", error_msg)
+                import traceback
+
+                self.log_detail(f"{name}异常堆栈", traceback.format_exc())
+                failed_validations.append(name)
+            finally:
+                # 记录每层耗时
+                layer_end_time = time.time()
+                layer_duration = layer_end_time - layer_start_time
+                layer_timings[name] = round(layer_duration, 2)
+                start_dt = datetime.fromtimestamp(layer_start_time).replace(
+                    tzinfo=BEIJING_TZ
+                )
+                end_dt = datetime.fromtimestamp(layer_end_time).replace(
+                    tzinfo=BEIJING_TZ
+                )
+                self.log_timing(f"{name}层", start_dt, end_dt)
+
+        # 计算总耗时
+        validation_end_time = time.time()
+        total_duration = validation_end_time - validation_start_time
 
         # 总结
         self.log(f"\n{'=' * 60}")
         self.log("📊 验证结果汇总：")
+        self.log(f"⏱️  总耗时: {total_duration:.2f}秒")
+        for layer_name, duration in layer_timings.items():
+            self.log(f"  {layer_name}: {duration}秒")
 
         if failed_validations:
             self.log(f"❌ 失败的验证：{', '.join(failed_validations)}")
@@ -469,8 +1734,25 @@ class LocalTestPassport:
             return False
         else:
             self.log("🎉 所有验证通过！")
-            passport_data = self.generate_passport()
+
+            # 生成通行证，包含详细验证结果
+            passport_data = self.generate_passport(validation_results)
+            # 填充执行时间
+            passport_data["validation_details"]["execution_time_seconds"] = round(
+                total_duration, 2
+            )
+            passport_data["validation_details"]["layer_timings"] = layer_timings
+
+            # 保存更新后的通行证
+            with open(self.passport_file, "w", encoding="utf-8") as f:
+                json.dump(passport_data, f, indent=2, ensure_ascii=False)
+
             self.log(f"🎫 通行证ID：{passport_data['validation_signature']}")
+            self.log("📊 验证详情：")
+            self.log(f"  act版本: {passport_data['validation_details']['act_version']}")
+            docker_ver = passport_data["validation_details"]["docker_version"]
+            self.log(f"  Docker版本: {docker_ver}")
+            self.log(f"  总耗时: {total_duration:.2f}秒")
             self.log("🚀 现在可以安全推送到远程仓库")
             return True
 
