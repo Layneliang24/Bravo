@@ -160,12 +160,14 @@ class UserLoginSerializer(serializers.Serializer):
                 {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"}
             )
 
+        # 将用户对象添加到validated_data中，供视图使用（即使密码错误也返回，以便视图处理失败次数）
+        attrs["user"] = user
+        attrs["password"] = password  # 保存密码供视图验证
+
         # 验证密码
         if not user.check_password(password):
             raise serializers.ValidationError(
                 {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"}
             )
 
-        # 将用户对象添加到validated_data中，供视图使用
-        attrs["user"] = user
         return attrs

@@ -221,7 +221,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试登录视图的认证逻辑、失败次数限制、账户锁定机制。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的登录流程，包括成功登录、多次失败导致锁定、锁定期间尝试登录等场景。",
         "priority": "high",
         "dependencies": ["1", "2", "3"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -262,10 +262,10 @@
             "description": "在登录视图中实现登录失败次数跟踪，当失败次数达到预设阈值时锁定用户账户一定时间，并在成功登录后重置失败次数。",
             "dependencies": [1, 3],
             "details": "检查`User`模型的`failed_login_attempts`和`locked_until`字段。如果账户已锁定，拒绝登录并返回锁定信息。每次登录失败时，增加`failed_login_attempts`计数。当计数达到5次时，更新`locked_until`字段为当前时间+10分钟。成功登录后，将`failed_login_attempts`重置为0。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "单元测试验证失败次数递增、账户锁定、锁定期间尝试登录、成功登录后重置次数的逻辑，确保账户状态更新正确。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T07:35:39.968Z"
+            "updatedAt": "2025-12-07T07:44:05.035Z"
           },
           {
             "id": 5,
@@ -273,12 +273,13 @@
             "description": "在用户成功登录后，生成JWT Access Token和Refresh Token，将其作为响应返回。同时对登录逻辑进行错误响应优化和初步重构，确保安全性和用户体验。",
             "dependencies": [3, 4],
             "details": "使用JWT库生成Access Token和Refresh Token。将Token和基本用户信息（如`user_id`, `username`, `email`）作为JSON响应返回。优化所有错误响应的格式，确保一致性和清晰度。对登录视图中的代码进行初步重构，提高可读性和安全性。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "单元测试验证成功登录后JWT Token的生成和响应格式是否符合预期。集成测试验证完整登录流程的端到端功能，包括Token的获取和使用。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:44:15.161Z"
           }
         ],
-        "updatedAt": "2025-12-07T07:35:39.968Z"
+        "updatedAt": "2025-12-07T07:44:15.161Z"
       },
       {
         "id": "5",
@@ -1169,9 +1170,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T07:35:39.977Z",
+      "lastModified": "2025-12-07T07:44:15.166Z",
       "taskCount": 18,
-      "completedCount": 3,
+      "completedCount": 4,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
