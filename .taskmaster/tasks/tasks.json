@@ -628,7 +628,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/Captcha.spec.ts`和`frontend/src/components/auth/__tests__/PasswordStrength.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
         "priority": "medium",
         "dependencies": ["9"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -636,9 +636,10 @@
             "description": "为 Captcha.vue 组件编写初始测试用例，验证其图片显示、刷新功能和输入框交互，并确保这些测试在组件未实现时预期失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/Captcha.spec.ts` 中创建测试文件。编写测试用例，模拟组件渲染，验证验证码图片是否显示、刷新按钮是否存在且可点击、输入框是否可交互。预期所有测试失败，以遵循测试驱动开发（TDD）的“红”阶段。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写单元测试，模拟组件的挂载和用户交互，断言组件的渲染输出和方法调用。预期测试失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T15:26:54.090Z"
           },
           {
             "id": 2,
@@ -680,7 +681,8 @@
             "testStrategy": "运行所有现有组件测试，确保重构后功能无回归。进行手动UI测试，验证用户体验和响应式设计。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T15:26:54.090Z"
       },
       {
         "id": "11",
@@ -1199,7 +1201,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T15:23:14.765Z",
+      "lastModified": "2025-12-07T15:26:54.096Z",
       "taskCount": 18,
       "completedCount": 9,
       "tags": ["REQ-2025-003-user-login"]
