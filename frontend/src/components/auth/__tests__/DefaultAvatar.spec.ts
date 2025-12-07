@@ -1,3 +1,4 @@
+// REQ-ID: REQ-2025-003-user-login
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DefaultAvatar from '../DefaultAvatar.vue'
