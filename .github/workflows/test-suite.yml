@@ -22,16 +22,6 @@ on:
       - dev
       - main
     types: [opened, synchronize, reopened]
-    outputs:
-      test-results:
-        description: "Test execution results"
-        value: ${{ jobs.test-summary.outputs.results }}
-      coverage-backend:
-        description: "Backend coverage percentage"
-        value: ${{ jobs.unit-tests.outputs.backend-coverage }}
-      coverage-frontend:
-        description: "Frontend coverage percentage"
-        value: ${{ jobs.unit-tests.outputs.frontend-coverage }}
 
 env:
   NODE_VERSION: "20"
