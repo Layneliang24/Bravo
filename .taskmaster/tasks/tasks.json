@@ -221,7 +221,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试登录视图的认证逻辑、失败次数限制、账户锁定机制。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的登录流程，包括成功登录、多次失败导致锁定、锁定期间尝试登录等场景。",
         "priority": "high",
         "dependencies": ["1", "2", "3"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -229,9 +229,10 @@
             "description": "编写单元测试和集成测试用例，覆盖用户登录API的各种场景，包括成功登录、密码错误、验证码错误、账户锁定、未激活邮箱等，预期测试失败。",
             "dependencies": [],
             "details": "在`backend/tests/unit/test_auth_views.py`中为`POST /api/auth/login/`视图编写单元测试，验证认证逻辑、失败次数限制、账户锁定机制。在`backend/tests/integration/test_auth_api.py`中编写集成测试，测试完整的登录流程，包括成功登录、多次失败导致锁定、锁定期间尝试登录等场景。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行这些新编写的测试用例，确保它们在当前未实现功能的情况下失败，以此验证测试用例的有效性。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:24:58.968Z"
           },
           {
             "id": 2,
@@ -239,9 +240,10 @@
             "description": "在`backend/apps/users/serializers.py`中创建`LoginSerializer`，并在`backend/apps/users/views.py`中实现`POST /api/auth/login/`视图的基础结构，处理请求数据解析和初步验证。",
             "dependencies": [1],
             "details": "创建`LoginSerializer`处理`username/email`、`password`、`captcha_id`和`captcha_code`字段的输入验证。在`LoginView`中，设置允许POST请求，并使用`LoginSerializer`进行数据验证。初步验证`username/email`和`password`的格式有效性。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写单元测试验证`LoginSerializer`的数据验证逻辑，以及`LoginView`是否能正确解析请求体并返回预期的验证错误。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:25:08.683Z"
           },
           {
             "id": 3,
@@ -273,7 +275,8 @@
             "testStrategy": "单元测试验证成功登录后JWT Token的生成和响应格式是否符合预期。集成测试验证完整登录流程的端到端功能，包括Token的获取和使用。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T07:25:08.683Z"
       },
       {
         "id": "5",
@@ -1164,7 +1167,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T07:14:22.994Z",
+      "lastModified": "2025-12-07T07:25:08.688Z",
       "taskCount": 18,
       "completedCount": 3,
       "tags": ["REQ-2025-003-user-login"]
