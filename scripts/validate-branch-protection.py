@@ -4,9 +4,12 @@
 确保分支保护规则中要求的所有job名称都在工作流中存在
 """
 
+import json
+import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 import yaml
 
@@ -92,13 +95,132 @@ def parse_all_workflow_jobs() -> Dict[str, Dict]:
     return all_jobs
 
 
-def get_required_checks_from_config() -> List[str]:
-    """
-    从配置文件或文档中获取必需的状态检查
-    这里我们硬编码已知的必需检查，实际应该从GitHub API或配置文件读取
-    """
-    # 这些是从复盘报告中提取的必需检查
-    required_checks = [
+def get_github_repo_info() -> Optional[tuple[str, str]]:
+    """获取GitHub仓库的owner和repo名称"""
+    try:
+        # 尝试从git remote获取
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        remote_url = result.stdout.strip()
+
+        # 解析URL格式: git@github.com:owner/repo.git 或 https://github.com/owner/repo.git
+        if "github.com" in remote_url:
+            if remote_url.startswith("git@"):
+                # git@github.com:owner/repo.git
+                parts = remote_url.split(":")[-1].replace(".git", "").split("/")
+            else:
+                # https://github.com/owner/repo.git
+                parts = (
+                    remote_url.split("github.com/")[-1].replace(".git", "").split("/")
+                )
+
+            if len(parts) >= 2:
+                return (parts[0], parts[1])
+    except (subprocess.SubprocessError, IndexError):
+        pass
+
+    # 尝试从环境变量获取
+    repo_env = os.getenv("GITHUB_REPOSITORY")
+    if repo_env:
+        parts = repo_env.split("/")
+        if len(parts) == 2:
+            return (parts[0], parts[1])
+
+    return None
+
+
+def get_required_checks_from_github_api(branch: str = "dev") -> Optional[List[str]]:
+    """通过GitHub API查询分支保护规则中的必需检查"""
+    repo_info = get_github_repo_info()
+    if not repo_info:
+        return None
+
+    owner, repo = repo_info
+
+    # 方法1: 使用GitHub CLI (gh)
+    try:
+        result = subprocess.run(
+            [
+                "gh",
+                "api",
+                f"repos/{owner}/{repo}/branches/{branch}/protection",
+                "--jq",
+                ".required_status_checks.contexts",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
+        )
+
+        if result.returncode == 0 and result.stdout.strip():
+            contexts = json.loads(result.stdout.strip())
+            if isinstance(contexts, list) and contexts:
+                print(f"📡 从GitHub API获取到 {branch} 分支的 {len(contexts)} 个必需检查")
+                return contexts
+    except (subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
+        pass
+
+    # 方法2: 使用GitHub API (curl + token)
+    github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    if github_token:
+        try:
+            import urllib.error
+            import urllib.request
+
+            url = (
+                f"https://api.github.com/repos/{owner}/{repo}/branches/"
+                f"{branch}/protection"
+            )
+            headers = {
+                "Accept": "application/vnd.github.v3+json",
+                "Authorization": f"token {github_token}",
+            }
+
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode())
+                contexts = data.get("required_status_checks", {}).get("contexts", [])
+                if contexts:
+                    print(f"📡 从GitHub API获取到 {branch} 分支的 {len(contexts)} 个必需检查")
+                    return contexts
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            json.JSONDecodeError,
+            KeyError,
+        ):
+            pass
+
+    return None
+
+
+def get_required_checks_from_config_file() -> Optional[List[str]]:
+    """从配置文件读取必需检查"""
+    config_file = Path(".github/branch-protection-checks.yaml")
+    if config_file.exists():
+        try:
+            with open(config_file, encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+                checks = config.get("required_checks", [])
+                if checks:
+                    print(f"📄 从配置文件读取到 {len(checks)} 个必需检查")
+                    return checks
+        except (yaml.YAMLError, KeyError):
+            pass
+
+    return None
+
+
+def get_required_checks_fallback() -> List[str]:
+    """回退方案：硬编码的必需检查（仅在没有其他方法时使用）"""
+    print("⚠️  无法从GitHub API或配置文件获取，使用硬编码的必需检查")
+    print("💡 建议：配置GITHUB_TOKEN环境变量或创建.github/branch-protection-checks.yaml")
+    return [
         "Push Validation Pipeline / run-tests (backend-unit-tests)",
         "Push Validation Pipeline / run-tests (frontend-unit-tests)",
         "Test Suite Component / unit-tests (backend)",
@@ -109,7 +231,35 @@ def get_required_checks_from_config() -> List[str]:
         "Pre-Release Quality Check / basic-checks (lint-frontend)",
     ]
 
-    return required_checks
+
+def get_required_checks(branches: List[str] = None) -> List[str]:
+    """
+    获取必需的状态检查，按优先级：
+    1. GitHub API查询（dev和main分支）
+    2. 配置文件
+    3. 硬编码回退
+    """
+    if branches is None:
+        branches = ["dev", "main"]
+
+    all_checks = set()
+
+    # 优先从GitHub API获取
+    for branch in branches:
+        api_checks = get_required_checks_from_github_api(branch)
+        if api_checks:
+            all_checks.update(api_checks)
+
+    if all_checks:
+        return sorted(list(all_checks))
+
+    # 回退到配置文件
+    config_checks = get_required_checks_from_config_file()
+    if config_checks:
+        return config_checks
+
+    # 最后回退到硬编码
+    return get_required_checks_fallback()
 
 
 def validate_branch_protection():
@@ -124,8 +274,8 @@ def validate_branch_protection():
         print("⚠️  未找到工作流文件")
         return True
 
-    # 2. 获取必需的检查
-    required_checks = get_required_checks_from_config()
+    # 2. 获取必需的检查（从GitHub API、配置文件或回退方案）
+    required_checks = get_required_checks()
 
     # 3. 构建所有可用的job名称（包含工作流名称前缀）
     all_available_jobs = set()
