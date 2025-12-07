@@ -171,6 +171,9 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "preview_login": "10/min",  # 登录预验证API：每分钟10次
+    },
 }
 
 # JWT 配置

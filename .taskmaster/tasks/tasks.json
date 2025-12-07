@@ -494,10 +494,10 @@
             "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/preview/`视图的基础框架，包括邮箱密码验证、用户头像信息（`avatar_url`, `default_avatar`, `avatar_letter`）的获取和响应。",
             "dependencies": [1, 1],
             "details": "创建`PreviewLoginAPIView`，处理`POST`请求。验证邮箱和密码是否匹配（不执行实际登录）。根据用户`avatar`字段判断`avatar_url`，如果为空则根据`display_name`或`username`的首字母生成`avatar_letter`。返回`display_name`、`avatar_url`、`default_avatar`、`avatar_letter`和`valid`字段。无论成功失败，均返回200状态码。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行Subtask 1中编写的单元测试，确保基本逻辑和响应符合预期，所有测试通过。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T07:51:40.380Z"
+            "updatedAt": "2025-12-07T08:00:50.877Z"
           },
           {
             "id": 3,
@@ -505,9 +505,10 @@
             "description": "在`backend/apps/users/throttling.py`中实现自定义频率限制，并将其应用于登录预验证API，限制同一IP每分钟最多10次请求。",
             "dependencies": [2],
             "details": "创建`PreviewLoginThrottle`类，继承Django REST Framework的`SimpleRateThrottle`，配置`scope`和`rate`为每分钟10次。将此限制器应用于`PreviewLoginAPIView`。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行Subtask 1中编写的频率限制集成测试，模拟多次请求，验证频率限制是否生效，以及在限制下的HTTP状态码和响应是否符合预期。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:07:07.467Z"
           },
           {
             "id": 4,
@@ -515,9 +516,10 @@
             "description": "将验证码保护机制集成到`POST /api/auth/preview/`接口中，确保在执行预验证逻辑前先验证验证码的有效性。",
             "dependencies": [2, 2],
             "details": "在`PreviewLoginAPIView`中添加验证码验证逻辑。从请求中获取`captcha_id`和`captcha_code`，调用后端验证码验证工具进行验证。验证失败时返回相应的错误信息（例如400 Bad Request或自定义错误响应）。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "扩展Subtask 1的单元测试，增加验证码失效、验证码错误、缺少验证码参数等场景的测试用例，确保验证码保护机制正常工作。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:07:14.716Z"
           },
           {
             "id": 5,
@@ -525,12 +527,13 @@
             "description": "审查并优化登录预验证API的逻辑和响应结构，确保代码的安全性、性能和可维护性。进行必要的代码重构。",
             "dependencies": [1, 2, 3, 4],
             "details": "检查`PreviewLoginAPIView`中的代码，确保异常处理完善，响应数据结构符合最佳实践。优化数据库查询，减少不必要的开销。清理冗余代码，提高代码可读性。确保所有安全最佳实践得到遵循。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行所有相关的单元测试和集成测试，确保重构没有引入新的bug，并且所有功能依然正常工作。进行代码审查以确保代码质量和安全性。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:07:21.694Z"
           }
         ],
-        "updatedAt": "2025-12-07T07:51:40.380Z"
+        "updatedAt": "2025-12-07T08:07:21.694Z"
       },
       {
         "id": "9",
@@ -1173,7 +1176,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T07:51:40.384Z",
+      "lastModified": "2025-12-07T08:07:21.696Z",
       "taskCount": 18,
       "completedCount": 4,
       "tags": ["REQ-2025-003-user-login"]

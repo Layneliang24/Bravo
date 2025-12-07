@@ -9,6 +9,7 @@ from apps.users.serializers import (
     UserLoginSerializer,
     UserRegisterSerializer,
 )
+from apps.users.throttling import PreviewLoginThrottle
 from apps.users.utils import generate_captcha, store_captcha
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -399,6 +400,7 @@ class PreviewAPIView(APIView):
     """登录预验证API视图（用于获取用户头像）"""
 
     permission_classes = []  # 允许匿名访问
+    throttle_classes = [PreviewLoginThrottle]  # 频率限制：每分钟10次
 
     def _get_avatar_letter(self, user):
         """
