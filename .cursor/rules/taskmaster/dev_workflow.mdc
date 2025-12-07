@@ -359,6 +359,23 @@ Taskmaster supports multiple AI coding assistant rule sets that can be configure
 - This provides greater flexibility in organizing and refining your task structure as project understanding evolves
 - This is especially useful when dealing with potential merge conflicts arising from teams creating tasks on separate branches. Solve these conflicts very easily by moving your tasks and keeping theirs.
 
+## Compliance Warning Handling (Critical)
+
+**⚠️ 关键原则：所有合规警告都必须主动修复，不得等待用户指出**
+
+Before committing code, you MUST:
+
+1. **Check pre-commit output** for compliance warnings (⚠️ warnings)
+2. **Immediately fix all warnings**:
+   - Missing REQ-ID → Add REQ-ID comment to file header
+   - Missing test files → Create corresponding test files
+   - PRD status issues → Fix PRD status
+   - Other warnings → Fix according to the warning message
+3. **Verify fixes** by re-running pre-commit checks
+4. **Never ignore warnings** - they indicate compliance issues that need attention
+
+See @`compliance_workflow.mdc` for detailed compliance warning handling procedures.
+
 ## Iterative Subtask Implementation
 
 Once a task has been broken down into subtasks using `expand_task` or similar methods, follow this iterative process for implementation:
