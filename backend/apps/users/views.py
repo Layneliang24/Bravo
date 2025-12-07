@@ -15,8 +15,10 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
@@ -500,3 +502,98 @@ class PreviewAPIView(BaseCaptchaView):
             {"valid": True, "user": user_data},
             status=status.HTTP_200_OK,
         )
+
+
+class TokenRefreshAPIView(APIView):
+    """JWT Token刷新API视图"""
+
+    permission_classes = []  # 允许匿名访问（只需要refresh token）
+
+    def post(self, request):
+        """
+        刷新JWT Token
+
+        请求体:
+            refresh: Refresh Token字符串
+
+        返回:
+            Response: 包含新的access token的JSON响应
+        """
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"refresh": ["此字段是必需的。"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # 验证并刷新token
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            # 返回新的access token
+            return Response(
+                {"access": access_token},
+                status=status.HTTP_200_OK,
+            )
+
+        except (TokenError, InvalidToken):
+            return Response(
+                {"error": "无效的refresh token", "code": "INVALID_REFRESH_TOKEN"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception:
+            return Response(
+                {"error": "Token刷新失败", "code": "REFRESH_FAILED"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class LogoutAPIView(APIView):
+    """用户登出API视图"""
+
+    permission_classes = [IsAuthenticated]  # 需要认证
+
+    def post(self, request):
+        """
+        用户登出
+
+        请求头:
+            Authorization: Bearer <access_token>
+
+        返回:
+            Response: 包含成功消息的JSON响应
+        """
+        # 检查是否已认证
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"error": "未授权", "code": "UNAUTHORIZED"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            # 获取refresh token（如果提供）
+            refresh_token = request.data.get("refresh_token")
+
+            if refresh_token:
+                try:
+                    # 将refresh token加入黑名单（如果配置了黑名单）
+                    refresh = RefreshToken(refresh_token)
+                    refresh.blacklist()
+                except (TokenError, InvalidToken):
+                    # 如果refresh token无效，忽略（不影响登出）
+                    pass
+
+            # 返回成功消息
+            return Response(
+                {"message": "登出成功"},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception:
+            # 即使出错，也返回成功（避免泄露错误信息）
+            return Response(
+                {"message": "登出成功"},
+                status=status.HTTP_200_OK,
+            )
