@@ -103,10 +103,11 @@
             "title": "实现验证码生成工具函数",
             "description": "在`backend/apps/users/utils.py`中实现图形验证码的生成逻辑，包括字符生成、图片绘制和Base64编码。",
             "dependencies": [1],
-            "details": "使用Pillow库在`backend/apps/users/utils.py`中实现一个函数，该函数能生成一个4位数字+字母混合的随机验证码字符串。同时，利用Pillow绘制包含干扰线和噪点的验证码图片，并将图片Base64编码为字符串返回。该函数应返回验证码文本和Base64编码的图片。",
-            "status": "pending",
+            "details": "使用Pillow库在`backend/apps/users/utils.py`中实现一个函数，该函数能生成一个4位数字+字母混合的随机验证码字符串。同时，利用Pillow绘制包含干扰线和噪点的验证码图片，并将图片Base64编码为字符串返回。该函数应返回验证码文本和Base64编码的图片。\n<info added on 2025-12-07T05:48:33.154Z>\n✅ 子任务2.2已完成。\n\n完成内容：\n- 创建了backend/apps/users/utils.py文件。\n- 实现了generate_captcha()函数：\n  * 生成4位数字+字母混合验证码。\n  * 使用Pillow生成120x40像素图片。\n  * 添加3条干扰线和50个噪点。\n  * Base64编码为PNG格式（data:image/png;base64,...）。\n  * 返回UUID格式的captcha_id。\n- 实现了store_captcha()函数：\n  * 将验证码答案存储到Redis。\n  * Key格式：captcha:{captcha_id}。\n  * 默认过期时间：300秒（5分钟）。\n- 实现了verify_captcha()函数：\n  * 验证验证码答案是否正确。\n  * 不区分大小写比较。\n  * 验证成功后自动删除验证码（防止重复使用）。\n\n测试结果：所有15个测试通过 ✅\n\n提交信息：\n- commit: 待确认\n- 文件：backend/apps/users/utils.py\n\n注意：子任务2.3（Redis存储与过期管理）已在此实现中完成。\n</info added on 2025-12-07T05:48:33.154Z>",
+            "status": "done",
             "testStrategy": "运行子任务1中编写的单元测试，验证验证码生成函数是否能正确生成指定格式的字符和Base64编码的图片，并检查图片质量和干扰效果。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:48:46.838Z"
           },
           {
             "id": 3,
@@ -114,9 +115,10 @@
             "description": "实现将生成的验证码答案存储到Redis中，并设置5分钟的过期时间。",
             "dependencies": [1, 2],
             "details": "在`backend/apps/users/utils.py`或独立的Redis服务模块中，实现将验证码答案存储到Redis的函数。Redis Key的格式应为`captcha:{session_id}`，其中`session_id`是一个唯一的标识符。设置验证码在Redis中的过期时间为5分钟。同时，实现从Redis获取和删除验证码答案的函数。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行子任务1中编写的单元测试，验证验证码是否能正确存储到Redis，Key格式是否正确，过期时间是否生效，以及能否正确从Redis中检索和删除验证码。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:48:57.949Z"
           },
           {
             "id": 4,
@@ -139,7 +141,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T05:44:02.142Z"
+        "updatedAt": "2025-12-07T05:48:57.949Z"
       },
       {
         "id": "3",
@@ -1154,7 +1156,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T05:44:02.146Z",
+      "lastModified": "2025-12-07T05:48:57.954Z",
       "taskCount": 18,
       "completedCount": 1,
       "tags": ["REQ-2025-003-user-login"]
