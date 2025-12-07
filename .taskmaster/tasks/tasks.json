@@ -24,11 +24,11 @@
             "title": "编写数据库模型扩展的单元测试",
             "description": "根据PRD要求，编写单元测试用例，验证User模型新增字段、EmailVerification和PasswordReset模型的创建及其字段、索引是否符合预期。预期这些测试在模型未实现时会失败。",
             "dependencies": [],
-            "details": "在`backend/tests/unit/test_auth_models.py`中创建测试文件。编写测试用例以验证`User`模型是否包含`is_email_verified`, `email_verified_at`, `last_login`, `failed_login_attempts`, `locked_until`, `avatar`, `display_name`字段。编写测试用例以验证`EmailVerification`和`PasswordReset`模型是否存在，并包含所有指定字段（`id`, `user_id`, `email`, `token`, `expires_at`, `verified_at`/`used_at`, `created_at`）。验证`User`表的`email`, `username`, `is_email_verified`字段以及`EmailVerification`和`PasswordReset`表的`token`字段的唯一索引是否被正确定义。",
-            "status": "in-progress",
+            "details": "在`backend/tests/unit/test_auth_models.py`中创建测试文件。编写测试用例以验证`User`模型是否包含`is_email_verified`, `email_verified_at`, `last_login`, `failed_login_attempts`, `locked_until`, `avatar`, `display_name`字段。编写测试用例以验证`EmailVerification`和`PasswordReset`模型是否存在，并包含所有指定字段（`id`, `user_id`, `email`, `token`, `expires_at`, `verified_at`/`used_at`, `created_at`）。验证`User`表的`email`, `username`, `is_email_verified`字段以及`EmailVerification`和`PasswordReset`表的`token`字段的唯一索引是否被正确定义。\n<info added on 2025-12-07T05:00:57.336Z>\n✅ 子任务1.1已完成\n\n完成内容：\n- 创建了backend/tests/unit/test_auth_models.py测试文件\n- 编写了20个测试用例，覆盖：\n  * User模型7个新字段的测试（is_email_verified, email_verified_at, last_login, failed_login_attempts, locked_until, avatar, display_name）\n  * User表的唯一索引测试（email, username, is_email_verified）\n  * EmailVerification模型的5个测试（模型存在、字段、外键、唯一索引）\n  * PasswordReset模型的5个测试（模型存在、字段、外键、唯一索引）\n\n测试状态：\n- 按预期失败（TDD红阶段），模型尚未实现\n- 8个ERROR：EmailVerification和PasswordReset模型不存在\n- 2个FAIL：模型不存在测试失败\n- 其他测试因为User模型字段未实现而失败\n\n提交信息：\n- commit: e99bbbb\n- 文件：backend/tests/unit/test_auth_models.py (389行)\n\n下一步：子任务1.2 - 扩展User模型字段\n</info added on 2025-12-07T05:00:57.336Z>",
+            "status": "done",
             "testStrategy": "运行新编写的单元测试，确保它们在模型未实现时失败，验证测试用例的有效性。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T04:54:03.620Z"
+            "updatedAt": "2025-12-07T05:01:10.281Z"
           },
           {
             "id": 2,
@@ -36,9 +36,10 @@
             "description": "在`backend/apps/users/models.py`中扩展现有的`User`模型，添加所有指定的新字段。",
             "dependencies": [1],
             "details": "修改`backend/apps/users/models.py`文件，在`User`模型中添加`is_email_verified` (BooleanField, default=False), `email_verified_at` (DateTimeField, nullable), `last_login` (DateTimeField, nullable), `failed_login_attempts` (IntegerField, default=0), `locked_until` (DateTimeField, nullable), `avatar` (ImageField/URLField, nullable), `display_name` (CharField, nullable)字段。确保字段类型和默认值设置正确。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "暂无特定测试策略，此步骤主要关注代码实现。后续将通过运行Subtask 1的测试来验证。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T05:01:38.485Z"
           },
           {
             "id": 3,
@@ -71,7 +72,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T04:54:03.620Z"
+        "updatedAt": "2025-12-07T05:01:38.485Z"
       },
       {
         "id": "2",
@@ -1148,7 +1149,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T04:54:03.624Z",
+      "lastModified": "2025-12-07T05:01:38.491Z",
       "taskCount": 18,
       "completedCount": 0,
       "tags": ["REQ-2025-003-user-login"]
