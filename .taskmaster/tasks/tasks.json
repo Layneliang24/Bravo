@@ -475,7 +475,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_preview.py`单元测试，测试预验证逻辑在不同账号密码和头像情况下的响应。编写`backend/tests/integration/test_preview_throttling.py`集成测试，测试预验证API的频率限制是否生效，以及在限制下的行为。",
         "priority": "high",
         "dependencies": ["1", "2", "4"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -483,9 +483,10 @@
             "description": "编写针对登录预验证API (`POST /api/auth/preview/`) 的单元测试，覆盖正确/错误账号密码、有/无头像用户、以及频率限制的场景，预期测试失败。",
             "dependencies": [1],
             "details": "在`backend/tests/unit/test_auth_preview.py`中创建测试用例，模拟`POST /api/auth/preview/`请求。测试用例应验证不同输入下的预期响应结构、`valid`字段、`display_name`、`avatar_url`、`default_avatar`和`avatar_letter`字段。同时，编写频率限制的集成测试，预期在未实现功能前测试失败。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "编写单元测试，确保测试用例能够捕获未来实现中的错误。编写集成测试，验证频率限制的预期行为。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:51:30.359Z"
           },
           {
             "id": 2,
@@ -493,9 +494,10 @@
             "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/preview/`视图的基础框架，包括邮箱密码验证、用户头像信息（`avatar_url`, `default_avatar`, `avatar_letter`）的获取和响应。",
             "dependencies": [1, 1],
             "details": "创建`PreviewLoginAPIView`，处理`POST`请求。验证邮箱和密码是否匹配（不执行实际登录）。根据用户`avatar`字段判断`avatar_url`，如果为空则根据`display_name`或`username`的首字母生成`avatar_letter`。返回`display_name`、`avatar_url`、`default_avatar`、`avatar_letter`和`valid`字段。无论成功失败，均返回200状态码。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行Subtask 1中编写的单元测试，确保基本逻辑和响应符合预期，所有测试通过。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:51:40.380Z"
           },
           {
             "id": 3,
@@ -527,7 +529,8 @@
             "testStrategy": "运行所有相关的单元测试和集成测试，确保重构没有引入新的bug，并且所有功能依然正常工作。进行代码审查以确保代码质量和安全性。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T07:51:40.380Z"
       },
       {
         "id": "9",
@@ -1170,7 +1173,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T07:44:15.166Z",
+      "lastModified": "2025-12-07T07:51:40.384Z",
       "taskCount": 18,
       "completedCount": 4,
       "tags": ["REQ-2025-003-user-login"]
