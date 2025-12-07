@@ -153,17 +153,18 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试注册视图的输入验证、密码哈希、用户创建、Token生成等逻辑。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的注册流程，包括成功注册、重复注册、密码强度不足、验证码错误等场景。",
         "priority": "high",
         "dependencies": ["1", "2"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
             "title": "编写注册API的集成测试用例 (Red)",
             "description": "根据需求，在`backend/tests/integration/test_auth_api.py`中为注册API (`POST /api/auth/register/`) 编写初始的集成测试用例，覆盖成功、邮箱已存在、密码弱、验证码错误等场景。这些测试在实现功能前预期会失败。",
             "dependencies": [],
-            "details": "创建测试类 `TestRegisterAPI`。编写测试方法 `test_register_success`, `test_register_email_exists`, `test_register_weak_password`, `test_register_invalid_captcha`。使用 Django REST Framework 的 `APIClient` 来模拟请求。",
-            "status": "pending",
+            "details": "创建测试类 `TestRegisterAPI`。编写测试方法 `test_register_success`, `test_register_email_exists`, `test_register_weak_password`, `test_register_invalid_captcha`。使用 Django REST Framework 的 `APIClient` 来模拟请求。\n<info added on 2025-12-07T06:54:57.393Z>\n✅ 子任务3.1已完成\n\n完成内容：\n- 创建了backend/tests/integration/test_register_api.py测试文件\n- 包含11个测试用例，覆盖以下场景：\n  * 成功注册：验证响应格式、用户创建、JWT Token生成\n  * 邮箱已存在：验证返回400错误\n  * 弱密码：密码太短、只有数字、只有字母\n  * 密码不匹配：password和password_confirm不一致\n  * 验证码错误：错误答案、不存在的ID、过期验证码\n  * 缺少字段：缺少email、password、captcha_id等\n  * 用户字段验证：is_email_verified、密码哈希等\n  * JWT Token格式验证\n- 测试结果：11个测试全部失败（符合TDD Red阶段）\n\n提交信息：\n- commit: 待确认\n- 文件：backend/tests/integration/test_register_api.py\n</info added on 2025-12-07T06:54:57.393Z>",
+            "status": "done",
             "testStrategy": "运行这些初始测试，并确认它们都因功能未实现而失败。这是测试驱动开发（TDD）的第一步。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T06:55:13.068Z"
           },
           {
             "id": 2,
@@ -205,7 +206,8 @@
             "testStrategy": "运行所有相关的单元测试和集成测试，并检查测试覆盖率报告，确保新代码的覆盖率达到项目标准（例如80%以上）。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T06:55:13.068Z"
       },
       {
         "id": "4",
@@ -1158,7 +1160,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T06:04:57.562Z",
+      "lastModified": "2025-12-07T06:55:13.075Z",
       "taskCount": 18,
       "completedCount": 2,
       "tags": ["REQ-2025-003-user-login"]
