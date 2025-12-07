@@ -443,9 +443,10 @@
             "description": "定义`PasswordReset`模型用于存储密码重置Token及其状态。创建Celery任务，负责异步发送包含密码重置链接的电子邮件。",
             "dependencies": [],
             "details": "在`backend/apps/users/models.py`中创建`PasswordReset`模型，包含`user`外键、`token`字段、`expires_at`字段、`is_used`布尔字段和`created_at`字段。在`backend/apps/users/tasks.py`中定义一个Celery任务，接收用户邮箱和重置链接，使用Django的`send_mail`或类似功能发送邮件。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "单元测试`PasswordReset`模型的创建、查询和更新操作。手动测试Celery任务，确保邮件能够被正确发送到指定的邮箱。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T10:16:10.613Z"
           },
           {
             "id": 3,
@@ -478,7 +479,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T10:10:08.401Z"
+        "updatedAt": "2025-12-07T10:16:10.613Z"
       },
       {
         "id": "8",
@@ -1195,7 +1196,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T10:10:08.407Z",
+      "lastModified": "2025-12-07T10:16:10.618Z",
       "taskCount": 18,
       "completedCount": 8,
       "tags": ["REQ-2025-003-user-login"]
