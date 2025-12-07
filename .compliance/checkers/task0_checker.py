@@ -486,6 +486,53 @@ class Task0Checker:
                     found = True
                     break
 
+            # 如果目录不存在，检查git中是否有该目录下的文件（merge commit阶段）
+            if not found:
+                import subprocess
+
+                git_dirs = ["/app", str(Path.cwd()), str(Path.cwd().parent)]
+                for git_dir in git_dirs:
+                    git_path = Path(git_dir) / ".git"
+                    if git_path.exists():
+                        try:
+                            # 检查git中是否有该目录下的文件
+                            result = subprocess.run(
+                                [
+                                    "git",
+                                    "ls-tree",
+                                    "-r",
+                                    "--name-only",
+                                    "HEAD",
+                                    f"{dir_path}",
+                                ],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                                cwd=git_dir,
+                            )
+                            # 也检查暂存区
+                            if result.returncode != 0 or not result.stdout.strip():
+                                result = subprocess.run(
+                                    [
+                                        "git",
+                                        "diff",
+                                        "--cached",
+                                        "--name-only",
+                                        "--diff-filter=A",
+                                        f"{dir_path}",
+                                    ],
+                                    capture_output=True,
+                                    text=True,
+                                    check=False,
+                                    cwd=git_dir,
+                                )
+                            if result.stdout.strip():
+                                # git中有该目录下的文件，说明目录会在提交后存在
+                                found = True
+                                break
+                        except (FileNotFoundError, subprocess.SubprocessError):
+                            continue
+
             if not found:
                 missing_dirs.append(dir_path)
 

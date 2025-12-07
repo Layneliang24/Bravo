@@ -149,8 +149,19 @@ restore_protection() {
         fi
     fi
 
-    # 3. 更新保护状态记录
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | RESTORED | $reason" > "$PROTECTION_CONFIG"
+    # 3. 更新保护状态记录（合并过程中跳过，避免冲突）
+    # 检测是否正在合并：检查 .git/MERGE_HEAD 或 .git/CHERRY_PICK_HEAD 是否存在
+    local merge_head="$PROJECT_ROOT/.git/MERGE_HEAD"
+    local cherry_pick_head="$PROJECT_ROOT/.git/CHERRY_PICK_HEAD"
+    local rebase_apply="$PROJECT_ROOT/.git/rebase-apply"
+    local rebase_merge="$PROJECT_ROOT/.git/rebase-merge"
+
+    if [[ -f "$merge_head" ]] || [[ -f "$cherry_pick_head" ]] || [[ -d "$rebase_apply" ]] || [[ -d "$rebase_merge" ]]; then
+        log_message "⏸️  SKIP | 检测到正在合并/变基操作，跳过更新 .git-protection-config 以避免冲突"
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | RESTORED | $reason" > "$PROTECTION_CONFIG"
+        log_message "✅ RESTORE | 保护状态记录已更新"
+    fi
 
     # 4. 发出警告
     echo ""
