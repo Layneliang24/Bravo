@@ -424,7 +424,7 @@
         "testStrategy": "编写`backend/tests/integration/test_password_reset.py`集成测试，测试发送重置邮件API是否触发Celery任务，验证链接是否正确生成。测试密码重置API，验证有效Token和过期/无效Token的响应，以及密码更新是否成功。",
         "priority": "high",
         "dependencies": ["1", "2", "5"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -432,9 +432,10 @@
             "description": "编写集成测试用例，覆盖发送密码重置邮件API (`POST /api/auth/password/reset/send/`) 和重置密码API (`POST /api/auth/password/reset/`) 的各种场景，包括成功发送邮件、重置链接生成、密码成功重置、Token过期或无效、邮箱不存在等。预期这些测试在API未实现时会失败。",
             "dependencies": [],
             "details": "在`backend/tests/integration/test_password_reset.py`中创建测试文件，使用Django测试客户端模拟API请求。测试`POST /api/auth/password/reset/send/`接口，验证其响应和是否触发Celery任务。测试`POST /api/auth/password/reset/`接口，验证有效和无效Token的响应，以及密码更新的正确性。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行新编写的集成测试，确认它们在当前API未实现的情况下按预期失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T10:10:08.401Z"
           },
           {
             "id": 2,
@@ -476,7 +477,8 @@
             "testStrategy": "手动测试邮件发送，检查邮件内容和格式。通过模拟错误场景（如数据库连接失败、Celery服务不可用）来验证错误处理机制。运行所有集成测试，确保优化没有引入回归问题。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-07T10:10:08.401Z"
       },
       {
         "id": "8",
@@ -1193,7 +1195,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T10:03:29.594Z",
+      "lastModified": "2025-12-07T10:10:08.407Z",
       "taskCount": 18,
       "completedCount": 8,
       "tags": ["REQ-2025-003-user-login"]
