@@ -386,9 +386,10 @@
             "description": "定义Celery任务来处理异步邮件发送逻辑，并创建用于邮箱验证的邮件模板。",
             "dependencies": [2],
             "details": "在`backend/apps/users/tasks.py`中定义`send_verification_email` Celery任务。任务应接收用户邮箱和验证链接作为参数。创建`email_verification.html`或`email_verification.txt`邮件模板，包含动态生成的验证链接。配置Django的邮件后端和Celery。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "通过手动触发Celery任务或运行Subtask 2的测试，验证邮件是否能被正确发送，邮件内容和链接是否符合预期。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T09:52:45.728Z"
           },
           {
             "id": 4,
@@ -411,7 +412,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T09:46:04.779Z"
+        "updatedAt": "2025-12-07T09:52:45.728Z"
       },
       {
         "id": "7",
@@ -1190,7 +1191,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T09:46:04.784Z",
+      "lastModified": "2025-12-07T09:52:45.732Z",
       "taskCount": 18,
       "completedCount": 7,
       "tags": ["REQ-2025-003-user-login"]

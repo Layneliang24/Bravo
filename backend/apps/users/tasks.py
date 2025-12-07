@@ -4,7 +4,8 @@
 
 from celery import shared_task
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 
 @shared_task
@@ -25,30 +26,29 @@ def send_email_verification(user_id, email, token):
     # 邮件主题
     subject = "请验证您的邮箱"
 
-    # 邮件内容（纯文本）
-    message = f"""
-    您好！
+    # 渲染HTML模板
+    html_content = render_to_string(
+        "users/emails/email_verification.html",
+        {"verification_url": verification_url},
+    )
 
-    感谢您注册我们的服务。请点击以下链接验证您的邮箱：
-
-    {verification_url}
-
-    此链接将在24小时内有效。
-
-    如果您没有注册此账户，请忽略此邮件。
-
-    此致
-    敬礼
-    """
+    # 渲染纯文本模板
+    text_content = render_to_string(
+        "users/emails/email_verification.txt",
+        {"verification_url": verification_url},
+    )
 
     # 获取发件人邮箱（如果未设置则使用默认值）
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@bravo.com")
 
-    # 发送邮件
-    send_mail(
+    # 创建邮件消息（支持HTML和纯文本）
+    msg = EmailMultiAlternatives(
         subject=subject,
-        message=message,
+        body=text_content,  # 纯文本版本
         from_email=from_email,
-        recipient_list=[email],
-        fail_silently=False,
+        to=[email],
     )
+    msg.attach_alternative(html_content, "text/html")  # HTML版本
+
+    # 发送邮件
+    msg.send(fail_silently=False)
