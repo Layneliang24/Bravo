@@ -2,7 +2,7 @@
 # REQ-ID: REQ-2025-003-user-login
 """用户认证相关视图"""
 
-from apps.users.serializers import UserRegisterSerializer
+from apps.users.serializers import UserLoginSerializer, UserRegisterSerializer
 from apps.users.utils import generate_captcha, store_captcha
 from django.core.cache import cache
 from rest_framework import status
@@ -217,3 +217,100 @@ class RegisterAPIView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class LoginAPIView(APIView):
+    """用户登录API视图"""
+
+    permission_classes = []  # 允许匿名访问
+
+    def post(self, request):
+        """
+        用户登录
+
+        请求体:
+            {
+                "email": "user@example.com" 或 "username",
+                "password": "SecurePass123",
+                "captcha_id": "uuid",
+                "captcha_answer": "A3B7"
+            }
+
+        返回:
+            Response: 包含user信息、token、refresh_token的JSON响应
+        """
+        serializer = UserLoginSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            # 处理错误响应格式
+            errors = serializer.errors
+
+            # 检查验证码错误
+            if "captcha_answer" in errors:
+                captcha_error = errors["captcha_answer"]
+                if isinstance(captcha_error, list) and any(
+                    "验证码错误" in str(e) for e in captcha_error
+                ):
+                    return Response(
+                        {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # 检查认证错误
+            if "error" in errors:
+                error_data = errors["error"]
+                if isinstance(error_data, list) and any(
+                    "用户不存在" in str(e) or "密码错误" in str(e) for e in error_data
+                ):
+                    return Response(
+                        {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                # 如果是字典格式
+                if isinstance(error_data, dict) and "error" in error_data:
+                    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+
+            # 其他错误直接返回
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 获取验证后的用户对象
+        user = serializer.validated_data["user"]
+
+        # 检查账户是否被锁定（暂时跳过，将在子任务4.4实现）
+        # TODO: 实现账户锁定检查
+
+        # 检查邮箱是否已验证（暂时跳过，将在子任务4.3实现）
+        # TODO: 实现邮箱验证检查
+
+        # 处理登录失败次数（暂时跳过，将在子任务4.4实现）
+        # TODO: 实现登录失败次数跟踪
+
+        # 生成JWT Token
+        access_token, refresh_token = self._generate_tokens(user)
+
+        # 返回响应
+        return Response(
+            {
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email,
+                    "is_email_verified": user.is_email_verified,
+                },
+                "token": access_token,
+                "refresh_token": refresh_token,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def _generate_tokens(self, user):
+        """
+        为用户生成JWT Token
+
+        Args:
+            user: User实例
+
+        Returns:
+            tuple: (access_token, refresh_token)
+        """
+        refresh = RefreshToken.for_user(user)
+        return str(refresh.access_token), str(refresh)

@@ -109,3 +109,63 @@ class UserRegisterSerializer(serializers.Serializer):
         )
 
         return user
+
+
+class UserLoginSerializer(serializers.Serializer):
+    """用户登录序列化器"""
+
+    email = serializers.CharField(
+        required=True, help_text="用户邮箱或用户名"
+    )  # 使用CharField支持邮箱和用户名
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="用户密码",
+    )
+    captcha_id = serializers.CharField(required=True, help_text="验证码ID")
+    captcha_answer = serializers.CharField(required=True, help_text="验证码答案")
+
+    def validate(self, attrs):
+        """验证验证码和用户认证"""
+        # 验证验证码
+        captcha_id = attrs.get("captcha_id")
+        captcha_answer = attrs.get("captcha_answer")
+
+        if not verify_captcha(captcha_id, captcha_answer):
+            raise serializers.ValidationError(
+                {"captcha_answer": "验证码错误"}, code="INVALID_CAPTCHA"
+            )
+
+        # 验证用户和密码
+        email_or_username = attrs.get("email")
+        password = attrs.get("password")
+
+        # 尝试通过邮箱或用户名查找用户
+        user = None
+        if "@" in email_or_username:
+            # 通过邮箱查找
+            try:
+                user = User.objects.get(email=email_or_username)
+            except User.DoesNotExist:
+                pass
+        else:
+            # 通过用户名查找
+            try:
+                user = User.objects.get(username=email_or_username)
+            except User.DoesNotExist:
+                pass
+
+        if user is None:
+            raise serializers.ValidationError(
+                {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"}
+            )
+
+        # 验证密码
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"}
+            )
+
+        # 将用户对象添加到validated_data中，供视图使用
+        attrs["user"] = user
+        return attrs
