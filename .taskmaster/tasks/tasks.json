@@ -454,9 +454,10 @@
             "description": "实现`POST /api/auth/password/reset/send/`接口。该接口应验证请求中的邮箱是否存在，生成唯一的密码重置Token，将其存储到`PasswordReset`表中，并调用Celery任务异步发送包含重置链接的邮件。此接口需集成验证码保护。",
             "dependencies": [1, 2],
             "details": "在`backend/apps/users/views.py`中创建`PasswordResetSendView`。使用序列化器验证邮箱和验证码。如果邮箱存在，生成一个安全的、有时效性的Token，保存到`PasswordReset`模型实例中。构建重置链接（例如：`frontend_url/reset-password?token={token}`）。调用之前定义的Celery任务发送邮件。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行Subtask 1中编写的集成测试，确保此API的成功和失败场景（如邮箱不存在、验证码错误）均能正确处理，并且Celery任务被正确触发。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T10:42:27.892Z"
           },
           {
             "id": 4,
@@ -479,7 +480,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T10:16:10.613Z"
+        "updatedAt": "2025-12-07T10:42:27.892Z"
       },
       {
         "id": "8",
@@ -1196,7 +1197,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T10:16:10.618Z",
+      "lastModified": "2025-12-07T10:42:27.896Z",
       "taskCount": 18,
       "completedCount": 8,
       "tags": ["REQ-2025-003-user-login"]

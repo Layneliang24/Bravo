@@ -10,6 +10,7 @@ from apps.users.views import (
     PreviewAPIView,
     RegisterAPIView,
     SendEmailVerificationAPIView,
+    SendPasswordResetAPIView,
     TokenRefreshAPIView,
     VerifyEmailAPIView,
 )
@@ -34,5 +35,10 @@ urlpatterns = [
         "email/verify/<str:token>/",
         VerifyEmailAPIView.as_view(),
         name="email-verify",
+    ),
+    path(
+        "password/reset/send/",
+        SendPasswordResetAPIView.as_view(),
+        name="password-reset-send",
     ),
 ]

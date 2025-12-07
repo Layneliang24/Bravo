@@ -221,3 +221,25 @@ class SendEmailVerificationSerializer(serializers.Serializer):
         """验证邮箱是否属于当前用户"""
         # 这个验证会在视图中进行，因为需要访问request.user
         return value
+
+
+class SendPasswordResetSerializer(serializers.Serializer):
+    """发送密码重置邮件序列化器"""
+
+    email = serializers.EmailField(required=True, help_text="用户邮箱地址")
+    captcha_id = serializers.CharField(required=True, help_text="验证码ID")
+    captcha_answer = serializers.CharField(required=True, help_text="验证码答案")
+
+    def validate(self, attrs):
+        """验证验证码"""
+        from apps.users.utils import verify_captcha
+
+        captcha_id = attrs.get("captcha_id")
+        captcha_answer = attrs.get("captcha_answer")
+
+        if not verify_captcha(captcha_id, captcha_answer):
+            raise serializers.ValidationError(
+                {"captcha_answer": "验证码错误"}, code="INVALID_CAPTCHA"
+            )
+
+        return attrs

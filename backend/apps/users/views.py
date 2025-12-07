@@ -5,16 +5,21 @@
 import secrets
 from datetime import timedelta
 
-from apps.users.models import EmailVerification
+from apps.users.models import EmailVerification, PasswordReset
 from apps.users.serializers import (
     PreviewLoginSerializer,
     SendEmailVerificationSerializer,
+    SendPasswordResetSerializer,
     UserLoginSerializer,
     UserRegisterSerializer,
 )
-from apps.users.tasks import send_email_verification
+from apps.users.tasks import send_email_verification, send_password_reset_email
 from apps.users.throttling import PreviewLoginThrottle
-from apps.users.utils import generate_captcha, store_captcha
+from apps.users.utils import (
+    find_user_by_email_or_username,
+    generate_captcha,
+    store_captcha,
+)
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
@@ -752,5 +757,89 @@ class VerifyEmailAPIView(APIView):
 
             return Response(
                 {"error": "邮箱验证失败，请稍后重试", "code": "VERIFICATION_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class SendPasswordResetAPIView(BaseCaptchaView):
+    """发送密码重置邮件API视图"""
+
+    permission_classes = []  # 允许匿名访问
+
+    def post(self, request):
+        """
+        发送密码重置邮件
+
+        请求体:
+            {
+                "email": "user@example.com",
+                "captcha_id": "uuid",
+                "captcha_answer": "A3B7"
+            }
+
+        返回:
+            Response: 包含成功消息的JSON响应
+        """
+        try:
+            serializer = SendPasswordResetSerializer(data=request.data)
+            if not serializer.is_valid():
+                # 处理验证码错误
+                captcha_error = self._handle_captcha_error(serializer.errors)
+                if captcha_error:
+                    return captcha_error
+
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            email = serializer.validated_data["email"]
+
+            # 查找用户（防止用户枚举攻击：无论邮箱是否存在都返回成功）
+            user = find_user_by_email_or_username(email)
+
+            # 如果用户存在，生成重置token并发送邮件
+            if user:
+                # 生成唯一的重置token
+                token = secrets.token_urlsafe(32)
+
+                # 设置过期时间（24小时）
+                expires_at = timezone.now() + timedelta(hours=24)
+
+                # 创建或更新PasswordReset记录
+                reset, created = PasswordReset.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "token": token,
+                        "expires_at": expires_at,
+                        "used_at": None,  # 重置使用状态
+                    },
+                )
+
+                # 调用Celery任务发送邮件
+                send_password_reset_email.delay(
+                    user_id=user.id,
+                    email=email,
+                    token=token,
+                )
+
+            # 无论用户是否存在，都返回成功消息（防止用户枚举攻击）
+            return Response(
+                {"message": "密码重置邮件已发送，请查收"},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"发送密码重置邮件时发生错误: email={request.data.get('email')}, " f"error={str(e)}",
+                exc_info=True,
+            )
+
+            return Response(
+                {"error": "发送重置邮件失败，请稍后重试", "code": "EMAIL_SEND_FAILED"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
