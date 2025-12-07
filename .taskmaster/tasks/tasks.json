@@ -636,10 +636,10 @@
             "description": "为 Captcha.vue 组件编写初始测试用例，验证其图片显示、刷新功能和输入框交互，并确保这些测试在组件未实现时预期失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/Captcha.spec.ts` 中创建测试文件。编写测试用例，模拟组件渲染，验证验证码图片是否显示、刷新按钮是否存在且可点击、输入框是否可交互。预期所有测试失败，以遵循测试驱动开发（TDD）的“红”阶段。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写单元测试，模拟组件的挂载和用户交互，断言组件的渲染输出和方法调用。预期测试失败。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T15:26:54.090Z"
+            "updatedAt": "2025-12-07T15:33:14.722Z"
           },
           {
             "id": 2,
@@ -647,9 +647,10 @@
             "description": "在 `frontend/src/components/auth/` 目录下创建 `Captcha.vue` 组件，并实现其核心功能，使其通过已编写的测试。",
             "dependencies": [1],
             "details": "在 `frontend/src/components/auth/Captcha.vue` 中实现组件。组件应包含一个显示验证码图片的 `img` 标签、一个用于刷新验证码的按钮和一个用于输入验证码的文本框。实现加载状态，例如在图片加载时显示占位符。确保组件通过在子任务1中编写的所有测试。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行子任务1中编写的测试，确保所有测试通过。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T15:33:25.958Z"
           },
           {
             "id": 3,
@@ -682,7 +683,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T15:26:54.090Z"
+        "updatedAt": "2025-12-07T15:33:25.958Z"
       },
       {
         "id": "11",
@@ -1201,7 +1202,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T15:26:54.096Z",
+      "lastModified": "2025-12-07T15:33:25.960Z",
       "taskCount": 18,
       "completedCount": 9,
       "tags": ["REQ-2025-003-user-login"]
