@@ -85,6 +85,91 @@ class RegisterAPIView(APIView):
 
     permission_classes = []  # 允许匿名访问
 
+    def _format_error_response(self, errors):
+        """
+        格式化错误响应，统一错误格式为 {error: str, code: str}
+
+        Args:
+            errors: DRF序列化器错误字典
+
+        Returns:
+            Response: 格式化的错误响应，如果无法格式化则返回None
+        """
+        # 检查验证码错误
+        if "captcha_answer" in errors:
+            captcha_error = errors["captcha_answer"]
+            if isinstance(captcha_error, list) and any(
+                "验证码错误" in str(e) for e in captcha_error
+            ):
+                return Response(
+                    {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # 检查邮箱错误
+        if "email" in errors:
+            email_error = errors["email"]
+            if isinstance(email_error, list) and any(
+                "该邮箱已被注册" in str(e) for e in email_error
+            ):
+                return Response(
+                    {"error": "该邮箱已被注册", "code": "EMAIL_EXISTS"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if isinstance(email_error, dict) and "error" in email_error:
+                return Response(email_error, status=status.HTTP_400_BAD_REQUEST)
+
+        # 检查密码错误
+        if "password" in errors:
+            password_error = errors["password"]
+            if isinstance(password_error, list):
+                if any(
+                    "至少" in str(e)
+                    or "Ensure this field has at least" in str(e)
+                    or "密码必须" in str(e)
+                    or "密码长度" in str(e)
+                    for e in password_error
+                ):
+                    return Response(
+                        {
+                            "error": password_error[0] if password_error else "密码不符合要求",
+                            "code": "WEAK_PASSWORD",
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            if isinstance(password_error, dict) and "error" in password_error:
+                return Response(password_error, status=status.HTTP_400_BAD_REQUEST)
+
+        # 检查密码不匹配错误
+        if "password_confirm" in errors or "non_field_errors" in errors:
+            mismatch_error = errors.get("password_confirm") or errors.get(
+                "non_field_errors"
+            )
+            if isinstance(mismatch_error, list) and any(
+                "密码" in str(e) and "不一致" in str(e) for e in mismatch_error
+            ):
+                return Response(
+                    {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if isinstance(mismatch_error, dict) and "error" in mismatch_error:
+                return Response(mismatch_error, status=status.HTTP_400_BAD_REQUEST)
+
+        return None
+
+    def _generate_tokens(self, user):
+        """
+        为用户生成JWT Token
+
+        Args:
+            user: User实例
+
+        Returns:
+            tuple: (access_token, refresh_token)
+        """
+        refresh = RefreshToken.for_user(user)
+        return str(refresh.access_token), str(refresh)
+
     def post(self, request):
         """
         用户注册
@@ -104,85 +189,19 @@ class RegisterAPIView(APIView):
         serializer = UserRegisterSerializer(data=request.data)
 
         if not serializer.is_valid():
-            # 处理错误响应格式
-            errors = serializer.errors
+            # 尝试格式化错误响应
+            formatted_response = self._format_error_response(serializer.errors)
+            if formatted_response:
+                return formatted_response
 
-            # 检查是否有验证码错误
-            if "captcha_answer" in errors:
-                captcha_error = errors["captcha_answer"]
-                if isinstance(captcha_error, list) and any(
-                    "验证码错误" in str(e) for e in captcha_error
-                ):
-                    return Response(
-                        {"error": "验证码错误", "code": "INVALID_CAPTCHA"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            # 检查是否有email错误（邮箱已存在）
-            if "email" in errors:
-                email_error = errors["email"]
-                if isinstance(email_error, list) and any(
-                    "该邮箱已被注册" in str(e) for e in email_error
-                ):
-                    return Response(
-                        {"error": "该邮箱已被注册", "code": "EMAIL_EXISTS"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                # 如果是字典格式（从validate_email返回的）
-                if isinstance(email_error, dict) and "error" in email_error:
-                    return Response(email_error, status=status.HTTP_400_BAD_REQUEST)
-
-            # 检查是否有password错误（弱密码）
-            if "password" in errors:
-                password_error = errors["password"]
-                if isinstance(password_error, list):
-                    # 检查是否是密码长度或强度错误
-                    if any(
-                        "至少" in str(e)
-                        or "Ensure this field has at least" in str(e)
-                        or "密码必须" in str(e)
-                        or "密码长度" in str(e)
-                        for e in password_error
-                    ):
-                        return Response(
-                            {
-                                "error": password_error[0]
-                                if password_error
-                                else "密码不符合要求",
-                                "code": "WEAK_PASSWORD",
-                            },
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                # 如果是字典格式（从validate_password返回的）
-                if isinstance(password_error, dict) and "error" in password_error:
-                    return Response(password_error, status=status.HTTP_400_BAD_REQUEST)
-
-            # 检查是否有password_confirm错误（密码不匹配）
-            if "password_confirm" in errors or "non_field_errors" in errors:
-                mismatch_error = errors.get("password_confirm") or errors.get(
-                    "non_field_errors"
-                )
-                if isinstance(mismatch_error, list) and any(
-                    "密码" in str(e) and "不一致" in str(e) for e in mismatch_error
-                ):
-                    return Response(
-                        {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                # 如果是字典格式（从validate返回的）
-                if isinstance(mismatch_error, dict) and "error" in mismatch_error:
-                    return Response(mismatch_error, status=status.HTTP_400_BAD_REQUEST)
-
-            # 其他错误直接返回
+            # 如果无法格式化，直接返回原始错误
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 创建用户
         user = serializer.save()
 
         # 生成JWT Token
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+        access_token, refresh_token = self._generate_tokens(user)
 
         # 返回响应
         return Response(

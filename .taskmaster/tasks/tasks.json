@@ -153,7 +153,7 @@
         "testStrategy": "编写`backend/tests/unit/test_auth_views.py`单元测试，测试注册视图的输入验证、密码哈希、用户创建、Token生成等逻辑。编写`backend/tests/integration/test_auth_api.py`集成测试，测试完整的注册流程，包括成功注册、重复注册、密码强度不足、验证码错误等场景。",
         "priority": "high",
         "dependencies": ["1", "2"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -183,10 +183,10 @@
             "description": "在 `backend/apps/users/views.py` 中创建处理 `POST /api/auth/register/` 请求的视图。该视图将使用 `UserRegisterSerializer` 来验证输入数据，验证验证码，并创建新用户。",
             "dependencies": [2],
             "details": "创建一个基于 `generics.GenericAPIView` 的视图，并设置 `serializer_class = UserRegisterSerializer`。在 `post` 方法中，首先验证序列化器数据。然后，调用一个独立的工具函数来验证验证码的正确性（依赖任务2）。如果所有验证通过，则创建新用户实例，并使用 `user.set_password()` 方法对密码进行哈希处理后保存。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "在实现过程中，逐步运行之前编写的集成测试，观察它们从失败到部分通过的过程。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T07:03:42.104Z"
+            "updatedAt": "2025-12-07T07:11:48.962Z"
           },
           {
             "id": 4,
@@ -194,9 +194,10 @@
             "description": "在用户成功注册并创建后，为新用户生成 JWT Access Token 和 Refresh Token，并将其包含在成功的API响应中。",
             "dependencies": [3],
             "details": "在注册视图成功创建用户的逻辑分支中，使用 `rest_framework_simplejwt.tokens.RefreshToken.for_user(user)` 方法为新用户生成 tokens。将 `access` 和 `refresh` tokens 以及用户基本信息（如邮箱、用户ID）组织成一个字典，并作为 `Response` 返回，HTTP状态码为 `201 Created`。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "修改 `test_register_success` 集成测试，断言成功的响应中包含 `access` 和 `refresh` 两个键，并且其值不为空。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:12:28.274Z"
           },
           {
             "id": 5,
@@ -204,12 +205,13 @@
             "description": "优化注册序列化器和视图的代码结构，改善错误处理逻辑，确保代码清晰可维护，并最终确保所有在第一步中编写的测试用例都能成功通过。",
             "dependencies": [4],
             "details": "审查 `UserRegisterSerializer` 和注册视图的代码，将复杂的逻辑（如密码强度验证）提取到独立的工具函数中。统一API的错误响应格式。完整运行 `pytest` 命令，确认 `test_auth_api.py` 和 `test_auth_serializers.py` 中的所有测试用例都通过。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行所有相关的单元测试和集成测试，并检查测试覆盖率报告，确保新代码的覆盖率达到项目标准（例如80%以上）。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T07:14:22.985Z"
           }
         ],
-        "updatedAt": "2025-12-07T07:03:42.104Z"
+        "updatedAt": "2025-12-07T07:14:22.985Z"
       },
       {
         "id": "4",
@@ -1162,9 +1164,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T07:03:42.107Z",
+      "lastModified": "2025-12-07T07:14:22.994Z",
       "taskCount": 18,
-      "completedCount": 2,
+      "completedCount": 3,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
