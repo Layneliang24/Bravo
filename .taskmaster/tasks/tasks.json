@@ -289,7 +289,7 @@
         "testStrategy": "编写`backend/tests/integration/test_auth_api.py`集成测试，测试Token刷新机制是否正常工作，登出后Access Token是否失效。",
         "priority": "medium",
         "dependencies": ["4"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -308,10 +308,10 @@
             "description": "在Django项目中安装并配置`djangorestframework-simplejwt`库，使其能够处理JWT Token的生成、验证和刷新机制。",
             "dependencies": [],
             "details": "在`backend/requirements.txt`中添加`djangorestframework-simplejwt`依赖，并运行`pip install -r requirements.txt`。在`backend/config/settings.py`中配置`REST_FRAMEWORK`以使用`simplejwt`的认证类，并配置`SIMPLE_JWT`设置，例如Access Token和Refresh Token的生命周期。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "通过简单的单元测试或手动验证，确保`simplejwt`的配置正确，例如尝试生成一个Token并验证其结构。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T08:34:41.852Z"
+            "updatedAt": "2025-12-07T08:57:15.111Z"
           },
           {
             "id": 3,
@@ -319,9 +319,10 @@
             "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/token/refresh/`视图，该视图接收一个Refresh Token，并返回一个新的Access Token和Refresh Token。",
             "dependencies": [2],
             "details": "在`backend/apps/users/views.py`中创建一个新的视图类，继承自`TokenRefreshView`或自定义视图，处理传入的Refresh Token。验证Refresh Token的有效性，并生成新的Access Token和Refresh Token作为响应。确保API端点在`backend/apps/users/urls.py`中正确注册。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`id=1`中编写的Token刷新相关集成测试，确保API功能正常，并处理过期Refresh Token的场景。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:57:15.159Z"
           },
           {
             "id": 4,
@@ -329,9 +330,10 @@
             "description": "在`backend/apps/users/views.py`中实现`POST /api/auth/logout/`视图，该视图使当前用户的Refresh Token失效，从而实现登出功能。",
             "dependencies": [2],
             "details": "在`backend/apps/users/views.py`中创建一个新的视图类，继承自`TokenBlacklistView`或自定义视图。该视图应接收Refresh Token（或通过认证头获取），并将其加入黑名单，使其失效。确保API端点在`backend/apps/users/urls.py`中正确注册。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`id=1`中编写的登出相关集成测试，验证登出功能是否正常，以及登出后Access Token是否失效。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-07T08:57:15.195Z"
           },
           {
             "id": 5,
@@ -344,7 +346,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T08:34:41.852Z"
+        "updatedAt": "2025-12-07T08:57:27.889Z"
       },
       {
         "id": "6",
@@ -576,10 +578,10 @@
             "description": "在 `frontend/src/components/auth/` 目录下创建并实现 `FloatingInput.vue` 组件，包括标签上浮动画、错误状态显示和图标支持，并确保通过所有相关测试。",
             "dependencies": [1],
             "details": "使用 Vue 3 Composition API 实现组件逻辑。利用 Tailwind CSS 或自定义 CSS 实现样式。确保输入框聚焦时标签上浮，输入内容后标签保持上浮。根据 `error` prop 显示错误样式和消息。支持通过 prop 传入图标。运行并确保通过 `FloatingInput` 的所有测试。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行并确保通过在子任务1中编写的所有单元测试。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-07T08:31:46.544Z"
+            "updatedAt": "2025-12-07T09:03:02.188Z"
           },
           {
             "id": 4,
@@ -602,7 +604,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-07T08:31:46.544Z"
+        "updatedAt": "2025-12-07T09:03:02.188Z"
       },
       {
         "id": "10",
@@ -1183,9 +1185,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-07T08:34:41.856Z",
+      "lastModified": "2025-12-07T09:03:02.192Z",
       "taskCount": 18,
-      "completedCount": 5,
+      "completedCount": 6,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
