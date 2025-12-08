@@ -981,10 +981,10 @@
             "description": "在`frontend/src/stores/auth.ts`的`AuthState`中添加`preview`状态，并实现`previewLogin` action。该action将调用后端`/api/auth/preview/`接口，并根据接口响应更新`preview`状态。同时，编写store单元测试，验证`previewLogin` action的调用和`preview`状态的更新。",
             "dependencies": [],
             "details": "修改`frontend/src/stores/auth.ts`，添加`preview`状态（例如，一个包含用户数据或错误信息的对象）。实现`previewLogin`异步action，使用`axios`或其他HTTP客户端调用`/api/auth/preview/`接口。处理API响应，更新`preview`状态。编写`frontend/src/stores/__tests__/auth.spec.ts`，模拟API调用，验证`previewLogin` action的逻辑和状态更新。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写`frontend/src/stores/__tests__/auth.spec.ts`，使用`vi.spyOn`或`mock-service-worker`模拟`/api/auth/preview/`接口的成功和失败响应，验证`previewLogin` action是否正确调用API并更新`preview`状态。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:26:05.230Z"
+            "updatedAt": "2025-12-08T13:32:03.659Z"
           },
           {
             "id": 3,
@@ -992,9 +992,10 @@
             "description": "在`LoginForm.vue`中，监听密码输入框的失焦事件或停止输入500ms后触发`previewLogin` action。将`UserPreview.vue`组件集成到`LoginForm`的表单上方，并根据`auth` store的`preview`状态显示用户预览信息。同时，编写集成测试，验证`LoginForm`中预验证的触发和`UserPreview`的显示。",
             "dependencies": [1, 2, 12],
             "details": "修改`frontend/src/components/auth/LoginForm.vue`。在密码输入框上添加事件监听器（例如`@blur`或使用`debounce`处理`@input`事件），在满足条件时调用`auth` store的`previewLogin` action。在`LoginForm`模板中引入并使用`UserPreview`组件，通过props将`auth` store中的`preview`状态传递给`UserPreview`。编写集成测试，验证`LoginForm`的交互逻辑。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`或新的集成测试文件，模拟用户在密码输入框中输入并失焦，验证`previewLogin` action是否被触发，以及`UserPreview`组件是否根据模拟的`preview`状态正确显示。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:31:40.307Z"
           },
           {
             "id": 4,
@@ -1017,7 +1018,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T13:26:05.230Z"
+        "updatedAt": "2025-12-08T13:32:03.659Z"
       },
       {
         "id": "16",
@@ -1226,7 +1227,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:26:05.234Z",
+      "lastModified": "2025-12-08T13:32:03.662Z",
       "taskCount": 18,
       "completedCount": 13,
       "tags": ["REQ-2025-003-user-login"]

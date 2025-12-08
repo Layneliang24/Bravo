@@ -243,6 +243,71 @@ describe('LoginForm', () => {
     expect(submitButton.text()).toBe('登录中...')
   })
 
+  it('应该渲染UserPreview组件', async () => {
+    const store = useAuthStore()
+    store.preview = {
+      valid: true,
+      user: {
+        display_name: 'Preview User',
+        avatar_url: null,
+        avatar_letter: 'P',
+      },
+    }
+
+    const routerPush = vi.fn()
+    const mockRouter = { push: routerPush }
+    ;(useRouter as any).mockReturnValue(mockRouter)
+
+    const wrapper = mount(LoginForm)
+
+    await wrapper.vm.$nextTick()
+
+    const userPreview = wrapper.findComponent({ name: 'UserPreview' })
+    expect(userPreview.exists()).toBe(true)
+  })
+
+  it('密码失焦时应触发预验证调用previewLogin', async () => {
+    const store = useAuthStore()
+    const routerPush = vi.fn()
+    const mockRouter = { push: routerPush }
+    ;(useRouter as any).mockReturnValue(mockRouter)
+
+    const previewSpy = vi.spyOn(store, 'previewLogin').mockResolvedValue({
+      valid: true,
+      user: {
+        display_name: 'Preview User',
+        avatar_url: null,
+        avatar_letter: 'P',
+      },
+    })
+
+    const wrapper = mount(LoginForm)
+
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInput = wrapper.find('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('preview@example.com')
+    await passwordInput.setValue('previewpass')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'preview-captcha-id',
+      captcha_answer: '9999',
+    })
+    await wrapper.vm.$nextTick()
+
+    await passwordInput.trigger('blur')
+    await wrapper.vm.$nextTick()
+
+    expect(previewSpy).toHaveBeenCalledWith({
+      email: 'preview@example.com',
+      password: 'previewpass',
+      captcha_id: 'preview-captcha-id',
+      captcha_answer: '9999',
+    })
+    expect(form.exists()).toBe(true)
+  })
+
   it('应该正确处理验证码更新事件', async () => {
     const wrapper = mount(LoginForm)
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })

@@ -1,5 +1,12 @@
 <!-- REQ-ID: REQ-2025-003-user-login -->
 <template>
+  <UserPreview
+    v-if="previewVisible"
+    :display-name="previewUser?.display_name || ''"
+    :avatar-url="previewUser?.avatar_url || null"
+    :avatar-letter="previewUser?.avatar_letter || ''"
+    :loading="previewLoading"
+  />
   <form @submit.prevent="handleSubmit" class="login-form">
     <FloatingInput
       v-model="formData.email"
@@ -13,6 +20,7 @@
       label="密码"
       type="password"
       :error="errors.password"
+      @blur="handlePasswordBlur"
       required
     />
     <div v-if="errors.captcha_answer" class="error-message">
@@ -31,11 +39,12 @@
 
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
+import UserPreview from './UserPreview.vue'
 
 interface FormData {
   email: string
@@ -53,9 +62,14 @@ const formData = reactive<FormData>({
 
 const errors = reactive<Partial<Record<keyof FormData, string>>>({})
 const isSubmitting = ref(false)
+const previewLoading = ref(false)
 const captchaRef = ref<InstanceType<typeof Captcha> | null>(null)
 const router = useRouter()
 const authStore = useAuthStore()
+const previewUser = computed(() => authStore.preview?.user || null)
+const previewVisible = computed(
+  () => previewLoading.value || !!previewUser.value
+)
 
 const handleCaptchaUpdate = (data: {
   captcha_id: string
@@ -64,6 +78,7 @@ const handleCaptchaUpdate = (data: {
   formData.captcha_id = data.captcha_id
   formData.captcha_answer = data.captcha_answer
   errors.captcha_answer = ''
+  triggerPreview()
 }
 
 // 邮箱格式验证正则
@@ -141,6 +156,35 @@ const handleLoginError = async (error: any) => {
   const errorMessage = error?.message || '登录失败，请稍后重试'
   errors.captcha_answer = errorMessage
   await refreshCaptcha()
+}
+
+const triggerPreview = async () => {
+  if (
+    !formData.email ||
+    !formData.password ||
+    !formData.captcha_id ||
+    !formData.captcha_answer
+  ) {
+    return
+  }
+
+  previewLoading.value = true
+  try {
+    await authStore.previewLogin({
+      email: formData.email,
+      password: formData.password,
+      captcha_id: formData.captcha_id,
+      captcha_answer: formData.captcha_answer,
+    })
+  } catch (error) {
+    console.error('Preview login failed:', error)
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+const handlePasswordBlur = () => {
+  triggerPreview()
 }
 
 const handleSubmit = async () => {
