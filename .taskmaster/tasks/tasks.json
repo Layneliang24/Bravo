@@ -908,7 +908,7 @@
             "description": "在`auth` store中添加或修改`sendPasswordReset` action，使其能够调用后端API发送密码重置邮件。这是前端表单提交的基础。",
             "dependencies": [11],
             "details": "在`frontend/src/store/auth.js`中定义`sendPasswordReset` action。该action应接收用户邮箱和验证码作为参数，并调用后端`/api/auth/password/reset/request/`接口。需要处理API响应，包括成功和错误情况。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "单元测试`auth` store的`sendPasswordReset` action，模拟API调用并验证状态更新和错误处理逻辑。",
             "parentId": "undefined"
           },
