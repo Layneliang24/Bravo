@@ -1052,10 +1052,10 @@
             "description": "在`auth` store中实现`sendEmailVerification`和`verifyEmail`两个action，用于与后端API进行交互，处理邮箱验证的发送和验证逻辑。",
             "dependencies": [],
             "details": "在`frontend/src/stores/auth.js`中实现`sendEmailVerification` action，该action负责调用后端发送验证邮件的API。同时，实现`verifyEmail` action，该action负责调用后端验证邮箱的API，并根据API响应更新用户状态或显示结果。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写单元测试或集成测试，验证`sendEmailVerification`和`verifyEmail`这两个action能够正确地调用后端API并处理响应数据，包括成功和失败场景。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T15:25:00.347Z"
+            "updatedAt": "2025-12-08T15:28:21.124Z"
           },
           {
             "id": 3,
@@ -1088,7 +1088,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T15:25:00.347Z"
+        "updatedAt": "2025-12-08T15:28:21.124Z"
       },
       {
         "id": "17",
@@ -1235,7 +1235,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T15:25:00.348Z",
+      "lastModified": "2025-12-08T15:28:21.127Z",
       "taskCount": 18,
       "completedCount": 15,
       "tags": ["REQ-2025-003-user-login"]
