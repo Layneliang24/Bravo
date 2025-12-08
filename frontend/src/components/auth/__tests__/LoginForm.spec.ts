@@ -39,4 +39,11 @@ describe('LoginForm', () => {
 
     expect(submitButton.exists()).toBe(true)
   })
+
+  it('应该包含验证码组件', () => {
+    const wrapper = mount(LoginForm)
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    expect(captchaComponent.exists()).toBe(true)
+  })
 })

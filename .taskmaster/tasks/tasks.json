@@ -772,10 +772,10 @@
             "description": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`文件，并集成`FloatingInput`组件用于邮箱和密码输入字段。",
             "dependencies": [9],
             "details": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`。引入`FloatingInput`组件，并将其用于邮箱和密码的输入字段。确保组件能够正确渲染，并且`FloatingInput`的基本功能（如标签上浮）正常工作。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`页面能够加载，并且邮箱和密码输入框（由`FloatingInput`提供）正常显示和交互。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T12:46:31.871Z"
+            "updatedAt": "2025-12-08T12:51:16.284Z"
           },
           {
             "id": 2,
@@ -783,9 +783,10 @@
             "description": "在`LoginForm.vue`中集成`Captcha`组件，并构建包含邮箱、密码和验证码输入的基础HTML表单结构。",
             "dependencies": [1],
             "details": "在`LoginForm.vue`中引入并集成`Captcha`组件。构建一个完整的`<form>`元素，包含邮箱输入（使用`FloatingInput`）、密码输入（使用`FloatingInput`）、验证码输入（使用`Captcha`）以及一个提交按钮。实现一个空的表单提交方法，为后续逻辑集成做准备。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`中`Captcha`组件能够正确渲染，表单的整体布局和所有输入字段、提交按钮都可见且可交互。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:51:27.510Z"
           },
           {
             "id": 3,
@@ -818,7 +819,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T12:46:31.871Z"
+        "updatedAt": "2025-12-08T12:51:27.510Z"
       },
       {
         "id": "13",
@@ -1213,7 +1214,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:46:31.876Z",
+      "lastModified": "2025-12-08T12:51:27.514Z",
       "taskCount": 18,
       "completedCount": 11,
       "tags": ["REQ-2025-003-user-login"]
