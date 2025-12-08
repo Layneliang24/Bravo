@@ -1,13 +1,39 @@
 ---
 req_id: REQ-2025-003-user-login
 title: REQ-2025-003-user-login 文件追溯图
-type: documentation
 status: approved
+priority: medium
+type: documentation
+created_at: 2025-12-08T16:55:00Z
+updated_at: 2025-12-08T16:55:00Z
+author: AI Assistant
+test_files: []
+implementation_files: []
+api_contract: ""
+deletable: false
 ---
 
 # REQ-2025-003-user-login 文件追溯图
 
-本文档展示了REQ-2025-003-user-login需求的所有相关文件及其追溯关系。
+## 功能概述
+
+本文档展示了REQ-2025-003-user-login需求的所有相关文件及其追溯关系，使用Mermaid格式可视化展示文件之间的依赖关系和追溯链。
+
+## 用户故事
+
+作为开发人员或项目管理者，我希望能够快速了解REQ-2025-003-user-login需求涉及的所有文件及其关系，以便进行代码审查、维护和追溯。
+
+## 验收标准
+
+- ✅ 追溯图包含所有实现文件（后端和前端）
+- ✅ 追溯图包含所有测试文件（单元测试、集成测试、E2E测试）
+- ✅ 追溯图展示文件之间的依赖关系
+- ✅ 追溯图使用Mermaid格式，可在支持Mermaid的Markdown查看器中渲染
+- ✅ 文档包含文件统计信息
+
+## 测试用例
+
+无需测试用例，本文档为技术文档。
 
 ## Mermaid追溯图
 
