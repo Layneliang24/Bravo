@@ -696,7 +696,7 @@
         "testStrategy": "编写`frontend/src/stores/__tests__/auth.spec.ts`单元测试，模拟API请求，验证store的状态管理和action的正确性。",
         "priority": "high",
         "dependencies": ["5", "6", "7", "10"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -715,10 +715,10 @@
             "description": "在Pinia中定义`auth` store的初始状态接口(`AuthState`)和动作接口(`AuthActions`)，并设置store的基本结构。",
             "dependencies": [1],
             "details": "在`frontend/src/stores/auth.ts`中定义`AuthState`接口，包含`user`, `token`, `refreshToken`, `isAuthenticated`, `captcha`等状态字段及其类型。定义`AuthActions`接口，声明`login`, `register`, `logout`, `refreshToken`, `fetchCaptcha`, `refreshCaptcha`等异步action的签名。初始化`auth` store，设置其`id`和初始状态。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行`auth.spec.ts`中的测试，确保store的基本结构和初始状态能够通过测试。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T12:14:17.070Z"
+            "updatedAt": "2025-12-08T12:39:41.530Z"
           },
           {
             "id": 3,
@@ -737,9 +737,10 @@
             "description": "在`auth` store中实现Token刷新、获取验证码和刷新验证码的异步动作，并处理相关状态更新。",
             "dependencies": [3, 2, 6, 10],
             "details": "在`frontend/src/stores/auth.ts`中实现`refreshToken` action，使用`refreshToken`调用后端API获取新的`token`和`refreshToken`，并更新存储和状态。实现`fetchCaptcha` action，调用后端API获取验证码图片和ID，更新`captcha`状态。实现`refreshCaptcha` action，调用后端API刷新验证码。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`auth.spec.ts`中针对`refreshToken`、`fetchCaptcha`、`refreshCaptcha`的测试用例，模拟API响应，验证action的正确性、状态更新和Token刷新逻辑。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:42:49.741Z"
           },
           {
             "id": 5,
@@ -747,12 +748,13 @@
             "description": "对`auth` store进行重构，优化其模块化结构和错误处理机制，确保状态管理清晰、代码健壮。",
             "dependencies": [4],
             "details": "审查`auth` store的代码，确保逻辑分离清晰，例如将API调用逻辑封装到单独的服务层。实现统一的错误处理机制，捕获API请求中的错误，并向用户提供友好的反馈。考虑使用Pinia插件或中间件来增强store的功能。确保所有状态更新都是响应式的。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行所有`auth.spec.ts`测试，确保重构后功能不受影响。手动测试或编写集成测试，验证错误处理机制是否按预期工作，例如API返回错误时是否正确捕获并处理。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:45:06.406Z"
           }
         ],
-        "updatedAt": "2025-12-08T12:31:36.810Z"
+        "updatedAt": "2025-12-08T12:45:06.406Z"
       },
       {
         "id": "12",
@@ -762,7 +764,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的登录流程。",
         "priority": "high",
         "dependencies": ["11"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -770,9 +772,10 @@
             "description": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`文件，并集成`FloatingInput`组件用于邮箱和密码输入字段。",
             "dependencies": [9],
             "details": "在`frontend/src/components/auth/`目录下创建`LoginForm.vue`。引入`FloatingInput`组件，并将其用于邮箱和密码的输入字段。确保组件能够正确渲染，并且`FloatingInput`的基本功能（如标签上浮）正常工作。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`页面能够加载，并且邮箱和密码输入框（由`FloatingInput`提供）正常显示和交互。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:46:31.871Z"
           },
           {
             "id": 2,
@@ -814,7 +817,8 @@
             "testStrategy": "运行所有编写的组件测试，确保它们全部通过。进行端到端测试，验证完整的登录流程，包括成功登录、错误凭据、验证码错误等场景。确保重构后的代码没有引入新的缺陷。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-08T12:46:31.871Z"
       },
       {
         "id": "13",
@@ -1209,9 +1213,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:31:36.814Z",
+      "lastModified": "2025-12-08T12:46:31.876Z",
       "taskCount": 18,
-      "completedCount": 10,
+      "completedCount": 11,
       "tags": ["REQ-2025-003-user-login"]
     }
   },

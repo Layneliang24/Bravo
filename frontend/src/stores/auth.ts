@@ -135,6 +135,17 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = null
   }
 
+  // 统一的错误处理函数
+  const handleApiError = (error: any, defaultMessage: string): never => {
+    if (error?.response?.data?.error) {
+      throw new Error(error.response.data.error)
+    }
+    if (error?.response) {
+      throw new Error(defaultMessage)
+    }
+    throw new Error('网络错误，请稍后重试')
+  }
+
   // Actions
   const login = async (
     credentials: LoginCredentials
@@ -156,12 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return response.data
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(
-          error.response.data?.error || '登录失败，请检查账号密码'
-        )
-      }
-      throw new Error('网络错误，请稍后重试')
+      handleApiError(error, '登录失败，请检查账号密码')
     }
   }
 
@@ -185,12 +191,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return response.data
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(
-          error.response.data?.error || '注册失败，请检查输入信息'
-        )
-      }
-      throw new Error('网络错误，请稍后重试')
+      handleApiError(error, '注册失败，请检查输入信息')
     }
   }
 
@@ -227,25 +228,28 @@ export const useAuthStore = defineStore('auth', () => {
 
       const newToken = response.data.access || response.data.token || ''
 
-      if (newToken) {
-        // 只更新access token，refresh token保持不变
-        localStorage.setItem(TOKEN_KEY, newToken)
-        token.value = newToken
-        // refreshToken保持不变，不需要更新
-      } else {
+      if (!newToken) {
         throw new Error('Token刷新失败：响应中缺少token')
       }
+
+      // 只更新access token，refresh token保持不变
+      localStorage.setItem(TOKEN_KEY, newToken)
+      token.value = newToken
     } catch (error: any) {
       // 刷新失败，清除所有状态
       user.value = null
       clearTokens()
 
-      if (error.response) {
-        throw new Error(
-          error.response.data?.error || 'Token刷新失败，请重新登录'
-        )
-      }
-      throw new Error('网络错误，请稍后重试')
+      handleApiError(error, 'Token刷新失败，请重新登录')
+    }
+  }
+
+  // 处理验证码响应的辅助函数
+  const parseCaptchaResponse = (data: CaptchaResponse): Captcha => {
+    return {
+      id: data.captcha_id,
+      image: data.captcha_image,
+      expiresIn: data.expires_in,
     }
   }
 
@@ -254,20 +258,12 @@ export const useAuthStore = defineStore('auth', () => {
       const response =
         await getApiClient().get<CaptchaResponse>('/api/auth/captcha/')
 
-      const captchaData: Captcha = {
-        id: response.data.captcha_id,
-        image: response.data.captcha_image,
-        expiresIn: response.data.expires_in,
-      }
-
+      const captchaData = parseCaptchaResponse(response.data)
       captcha.value = captchaData
       return captchaData
     } catch (error: any) {
       captcha.value = null
-      if (error.response) {
-        throw new Error(error.response.data?.error || '获取验证码失败')
-      }
-      throw new Error('网络错误，请稍后重试')
+      handleApiError(error, '获取验证码失败')
     }
   }
 
@@ -277,20 +273,12 @@ export const useAuthStore = defineStore('auth', () => {
         '/api/auth/captcha/refresh/'
       )
 
-      const captchaData: Captcha = {
-        id: response.data.captcha_id,
-        image: response.data.captcha_image,
-        expiresIn: response.data.expires_in,
-      }
-
+      const captchaData = parseCaptchaResponse(response.data)
       captcha.value = captchaData
       return captchaData
     } catch (error: any) {
       captcha.value = null
-      if (error.response) {
-        throw new Error(error.response.data?.error || '刷新验证码失败')
-      }
-      throw new Error('网络错误，请稍后重试')
+      handleApiError(error, '刷新验证码失败')
     }
   }
 
