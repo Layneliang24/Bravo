@@ -992,10 +992,10 @@
             "description": "在`LoginForm.vue`中，监听密码输入框的失焦事件或停止输入500ms后触发`previewLogin` action。将`UserPreview.vue`组件集成到`LoginForm`的表单上方，并根据`auth` store的`preview`状态显示用户预览信息。同时，编写集成测试，验证`LoginForm`中预验证的触发和`UserPreview`的显示。",
             "dependencies": [1, 2, 12],
             "details": "修改`frontend/src/components/auth/LoginForm.vue`。在密码输入框上添加事件监听器（例如`@blur`或使用`debounce`处理`@input`事件），在满足条件时调用`auth` store的`previewLogin` action。在`LoginForm`模板中引入并使用`UserPreview`组件，通过props将`auth` store中的`preview`状态传递给`UserPreview`。编写集成测试，验证`LoginForm`的交互逻辑。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`或新的集成测试文件，模拟用户在密码输入框中输入并失焦，验证`previewLogin` action是否被触发，以及`UserPreview`组件是否根据模拟的`preview`状态正确显示。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:31:40.307Z"
+            "updatedAt": "2025-12-08T13:37:40.681Z"
           },
           {
             "id": 4,
@@ -1003,9 +1003,10 @@
             "description": "审查并优化`UserPreview.vue`组件的淡入动画效果，确保用户体验流畅。同时，优化`UserPreview`组件与`auth` store之间的数据流和交互逻辑，减少不必要的渲染或提高响应速度。",
             "dependencies": [1, 3],
             "details": "检查`UserPreview.vue`中的CSS动画或Vue过渡效果，进行调整以达到最佳视觉效果。分析组件的`props`、`computed`属性和`watchers`，确保与`auth` store的`preview`状态同步高效。考虑使用`v-memo`或`keep-alive`等Vue优化策略（如果适用）。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "手动测试组件的动画效果和数据更新流畅性。如果需要，可以添加或修改组件测试，以验证特定交互模式下的性能或动画行为。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:37:49.844Z"
           },
           {
             "id": 5,
@@ -1018,7 +1019,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T13:32:03.659Z"
+        "updatedAt": "2025-12-08T13:37:49.844Z"
       },
       {
         "id": "16",
@@ -1227,7 +1228,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:32:03.662Z",
+      "lastModified": "2025-12-08T13:37:49.848Z",
       "taskCount": 18,
       "completedCount": 13,
       "tags": ["REQ-2025-003-user-login"]

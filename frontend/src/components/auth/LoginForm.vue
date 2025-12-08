@@ -46,6 +46,24 @@ import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
 import UserPreview from './UserPreview.vue'
 
+// 防抖函数
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null
+      func(...args)
+    }
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+    timeout = setTimeout(later, wait)
+  }
+}
+
 interface FormData {
   email: string
   password: string
@@ -159,12 +177,23 @@ const handleLoginError = async (error: any) => {
 }
 
 const triggerPreview = async () => {
+  // 验证必要字段
   if (
     !formData.email ||
     !formData.password ||
     !formData.captcha_id ||
     !formData.captcha_answer
   ) {
+    return
+  }
+
+  // 验证邮箱格式
+  if (!EMAIL_REGEX.test(formData.email)) {
+    return
+  }
+
+  // 验证密码长度
+  if (formData.password.length < 8) {
     return
   }
 
@@ -177,14 +206,18 @@ const triggerPreview = async () => {
       captcha_answer: formData.captcha_answer,
     })
   } catch (error) {
+    // 静默处理错误，不影响用户体验
     console.error('Preview login failed:', error)
   } finally {
     previewLoading.value = false
   }
 }
 
+// 使用防抖优化，避免频繁调用
+const debouncedTriggerPreview = debounce(triggerPreview, 500)
+
 const handlePasswordBlur = () => {
-  triggerPreview()
+  debouncedTriggerPreview()
 }
 
 const handleSubmit = async () => {

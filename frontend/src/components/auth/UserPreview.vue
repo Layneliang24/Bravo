@@ -1,18 +1,25 @@
 <!-- REQ-ID: REQ-2025-003-user-login -->
 <template>
-  <div class="user-preview">
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="displayName" class="user-info">
-      <DefaultAvatar
-        :avatar-url="avatarUrl"
-        :avatar-letter="avatarLetter"
-        :user-name="displayName"
-        size="large"
-        shape="circle"
-      />
-      <span class="display-name">{{ displayName }}</span>
+  <Transition name="fade">
+    <div v-if="loading || displayName" class="user-preview">
+      <Transition name="fade" mode="out-in">
+        <div v-if="loading" key="loading" class="loading">
+          <span class="loading-spinner"></span>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="displayName" key="user" class="user-info">
+          <DefaultAvatar
+            :avatar-url="avatarUrl"
+            :avatar-letter="avatarLetter"
+            :user-name="displayName"
+            size="large"
+            shape="circle"
+          />
+          <span class="display-name">{{ displayName }}</span>
+        </div>
+      </Transition>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -42,8 +49,27 @@ const props = withDefaults(defineProps<Props>(), {
 }
 
 .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .user-info {
@@ -51,11 +77,34 @@ const props = withDefaults(defineProps<Props>(), {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .display-name {
   font-size: 1rem;
   font-weight: 500;
   color: #1f2937;
+}
+
+/* 淡入淡出过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
