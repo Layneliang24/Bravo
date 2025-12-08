@@ -10,7 +10,7 @@ describe('Auth Store', () => {
     localStorage.clear()
     // 创建新的Pinia实例
     setActivePinia(createPinia())
-    // 创建mock的axios实例
+    // 创建默认的mock axios实例（每个测试可以覆盖）
     const mockAxios = {
       get: vi.fn(),
       post: vi.fn(),
@@ -23,8 +23,7 @@ describe('Auth Store', () => {
       create: vi.fn(),
     } as unknown as AxiosInstance
     setApiClient(mockAxios)
-    // 清除所有mock
-    vi.clearAllMocks()
+    // 注意：不在这里清除mock，让每个测试自己设置mock
   })
 
   describe('状态初始化', () => {

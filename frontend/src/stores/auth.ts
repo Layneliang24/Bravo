@@ -99,18 +99,22 @@ export const useAuthStore = defineStore('auth', () => {
     return !!(user.value && token.value)
   })
 
-  // 从localStorage恢复token（延迟执行，确保在测试中可以设置localStorage）
+  // 从localStorage恢复token
   const restoreTokens = () => {
-    // 使用nextTick确保在store创建后执行
-    if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem(TOKEN_KEY)
-      const savedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const savedToken = localStorage.getItem(TOKEN_KEY)
+        const savedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
 
-      if (savedToken) {
-        token.value = savedToken
-      }
-      if (savedRefreshToken) {
-        refreshToken.value = savedRefreshToken
+        if (savedToken) {
+          token.value = savedToken
+        }
+        if (savedRefreshToken) {
+          refreshToken.value = savedRefreshToken
+        }
+      } catch (error) {
+        // localStorage可能不可用（如某些测试环境）
+        console.warn('Failed to restore tokens from localStorage:', error)
       }
     }
   }

@@ -36,14 +36,35 @@ Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
 })
 
-// Mock localStorage
+// Mock localStorage with actual storage functionality
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+
+  return {
+    getItem: (key: string) => {
+      return store[key] || null
+    },
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString()
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    get length() {
+      return Object.keys(store).length
+    },
+    key: (index: number) => {
+      const keys = Object.keys(store)
+      return keys[index] || null
+    },
+  }
+})()
+
 Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  },
+  value: localStorageMock,
   writable: true,
 })
 
@@ -82,6 +103,10 @@ config.global.plugins = []
 
 // Clean up after each test
 afterEach(() => {
+  // 清除localStorage（但保留mock实现）
+  if (window.localStorage) {
+    window.localStorage.clear()
+  }
   vi.clearAllMocks()
   vi.clearAllTimers()
 })

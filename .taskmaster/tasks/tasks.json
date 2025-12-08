@@ -726,9 +726,10 @@
             "description": "在`auth` store中实现用户登录、注册和登出功能，包括调用后端API、处理Token存储和`isAuthenticated`状态更新。",
             "dependencies": [2, 5, 10],
             "details": "在`frontend/src/stores/auth.ts`中实现`login` action，使用Axios调用后端登录API，成功后将`token`和`refreshToken`存储到`localStorage`或`sessionStorage`，并更新`user`和`isAuthenticated`状态。实现`register` action，调用后端注册API。实现`logout` action，清除存储的Token，重置`user`和`isAuthenticated`状态。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`auth.spec.ts`中针对`login`、`register`、`logout`的测试用例，模拟API响应，验证action的正确性、状态更新和Token存储清除逻辑。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:31:36.810Z"
           },
           {
             "id": 4,
@@ -751,7 +752,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T12:14:17.070Z"
+        "updatedAt": "2025-12-08T12:31:36.810Z"
       },
       {
         "id": "12",
@@ -1208,7 +1209,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:14:17.072Z",
+      "lastModified": "2025-12-08T12:31:36.814Z",
       "taskCount": 18,
       "completedCount": 10,
       "tags": ["REQ-2025-003-user-login"]
