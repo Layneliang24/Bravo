@@ -174,7 +174,7 @@ describe('RegisterForm', () => {
     expect(errorMessages.length).toBeGreaterThan(0)
   })
 
-  it('注册成功时应该导航到首页', async () => {
+  it('注册成功时应该显示邮箱验证提示界面而不是跳转', async () => {
     const { useAuthStore } = await import('@/stores/auth')
     const store = useAuthStore()
     const routerPush = vi.fn()
@@ -206,7 +206,164 @@ describe('RegisterForm', () => {
     await wrapper.vm.$nextTick()
     await new Promise(resolve => setTimeout(resolve, 200))
 
-    expect(routerPush).toHaveBeenCalledWith('/')
+    // 应该显示邮箱验证提示界面
+    expect(wrapper.find('.email-verification-prompt').exists()).toBe(true)
+    // 不应该跳转到首页
+    expect(routerPush).not.toHaveBeenCalled()
+  })
+
+  it('注册成功后应该显示注册邮箱地址', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 应该显示注册邮箱
+    expect(wrapper.text()).toContain('test@example.com')
+  })
+
+  it('注册成功后应该显示重新发送验证邮件按钮', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 应该显示重新发送按钮
+    const resendButton = wrapper.find('.resend-button')
+    expect(resendButton.exists()).toBe(true)
+    expect(resendButton.text()).toBe('重新发送验证邮件')
+  })
+
+  it('点击重新发送验证邮件按钮应该调用sendEmailVerification', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    const sendEmailVerificationSpy = vi
+      .spyOn(store, 'sendEmailVerification')
+      .mockResolvedValue({ message: '验证邮件已发送' })
+
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 点击重新发送按钮
+    const resendButton = wrapper.find('.resend-button')
+    await resendButton.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 应该调用sendEmailVerification
+    expect(sendEmailVerificationSpy).toHaveBeenCalledWith({
+      email: 'test@example.com',
+    })
+  })
+
+  it('重新发送验证邮件成功时应该显示成功消息', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'sendEmailVerification').mockResolvedValue({
+      message: '验证邮件已发送，请查收',
+    })
+
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 点击重新发送按钮
+    const resendButton = wrapper.find('.resend-button')
+    await resendButton.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 应该显示成功消息
+    const feedback = wrapper.find('.verification-feedback.success')
+    expect(feedback.exists()).toBe(true)
+    expect(feedback.text()).toContain('验证邮件已发送')
   })
 
   it('提交时应该禁用提交按钮', async () => {

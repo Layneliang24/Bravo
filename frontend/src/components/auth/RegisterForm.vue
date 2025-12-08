@@ -1,6 +1,39 @@
 <!-- REQ-ID: REQ-2025-003-user-login -->
 <template>
-  <form @submit.prevent="handleSubmit" class="register-form">
+  <!-- 注册成功后的邮箱验证提示界面 -->
+  <div v-if="isRegistered" class="email-verification-prompt">
+    <div class="verification-icon">📧</div>
+    <h2 class="verification-title">注册成功！</h2>
+    <p class="verification-message">
+      我们已向您的邮箱 <strong>{{ registeredEmail }}</strong> 发送了验证邮件。
+    </p>
+    <p class="verification-instruction">
+      请查收您的邮箱并点击验证链接以完成邮箱验证。
+    </p>
+    <div v-if="verificationMessage" :class="['verification-feedback', verificationMessageType]">
+      {{ verificationMessage }}
+    </div>
+    <div class="verification-actions">
+      <button
+        type="button"
+        @click="handleResendVerification"
+        :disabled="isResending"
+        class="resend-button"
+      >
+        {{ isResending ? '发送中...' : '重新发送验证邮件' }}
+      </button>
+      <button
+        type="button"
+        @click="handleGoToHome"
+        class="home-button"
+      >
+        返回首页
+      </button>
+    </div>
+  </div>
+
+  <!-- 注册表单 -->
+  <form v-else @submit.prevent="handleSubmit" class="register-form">
     <FloatingInput
       v-model="formData.email"
       label="邮箱"
@@ -39,11 +72,11 @@
 
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
+import { useAuthStore } from '@/stores/auth'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
+import FloatingInput from './FloatingInput.vue'
 import PasswordStrength from './PasswordStrength.vue'
 
 interface FormData {
@@ -67,6 +100,13 @@ const isSubmitting = ref(false)
 const captchaRef = ref<InstanceType<typeof Captcha> | null>(null)
 const router = useRouter()
 const authStore = useAuthStore()
+
+// 邮箱验证相关状态
+const isRegistered = ref(false)
+const registeredEmail = ref('')
+const isResending = ref(false)
+const verificationMessage = ref('')
+const verificationMessageType = ref<'success' | 'error'>('success')
 
 const handleCaptchaUpdate = (data: {
   captcha_id: string
@@ -163,8 +203,10 @@ const refreshCaptcha = async () => {
 }
 
 // 处理注册成功
-const handleRegisterSuccess = async () => {
-  await router.push('/')
+const handleRegisterSuccess = async (email: string) => {
+  isRegistered.value = true
+  registeredEmail.value = email
+  // 不清空表单，保留邮箱信息用于重发验证邮件
 }
 
 // 处理注册失败
@@ -190,12 +232,44 @@ const handleSubmit = async () => {
       captcha_answer: formData.captcha_answer,
     })
 
-    await handleRegisterSuccess()
+    await handleRegisterSuccess(formData.email)
   } catch (error: any) {
     await handleRegisterError(error)
   } finally {
     isSubmitting.value = false
   }
+}
+
+// 处理重新发送验证邮件
+const handleResendVerification = async () => {
+  if (!registeredEmail.value) {
+    return
+  }
+
+  isResending.value = true
+  verificationMessage.value = ''
+
+  try {
+    const response = await authStore.sendEmailVerification({
+      email: registeredEmail.value,
+    })
+
+    if (response && response.message) {
+      verificationMessage.value = response.message
+      verificationMessageType.value = 'success'
+    }
+  } catch (error: any) {
+    const errorMessage = error?.message || '发送验证邮件失败，请稍后重试'
+    verificationMessage.value = errorMessage
+    verificationMessageType.value = 'error'
+  } finally {
+    isResending.value = false
+  }
+}
+
+// 返回首页
+const handleGoToHome = () => {
+  router.push('/')
 }
 </script>
 
@@ -232,5 +306,112 @@ const handleSubmit = async () => {
   color: #ef4444;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+}
+
+/* 邮箱验证提示界面样式 */
+.email-verification-prompt {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.verification-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.verification-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.verification-message {
+  font-size: 1rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.verification-message strong {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.verification-instruction {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.verification-feedback {
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.verification-feedback.success {
+  color: #065f46;
+  background-color: #d1fae5;
+  border: 1px solid #10b981;
+}
+
+.verification-feedback.error {
+  color: #991b1b;
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resend-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.resend-button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.resend-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.home-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-button:hover {
+  background-color: #f9fafb;
+  color: #4b5563;
+  border-color: #9ca3af;
 }
 </style>
