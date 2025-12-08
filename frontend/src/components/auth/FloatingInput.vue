@@ -176,13 +176,17 @@ input:disabled {
   position: absolute;
   left: 0.75rem;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(1);
   font-size: 1rem;
   color: var(--text-secondary);
   pointer-events: none;
-  transition: all 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s ease,
+    top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: var(--input-background);
   padding: 0 0.25rem;
+  z-index: 1;
 }
 
 .input-container.has-icon .floating-label {
@@ -193,11 +197,15 @@ input:disabled {
   top: 0.5rem;
   font-size: 0.75rem;
   color: var(--color-primary-dark-blue);
-  transform: translateY(0);
+  transform: translateY(0) scale(0.9);
 }
 
 input:focus + .floating-label {
   color: var(--color-primary-dark-blue);
+}
+
+input:focus + .floating-label:not(.floating-label-active) {
+  color: var(--color-primary-gold);
 }
 
 input.error + .floating-label {

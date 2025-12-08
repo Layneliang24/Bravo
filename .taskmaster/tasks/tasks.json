@@ -1130,10 +1130,11 @@
             "title": "实现悬浮式输入框动画",
             "description": "为`FloatingInput`组件实现标签上浮动画效果，提升用户体验。",
             "dependencies": [1],
-            "details": "修改`FloatingInput`组件的CSS，使用`CSS transform`和`transition`属性，当输入框获得焦点或有内容时，使其标签（placeholder/label）向上浮动并缩小，实现平滑的动画效果。",
-            "status": "pending",
+            "details": "修改`FloatingInput`组件的CSS，使用`CSS transform`和`transition`属性，当输入框获得焦点或有内容时，使其标签（placeholder/label）向上浮动并缩小，实现平滑的动画效果。\n<info added on 2025-12-08T16:13:27.721Z>\n已完成悬浮式输入框动画优化。\n具体实现内容包括：\n1. 优化标签上浮动画，采用cubic-bezier缓动函数，使动画更流畅。\n2. 添加scale变换，标签上浮时缩小至0.9倍，增强视觉效果。\n3. 分离动画属性，对transform、font-size、color、top分别设置transition。\n4. 优化焦点状态，焦点时标签颜色变为金色，增强视觉反馈。\n5. 动画效果符合PRD设计规范要求，标签默认在输入框内（50%位置），输入或获得焦点时标签上浮并缩小。\n</info added on 2025-12-08T16:13:27.721Z>",
+            "status": "done",
             "testStrategy": "手动测试`FloatingInput`组件，验证焦点和输入内容时标签上浮动画的流畅性和准确性。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T16:13:30.375Z"
           },
           {
             "id": 4,
@@ -1156,7 +1157,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T16:10:22.615Z"
+        "updatedAt": "2025-12-08T16:13:30.375Z"
       },
       {
         "id": "18",
@@ -1241,7 +1242,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T16:10:22.616Z",
+      "lastModified": "2025-12-08T16:13:30.376Z",
       "taskCount": 18,
       "completedCount": 16,
       "tags": ["REQ-2025-003-user-login"]
