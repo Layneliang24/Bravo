@@ -764,7 +764,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/LoginForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的登录流程。",
         "priority": "high",
         "dependencies": ["11"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -816,13 +816,13 @@
             "description": "为`LoginForm.vue`编写全面的组件测试，覆盖渲染、表单验证、提交逻辑、错误提示和验证码刷新。根据测试结果和最佳实践，对表单的交互逻辑和代码结构进行重构和优化。",
             "dependencies": [4],
             "details": "在`frontend/src/components/auth/__tests__/LoginForm.spec.ts`中编写组件测试。测试用例应包括：组件的正确渲染、输入有效/无效数据时的验证行为、成功提交后的行为、提交失败时的错误提示和验证码刷新机制。根据测试覆盖率和代码审查，优化表单的交互逻辑、错误消息的显示方式、状态管理和代码可读性。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行所有编写的组件测试，确保它们全部通过。进行端到端测试，验证完整的登录流程，包括成功登录、错误凭据、验证码错误等场景。确保重构后的代码没有引入新的缺陷。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:04:18.484Z"
+            "updatedAt": "2025-12-08T13:08:40.990Z"
           }
         ],
-        "updatedAt": "2025-12-08T13:04:18.484Z"
+        "updatedAt": "2025-12-08T13:08:40.990Z"
       },
       {
         "id": "13",
@@ -832,7 +832,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的注册流程。",
         "priority": "high",
         "dependencies": ["11"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -840,9 +840,10 @@
             "description": "创建 `RegisterForm.spec.ts` 文件，编写测试用例以验证组件的渲染、表单验证规则、密码强度显示、提交逻辑、错误提示和验证码刷新。预期这些测试最初会失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/` 目录下创建 `RegisterForm.spec.ts`。使用 Vue Test Utils 编写测试，模拟用户输入，断言组件状态和渲染输出。重点关注表单字段的存在、验证消息、密码强度组件的显示、提交按钮状态以及错误提示的显示。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的渲染、验证规则、密码强度显示、提交按钮状态和错误提示。预期测试失败。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:09:26.654Z"
           },
           {
             "id": 2,
@@ -884,7 +885,8 @@
             "testStrategy": "运行所有`RegisterForm.spec.ts`组件测试，确保所有测试用例通过。进行手动测试以验证表单的整体交互和用户体验。考虑编写或更新E2E测试以验证完整的注册流程。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-08T13:09:26.654Z"
       },
       {
         "id": "14",
@@ -1217,9 +1219,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:04:18.486Z",
+      "lastModified": "2025-12-08T13:09:26.662Z",
       "taskCount": 18,
-      "completedCount": 11,
+      "completedCount": 12,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
