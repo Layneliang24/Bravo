@@ -715,9 +715,10 @@
             "description": "在Pinia中定义`auth` store的初始状态接口(`AuthState`)和动作接口(`AuthActions`)，并设置store的基本结构。",
             "dependencies": [1],
             "details": "在`frontend/src/stores/auth.ts`中定义`AuthState`接口，包含`user`, `token`, `refreshToken`, `isAuthenticated`, `captcha`等状态字段及其类型。定义`AuthActions`接口，声明`login`, `register`, `logout`, `refreshToken`, `fetchCaptcha`, `refreshCaptcha`等异步action的签名。初始化`auth` store，设置其`id`和初始状态。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行`auth.spec.ts`中的测试，确保store的基本结构和初始状态能够通过测试。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:14:17.070Z"
           },
           {
             "id": 3,
@@ -750,7 +751,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T12:11:41.377Z"
+        "updatedAt": "2025-12-08T12:14:17.070Z"
       },
       {
         "id": "12",
@@ -1207,7 +1208,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:11:41.380Z",
+      "lastModified": "2025-12-08T12:14:17.072Z",
       "taskCount": 18,
       "completedCount": 10,
       "tags": ["REQ-2025-003-user-login"]
