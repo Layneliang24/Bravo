@@ -832,7 +832,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的行为和与store的交互。编写E2E测试，验证完整的注册流程。",
         "priority": "high",
         "dependencies": ["11"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -884,13 +884,13 @@
             "description": "优化 `RegisterForm` 的用户体验，包括表单的交互逻辑、错误提示的清晰度、加载状态的显示，并确保所有组件测试和E2E测试通过。",
             "dependencies": [1, 2, 3, 4],
             "details": "审查并改进表单的UI/UX，例如在提交过程中禁用按钮、显示加载指示器。确保所有验证消息和后端错误提示都以用户友好的方式显示。运行并确保所有为 `RegisterForm` 编写的组件测试通过。如果需要，编写或更新E2E测试以验证完整的注册流程。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行所有`RegisterForm.spec.ts`组件测试，确保所有测试用例通过。进行手动测试以验证表单的整体交互和用户体验。考虑编写或更新E2E测试以验证完整的注册流程。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:18:23.040Z"
+            "updatedAt": "2025-12-08T13:21:10.846Z"
           }
         ],
-        "updatedAt": "2025-12-08T13:18:23.040Z"
+        "updatedAt": "2025-12-08T13:21:10.846Z"
       },
       {
         "id": "14",
@@ -962,7 +962,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`组件测试。编写`frontend/src/stores/__tests__/auth.spec.ts`单元测试，模拟`previewLogin`的API响应。编写`e2e/tests/auth/login-preview.spec.ts`E2E测试，验证登录预验证的触发、头像显示、默认头像显示、错误处理和频率限制。",
         "priority": "high",
         "dependencies": ["8", "9", "11", "12"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -970,9 +970,10 @@
             "description": "在`frontend/src/components/auth/`目录下创建`UserPreview.vue`组件，实现圆形头像（真实头像或首字母默认头像）、用户显示名称，支持加载中状态和淡入动画。同时，编写组件测试，验证`UserPreview`在不同状态（加载中、有效、无效、无头像）下的显示。",
             "dependencies": [],
             "details": "创建`frontend/src/components/auth/UserPreview.vue`。实现Vue组件的模板、样式和逻辑，以显示用户头像和名称。头像应支持加载中状态和淡入动画。编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`，使用Vue Test Utils模拟不同props和状态，验证组件的渲染和行为。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`，覆盖加载中、有效用户（带头像、无头像）、无效用户等状态下的组件渲染和样式。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:21:48.417Z"
           },
           {
             "id": 2,
@@ -1014,7 +1015,8 @@
             "testStrategy": "编写`e2e/tests/auth/login-preview.spec.ts`，覆盖以下场景：1. 成功预验证并显示用户头像。2. 成功预验证但用户无头像，显示默认头像。3. 预验证失败，显示错误信息。4. 频繁触发预验证，验证频率限制。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-08T13:21:48.417Z"
       },
       {
         "id": "16",
@@ -1223,9 +1225,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:18:23.044Z",
+      "lastModified": "2025-12-08T13:21:48.421Z",
       "taskCount": 18,
-      "completedCount": 12,
+      "completedCount": 13,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
