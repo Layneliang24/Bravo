@@ -61,7 +61,7 @@ const props = withDefaults(defineProps<Props>(), {
   width: 1rem;
   height: 1rem;
   border: 2px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border-top-color: var(--color-primary-gold);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -77,17 +77,17 @@ const props = withDefaults(defineProps<Props>(), {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  animation: slideDown 0.3s ease-out;
+  animation: fadeInScale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideDown {
+@keyframes fadeInScale {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -98,7 +98,10 @@ const props = withDefaults(defineProps<Props>(), {
 }
 
 /* 淡入淡出过渡动画 */
-.fade-enter-active,
+.fade-enter-active {
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
