@@ -783,10 +783,10 @@
             "description": "在`LoginForm.vue`中集成`Captcha`组件，并构建包含邮箱、密码和验证码输入的基础HTML表单结构。",
             "dependencies": [1],
             "details": "在`LoginForm.vue`中引入并集成`Captcha`组件。构建一个完整的`<form>`元素，包含邮箱输入（使用`FloatingInput`）、密码输入（使用`FloatingInput`）、验证码输入（使用`Captcha`）以及一个提交按钮。实现一个空的表单提交方法，为后续逻辑集成做准备。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "手动运行开发服务器，验证`LoginForm.vue`中`Captcha`组件能够正确渲染，表单的整体布局和所有输入字段、提交按钮都可见且可交互。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T12:51:27.510Z"
+            "updatedAt": "2025-12-08T12:54:28.446Z"
           },
           {
             "id": 3,
@@ -794,9 +794,10 @@
             "description": "使用VeeValidate库为`LoginForm.vue`中的邮箱、密码和验证码字段实现客户端验证规则，并显示相应的错误信息。",
             "dependencies": [2],
             "details": "在`LoginForm.vue`中集成VeeValidate。为邮箱字段添加有效的邮箱格式验证规则。为密码字段添加最小长度（例如8位）和必填验证。为验证码字段添加必填验证。配置VeeValidate以在用户输入无效时显示错误提示信息。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写组件测试，模拟用户输入无效的邮箱、过短的密码或空验证码，验证VeeValidate是否正确显示错误信息，并在所有字段有效前阻止表单提交。手动测试不同验证场景。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T12:54:49.086Z"
           },
           {
             "id": 4,
@@ -819,7 +820,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T12:51:27.510Z"
+        "updatedAt": "2025-12-08T12:54:49.086Z"
       },
       {
         "id": "13",
@@ -1214,7 +1215,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:51:27.514Z",
+      "lastModified": "2025-12-08T12:54:49.090Z",
       "taskCount": 18,
       "completedCount": 11,
       "tags": ["REQ-2025-003-user-login"]

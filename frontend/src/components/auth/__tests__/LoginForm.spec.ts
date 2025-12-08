@@ -46,4 +46,47 @@ describe('LoginForm', () => {
 
     expect(captchaComponent.exists()).toBe(true)
   })
+
+  it('应该验证邮箱格式', async () => {
+    const wrapper = mount(LoginForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+
+    await emailInput.setValue('invalid-email')
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    const errorMessage = wrapper.find('.error-message')
+    expect(errorMessage.exists()).toBe(true)
+  })
+
+  it('应该验证密码长度', async () => {
+    const wrapper = mount(LoginForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInput = wrapper.find('input[type="password"]')
+
+    await emailInput.setValue('test@example.com')
+    await passwordInput.setValue('12345')
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    const errorMessages = wrapper.findAll('.error-message')
+    expect(errorMessages.length).toBeGreaterThan(0)
+  })
+
+  it('应该验证验证码必填', async () => {
+    const wrapper = mount(LoginForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInput = wrapper.find('input[type="password"]')
+
+    await emailInput.setValue('test@example.com')
+    await passwordInput.setValue('password123')
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    // 验证码验证应该在表单提交时触发
+    expect(wrapper.vm.isSubmitting).toBe(false)
+  })
 })

@@ -57,24 +57,65 @@ const handleCaptchaUpdate = (data: {
   errors.captcha_answer = ''
 }
 
+// 邮箱格式验证正则
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// 验证邮箱格式
+const validateEmail = (email: string): string => {
+  if (!email) {
+    return '请输入邮箱'
+  }
+  if (!EMAIL_REGEX.test(email)) {
+    return '邮箱格式不正确'
+  }
+  return ''
+}
+
+// 验证密码
+const validatePassword = (password: string): string => {
+  if (!password) {
+    return '请输入密码'
+  }
+  if (password.length < 8) {
+    return '密码长度至少为8位'
+  }
+  return ''
+}
+
+// 验证验证码
+const validateCaptcha = (captchaId: string, captchaAnswer: string): string => {
+  if (!captchaId || !captchaAnswer) {
+    return '请输入验证码'
+  }
+  return ''
+}
+
 const handleSubmit = async () => {
   // 清除之前的错误
   errors.email = ''
   errors.password = ''
+  errors.captcha_answer = ''
 
-  // 基础验证
-  if (!formData.email) {
-    errors.email = '请输入邮箱'
-    return
+  // 执行验证
+  const emailError = validateEmail(formData.email)
+  const passwordError = validatePassword(formData.password)
+  const captchaError = validateCaptcha(
+    formData.captcha_id,
+    formData.captcha_answer
+  )
+
+  if (emailError) {
+    errors.email = emailError
+  }
+  if (passwordError) {
+    errors.password = passwordError
+  }
+  if (captchaError) {
+    errors.captcha_answer = captchaError
   }
 
-  if (!formData.password) {
-    errors.password = '请输入密码'
-    return
-  }
-
-  if (!formData.captcha_id || !formData.captcha_answer) {
-    errors.captcha_answer = '请输入验证码'
+  // 如果有任何错误，停止提交
+  if (emailError || passwordError || captchaError) {
     return
   }
 
