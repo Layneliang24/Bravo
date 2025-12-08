@@ -873,10 +873,10 @@
             "description": "将表单提交逻辑与 Pinia `auth` store 的 `register` action 进行集成，并处理注册成功与失败的响应，包括错误提示和验证码刷新。",
             "dependencies": [3],
             "details": "在 `RegisterForm.vue` 中，创建一个提交方法，该方法将收集表单数据（邮箱、密码、确认密码、验证码ID和答案）。通过 Pinia `auth` store 调用 `register` action，并传递表单数据。根据 `register` action 的返回结果，显示成功消息或处理注册失败时的错误提示（例如，邮箱已存在、密码强度不足、验证码错误）。在注册失败时，触发 `Captcha` 组件的刷新。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，模拟`auth` store的`register` action的成功和失败场景，验证表单提交后是否正确调用store action，并根据响应显示成功消息或错误提示，以及在失败时是否刷新验证码。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:15:44.524Z"
+            "updatedAt": "2025-12-08T13:18:14.756Z"
           },
           {
             "id": 5,
@@ -884,12 +884,13 @@
             "description": "优化 `RegisterForm` 的用户体验，包括表单的交互逻辑、错误提示的清晰度、加载状态的显示，并确保所有组件测试和E2E测试通过。",
             "dependencies": [1, 2, 3, 4],
             "details": "审查并改进表单的UI/UX，例如在提交过程中禁用按钮、显示加载指示器。确保所有验证消息和后端错误提示都以用户友好的方式显示。运行并确保所有为 `RegisterForm` 编写的组件测试通过。如果需要，编写或更新E2E测试以验证完整的注册流程。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行所有`RegisterForm.spec.ts`组件测试，确保所有测试用例通过。进行手动测试以验证表单的整体交互和用户体验。考虑编写或更新E2E测试以验证完整的注册流程。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:18:23.040Z"
           }
         ],
-        "updatedAt": "2025-12-08T13:15:44.524Z"
+        "updatedAt": "2025-12-08T13:18:23.040Z"
       },
       {
         "id": "14",
@@ -1222,7 +1223,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:15:44.527Z",
+      "lastModified": "2025-12-08T13:18:23.044Z",
       "taskCount": 18,
       "completedCount": 12,
       "tags": ["REQ-2025-003-user-login"]
