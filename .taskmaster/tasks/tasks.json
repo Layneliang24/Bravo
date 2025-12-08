@@ -840,10 +840,10 @@
             "description": "创建 `RegisterForm.spec.ts` 文件，编写测试用例以验证组件的渲染、表单验证规则、密码强度显示、提交逻辑、错误提示和验证码刷新。预期这些测试最初会失败。",
             "dependencies": [],
             "details": "在 `frontend/src/components/auth/__tests__/` 目录下创建 `RegisterForm.spec.ts`。使用 Vue Test Utils 编写测试，模拟用户输入，断言组件状态和渲染输出。重点关注表单字段的存在、验证消息、密码强度组件的显示、提交按钮状态以及错误提示的显示。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写`frontend/src/components/auth/__tests__/RegisterForm.spec.ts`组件测试，模拟用户输入和提交，验证表单的渲染、验证规则、密码强度显示、提交按钮状态和错误提示。预期测试失败。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:09:26.654Z"
+            "updatedAt": "2025-12-08T13:15:18.960Z"
           },
           {
             "id": 2,
@@ -851,9 +851,10 @@
             "description": "在 `frontend/src/components/auth/` 目录下创建 `RegisterForm.vue`，并使用 `FloatingInput` 组件实现邮箱、密码和确认密码的输入字段。",
             "dependencies": [9],
             "details": "创建 `RegisterForm.vue` 文件。定义表单的响应式数据模型（例如，email, password, confirmPassword）。集成 `FloatingInput` 组件，为邮箱、密码和确认密码创建输入框，并绑定到数据模型。实现基本的客户端表单验证逻辑（例如，邮箱格式、密码长度、两次密码一致性）。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，验证`FloatingInput`组件是否正确渲染，表单数据绑定是否正常，以及基本的客户端验证是否生效。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:15:27.608Z"
           },
           {
             "id": 3,
@@ -861,9 +862,10 @@
             "description": "将 `PasswordStrength` 组件集成到密码输入字段下方以显示密码强度，并集成 `Captcha` 组件以处理验证码的显示和输入。",
             "dependencies": [2],
             "details": "在 `RegisterForm.vue` 中，将 `PasswordStrength` 组件放置在密码输入框下方，并将其 `password` 属性绑定到表单的密码字段。集成 `Captcha` 组件，处理验证码的显示、用户输入和刷新机制。确保验证码组件能够获取新的验证码ID和图片。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，验证`PasswordStrength`组件是否根据密码输入正确显示强度，`Captcha`组件是否正确渲染，以及验证码刷新功能是否可触发。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:15:35.982Z"
           },
           {
             "id": 4,
@@ -871,9 +873,10 @@
             "description": "将表单提交逻辑与 Pinia `auth` store 的 `register` action 进行集成，并处理注册成功与失败的响应，包括错误提示和验证码刷新。",
             "dependencies": [3],
             "details": "在 `RegisterForm.vue` 中，创建一个提交方法，该方法将收集表单数据（邮箱、密码、确认密码、验证码ID和答案）。通过 Pinia `auth` store 调用 `register` action，并传递表单数据。根据 `register` action 的返回结果，显示成功消息或处理注册失败时的错误提示（例如，邮箱已存在、密码强度不足、验证码错误）。在注册失败时，触发 `Captcha` 组件的刷新。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行`RegisterForm.spec.ts`中的相关测试，模拟`auth` store的`register` action的成功和失败场景，验证表单提交后是否正确调用store action，并根据响应显示成功消息或错误提示，以及在失败时是否刷新验证码。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:15:44.524Z"
           },
           {
             "id": 5,
@@ -886,7 +889,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T13:09:26.654Z"
+        "updatedAt": "2025-12-08T13:15:44.524Z"
       },
       {
         "id": "14",
@@ -1219,7 +1222,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:09:26.662Z",
+      "lastModified": "2025-12-08T13:15:44.527Z",
       "taskCount": 18,
       "completedCount": 12,
       "tags": ["REQ-2025-003-user-login"]

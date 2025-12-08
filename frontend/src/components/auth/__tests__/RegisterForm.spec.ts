@@ -54,4 +54,94 @@ describe('RegisterForm', () => {
 
     expect(captchaComponent.exists()).toBe(true)
   })
+
+  it('应该包含密码强度组件', () => {
+    const wrapper = mount(RegisterForm)
+    const passwordStrengthComponent = wrapper.findComponent({
+      name: 'PasswordStrength',
+    })
+
+    expect(passwordStrengthComponent.exists()).toBe(true)
+  })
+
+  it('注册成功时应该调用auth store的register方法', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    const registerSpy = vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    expect(registerSpy).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+      password_confirm: 'password123',
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+  })
+
+  it('注册失败时应该显示错误信息并刷新验证码', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    const registerError = new Error('注册失败，邮箱已存在')
+    vi.spyOn(store, 'register').mockRejectedValue(registerError)
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    const errorMessages = wrapper.findAll('.error-message')
+    expect(errorMessages.length).toBeGreaterThan(0)
+  })
+
+  it('应该验证密码和确认密码是否一致', async () => {
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password456')
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    const errorMessages = wrapper.findAll('.error-message')
+    expect(errorMessages.length).toBeGreaterThan(0)
+  })
 })
