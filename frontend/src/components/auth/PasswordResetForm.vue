@@ -157,39 +157,43 @@ const handleSubmit = async () => {
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-top: -0.5rem;
 }
 
 .success-message {
-  color: #10b981;
+  color: var(--color-success);
   font-size: 0.875rem;
   padding: 0.75rem;
   background-color: #d1fae5;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   text-align: center;
 }
 
 .submit-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background: var(--gradient-button);
+  color: var(--text-light);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow);
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background: var(--gradient-button-hover);
+  box-shadow: var(--box-shadow-lg);
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
 }
 </style>

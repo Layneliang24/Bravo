@@ -285,27 +285,31 @@ const handleGoToHome = () => {
 .submit-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background: var(--gradient-button);
+  color: var(--text-light);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow);
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background: var(--gradient-button-hover);
+  box-shadow: var(--box-shadow-lg);
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
 }
@@ -361,13 +365,13 @@ const handleGoToHome = () => {
 .verification-feedback.success {
   color: #065f46;
   background-color: #d1fae5;
-  border: 1px solid #10b981;
+  border: 1px solid var(--color-success);
 }
 
 .verification-feedback.error {
   color: #991b1b;
   background-color: #fee2e2;
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-error);
 }
 
 .verification-actions {
@@ -379,23 +383,27 @@ const handleGoToHome = () => {
 .resend-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background: var(--gradient-button);
+  color: var(--text-light);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow);
 }
 
 .resend-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background: var(--gradient-button-hover);
+  box-shadow: var(--box-shadow-lg);
+  transform: translateY(-1px);
 }
 
 .resend-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
 }
 
 .home-button {

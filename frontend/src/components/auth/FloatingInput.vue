@@ -142,27 +142,28 @@ input {
   width: 100%;
   padding: 1rem 0.75rem;
   padding-top: 1.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s ease;
-  background-color: transparent;
+  background-color: var(--input-background);
+  color: var(--input-text);
 }
 
 input:focus {
-  border-color: #3b82f6;
+  border-color: var(--input-border-focus);
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
 input:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--input-border-focus);
   outline-offset: 2px;
 }
 
 input.error {
-  border-color: #ef4444;
+  border-color: var(--color-error);
 }
 
 input:disabled {
@@ -177,10 +178,10 @@ input:disabled {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   pointer-events: none;
   transition: all 0.2s ease;
-  background-color: white;
+  background-color: var(--input-background);
   padding: 0 0.25rem;
 }
 
@@ -191,22 +192,22 @@ input:disabled {
 .floating-label-active {
   top: 0.5rem;
   font-size: 0.75rem;
-  color: #3b82f6;
+  color: var(--color-primary-dark-blue);
   transform: translateY(0);
 }
 
 input:focus + .floating-label {
-  color: #3b82f6;
+  color: var(--color-primary-dark-blue);
 }
 
 input.error + .floating-label {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .error-message {
   margin-top: 0.25rem;
   font-size: 0.875rem;
-  color: #ef4444;
+  color: var(--color-error);
   line-height: 1.25rem;
 }
 </style>

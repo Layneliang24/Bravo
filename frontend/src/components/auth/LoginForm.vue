@@ -254,22 +254,26 @@ const handleSubmit = async () => {
 .submit-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background: var(--gradient-button);
+  color: var(--text-light);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow);
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background: var(--gradient-button-hover);
+  box-shadow: var(--box-shadow-lg);
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
 }
 </style>

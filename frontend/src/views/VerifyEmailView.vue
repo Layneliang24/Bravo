@@ -115,7 +115,7 @@ onMounted(() => {
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
-  background-color: #f9fafb;
+  background: var(--gradient-background);
 }
 
 .verification-loading,
@@ -135,7 +135,7 @@ onMounted(() => {
   height: 48px;
   margin: 0 auto 1rem;
   border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border-top-color: var(--color-primary-gold);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -165,11 +165,11 @@ onMounted(() => {
 }
 
 .success-title {
-  color: #059669;
+  color: var(--color-success);
 }
 
 .error-title {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .success-message,
@@ -183,18 +183,21 @@ onMounted(() => {
 .login-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
+  background: var(--gradient-button);
+  color: var(--text-light);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow);
 }
 
 .login-button:hover {
-  background-color: #2563eb;
+  background: var(--gradient-button-hover);
+  box-shadow: var(--box-shadow-lg);
+  transform: translateY(-1px);
 }
 
 .error-actions {
