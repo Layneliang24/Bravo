@@ -424,4 +424,84 @@ describe('RegisterForm', () => {
 
     expect(wrapper.vm.errors.captcha_answer).toBe('')
   })
+
+  it('注册成功后的提示信息应该包含清晰的指导性说明', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    const text = wrapper.text()
+    // 应该包含友好的提示信息
+    expect(text).toContain('注册成功')
+    expect(text).toContain('发送了验证邮件')
+    expect(text).toContain('查收')
+    expect(text).toContain('点击验证链接')
+  })
+
+  it('重新发送验证邮件失败时应该显示友好的错误提示', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'sendEmailVerification').mockRejectedValue(
+      new Error('发送失败，请稍后重试')
+    )
+
+    vi.spyOn(store, 'register').mockResolvedValue({
+      user: { id: '1', email: 'test@example.com', is_email_verified: false },
+      token: 'test-token',
+      refresh_token: 'test-refresh-token',
+    })
+
+    const wrapper = mount(RegisterForm)
+    const form = wrapper.find('form')
+    const emailInput = wrapper.find('input[type="email"]')
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
+
+    await emailInput.setValue('test@example.com')
+    await passwordInputs[0].setValue('password123')
+    await passwordInputs[1].setValue('password123')
+    await captchaComponent.vm.$emit('captcha-update', {
+      captcha_id: 'test-captcha-id',
+      captcha_answer: '1234',
+    })
+    await wrapper.vm.$nextTick()
+
+    await form.trigger('submit')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 点击重新发送按钮
+    const resendButton = wrapper.find('.resend-button')
+    await resendButton.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    // 应该显示错误消息
+    const feedback = wrapper.find('.verification-feedback.error')
+    expect(feedback.exists()).toBe(true)
+    expect(feedback.text()).toContain('发送失败')
+  })
 })

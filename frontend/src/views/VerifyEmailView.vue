@@ -20,7 +20,8 @@
       <div class="success-icon">✅</div>
       <h2 class="success-title">邮箱验证成功！</h2>
       <p class="success-message">{{ successMessage }}</p>
-      <button @click="handleGoToLogin" class="login-button">前往登录</button>
+      <p class="auto-redirect-hint">页面将在3秒后自动跳转到登录页面...</p>
+      <button @click="handleGoToLogin" class="login-button">立即前往登录</button>
     </div>
 
     <!-- 验证失败 -->
@@ -30,7 +31,9 @@
       <p class="error-message">{{ errorMessage }}</p>
       <div class="error-actions">
         <button @click="handleGoToLogin" class="login-button">前往登录</button>
-        <p class="resend-hint">如需重新发送验证邮件，请前往登录页面操作</p>
+        <p class="resend-hint">
+          验证链接可能已过期或无效，请前往登录页面重新发送或重新申请验证邮件。
+        </p>
       </div>
     </div>
   </div>
@@ -76,7 +79,11 @@ const verifyEmail = async () => {
 
     if (response && response.message) {
       verificationResult.value = 'success'
-      successMessage.value = response.message
+      successMessage.value = response.message || '邮箱验证成功，您现在可以登录了'
+      // 验证成功后3秒自动跳转到登录页
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
     } else {
       verificationResult.value = 'error'
       errorMessage.value = '邮箱验证失败，请稍后重试'
@@ -200,5 +207,13 @@ onMounted(() => {
   font-size: 0.875rem;
   color: #6b7280;
   margin-top: 0.5rem;
+  line-height: 1.6;
+}
+
+.auto-redirect-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  font-style: italic;
 }
 </style>

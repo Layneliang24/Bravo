@@ -171,4 +171,71 @@ describe('VerifyEmailView', () => {
 
     expect(wrapper.text()).toContain('重新发送')
   })
+
+  it('验证成功后应该自动跳转到登录页（延迟跳转）', async () => {
+    const mockRoute = {
+      query: { token: 'test-token' },
+    }
+    ;(useRoute as any).mockReturnValue(mockRoute)
+
+    const routerPush = vi.fn()
+    const mockRouter = { push: routerPush }
+    ;(useRouter as any).mockReturnValue(mockRouter)
+
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'verifyEmail').mockResolvedValue({
+      message: '邮箱验证成功',
+    })
+
+    mount(VerifyEmailView)
+    // 等待验证完成和自动跳转（假设延迟3秒）
+    await new Promise(resolve => setTimeout(resolve, 3500))
+
+    // 应该自动跳转到登录页
+    expect(routerPush).toHaveBeenCalledWith('/login')
+  })
+
+  it('验证成功后的提示信息应该清晰友好', async () => {
+    const mockRoute = {
+      query: { token: 'test-token' },
+    }
+    ;(useRoute as any).mockReturnValue(mockRoute)
+
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'verifyEmail').mockResolvedValue({
+      message: '邮箱验证成功，您现在可以登录了',
+    })
+
+    const wrapper = mount(VerifyEmailView)
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    const text = wrapper.text()
+    // 应该包含友好的成功提示
+    expect(text).toContain('邮箱验证成功')
+    expect(text).toContain('登录')
+  })
+
+  it('验证失败后的错误提示应该具有指导性', async () => {
+    const mockRoute = {
+      query: { token: 'invalid-token' },
+    }
+    ;(useRoute as any).mockReturnValue(mockRoute)
+
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    vi.spyOn(store, 'verifyEmail').mockRejectedValue(
+      new Error('验证链接已过期或无效')
+    )
+
+    const wrapper = mount(VerifyEmailView)
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    const text = wrapper.text()
+    // 应该包含指导性的错误提示
+    expect(text).toContain('邮箱验证失败')
+    expect(text).toContain('过期')
+    expect(text).toContain('重新申请')
+  })
 })

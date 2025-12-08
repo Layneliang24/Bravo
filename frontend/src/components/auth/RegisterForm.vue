@@ -7,8 +7,8 @@
     <p class="verification-message">
       我们已向您的邮箱 <strong>{{ registeredEmail }}</strong> 发送了验证邮件。
     </p>
-    <p class="verification-instruction">
-      请查收您的邮箱并点击验证链接以完成邮箱验证。
+      <p class="verification-instruction">
+      请查收您的邮箱（包括垃圾邮件文件夹），点击验证链接以完成邮箱验证。验证链接将在24小时内有效。
     </p>
     <div v-if="verificationMessage" :class="['verification-feedback', verificationMessageType]">
       {{ verificationMessage }}
@@ -259,7 +259,9 @@ const handleResendVerification = async () => {
       verificationMessageType.value = 'success'
     }
   } catch (error: any) {
-    const errorMessage = error?.message || '发送验证邮件失败，请稍后重试'
+    const errorMessage =
+      error?.message ||
+      '发送验证邮件失败，请稍后重试。如果问题持续存在，请联系客服支持。'
     verificationMessage.value = errorMessage
     verificationMessageType.value = 'error'
   } finally {
