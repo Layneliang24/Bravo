@@ -180,15 +180,15 @@ const strengthHint = computed(() => {
 }
 
 .strength-bar.weak {
-  background-color: #ef4444; /* 红色 */
+  background-color: var(--color-error);
 }
 
 .strength-bar.medium {
-  background-color: #f59e0b; /* 橙色/黄色 */
+  background-color: #f59e0b;
 }
 
 .strength-bar.strong {
-  background-color: #10b981; /* 绿色 */
+  background-color: var(--color-success);
 }
 
 .strength-info {
@@ -200,11 +200,11 @@ const strengthHint = computed(() => {
 
 .strength-text {
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .strength-hint {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 

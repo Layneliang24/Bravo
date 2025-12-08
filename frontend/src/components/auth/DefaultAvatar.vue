@@ -80,7 +80,7 @@ const handleImageLoad = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #3b82f6;
+  background: var(--gradient-button);
   color: white;
   font-weight: 600;
   overflow: hidden;

@@ -331,32 +331,32 @@ const handleGoToHome = () => {
 .verification-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 .verification-message {
   font-size: 1rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   line-height: 1.6;
 }
 
 .verification-message strong {
-  color: #3b82f6;
+  color: var(--color-primary-dark-blue);
   font-weight: 600;
 }
 
 .verification-instruction {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
 .verification-feedback {
   padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -410,9 +410,9 @@ const handleGoToHome = () => {
   width: 100%;
   padding: 0.75rem 1rem;
   background-color: transparent;
-  color: #6b7280;
+  color: var(--text-secondary);
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -421,7 +421,7 @@ const handleGoToHome = () => {
 
 .home-button:hover {
   background-color: #f9fafb;
-  color: #4b5563;
+  color: var(--text-primary);
   border-color: #9ca3af;
 }
 </style>

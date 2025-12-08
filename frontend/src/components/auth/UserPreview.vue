@@ -53,7 +53,7 @@ const props = withDefaults(defineProps<Props>(), {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -94,7 +94,7 @@ const props = withDefaults(defineProps<Props>(), {
 .display-name {
   font-size: 1rem;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
 /* 淡入淡出过渡动画 */

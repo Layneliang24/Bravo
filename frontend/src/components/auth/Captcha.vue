@@ -181,7 +181,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -191,17 +191,17 @@ defineExpose({
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 0.875rem;
   background-color: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
 }
 
 .error button {
   padding: 0.5rem 1rem;
-  background-color: #ef4444;
-  color: white;
+  background-color: var(--color-error);
+  color: var(--text-light);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -230,7 +230,7 @@ defineExpose({
   width: 100%;
   min-height: 40px;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   background-color: #f9fafb;
   overflow: hidden;
 }
@@ -243,7 +243,7 @@ defineExpose({
 
 .captcha-placeholder {
   padding: 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   text-align: center;
 }
@@ -258,14 +258,14 @@ defineExpose({
   flex: 1;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s ease;
 }
 
 .captcha-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--input-border-focus);
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
