@@ -15,7 +15,11 @@
       :error="errors.password"
       required
     />
+    <div v-if="errors.captcha_answer" class="error-message">
+      {{ errors.captcha_answer }}
+    </div>
     <Captcha
+      ref="captchaRef"
       :disabled="isSubmitting"
       @captcha-update="handleCaptchaUpdate"
     />
@@ -28,6 +32,8 @@
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
 
@@ -47,6 +53,9 @@ const formData = reactive<FormData>({
 
 const errors = reactive<Partial<Record<keyof FormData, string>>>({})
 const isSubmitting = ref(false)
+const captchaRef = ref<InstanceType<typeof Captcha> | null>(null)
+const router = useRouter()
+const authStore = useAuthStore()
 
 const handleCaptchaUpdate = (data: {
   captcha_id: string
@@ -119,11 +128,26 @@ const handleSubmit = async () => {
     return
   }
 
-  // TODO: 集成Auth Store登录功能
   isSubmitting.value = true
   try {
-    // 登录逻辑将在后续任务中实现
-    console.log('Login attempt:', formData)
+    await authStore.login({
+      email: formData.email,
+      password: formData.password,
+      captcha_id: formData.captcha_id,
+      captcha_answer: formData.captcha_answer,
+    })
+
+    // 登录成功，导航到首页
+    await router.push('/')
+  } catch (error: any) {
+    // 登录失败，显示错误信息
+    const errorMessage = error?.message || '登录失败，请稍后重试'
+    errors.captcha_answer = errorMessage
+
+    // 刷新验证码
+    if (captchaRef.value && typeof captchaRef.value.refreshCaptcha === 'function') {
+      await captchaRef.value.refreshCaptcha()
+    }
   } finally {
     isSubmitting.value = false
   }

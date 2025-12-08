@@ -794,10 +794,10 @@
             "description": "使用VeeValidate库为`LoginForm.vue`中的邮箱、密码和验证码字段实现客户端验证规则，并显示相应的错误信息。",
             "dependencies": [2],
             "details": "在`LoginForm.vue`中集成VeeValidate。为邮箱字段添加有效的邮箱格式验证规则。为密码字段添加最小长度（例如8位）和必填验证。为验证码字段添加必填验证。配置VeeValidate以在用户输入无效时显示错误提示信息。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写组件测试，模拟用户输入无效的邮箱、过短的密码或空验证码，验证VeeValidate是否正确显示错误信息，并在所有字段有效前阻止表单提交。手动测试不同验证场景。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T12:54:49.086Z"
+            "updatedAt": "2025-12-08T12:58:17.503Z"
           },
           {
             "id": 4,
@@ -805,9 +805,10 @@
             "description": "将`LoginForm`与Pinia `auth` store的`login` action进行集成，处理登录成功后的导航、登录失败时的错误提示和验证码刷新。",
             "dependencies": [3],
             "details": "在`LoginForm.vue`中，通过Pinia `useAuthStore`调用`login` action，将表单的邮箱、密码和验证码数据作为参数传递。处理`login` action返回的成功或失败结果。登录成功后，执行页面导航（例如，跳转到仪表盘）。登录失败时，捕获错误信息，显示用户友好的错误提示，并触发`Captcha`组件刷新验证码。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写组件测试，模拟`auth` store的`login` action的成功和失败场景。验证成功时是否触发正确导航，失败时是否显示错误信息并调用`Captcha`刷新方法。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:00:02.996Z"
           },
           {
             "id": 5,
@@ -820,7 +821,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T12:54:49.086Z"
+        "updatedAt": "2025-12-08T13:00:02.996Z"
       },
       {
         "id": "13",
@@ -1215,7 +1216,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T12:54:49.090Z",
+      "lastModified": "2025-12-08T13:00:03.000Z",
       "taskCount": 18,
       "completedCount": 11,
       "tags": ["REQ-2025-003-user-login"]

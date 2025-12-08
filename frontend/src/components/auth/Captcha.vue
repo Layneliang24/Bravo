@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineExpose } from 'vue'
 
 interface Props {
   disabled?: boolean
@@ -162,6 +162,11 @@ const handleInput = () => {
 // 组件挂载时加载验证码
 onMounted(() => {
   loadCaptcha()
+})
+
+// 暴露方法供父组件调用
+defineExpose({
+  refreshCaptcha,
 })
 </script>
 
