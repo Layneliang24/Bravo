@@ -221,6 +221,13 @@ def main():
         # 没有scripts-golden文件，直接通过
         sys.exit(0)
 
+    # 过滤出真正被修改的文件（通过git diff检查）
+    actually_modified = get_actually_modified_files(golden_files)
+
+    if not actually_modified:
+        # 没有真正被修改的文件，直接通过（避免误报）
+        sys.exit(0)
+
     # 检查人工授权环境变量（静默模式）
     manual_auth = os.environ.get("GOLDEN_SCRIPTS_MANUAL_AUTH")
     if manual_auth == "AUTHORIZED_BY_HUMAN":
@@ -231,8 +238,8 @@ def main():
         sys.exit(0)
 
     # 只有在需要授权时才输出文件列表
-    print("检测到 {} 个核心保护脚本被修改:".format(len(golden_files)))
-    for file in golden_files:
+    print("检测到 {} 个核心保护脚本被修改:".format(len(actually_modified)))
+    for file in actually_modified:
         print("   - {}".format(file))
     print("")
 
@@ -263,7 +270,9 @@ def main():
     if os.environ.get("CI") == "true":
         print("ERROR: 检测到CI环境中的修改尝试")
         print("INFO: AI无法在CI环境中修改保护脚本")
-        log_security_violation("CI环境修改尝试", "文件: {}".format(", ".join(golden_files)))
+        log_security_violation(
+            "CI环境修改尝试", "文件: {}".format(", ".join(actually_modified))
+        )
         sys.exit(1)
 
     # 要求授权
