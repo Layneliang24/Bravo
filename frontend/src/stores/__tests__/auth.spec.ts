@@ -825,4 +825,200 @@ describe('Auth Store', () => {
       ).rejects.toThrow('网络错误，请稍后重试')
     })
   })
+
+  describe('sendEmailVerification', () => {
+    let mockClient: AxiosInstance
+
+    beforeEach(() => {
+      mockClient = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+        request: vi.fn(),
+        defaults: {} as any,
+        interceptors: {} as any,
+        create: vi.fn(),
+      } as unknown as AxiosInstance
+      setApiClient(mockClient)
+    })
+
+    it('应该成功发送邮箱验证邮件', async () => {
+      const mockResponse = {
+        data: {
+          message: '验证邮件已发送，请查收',
+        },
+      }
+      mockClient.post = vi.fn().mockResolvedValue(mockResponse)
+
+      // 设置token以通过认证检查
+      localStorage.setItem('auth_token', 'test-token')
+
+      const store = useAuthStore()
+      const result = await store.sendEmailVerification({
+        email: 'test@example.com',
+      })
+
+      expect(mockClient.post).toHaveBeenCalledWith(
+        '/api/auth/email/verify/send/',
+        {
+          email: 'test@example.com',
+        },
+        {
+          headers: {
+            Authorization: 'Bearer test-token',
+          },
+        }
+      )
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('应该处理邮箱不匹配错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '邮箱不属于当前用户',
+            code: 'EMAIL_MISMATCH',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      localStorage.setItem('auth_token', 'test-token')
+
+      const store = useAuthStore()
+      await expect(
+        store.sendEmailVerification({
+          email: 'other@example.com',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理未认证错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 401,
+          data: {
+            error: '未认证',
+            code: 'UNAUTHORIZED',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.sendEmailVerification({
+          email: 'test@example.com',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理网络错误', async () => {
+      const error = new Error('网络错误，请稍后重试')
+      mockClient.post = vi.fn().mockRejectedValue(error)
+
+      localStorage.setItem('auth_token', 'test-token')
+
+      const store = useAuthStore()
+      await expect(
+        store.sendEmailVerification({
+          email: 'test@example.com',
+        })
+      ).rejects.toThrow('网络错误，请稍后重试')
+    })
+  })
+
+  describe('verifyEmail', () => {
+    let mockClient: AxiosInstance
+
+    beforeEach(() => {
+      mockClient = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+        request: vi.fn(),
+        defaults: {} as any,
+        interceptors: {} as any,
+        create: vi.fn(),
+      } as unknown as AxiosInstance
+      setApiClient(mockClient)
+    })
+
+    it('应该成功验证邮箱', async () => {
+      const mockResponse = {
+        data: {
+          message: '邮箱验证成功！',
+        },
+      }
+      mockClient.get = vi.fn().mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      const result = await store.verifyEmail('valid-token')
+
+      expect(mockClient.get).toHaveBeenCalledWith(
+        '/api/auth/email/verify/valid-token/'
+      )
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('应该处理无效token错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            detail: '无效的验证链接。',
+          },
+        },
+      }
+      mockClient.get = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(store.verifyEmail('invalid-token')).rejects.toThrow()
+    })
+
+    it('应该处理过期token错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            detail: '验证链接已过期。',
+          },
+        },
+      }
+      mockClient.get = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(store.verifyEmail('expired-token')).rejects.toThrow()
+    })
+
+    it('应该处理已使用的token错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            detail: '该验证令牌已被使用',
+          },
+        },
+      }
+      mockClient.get = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(store.verifyEmail('used-token')).rejects.toThrow()
+    })
+
+    it('应该处理网络错误', async () => {
+      const error = new Error('网络错误，请稍后重试')
+      mockClient.get = vi.fn().mockRejectedValue(error)
+
+      const store = useAuthStore()
+      await expect(store.verifyEmail('valid-token')).rejects.toThrow(
+        '网络错误，请稍后重试'
+      )
+    })
+  })
 })

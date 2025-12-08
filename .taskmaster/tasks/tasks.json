@@ -1034,7 +1034,7 @@
         "testStrategy": "编写`e2e/tests/auth/register.spec.ts`和`e2e/tests/auth/email-verification.spec.ts`E2E测试，验证注册后邮箱验证流程的完整性，包括邮件发送、链接点击和状态更新。",
         "priority": "medium",
         "dependencies": ["6", "11", "13"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1052,9 +1052,10 @@
             "description": "在`auth` store中实现`sendEmailVerification`和`verifyEmail`两个action，用于与后端API进行交互，处理邮箱验证的发送和验证逻辑。",
             "dependencies": [],
             "details": "在`frontend/src/stores/auth.js`中实现`sendEmailVerification` action，该action负责调用后端发送验证邮件的API。同时，实现`verifyEmail` action，该action负责调用后端验证邮箱的API，并根据API响应更新用户状态或显示结果。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写单元测试或集成测试，验证`sendEmailVerification`和`verifyEmail`这两个action能够正确地调用后端API并处理响应数据，包括成功和失败场景。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T15:25:00.347Z"
           },
           {
             "id": 3,
@@ -1086,7 +1087,8 @@
             "testStrategy": "进行全面的用户体验测试，确保所有提示信息准确、及时，页面跳转逻辑符合预期，用户在整个邮箱验证流程中能够获得流畅且友好的体验。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-08T15:25:00.347Z"
       },
       {
         "id": "17",
@@ -1233,7 +1235,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T15:23:05.759Z",
+      "lastModified": "2025-12-08T15:25:00.348Z",
       "taskCount": 18,
       "completedCount": 15,
       "tags": ["REQ-2025-003-user-login"]

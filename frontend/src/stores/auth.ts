@@ -122,6 +122,18 @@ export interface ResetPasswordResponse {
   message: string
 }
 
+export interface SendEmailVerificationCredentials {
+  email: string
+}
+
+export interface SendEmailVerificationResponse {
+  message: string
+}
+
+export interface VerifyEmailResponse {
+  message: string
+}
+
 // localStorage键名
 const TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'auth_refresh_token'
@@ -369,6 +381,43 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const sendEmailVerification = async (
+    credentials: SendEmailVerificationCredentials
+  ): Promise<SendEmailVerificationResponse> => {
+    try {
+      const currentToken = token.value
+      if (!currentToken) {
+        throw new Error('未认证，请先登录')
+      }
+
+      const response = await getApiClient().post<SendEmailVerificationResponse>(
+        '/api/auth/email/verify/send/',
+        credentials,
+        {
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+          },
+        }
+      )
+
+      return response.data
+    } catch (error: any) {
+      handleApiError(error, '发送验证邮件失败，请稍后重试')
+    }
+  }
+
+  const verifyEmail = async (token: string): Promise<VerifyEmailResponse> => {
+    try {
+      const response = await getApiClient().get<VerifyEmailResponse>(
+        `/api/auth/email/verify/${token}/`
+      )
+
+      return response.data
+    } catch (error: any) {
+      handleApiError(error, '邮箱验证失败，请稍后重试')
+    }
+  }
+
   // 初始化：从localStorage恢复token
   restoreTokens()
 
@@ -391,5 +440,7 @@ export const useAuthStore = defineStore('auth', () => {
     previewLogin,
     sendPasswordReset,
     resetPassword,
+    sendEmailVerification,
+    verifyEmail,
   }
 })
