@@ -1,3 +1,4 @@
+// REQ-ID: REQ-2025-003-user-login
 import { createRouter, createWebHistory } from 'vue-router'
 import type { Component } from 'vue'
 
@@ -23,6 +24,12 @@ const router = createRouter({
       path: '/blog/:id',
       name: 'BlogDetail',
       component: (): Promise<Component> => import('../views/BlogDetail.vue'),
+    },
+    {
+      path: '/verify-email',
+      name: 'VerifyEmail',
+      component: (): Promise<Component> =>
+        import('../views/VerifyEmailView.vue'),
     },
   ],
 })

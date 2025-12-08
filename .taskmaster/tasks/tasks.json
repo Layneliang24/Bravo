@@ -1071,13 +1071,13 @@
           {
             "id": 4,
             "title": "实现邮箱验证链接处理页面及逻辑",
-            "description": "创建一个专门的路由和页面（例如`/verify-email?token=...`），用于接收邮箱验证链接中的token，调用`verifyEmail` action处理验证逻辑，并向用户显示验证结果。",
+            "description": "创建一个专门的路由和页面（例如`/verify-email?token=...`），用于接收邮箱验证链接中的token，调用`verifyEmail` action处理验证逻辑，并向用户显示验证结果。 [Updated: 2025/12/8]",
             "dependencies": [2],
-            "details": "创建`frontend/src/views/VerifyEmailView.vue`组件，并配置相应的路由`/verify-email`。在该页面中，从URL查询参数中获取`token`，然后调用`auth` store中的`verifyEmail` action。根据`verifyEmail` action的返回结果，显示邮箱验证成功或失败的消息，并提供适当的导航选项（如跳转到登录页或个人中心）。",
-            "status": "in-progress",
+            "details": "创建`frontend/src/views/VerifyEmailView.vue`组件，并配置相应的路由`/verify-email`。在该页面中，从URL查询参数中获取`token`，然后调用`auth` store中的`verifyEmail` action。根据`verifyEmail` action的返回结果，显示邮箱验证成功或失败的消息，并提供适当的导航选项（如跳转到登录页或个人中心）。\n<info added on 2025-12-08T15:45:35.494Z>\nTDD红阶段：已创建测试文件。\n添加的测试用例：\n1. 应该正确渲染邮箱验证页面\n2. 应该从URL中获取token参数\n3. 没有token时应该显示错误消息\n4. 挂载时应该自动调用verifyEmail action\n5. 验证成功时应该显示成功消息\n6. 验证失败时应该显示错误消息\n7. 验证中应该显示加载状态\n8. 验证成功后应该提供跳转到登录页的按钮\n9. 验证失败后应该提供重新发送验证邮件的选项\n下一步：运行测试确认失败（红阶段），然后实现功能（绿阶段）。\n</info added on 2025-12-08T15:45:35.494Z>\n<info added on 2025-12-08T15:45:52.480Z>\nTDD红阶段完成：测试失败，因为组件文件不存在（符合预期）。\n绿阶段：创建`VerifyEmailView.vue`组件和路由配置，实现功能使测试通过。\n</info added on 2025-12-08T15:45:52.480Z>\n<info added on 2025-12-08T15:46:38.189Z>\nTDD绿阶段完成：所有9个测试通过\n\n实现内容：\n1. 创建VerifyEmailView.vue组件\n2. 从URL查询参数获取token\n3. 组件挂载时自动调用verifyEmail action\n4. 显示验证中、成功、失败三种状态\n5. 提供跳转到登录页的按钮\n6. 添加完整的样式和用户体验\n7. 配置路由/verify-email\n\n测试结果：\n- 所有9个测试用例通过\n- 功能已完整实现，符合TDD要求\n</info added on 2025-12-08T15:46:38.189Z>",
+            "status": "done",
             "testStrategy": "手动构造带有有效和无效token的URL，访问`/verify-email`页面，验证页面是否能正确解析token，调用`verifyEmail` action，并根据验证结果显示正确的UI和执行相应的页面跳转。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T15:35:36.236Z"
+            "updatedAt": "2025-12-08T15:46:39.437Z"
           },
           {
             "id": 5,
@@ -1090,7 +1090,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T15:42:40.598Z"
+        "updatedAt": "2025-12-08T15:46:39.437Z"
       },
       {
         "id": "17",
@@ -1237,7 +1237,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T15:42:40.599Z",
+      "lastModified": "2025-12-08T15:46:39.438Z",
       "taskCount": 18,
       "completedCount": 15,
       "tags": ["REQ-2025-003-user-login"]
