@@ -962,7 +962,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/UserPreview.spec.ts`组件测试。编写`frontend/src/stores/__tests__/auth.spec.ts`单元测试，模拟`previewLogin`的API响应。编写`e2e/tests/auth/login-preview.spec.ts`E2E测试，验证登录预验证的触发、头像显示、默认头像显示、错误处理和频率限制。",
         "priority": "high",
         "dependencies": ["8", "9", "11", "12"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
