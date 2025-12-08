@@ -939,10 +939,10 @@
             "description": "创建一个独立的页面或组件，用于用户通过重置链接访问时输入新密码并完成密码重置。",
             "dependencies": [3],
             "details": "创建一个路由（例如`/reset-password?token=...`）和对应的Vue组件。组件应从URL中获取`token`参数。集成`FloatingInput`用于新密码和确认密码输入，集成`PasswordStrength`组件显示密码强度。表单提交时，调用`auth` store的`resetPassword` action。需要实现客户端表单验证、密码强度显示和错误提示。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写组件测试，验证重置密码页面的渲染、token解析、输入、提交行为、密码强度显示、错误提示以及与`auth` store的交互。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T15:14:09.865Z"
+            "updatedAt": "2025-12-08T15:18:04.132Z"
           },
           {
             "id": 5,
@@ -955,7 +955,7 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-12-08T15:14:09.865Z"
+        "updatedAt": "2025-12-08T15:18:04.132Z"
       },
       {
         "id": "15",
@@ -1232,7 +1232,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T15:14:09.866Z",
+      "lastModified": "2025-12-08T15:18:04.133Z",
       "taskCount": 18,
       "completedCount": 14,
       "tags": ["REQ-2025-003-user-login"]
