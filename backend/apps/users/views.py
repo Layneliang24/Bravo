@@ -86,6 +86,19 @@ class BaseCaptchaView(APIView):
             status=status.HTTP_200_OK,
         )
 
+    def _generate_tokens(self, user):
+        """
+        为用户生成JWT Token（公共方法）
+
+        Args:
+            user: User实例
+
+        Returns:
+            tuple: (access_token, refresh_token)
+        """
+        refresh = RefreshToken.for_user(user)
+        return str(refresh.access_token), str(refresh)
+
 
 class CaptchaAPIView(BaseCaptchaView):
     """获取验证码API视图"""
@@ -124,7 +137,7 @@ class CaptchaRefreshAPIView(BaseCaptchaView):
         return self._create_captcha_response()
 
 
-class RegisterAPIView(APIView):
+class RegisterAPIView(BaseCaptchaView):
     """用户注册API视图"""
 
     permission_classes = []  # 允许匿名访问
@@ -200,19 +213,6 @@ class RegisterAPIView(APIView):
                 return Response(mismatch_error, status=status.HTTP_400_BAD_REQUEST)
 
         return None
-
-    def _generate_tokens(self, user):
-        """
-        为用户生成JWT Token
-
-        Args:
-            user: User实例
-
-        Returns:
-            tuple: (access_token, refresh_token)
-        """
-        refresh = RefreshToken.for_user(user)
-        return str(refresh.access_token), str(refresh)
 
     def post(self, request):
         """
@@ -400,19 +400,6 @@ class LoginAPIView(BaseCaptchaView):
             },
             status=status.HTTP_200_OK,
         )
-
-    def _generate_tokens(self, user):
-        """
-        为用户生成JWT Token
-
-        Args:
-            user: User实例
-
-        Returns:
-            tuple: (access_token, refresh_token)
-        """
-        refresh = RefreshToken.for_user(user)
-        return str(refresh.access_token), str(refresh)
 
 
 class PreviewAPIView(BaseCaptchaView):
