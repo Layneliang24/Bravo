@@ -597,4 +597,232 @@ describe('Auth Store', () => {
       ).rejects.toThrow('网络错误，请稍后重试')
     })
   })
+
+  describe('sendPasswordReset', () => {
+    let mockClient: AxiosInstance
+
+    beforeEach(() => {
+      mockClient = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+        request: vi.fn(),
+        defaults: {} as any,
+        interceptors: {} as any,
+        create: vi.fn(),
+      } as unknown as AxiosInstance
+      setApiClient(mockClient)
+    })
+
+    it('应该成功发送密码重置邮件', async () => {
+      const mockResponse = {
+        data: {
+          message: '密码重置邮件已发送，请查收',
+        },
+      }
+      mockClient.post = vi.fn().mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      const result = await store.sendPasswordReset({
+        email: 'test@example.com',
+        captcha_id: 'test-captcha-id',
+        captcha_answer: '1234',
+      })
+
+      expect(mockClient.post).toHaveBeenCalledWith(
+        '/api/auth/password/reset/send/',
+        {
+          email: 'test@example.com',
+          captcha_id: 'test-captcha-id',
+          captcha_answer: '1234',
+        }
+      )
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('应该处理验证码错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '验证码错误',
+            code: 'INVALID_CAPTCHA',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.sendPasswordReset({
+          email: 'test@example.com',
+          captcha_id: 'invalid-captcha-id',
+          captcha_answer: 'wrong',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理邮箱格式错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '邮箱格式不正确',
+            code: 'INVALID_EMAIL',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.sendPasswordReset({
+          email: 'invalid-email',
+          captcha_id: 'test-captcha-id',
+          captcha_answer: '1234',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理网络错误', async () => {
+      const error = new Error('网络错误，请稍后重试')
+      mockClient.post = vi.fn().mockRejectedValue(error)
+
+      const store = useAuthStore()
+      await expect(
+        store.sendPasswordReset({
+          email: 'test@example.com',
+          captcha_id: 'test-captcha-id',
+          captcha_answer: '1234',
+        })
+      ).rejects.toThrow('网络错误，请稍后重试')
+    })
+  })
+
+  describe('resetPassword', () => {
+    let mockClient: AxiosInstance
+
+    beforeEach(() => {
+      mockClient = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+        request: vi.fn(),
+        defaults: {} as any,
+        interceptors: {} as any,
+        create: vi.fn(),
+      } as unknown as AxiosInstance
+      setApiClient(mockClient)
+    })
+
+    it('应该成功重置密码', async () => {
+      const mockResponse = {
+        data: {
+          message: '密码重置成功',
+        },
+      }
+      mockClient.post = vi.fn().mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      const result = await store.resetPassword({
+        token: 'reset-token',
+        password: 'NewPassword123!',
+        password_confirm: 'NewPassword123!',
+      })
+
+      expect(mockClient.post).toHaveBeenCalledWith(
+        '/api/auth/password/reset/',
+        {
+          token: 'reset-token',
+          password: 'NewPassword123!',
+          password_confirm: 'NewPassword123!',
+        }
+      )
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('应该处理密码不匹配错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '两次输入的密码不一致',
+            code: 'PASSWORD_MISMATCH',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.resetPassword({
+          token: 'reset-token',
+          password: 'NewPassword123!',
+          password_confirm: 'DifferentPassword123!',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理弱密码错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '密码长度至少为8位',
+            code: 'WEAK_PASSWORD',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.resetPassword({
+          token: 'reset-token',
+          password: 'weak',
+          password_confirm: 'weak',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理无效token错误', async () => {
+      const errorResponse = {
+        response: {
+          status: 400,
+          data: {
+            error: '无效的重置链接',
+            code: 'INVALID_TOKEN',
+          },
+        },
+      }
+      mockClient.post = vi.fn().mockRejectedValue(errorResponse)
+
+      const store = useAuthStore()
+      await expect(
+        store.resetPassword({
+          token: 'invalid-token',
+          password: 'NewPassword123!',
+          password_confirm: 'NewPassword123!',
+        })
+      ).rejects.toThrow()
+    })
+
+    it('应该处理网络错误', async () => {
+      const error = new Error('网络错误，请稍后重试')
+      mockClient.post = vi.fn().mockRejectedValue(error)
+
+      const store = useAuthStore()
+      await expect(
+        store.resetPassword({
+          token: 'reset-token',
+          password: 'NewPassword123!',
+          password_confirm: 'NewPassword123!',
+        })
+      ).rejects.toThrow('网络错误，请稍后重试')
+    })
+  })
 })

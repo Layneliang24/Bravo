@@ -102,6 +102,26 @@ export interface PreviewCredentials {
   captcha_answer: string
 }
 
+export interface SendPasswordResetCredentials {
+  email: string
+  captcha_id: string
+  captcha_answer: string
+}
+
+export interface ResetPasswordCredentials {
+  token: string
+  password: string
+  password_confirm: string
+}
+
+export interface SendPasswordResetResponse {
+  message: string
+}
+
+export interface ResetPasswordResponse {
+  message: string
+}
+
 // localStorage键名
 const TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'auth_refresh_token'
@@ -319,6 +339,36 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const sendPasswordReset = async (
+    credentials: SendPasswordResetCredentials
+  ): Promise<SendPasswordResetResponse> => {
+    try {
+      const response = await getApiClient().post<SendPasswordResetResponse>(
+        '/api/auth/password/reset/send/',
+        credentials
+      )
+
+      return response.data
+    } catch (error: any) {
+      handleApiError(error, '发送密码重置邮件失败，请检查输入信息')
+    }
+  }
+
+  const resetPassword = async (
+    credentials: ResetPasswordCredentials
+  ): Promise<ResetPasswordResponse> => {
+    try {
+      const response = await getApiClient().post<ResetPasswordResponse>(
+        '/api/auth/password/reset/',
+        credentials
+      )
+
+      return response.data
+    } catch (error: any) {
+      handleApiError(error, '密码重置失败，请检查输入信息')
+    }
+  }
+
   // 初始化：从localStorage恢复token
   restoreTokens()
 
@@ -339,5 +389,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchCaptcha,
     refreshCaptcha,
     previewLogin,
+    sendPasswordReset,
+    resetPassword,
   }
 })
