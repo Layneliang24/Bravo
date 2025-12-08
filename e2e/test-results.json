@@ -101,7 +101,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11864,
+                      "duration": 11570,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at HomePage.getTitle (/app/tests/app.spec.ts:19:28)\n    at /app/tests/app.spec.ts:70:34",
@@ -125,7 +125,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:21:14.393Z",
+                      "startTime": "2025-12-08T16:34:15.006Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -154,7 +154,7 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11916,
+                      "duration": 11167,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at HomePage.getTitle (/app/tests/app.spec.ts:19:28)\n    at /app/tests/app.spec.ts:70:34",
@@ -178,7 +178,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:21:27.403Z",
+                      "startTime": "2025-12-08T16:34:27.823Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -212,7 +212,7 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11340,
+                      "duration": 11034,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at HomePage.getTitle (/app/tests/app.spec.ts:19:28)\n    at /app/tests/app.spec.ts:70:34",
@@ -236,7 +236,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:21:41.004Z",
+                      "startTime": "2025-12-08T16:34:39.704Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -286,7 +286,7 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11306,
+                      "duration": 11035,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n\n    at HomePage.getDescription (/app/tests/app.spec.ts:23:28)\n    at /app/tests/app.spec.ts:76:40",
@@ -310,7 +310,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:21:53.301Z",
+                      "startTime": "2025-12-08T16:34:51.330Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -339,7 +339,7 @@
                       "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12659,
+                      "duration": 11365,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n\n    at HomePage.getDescription (/app/tests/app.spec.ts:23:28)\n    at /app/tests/app.spec.ts:76:40",
@@ -363,7 +363,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:22:05.590Z",
+                      "startTime": "2025-12-08T16:35:02.912Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -397,7 +397,7 @@
                       "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13071,
+                      "duration": 11328,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('p')\u001b[22m\n\n    at HomePage.getDescription (/app/tests/app.spec.ts:23:28)\n    at /app/tests/app.spec.ts:76:40",
@@ -421,7 +421,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:22:19.669Z",
+                      "startTime": "2025-12-08T16:35:15.228Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -471,12 +471,12 @@
                       "workerIndex": 6,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 967,
+                      "duration": 699,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:22:34.584Z",
+                      "startTime": "2025-12-08T16:35:27.496Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -513,7 +513,7 @@
                       "workerIndex": 6,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11656,
+                      "duration": 11380,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at LoginPage.getLoginTitle (/app/tests/app.spec.ts:56:28)\n    at /app/tests/app.spec.ts:96:35",
@@ -537,7 +537,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:22:35.790Z",
+                      "startTime": "2025-12-08T16:35:28.297Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -566,7 +566,7 @@
                       "workerIndex": 7,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11728,
+                      "duration": 11419,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at LoginPage.getLoginTitle (/app/tests/app.spec.ts:56:28)\n    at /app/tests/app.spec.ts:96:35",
@@ -590,7 +590,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:22:48.460Z",
+                      "startTime": "2025-12-08T16:35:40.509Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -624,7 +624,7 @@
                       "workerIndex": 8,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11497,
+                      "duration": 11313,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at LoginPage.getLoginTitle (/app/tests/app.spec.ts:56:28)\n    at /app/tests/app.spec.ts:96:35",
@@ -648,7 +648,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:23:01.909Z",
+                      "startTime": "2025-12-08T16:35:53.152Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -698,7 +698,7 @@
                       "workerIndex": 9,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11572,
+                      "duration": 11292,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at /app/tests/app.spec.ts:102:21",
@@ -722,7 +722,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:23:14.471Z",
+                      "startTime": "2025-12-08T16:36:05.324Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -751,7 +751,7 @@
                       "workerIndex": 10,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12246,
+                      "duration": 11378,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at /app/tests/app.spec.ts:102:21",
@@ -775,7 +775,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:23:27.186Z",
+                      "startTime": "2025-12-08T16:36:17.527Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -809,7 +809,7 @@
                       "workerIndex": 11,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12265,
+                      "duration": 12649,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at /app/tests/app.spec.ts:102:21",
@@ -833,7 +833,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:23:41.211Z",
+                      "startTime": "2025-12-08T16:36:29.928Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -883,7 +883,7 @@
                       "workerIndex": 12,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11481,
+                      "duration": 11396,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at LoginPage.login (/app/tests/app.spec.ts:49:16)\n    at /app/tests/app.spec.ts:114:21",
@@ -907,7 +907,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:23:55.776Z",
+                      "startTime": "2025-12-08T16:36:43.855Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -936,7 +936,7 @@
                       "workerIndex": 13,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12188,
+                      "duration": 11418,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at LoginPage.login (/app/tests/app.spec.ts:49:16)\n    at /app/tests/app.spec.ts:114:21",
@@ -960,7 +960,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:24:08.404Z",
+                      "startTime": "2025-12-08T16:36:56.238Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -994,7 +994,7 @@
                       "workerIndex": 14,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11819,
+                      "duration": 11446,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder=\"请输入用户名\"]')\u001b[22m\n\n    at LoginPage.fillUsername (/app/tests/app.spec.ts:37:21)\n    at LoginPage.login (/app/tests/app.spec.ts:49:16)\n    at /app/tests/app.spec.ts:114:21",
@@ -1018,7 +1018,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:24:21.880Z",
+                      "startTime": "2025-12-08T16:37:08.878Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1068,7 +1068,7 @@
                       "workerIndex": 15,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12769,
+                      "duration": 11398,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n\n    at LoginPage.clickLoginButton (/app/tests/app.spec.ts:45:21)\n    at /app/tests/app.spec.ts:128:21",
@@ -1092,7 +1092,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:24:35.224Z",
+                      "startTime": "2025-12-08T16:37:21.482Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1121,7 +1121,7 @@
                       "workerIndex": 16,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11556,
+                      "duration": 11430,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n\n    at LoginPage.clickLoginButton (/app/tests/app.spec.ts:45:21)\n    at /app/tests/app.spec.ts:128:21",
@@ -1145,7 +1145,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:24:49.907Z",
+                      "startTime": "2025-12-08T16:37:33.847Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1179,7 +1179,7 @@
                       "workerIndex": 17,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11202,
+                      "duration": 11383,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"登录\")')\u001b[22m\n\n    at LoginPage.clickLoginButton (/app/tests/app.spec.ts:45:21)\n    at /app/tests/app.spec.ts:128:21",
@@ -1203,7 +1203,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:25:02.506Z",
+                      "startTime": "2025-12-08T16:37:46.357Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1261,12 +1261,12 @@
                       "workerIndex": 18,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 137,
+                      "duration": 157,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:25:14.628Z",
+                      "startTime": "2025-12-08T16:37:58.701Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1303,7 +1303,7 @@
                       "workerIndex": 18,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 10672,
+                      "duration": 10684,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at /app/tests/app.spec.ts:158:30",
@@ -1327,7 +1327,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:25:14.849Z",
+                      "startTime": "2025-12-08T16:37:58.956Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1356,7 +1356,7 @@
                       "workerIndex": 19,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11070,
+                      "duration": 10835,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at /app/tests/app.spec.ts:158:30",
@@ -1380,7 +1380,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:25:26.438Z",
+                      "startTime": "2025-12-08T16:38:10.604Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1414,7 +1414,7 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 10852,
+                      "duration": 10706,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at /app/tests/app.spec.ts:158:30",
@@ -1438,7 +1438,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:25:38.910Z",
+                      "startTime": "2025-12-08T16:38:22.593Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1488,7 +1488,7 @@
                       "workerIndex": 21,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 10797,
+                      "duration": 10779,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at /app/tests/app.spec.ts:166:30",
@@ -1512,7 +1512,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:25:51.488Z",
+                      "startTime": "2025-12-08T16:38:34.251Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1541,7 +1541,7 @@
                       "workerIndex": 22,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 10859,
+                      "duration": 10769,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at /app/tests/app.spec.ts:166:30",
@@ -1565,7 +1565,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:26:03.342Z",
+                      "startTime": "2025-12-08T16:38:45.917Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1599,7 +1599,7 @@
                       "workerIndex": 23,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 10657,
+                      "duration": 10887,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('h2')\u001b[22m\n\n    at /app/tests/app.spec.ts:166:30",
@@ -1623,7 +1623,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:26:15.576Z",
+                      "startTime": "2025-12-08T16:38:57.724Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1681,12 +1681,12 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 722,
+                      "duration": 743,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:27.230Z",
+                      "startTime": "2025-12-08T16:39:09.602Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1715,12 +1715,12 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 676,
+                      "duration": 678,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:28.071Z",
+                      "startTime": "2025-12-08T16:39:10.467Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1757,12 +1757,12 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 114,
+                      "duration": 183,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:28.765Z",
+                      "startTime": "2025-12-08T16:39:11.164Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1791,12 +1791,12 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 627,
+                      "duration": 645,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:28.890Z",
+                      "startTime": "2025-12-08T16:39:11.365Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1825,7 +1825,7 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 203,
+                      "duration": 254,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/app.spec.ts:239:19",
@@ -1849,7 +1849,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:29.527Z",
+                      "startTime": "2025-12-08T16:39:12.029Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1878,7 +1878,7 @@
                       "workerIndex": 25,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 482,
+                      "duration": 541,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/app.spec.ts:239:19",
@@ -1902,7 +1902,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:26:30.709Z",
+                      "startTime": "2025-12-08T16:39:13.231Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1936,7 +1936,7 @@
                       "workerIndex": 26,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 283,
+                      "duration": 657,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/app.spec.ts:239:19",
@@ -1960,7 +1960,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:26:32.068Z",
+                      "startTime": "2025-12-08T16:39:15.821Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2027,7 +2027,7 @@
                       "workerIndex": 27,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2058,
+                      "duration": 2222,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:158:48",
@@ -2051,7 +2051,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:33.585Z",
+                      "startTime": "2025-12-08T16:39:19.225Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2080,7 +2080,7 @@
                       "workerIndex": 28,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2083,
+                      "duration": 2004,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:158:48",
@@ -2104,7 +2104,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:26:37.534Z",
+                      "startTime": "2025-12-08T16:39:23.377Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2138,7 +2138,7 @@
                       "workerIndex": 29,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1871,
+                      "duration": 1885,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:158:48",
@@ -2162,7 +2162,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:26:40.937Z",
+                      "startTime": "2025-12-08T16:39:26.716Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2212,7 +2212,7 @@
                       "workerIndex": 30,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1868,
+                      "duration": 1898,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:176:46",
@@ -2236,7 +2236,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:43.976Z",
+                      "startTime": "2025-12-08T16:39:29.704Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2265,7 +2265,7 @@
                       "workerIndex": 31,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2144,
+                      "duration": 1937,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:176:46",
@@ -2289,7 +2289,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:26:46.917Z",
+                      "startTime": "2025-12-08T16:39:32.806Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2323,7 +2323,7 @@
                       "workerIndex": 32,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2319,
+                      "duration": 1825,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:176:46",
@@ -2347,7 +2347,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:26:50.727Z",
+                      "startTime": "2025-12-08T16:39:35.909Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2397,7 +2397,7 @@
                       "workerIndex": 33,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2452,
+                      "duration": 1695,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:194:46",
@@ -2421,7 +2421,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:26:55.596Z",
+                      "startTime": "2025-12-08T16:39:38.391Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2450,7 +2450,7 @@
                       "workerIndex": 34,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1741,
+                      "duration": 1714,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:194:46",
@@ -2474,7 +2474,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:26:59.624Z",
+                      "startTime": "2025-12-08T16:39:40.650Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2508,7 +2508,7 @@
                       "workerIndex": 35,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2166,
+                      "duration": 1848,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /app/tests/auth/test-email-verification.spec.ts:194:46",
@@ -2532,7 +2532,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:27:02.250Z",
+                      "startTime": "2025-12-08T16:39:43.108Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2582,7 +2582,7 @@
                       "workerIndex": 36,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11122,
+                      "duration": 12442,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at RegisterPage.fillEmail (/app/tests/auth/test-email-verification.spec.ts:74:21)\n    at /app/tests/auth/test-email-verification.spec.ts:214:24",
@@ -2606,7 +2606,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:27:06.582Z",
+                      "startTime": "2025-12-08T16:39:45.975Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2635,7 +2635,7 @@
                       "workerIndex": 37,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11053,
+                      "duration": 11483,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at RegisterPage.fillEmail (/app/tests/auth/test-email-verification.spec.ts:74:21)\n    at /app/tests/auth/test-email-verification.spec.ts:214:24",
@@ -2659,7 +2659,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:27:18.477Z",
+                      "startTime": "2025-12-08T16:40:01.585Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2693,7 +2693,7 @@
                       "workerIndex": 38,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11860,
+                      "duration": 11743,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at RegisterPage.fillEmail (/app/tests/auth/test-email-verification.spec.ts:74:21)\n    at /app/tests/auth/test-email-verification.spec.ts:214:24",
@@ -2717,7 +2717,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:27:30.212Z",
+                      "startTime": "2025-12-08T16:40:14.262Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2767,7 +2767,7 @@
                       "workerIndex": 39,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12990,
+                      "duration": 12922,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n\n    at EmailVerificationPage.clickResendButton (/app/tests/auth/test-email-verification.spec.ts:48:21)\n    at /app/tests/auth/test-email-verification.spec.ts:253:28",
@@ -2791,7 +2791,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:27:43.031Z",
+                      "startTime": "2025-12-08T16:40:27.181Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2820,7 +2820,7 @@
                       "workerIndex": 40,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13275,
+                      "duration": 13026,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n\n    at EmailVerificationPage.clickResendButton (/app/tests/auth/test-email-verification.spec.ts:48:21)\n    at /app/tests/auth/test-email-verification.spec.ts:253:28",
@@ -2844,7 +2844,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:27:57.440Z",
+                      "startTime": "2025-12-08T16:40:41.356Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2878,7 +2878,7 @@
                       "workerIndex": 41,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 12438,
+                      "duration": 12479,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"重新发送\"), .resend-button, [data-testid=\"resend-button\"]')\u001b[22m\n\n    at EmailVerificationPage.clickResendButton (/app/tests/auth/test-email-verification.spec.ts:48:21)\n    at /app/tests/auth/test-email-verification.spec.ts:253:28",
@@ -2902,7 +2902,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:28:12.128Z",
+                      "startTime": "2025-12-08T16:40:55.902Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2952,7 +2952,7 @@
                       "workerIndex": 42,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13417,
+                      "duration": 12467,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n\n    at EmailVerificationPage.getMessage (/app/tests/auth/test-email-verification.spec.ts:26:28)\n    at /app/tests/auth/test-email-verification.spec.ts:265:44",
@@ -2976,7 +2976,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:28:25.510Z",
+                      "startTime": "2025-12-08T16:41:09.527Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3005,7 +3005,7 @@
                       "workerIndex": 43,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13041,
+                      "duration": 14508,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n\n    at EmailVerificationPage.getMessage (/app/tests/auth/test-email-verification.spec.ts:26:28)\n    at /app/tests/auth/test-email-verification.spec.ts:265:44",
@@ -3029,7 +3029,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:28:40.144Z",
+                      "startTime": "2025-12-08T16:41:22.943Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3063,7 +3063,7 @@
                       "workerIndex": 44,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13033,
+                      "duration": 13254,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.verification-message, .message, [data-testid=\"message\"]')\u001b[22m\n\n    at EmailVerificationPage.getMessage (/app/tests/auth/test-email-verification.spec.ts:26:28)\n    at /app/tests/auth/test-email-verification.spec.ts:265:44",
@@ -3087,7 +3087,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:28:54.877Z",
+                      "startTime": "2025-12-08T16:41:38.806Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3154,7 +3154,7 @@
                       "workerIndex": 45,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11299,
+                      "duration": 11951,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:104:21",
@@ -3178,7 +3178,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:29:09.252Z",
+                      "startTime": "2025-12-08T16:41:53.281Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3207,7 +3207,7 @@
                       "workerIndex": 46,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11761,
+                      "duration": 11652,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:104:21",
@@ -3231,7 +3231,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:29:21.612Z",
+                      "startTime": "2025-12-08T16:42:06.310Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3265,7 +3265,7 @@
                       "workerIndex": 47,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11825,
+                      "duration": 11488,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:104:21",
@@ -3289,7 +3289,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:29:35.196Z",
+                      "startTime": "2025-12-08T16:42:19.464Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3339,7 +3339,7 @@
                       "workerIndex": 48,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11436,
+                      "duration": 11355,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:137:21",
@@ -3363,7 +3363,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:29:48.400Z",
+                      "startTime": "2025-12-08T16:42:32.037Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3392,7 +3392,7 @@
                       "workerIndex": 49,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11846,
+                      "duration": 11092,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:137:21",
@@ -3416,7 +3416,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:30:02.503Z",
+                      "startTime": "2025-12-08T16:42:44.188Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3450,7 +3450,7 @@
                       "workerIndex": 50,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11522,
+                      "duration": 11302,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:137:21",
@@ -3474,7 +3474,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:30:15.812Z",
+                      "startTime": "2025-12-08T16:42:55.960Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3524,7 +3524,7 @@
                       "workerIndex": 51,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11403,
+                      "duration": 11327,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:166:21",
@@ -3548,7 +3548,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:30:28.410Z",
+                      "startTime": "2025-12-08T16:43:08.153Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3577,7 +3577,7 @@
                       "workerIndex": 52,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11513,
+                      "duration": 11391,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:166:21",
@@ -3601,7 +3601,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:30:40.903Z",
+                      "startTime": "2025-12-08T16:43:20.437Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3635,7 +3635,7 @@
                       "workerIndex": 53,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11418,
+                      "duration": 11374,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:166:21",
@@ -3659,7 +3659,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:30:53.686Z",
+                      "startTime": "2025-12-08T16:43:32.980Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3709,7 +3709,7 @@
                       "workerIndex": 54,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11388,
+                      "duration": 11395,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:212:21",
@@ -3733,7 +3733,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:31:06.217Z",
+                      "startTime": "2025-12-08T16:43:45.414Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3762,7 +3762,7 @@
                       "workerIndex": 55,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11426,
+                      "duration": 11396,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:212:21",
@@ -3786,7 +3786,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:31:18.658Z",
+                      "startTime": "2025-12-08T16:43:57.771Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3820,7 +3820,7 @@
                       "workerIndex": 56,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11355,
+                      "duration": 11387,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at LoginPreviewPage.fillEmail (/app/tests/auth/test-login-preview.spec.ts:21:21)\n    at /app/tests/auth/test-login-preview.spec.ts:212:21",
@@ -3844,7 +3844,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:31:31.199Z",
+                      "startTime": "2025-12-08T16:44:10.291Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3911,7 +3911,7 @@
                       "workerIndex": 57,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11310,
+                      "duration": 11332,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:124:36",
@@ -3935,7 +3935,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:31:43.580Z",
+                      "startTime": "2025-12-08T16:44:22.698Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3964,7 +3964,7 @@
                       "workerIndex": 58,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11398,
+                      "duration": 11457,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:124:36",
@@ -3988,7 +3988,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:31:55.588Z",
+                      "startTime": "2025-12-08T16:44:35.080Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4022,7 +4022,7 @@
                       "workerIndex": 59,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11446,
+                      "duration": 11382,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:124:36",
@@ -4046,7 +4046,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:32:08.174Z",
+                      "startTime": "2025-12-08T16:44:47.689Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4096,10 +4096,10 @@
                       "workerIndex": 60,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11496,
+                      "duration": 11352,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36",
+                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4114,13 +4114,13 @@
                             "column": 21,
                             "line": 21
                           },
-                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36"
+                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:32:20.709Z",
+                      "startTime": "2025-12-08T16:45:00.091Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4149,10 +4149,10 @@
                       "workerIndex": 61,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11157,
+                      "duration": 11449,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36",
+                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4167,13 +4167,13 @@
                             "column": 21,
                             "line": 21
                           },
-                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36"
+                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:32:33.198Z",
+                      "startTime": "2025-12-08T16:45:12.350Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4207,10 +4207,10 @@
                       "workerIndex": 62,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11016,
+                      "duration": 11443,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36",
+                        "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4225,13 +4225,13 @@
                             "column": 21,
                             "line": 21
                           },
-                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:174:36"
+                          "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]')\u001b[22m\n\n\n  19 |\n  20 |   async fillEmail(email: string) {\n> 21 |     await this.page.fill('input[type=\"email\"]', email);\n     |                     ^\n  22 |   }\n  23 |\n  24 |   async fillCaptcha(answer: string) {\n    at PasswordResetRequestPage.fillEmail (/app/tests/auth/test-password-reset.spec.ts:21:21)\n    at /app/tests/auth/test-password-reset.spec.ts:171:36"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:32:45.055Z",
+                      "startTime": "2025-12-08T16:45:25.006Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4262,7 +4262,7 @@
               ],
               "id": "a619816edb5346f42977-2d52c8051c19f3740491",
               "file": "auth/test-password-reset.spec.ts",
-              "line": 161,
+              "line": 158,
               "column": 3
             },
             {
@@ -4281,10 +4281,10 @@
                       "workerIndex": 63,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11275,
+                      "duration": 12400,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4299,13 +4299,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:32:56.605Z",
+                      "startTime": "2025-12-08T16:45:37.447Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4334,10 +4334,10 @@
                       "workerIndex": 64,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11260,
+                      "duration": 13117,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4352,13 +4352,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:33:08.590Z",
+                      "startTime": "2025-12-08T16:45:50.926Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4392,10 +4392,10 @@
                       "workerIndex": 65,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11431,
+                      "duration": 11462,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4410,13 +4410,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:200:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:194:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:33:20.906Z",
+                      "startTime": "2025-12-08T16:46:06.786Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4447,7 +4447,7 @@
               ],
               "id": "a619816edb5346f42977-64b4a56e1c1836a84bc3",
               "file": "auth/test-password-reset.spec.ts",
-              "line": 182,
+              "line": 179,
               "column": 3
             },
             {
@@ -4466,10 +4466,10 @@
                       "workerIndex": 66,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11299,
+                      "duration": 11476,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4484,13 +4484,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:33:33.232Z",
+                      "startTime": "2025-12-08T16:46:19.178Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4519,10 +4519,10 @@
                       "workerIndex": 67,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11471,
+                      "duration": 11659,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4537,13 +4537,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:33:45.452Z",
+                      "startTime": "2025-12-08T16:46:31.620Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4577,10 +4577,10 @@
                       "workerIndex": 68,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11449,
+                      "duration": 11706,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4595,13 +4595,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:224:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:215:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:33:57.861Z",
+                      "startTime": "2025-12-08T16:46:44.938Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4632,7 +4632,7 @@
               ],
               "id": "a619816edb5346f42977-892c501875660474d3e7",
               "file": "auth/test-password-reset.spec.ts",
-              "line": 206,
+              "line": 200,
               "column": 3
             },
             {
@@ -4651,10 +4651,10 @@
                       "workerIndex": 69,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11464,
+                      "duration": 11853,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4669,13 +4669,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:34:10.319Z",
+                      "startTime": "2025-12-08T16:46:57.758Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4704,10 +4704,10 @@
                       "workerIndex": 70,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11620,
+                      "duration": 11856,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4722,13 +4722,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:34:22.822Z",
+                      "startTime": "2025-12-08T16:47:13.193Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4762,10 +4762,10 @@
                       "workerIndex": 71,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11476,
+                      "duration": 11351,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n",
-                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29",
+                        "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 21,
@@ -4780,13 +4780,13 @@
                             "column": 21,
                             "line": 69
                           },
-                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:248:29"
+                          "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button[type=\"submit\"]')\u001b[22m\n\n\n  67 |\n  68 |   async clickResetButton() {\n> 69 |     await this.page.click('button[type=\"submit\"]');\n     |                     ^\n  70 |   }\n  71 |\n  72 |   async getSuccessMessage(): Promise<string | null> {\n    at ResetPasswordPage.clickResetButton (/app/tests/auth/test-password-reset.spec.ts:69:21)\n    at /app/tests/auth/test-password-reset.spec.ts:236:29"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:34:35.770Z",
+                      "startTime": "2025-12-08T16:47:26.425Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4817,7 +4817,7 @@
               ],
               "id": "a619816edb5346f42977-d43de2b6d2f970ccd134",
               "file": "auth/test-password-reset.spec.ts",
-              "line": 230,
+              "line": 221,
               "column": 3
             },
             {
@@ -4836,10 +4836,10 @@
                       "workerIndex": 72,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11415,
+                      "duration": 11082,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n",
-                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50",
+                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 28,
@@ -4854,13 +4854,13 @@
                             "column": 28,
                             "line": 77
                           },
-                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50"
+                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:34:48.290Z",
+                      "startTime": "2025-12-08T16:47:38.696Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4889,10 +4889,10 @@
                       "workerIndex": 73,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11524,
+                      "duration": 11047,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n",
-                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50",
+                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 28,
@@ -4907,13 +4907,13 @@
                             "column": 28,
                             "line": 77
                           },
-                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50"
+                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:35:00.859Z",
+                      "startTime": "2025-12-08T16:47:50.378Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4947,10 +4947,10 @@
                       "workerIndex": 74,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11417,
+                      "duration": 11271,
                       "error": {
                         "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n",
-                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50",
+                        "stack": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50",
                         "location": {
                           "file": "/app/tests/auth/test-password-reset.spec.ts",
                           "column": 28,
@@ -4965,13 +4965,13 @@
                             "column": 28,
                             "line": 77
                           },
-                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:257:50"
+                          "message": "TimeoutError: page.textContent: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.error-message')\u001b[22m\n\n\n  75 |\n  76 |   async getErrorMessage(): Promise<string | null> {\n> 77 |     return await this.page.textContent('.error-message');\n     |                            ^\n  78 |   }\n  79 |\n  80 |   async waitForSuccessMessage() {\n    at ResetPasswordPage.getErrorMessage (/app/tests/auth/test-password-reset.spec.ts:77:28)\n    at /app/tests/auth/test-password-reset.spec.ts:245:50"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:35:13.563Z",
+                      "startTime": "2025-12-08T16:48:02.059Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5002,7 +5002,7 @@
               ],
               "id": "a619816edb5346f42977-9ab54d944a9d055a2825",
               "file": "auth/test-password-reset.spec.ts",
-              "line": 254,
+              "line": 242,
               "column": 3
             }
           ]
@@ -5038,7 +5038,7 @@
                       "workerIndex": 75,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31756,
+                      "duration": 31797,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5059,7 +5059,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:35:26.022Z",
+                      "startTime": "2025-12-08T16:48:14.214Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5083,7 +5083,7 @@
                       "workerIndex": 76,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31078,
+                      "duration": 31756,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5104,7 +5104,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:35:58.681Z",
+                      "startTime": "2025-12-08T16:48:46.960Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5133,7 +5133,7 @@
                       "workerIndex": 77,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31046,
+                      "duration": 31548,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5154,7 +5154,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:36:30.439Z",
+                      "startTime": "2025-12-08T16:49:19.843Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5199,7 +5199,7 @@
                       "workerIndex": 78,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31050,
+                      "duration": 31636,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5220,7 +5220,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:37:02.037Z",
+                      "startTime": "2025-12-08T16:49:52.339Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5244,7 +5244,7 @@
                       "workerIndex": 79,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31087,
+                      "duration": 31988,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5265,7 +5265,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:37:33.641Z",
+                      "startTime": "2025-12-08T16:50:24.989Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5294,7 +5294,7 @@
                       "workerIndex": 80,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31796,
+                      "duration": 34124,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5315,7 +5315,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:38:05.367Z",
+                      "startTime": "2025-12-08T16:50:58.162Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5360,7 +5360,7 @@
                       "workerIndex": 81,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11351,
+                      "duration": 11943,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n\n    at BlogPage.searchBlog (/app/tests/blog.spec.ts:58:21)\n    at /app/tests/blog.spec.ts:136:20",
@@ -5384,7 +5384,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:38:38.149Z",
+                      "startTime": "2025-12-08T16:51:33.282Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5413,7 +5413,7 @@
                       "workerIndex": 82,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11397,
+                      "duration": 12078,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n\n    at BlogPage.searchBlog (/app/tests/blog.spec.ts:58:21)\n    at /app/tests/blog.spec.ts:136:20",
@@ -5437,7 +5437,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:38:50.426Z",
+                      "startTime": "2025-12-08T16:51:46.349Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5471,7 +5471,7 @@
                       "workerIndex": 83,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11352,
+                      "duration": 11413,
                       "error": {
                         "message": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"search-input\"]')\u001b[22m\n\n    at BlogPage.searchBlog (/app/tests/blog.spec.ts:58:21)\n    at /app/tests/blog.spec.ts:136:20",
@@ -5495,7 +5495,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:39:02.917Z",
+                      "startTime": "2025-12-08T16:51:59.699Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5545,7 +5545,7 @@
                       "workerIndex": 84,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11303,
+                      "duration": 11374,
                       "error": {
                         "message": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n\n    at BlogPage.filterByCategory (/app/tests/blog.spec.ts:65:21)\n    at /app/tests/blog.spec.ts:144:20",
@@ -5569,7 +5569,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:39:15.209Z",
+                      "startTime": "2025-12-08T16:52:12.070Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5598,7 +5598,7 @@
                       "workerIndex": 85,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11428,
+                      "duration": 13002,
                       "error": {
                         "message": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n\n    at BlogPage.filterByCategory (/app/tests/blog.spec.ts:65:21)\n    at /app/tests/blog.spec.ts:144:20",
@@ -5622,7 +5622,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:39:27.345Z",
+                      "startTime": "2025-12-08T16:52:24.408Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5656,7 +5656,7 @@
                       "workerIndex": 86,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11450,
+                      "duration": 14119,
                       "error": {
                         "message": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.selectOption: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"category-filter\"]')\u001b[22m\n\n    at BlogPage.filterByCategory (/app/tests/blog.spec.ts:65:21)\n    at /app/tests/blog.spec.ts:144:20",
@@ -5680,7 +5680,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:39:39.937Z",
+                      "startTime": "2025-12-08T16:52:38.868Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5730,7 +5730,7 @@
                       "workerIndex": 87,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31834,
+                      "duration": 31477,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5751,7 +5751,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:39:52.446Z",
+                      "startTime": "2025-12-08T16:52:54.103Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5775,7 +5775,7 @@
                       "workerIndex": 88,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 32055,
+                      "duration": 31596,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5796,7 +5796,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:40:25.277Z",
+                      "startTime": "2025-12-08T16:53:26.603Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5825,7 +5825,7 @@
                       "workerIndex": 89,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31763,
+                      "duration": 31072,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -5846,7 +5846,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:40:58.542Z",
+                      "startTime": "2025-12-08T16:53:59.338Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5891,7 +5891,7 @@
                       "workerIndex": 90,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11371,
+                      "duration": 11032,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:177:20",
@@ -5915,7 +5915,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:41:31.376Z",
+                      "startTime": "2025-12-08T16:54:31.048Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5944,7 +5944,7 @@
                       "workerIndex": 91,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11450,
+                      "duration": 11070,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:177:20",
@@ -5968,7 +5968,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:41:43.749Z",
+                      "startTime": "2025-12-08T16:54:42.676Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6002,7 +6002,7 @@
                       "workerIndex": 92,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11520,
+                      "duration": 11006,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:177:20",
@@ -6026,7 +6026,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:41:56.465Z",
+                      "startTime": "2025-12-08T16:54:54.458Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6076,7 +6076,7 @@
                       "workerIndex": 93,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11526,
+                      "duration": 11392,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:194:20",
@@ -6100,7 +6100,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:42:09.066Z",
+                      "startTime": "2025-12-08T16:55:05.999Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6129,7 +6129,7 @@
                       "workerIndex": 94,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11242,
+                      "duration": 11496,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:194:20",
@@ -6153,7 +6153,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:42:21.897Z",
+                      "startTime": "2025-12-08T16:55:18.349Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6187,7 +6187,7 @@
                       "workerIndex": 95,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11312,
+                      "duration": 11548,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:194:20",
@@ -6211,7 +6211,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:42:33.937Z",
+                      "startTime": "2025-12-08T16:55:31.103Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6261,7 +6261,7 @@
                       "workerIndex": 96,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11205,
+                      "duration": 11386,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:219:20",
@@ -6285,7 +6285,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:42:46.237Z",
+                      "startTime": "2025-12-08T16:55:43.719Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6314,7 +6314,7 @@
                       "workerIndex": 97,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11428,
+                      "duration": 11463,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:219:20",
@@ -6338,7 +6338,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:42:58.074Z",
+                      "startTime": "2025-12-08T16:55:56.074Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6372,7 +6372,7 @@
                       "workerIndex": 98,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 11692,
+                      "duration": 11421,
                       "error": {
                         "message": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n",
                         "stack": "TimeoutError: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"create-post\"]')\u001b[22m\n\n    at BlogPage.createNewPost (/app/tests/blog.spec.ts:80:21)\n    at /app/tests/blog.spec.ts:219:20",
@@ -6396,7 +6396,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:43:10.690Z",
+                      "startTime": "2025-12-08T16:56:08.683Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6446,7 +6446,7 @@
                       "workerIndex": 99,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31774,
+                      "duration": 31679,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6467,7 +6467,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:43:24.010Z",
+                      "startTime": "2025-12-08T16:56:21.133Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6491,7 +6491,7 @@
                       "workerIndex": 100,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 33177,
+                      "duration": 31610,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6512,7 +6512,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:43:56.792Z",
+                      "startTime": "2025-12-08T16:56:53.722Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6541,7 +6541,7 @@
                       "workerIndex": 101,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31824,
+                      "duration": 31660,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6562,7 +6562,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:44:31.792Z",
+                      "startTime": "2025-12-08T16:57:26.333Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6607,7 +6607,7 @@
                       "workerIndex": 102,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31558,
+                      "duration": 30924,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6628,7 +6628,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:45:04.586Z",
+                      "startTime": "2025-12-08T16:57:58.883Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6652,7 +6652,7 @@
                       "workerIndex": 103,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 31852,
+                      "duration": 31770,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6673,7 +6673,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:45:37.170Z",
+                      "startTime": "2025-12-08T16:58:30.418Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6702,7 +6702,7 @@
                       "workerIndex": 104,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 32326,
+                      "duration": 32799,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -6723,7 +6723,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:46:10.245Z",
+                      "startTime": "2025-12-08T16:59:03.173Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6768,12 +6768,12 @@
                       "workerIndex": 105,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 823,
+                      "duration": 965,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:43.624Z",
+                      "startTime": "2025-12-08T16:59:37.800Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6802,7 +6802,7 @@
                       "workerIndex": 105,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1348,
+                      "duration": 1222,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/blog.spec.ts:278:19",
@@ -6826,7 +6826,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:44.592Z",
+                      "startTime": "2025-12-08T16:59:38.960Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6855,7 +6855,7 @@
                       "workerIndex": 106,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1859,
+                      "duration": 1341,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/blog.spec.ts:278:19",
@@ -6879,7 +6879,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:46:47.741Z",
+                      "startTime": "2025-12-08T16:59:41.045Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6913,7 +6913,7 @@
                       "workerIndex": 107,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1326,
+                      "duration": 1223,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/blog.spec.ts:278:19",
@@ -6937,7 +6937,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:46:51.623Z",
+                      "startTime": "2025-12-08T16:59:43.370Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -6995,12 +6995,12 @@
                       "workerIndex": 108,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 772,
+                      "duration": 623,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:54.079Z",
+                      "startTime": "2025-12-08T16:59:45.207Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7029,12 +7029,12 @@
                       "workerIndex": 108,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1200,
+                      "duration": 1096,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:54.988Z",
+                      "startTime": "2025-12-08T16:59:45.893Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7071,12 +7071,12 @@
                       "workerIndex": 108,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 321,
+                      "duration": 132,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:56.211Z",
+                      "startTime": "2025-12-08T16:59:47.002Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7105,7 +7105,7 @@
                       "workerIndex": 108,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 249,
+                      "duration": 165,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /app/tests/blog.spec.ts:337:39",
@@ -7129,7 +7129,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:46:56.556Z",
+                      "startTime": "2025-12-08T16:59:47.145Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7158,7 +7158,7 @@
                       "workerIndex": 109,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 441,
+                      "duration": 252,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /app/tests/blog.spec.ts:337:39",
@@ -7182,7 +7182,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:46:57.723Z",
+                      "startTime": "2025-12-08T16:59:47.883Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7216,7 +7216,7 @@
                       "workerIndex": 110,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 884,
+                      "duration": 162,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /app/tests/blog.spec.ts:337:39",
@@ -7240,7 +7240,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:47:00.578Z",
+                      "startTime": "2025-12-08T16:59:48.840Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7307,7 +7307,7 @@
                       "workerIndex": 111,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 374,
+                      "duration": 167,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:18:19",
@@ -7331,7 +7331,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:04.682Z",
+                      "startTime": "2025-12-08T16:59:49.572Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7360,7 +7360,7 @@
                       "workerIndex": 112,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 780,
+                      "duration": 504,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:18:19",
@@ -7384,7 +7384,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:47:06.145Z",
+                      "startTime": "2025-12-08T16:59:50.350Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7418,7 +7418,7 @@
                       "workerIndex": 113,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 452,
+                      "duration": 180,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:18:19",
@@ -7442,7 +7442,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:47:08.496Z",
+                      "startTime": "2025-12-08T16:59:51.604Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7492,7 +7492,7 @@
                       "workerIndex": 114,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 645,
+                      "duration": 457,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:31:41",
@@ -7515,7 +7515,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:10.324Z",
+                      "startTime": "2025-12-08T16:59:52.376Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7539,7 +7539,7 @@
                       "workerIndex": 115,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 800,
+                      "duration": 490,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:31:41",
@@ -7562,7 +7562,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:47:12.305Z",
+                      "startTime": "2025-12-08T16:59:53.426Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7591,7 +7591,7 @@
                       "workerIndex": 116,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 713,
+                      "duration": 438,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:31:41",
@@ -7614,7 +7614,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:47:14.970Z",
+                      "startTime": "2025-12-08T16:59:54.583Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7659,7 +7659,7 @@
                       "workerIndex": 117,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 728,
+                      "duration": 433,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:43:48",
@@ -7682,7 +7682,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:17.580Z",
+                      "startTime": "2025-12-08T16:59:55.610Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7706,7 +7706,7 @@
                       "workerIndex": 118,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 691,
+                      "duration": 492,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:43:48",
@@ -7729,7 +7729,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:47:20.007Z",
+                      "startTime": "2025-12-08T16:59:56.638Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7758,7 +7758,7 @@
                       "workerIndex": 119,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 847,
+                      "duration": 448,
                       "error": {
                         "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
                         "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\nCall log:\n\u001b[2m  - → GET http://localhost:8000/health/\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.16 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n    at /app/tests/health.spec.ts:43:48",
@@ -7781,7 +7781,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:47:22.918Z",
+                      "startTime": "2025-12-08T16:59:57.831Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7826,12 +7826,12 @@
                       "workerIndex": 120,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 841,
+                      "duration": 629,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:25.953Z",
+                      "startTime": "2025-12-08T16:59:58.871Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7860,12 +7860,12 @@
                       "workerIndex": 120,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 282,
+                      "duration": 164,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:27.009Z",
+                      "startTime": "2025-12-08T16:59:59.566Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7902,12 +7902,12 @@
                       "workerIndex": 120,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 727,
+                      "duration": 629,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:27.317Z",
+                      "startTime": "2025-12-08T16:59:59.744Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -7936,7 +7936,7 @@
                       "workerIndex": 120,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 198,
+                      "duration": 171,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:122:19",
@@ -7960,7 +7960,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:28.062Z",
+                      "startTime": "2025-12-08T17:00:00.385Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -7989,7 +7989,7 @@
                       "workerIndex": 121,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 554,
+                      "duration": 317,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:122:19",
@@ -8013,7 +8013,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-12-08T15:47:29.445Z",
+                      "startTime": "2025-12-08T17:00:01.225Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -8047,7 +8047,7 @@
                       "workerIndex": 122,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 320,
+                      "duration": 192,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"\"\u001b[39m\n    at /app/tests/health.spec.ts:122:19",
@@ -8071,7 +8071,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 2,
-                      "startTime": "2025-12-08T15:47:31.337Z",
+                      "startTime": "2025-12-08T17:00:02.251Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -8121,12 +8121,12 @@
                       "workerIndex": 123,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 788,
+                      "duration": 631,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T15:47:32.839Z",
+                      "startTime": "2025-12-08T17:00:03.068Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -8146,8 +8146,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-08T15:21:12.013Z",
-    "duration": 1581896.314,
+    "startTime": "2025-12-08T16:34:13.043Z",
+    "duration": 1550933.25,
     "expected": 14,
     "skipped": 0,
     "unexpected": 41,
