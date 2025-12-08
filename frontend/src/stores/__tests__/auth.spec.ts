@@ -1,8 +1,8 @@
 // REQ-ID: REQ-2025-003-user-login
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useAuthStore, setApiClient, createApiClient } from '../auth'
 import { AxiosInstance } from 'axios'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { setApiClient, useAuthStore } from '../auth'
 
 describe('Auth Store', () => {
   beforeEach(() => {
@@ -469,6 +469,132 @@ describe('Auth Store', () => {
       // 清除user
       store.user = null
       expect(store.isAuthenticated).toBe(false)
+    })
+  })
+
+  describe('previewLogin', () => {
+    let mockClient: AxiosInstance
+
+    beforeEach(() => {
+      setActivePinia(createPinia())
+      mockClient = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+        request: vi.fn(),
+        defaults: {} as any,
+        interceptors: {} as any,
+        create: vi.fn(),
+      } as unknown as AxiosInstance
+      setApiClient(mockClient)
+    })
+
+    it('应该成功调用preview API并更新preview状态', async () => {
+      const mockResponse = {
+        data: {
+          valid: true,
+          user: {
+            display_name: 'Test User',
+            avatar_url: 'https://example.com/avatar.jpg',
+            default_avatar: false,
+          },
+        },
+      }
+      mockClient.post.mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      await store.previewLogin({
+        email: 'test@example.com',
+        password: 'password123',
+        captcha_id: 'test-captcha-id',
+        captcha_answer: '1234',
+      })
+
+      expect(mockClient.post).toHaveBeenCalledWith('/api/auth/preview/', {
+        email: 'test@example.com',
+        password: 'password123',
+        captcha_id: 'test-captcha-id',
+        captcha_answer: '1234',
+      })
+      expect(store.preview).toEqual({
+        valid: true,
+        user: {
+          display_name: 'Test User',
+          avatar_url: 'https://example.com/avatar.jpg',
+          default_avatar: false,
+        },
+      })
+    })
+
+    it('应该处理无效的账号密码', async () => {
+      const mockResponse = {
+        data: {
+          valid: false,
+          user: null,
+        },
+      }
+      mockClient.post.mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      await store.previewLogin({
+        email: 'test@example.com',
+        password: 'wrongpassword',
+        captcha_id: 'test-captcha-id',
+        captcha_answer: '1234',
+      })
+
+      expect(store.preview).toEqual({
+        valid: false,
+        user: null,
+      })
+    })
+
+    it('应该处理无头像的用户', async () => {
+      const mockResponse = {
+        data: {
+          valid: true,
+          user: {
+            display_name: 'Test User',
+            avatar_url: null,
+            avatar_letter: 'T',
+          },
+        },
+      }
+      mockClient.post.mockResolvedValue(mockResponse)
+
+      const store = useAuthStore()
+      await store.previewLogin({
+        email: 'test@example.com',
+        password: 'password123',
+        captcha_id: 'test-captcha-id',
+        captcha_answer: '1234',
+      })
+
+      expect(store.preview).toEqual({
+        valid: true,
+        user: {
+          display_name: 'Test User',
+          avatar_url: null,
+          avatar_letter: 'T',
+        },
+      })
+    })
+
+    it('应该处理API错误', async () => {
+      const error = new Error('网络错误，请稍后重试')
+      mockClient.post.mockRejectedValue(error)
+
+      const store = useAuthStore()
+      await expect(
+        store.previewLogin({
+          email: 'test@example.com',
+          password: 'password123',
+          captcha_id: 'test-captcha-id',
+          captcha_answer: '1234',
+        })
+      ).rejects.toThrow('网络错误，请稍后重试')
     })
   })
 })

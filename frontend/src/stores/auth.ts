@@ -83,6 +83,25 @@ export interface CaptchaResponse {
   expires_in: number
 }
 
+export interface PreviewUser {
+  display_name: string
+  avatar_url?: string | null
+  avatar_letter?: string
+  default_avatar?: boolean
+}
+
+export interface PreviewResponse {
+  valid: boolean
+  user: PreviewUser | null
+}
+
+export interface PreviewCredentials {
+  email: string
+  password: string
+  captcha_id: string
+  captcha_answer: string
+}
+
 // localStorage键名
 const TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'auth_refresh_token'
@@ -93,6 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
   const captcha = ref<Captcha | null>(null)
+  const preview = ref<PreviewResponse | null>(null)
 
   // 计算属性
   const isAuthenticated = computed(() => {
@@ -282,6 +302,23 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const previewLogin = async (
+    credentials: PreviewCredentials
+  ): Promise<PreviewResponse> => {
+    try {
+      const response = await getApiClient().post<PreviewResponse>(
+        '/api/auth/preview/',
+        credentials
+      )
+
+      preview.value = response.data
+      return response.data
+    } catch (error: any) {
+      preview.value = null
+      handleApiError(error, '预验证失败，请检查输入信息')
+    }
+  }
+
   // 初始化：从localStorage恢复token
   restoreTokens()
 
@@ -291,6 +328,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     refreshToken,
     captcha,
+    preview,
     // 计算属性
     isAuthenticated,
     // Actions
@@ -300,5 +338,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshTokenAction,
     fetchCaptcha,
     refreshCaptcha,
+    previewLogin,
   }
 })
