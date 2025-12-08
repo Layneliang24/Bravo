@@ -35,20 +35,32 @@ const props = withDefaults(defineProps<Props>(), {
 
 type StrengthLevel = 'weak' | 'medium' | 'strong'
 
+// 缓存正则表达式以提高性能
+const LETTER_REGEX = /[a-zA-Z]/
+const DIGIT_REGEX = /\d/
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>]/
+
+/**
+ * 计算密码强度
+ * @param password - 密码字符串
+ * @returns 强度等级：weak | medium | strong
+ */
 const calculateStrength = (password: string): StrengthLevel => {
   if (!password || password.length === 0) {
     return 'weak'
   }
 
+  const length = password.length
+
   // 长度检查
-  if (password.length < 8) {
+  if (length < 8) {
     return 'weak'
   }
 
-  // 检查字符类型
-  const hasLetter = /[a-zA-Z]/.test(password)
-  const hasDigit = /\d/.test(password)
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  // 检查字符类型（使用缓存的正则表达式）
+  const hasLetter = LETTER_REGEX.test(password)
+  const hasDigit = DIGIT_REGEX.test(password)
+  const hasSpecialChar = SPECIAL_CHAR_REGEX.test(password)
 
   // 只有数字或只有字母 -> 弱
   if ((hasLetter && !hasDigit) || (!hasLetter && hasDigit)) {
@@ -58,11 +70,11 @@ const calculateStrength = (password: string): StrengthLevel => {
   // 包含字母和数字
   if (hasLetter && hasDigit) {
     // 长度刚好8位 -> 中等
-    if (password.length === 8) {
+    if (length === 8) {
       return 'medium'
     }
     // 长度超过8位或包含特殊字符 -> 强
-    if (password.length > 8 || hasSpecialChar) {
+    if (length > 8 || hasSpecialChar) {
       return 'strong'
     }
     return 'medium'
@@ -110,22 +122,27 @@ const strengthText = computed(() => {
 })
 
 const strengthHint = computed(() => {
-  if (!props.password || props.password.length === 0) {
+  const password = props.password
+
+  if (!password || password.length === 0) {
     return '请输入密码'
   }
 
-  if (props.password.length < 8) {
+  const length = password.length
+
+  if (length < 8) {
     return '密码长度至少为8位'
   }
 
-  const hasLetter = /[a-zA-Z]/.test(props.password)
-  const hasDigit = /\d/.test(props.password)
+  // 使用缓存的正则表达式
+  const hasLetter = LETTER_REGEX.test(password)
+  const hasDigit = DIGIT_REGEX.test(password)
 
   if (!hasLetter || !hasDigit) {
     return '密码必须包含字母和数字'
   }
 
-  if (props.password.length === 8) {
+  if (length === 8) {
     return '建议使用更长的密码以提高安全性'
   }
 
@@ -189,5 +206,18 @@ const strengthHint = computed(() => {
 .strength-hint {
   color: #6b7280;
   font-size: 0.75rem;
+}
+
+/* 响应式设计优化 */
+@media (max-width: 640px) {
+  .strength-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .strength-hint {
+    font-size: 0.7rem;
+  }
 }
 </style>

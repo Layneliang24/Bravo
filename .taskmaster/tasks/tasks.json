@@ -628,7 +628,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/Captcha.spec.ts`和`frontend/src/components/auth/__tests__/PasswordStrength.spec.ts`组件测试，验证组件的渲染、交互和状态更新。",
         "priority": "medium",
         "dependencies": ["9"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -680,12 +680,13 @@
             "description": "对 `Captcha.vue` 和 `PasswordStrength.vue` 组件进行代码重构和优化，提升代码质量、性能和用户体验。",
             "dependencies": [2, 4],
             "details": "审查 `Captcha.vue` 和 `PasswordStrength.vue` 的代码，优化逻辑清晰度、可读性和可维护性。改进组件的样式和动画，确保响应式设计和无障碍性。检查并优化性能瓶颈。确保所有现有测试在重构后仍然通过，并考虑添加额外的边缘情况测试。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行所有现有组件测试，确保重构后功能无回归。进行手动UI测试，验证用户体验和响应式设计。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T11:20:16.640Z"
           }
         ],
-        "updatedAt": "2025-12-08T11:15:18.998Z"
+        "updatedAt": "2025-12-08T11:20:16.640Z"
       },
       {
         "id": "11",
@@ -1204,9 +1205,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T11:15:19.001Z",
+      "lastModified": "2025-12-08T11:20:16.644Z",
       "taskCount": 18,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": ["REQ-2025-003-user-login"]
     }
   },

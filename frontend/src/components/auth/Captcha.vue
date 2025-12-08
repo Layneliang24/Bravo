@@ -73,7 +73,15 @@ const captchaAnswer = ref('')
 // API基础URL（可以根据环境配置调整）
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
+// 防抖定时器
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
+
 const loadCaptcha = async (isRefresh = false) => {
+  // 防止重复加载
+  if (loading.value) {
+    return
+  }
+
   loading.value = true
   error.value = null
 
@@ -82,13 +90,27 @@ const loadCaptcha = async (isRefresh = false) => {
       ? `${API_BASE_URL}/api/auth/captcha/refresh/`
       : `${API_BASE_URL}/api/auth/captcha/`
 
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
     if (!response.ok) {
-      throw new Error(`获取验证码失败: ${response.status}`)
+      const errorText = await response.text().catch(() => '')
+      throw new Error(
+        `获取验证码失败: ${response.status}${errorText ? ` - ${errorText}` : ''}`
+      )
     }
 
     const data = await response.json()
+
+    // 验证响应数据
+    if (!data.captcha_id || !data.captcha_image) {
+      throw new Error('验证码数据格式错误')
+    }
+
     captchaId.value = data.captcha_id
     captchaImage.value = data.captcha_image
 
@@ -109,7 +131,25 @@ const loadCaptcha = async (isRefresh = false) => {
 }
 
 const refreshCaptcha = () => {
-  loadCaptcha(true)
+  // 如果正在加载，直接返回
+  if (loading.value) {
+    return
+  }
+
+  // 防抖处理：避免频繁刷新（仅在非测试环境下启用）
+  if (import.meta.env.MODE !== 'test') {
+    if (refreshTimer) {
+      clearTimeout(refreshTimer)
+    }
+
+    refreshTimer = setTimeout(() => {
+      loadCaptcha(true)
+      refreshTimer = null
+    }, 300) // 300ms防抖延迟
+  } else {
+    // 测试环境下立即执行
+    loadCaptcha(true)
+  }
 }
 
 const handleInput = () => {
