@@ -900,7 +900,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`组件测试，验证表单的渲染、提交和与store的交互。编写E2E测试，验证完整的密码找回流程。",
         "priority": "medium",
         "dependencies": ["11"],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -950,13 +950,13 @@
             "description": "编写针对发送重置邮件表单和重置密码页面的组件测试，并编写端到端测试以验证完整的密码找回流程。",
             "dependencies": [2, 4],
             "details": "完善`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`，确保覆盖发送重置邮件表单的提交、错误提示、验证码交互等场景。为重置密码页面/组件编写组件测试，验证其提交、密码强度、错误提示、token处理等场景。编写E2E测试（例如在`e2e/tests/auth/password-reset.spec.ts`），模拟用户从请求重置邮件到点击链接、输入新密码并成功重置的完整流程。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "运行所有编写的组件测试和E2E测试，确保所有测试通过，验证密码找回功能的完整性和健壮性。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T15:19:24.269Z"
+            "updatedAt": "2025-12-08T15:23:05.758Z"
           }
         ],
-        "updatedAt": "2025-12-08T15:19:24.269Z"
+        "updatedAt": "2025-12-08T15:23:05.758Z"
       },
       {
         "id": "15",
@@ -1233,9 +1233,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T15:19:24.270Z",
+      "lastModified": "2025-12-08T15:23:05.759Z",
       "taskCount": 18,
-      "completedCount": 14,
+      "completedCount": 15,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
