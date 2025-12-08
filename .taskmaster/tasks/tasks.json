@@ -805,10 +805,10 @@
             "description": "将`LoginForm`与Pinia `auth` store的`login` action进行集成，处理登录成功后的导航、登录失败时的错误提示和验证码刷新。",
             "dependencies": [3],
             "details": "在`LoginForm.vue`中，通过Pinia `useAuthStore`调用`login` action，将表单的邮箱、密码和验证码数据作为参数传递。处理`login` action返回的成功或失败结果。登录成功后，执行页面导航（例如，跳转到仪表盘）。登录失败时，捕获错误信息，显示用户友好的错误提示，并触发`Captcha`组件刷新验证码。",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "编写组件测试，模拟`auth` store的`login` action的成功和失败场景。验证成功时是否触发正确导航，失败时是否显示错误信息并调用`Captcha`刷新方法。",
             "parentId": "undefined",
-            "updatedAt": "2025-12-08T13:00:02.996Z"
+            "updatedAt": "2025-12-08T13:03:54.033Z"
           },
           {
             "id": 5,
@@ -816,12 +816,13 @@
             "description": "为`LoginForm.vue`编写全面的组件测试，覆盖渲染、表单验证、提交逻辑、错误提示和验证码刷新。根据测试结果和最佳实践，对表单的交互逻辑和代码结构进行重构和优化。",
             "dependencies": [4],
             "details": "在`frontend/src/components/auth/__tests__/LoginForm.spec.ts`中编写组件测试。测试用例应包括：组件的正确渲染、输入有效/无效数据时的验证行为、成功提交后的行为、提交失败时的错误提示和验证码刷新机制。根据测试覆盖率和代码审查，优化表单的交互逻辑、错误消息的显示方式、状态管理和代码可读性。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "运行所有编写的组件测试，确保它们全部通过。进行端到端测试，验证完整的登录流程，包括成功登录、错误凭据、验证码错误等场景。确保重构后的代码没有引入新的缺陷。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T13:04:18.484Z"
           }
         ],
-        "updatedAt": "2025-12-08T13:00:02.996Z"
+        "updatedAt": "2025-12-08T13:04:18.484Z"
       },
       {
         "id": "13",
@@ -1216,7 +1217,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:00:03.000Z",
+      "lastModified": "2025-12-08T13:04:18.486Z",
       "taskCount": 18,
       "completedCount": 11,
       "tags": ["REQ-2025-003-user-login"]

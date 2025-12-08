@@ -99,13 +99,17 @@ const validateCaptcha = (captchaId: string, captchaAnswer: string): string => {
   return ''
 }
 
-const handleSubmit = async () => {
-  // 清除之前的错误
+// 清除所有错误
+const clearErrors = () => {
   errors.email = ''
   errors.password = ''
   errors.captcha_answer = ''
+}
 
-  // 执行验证
+// 执行表单验证
+const validateForm = (): boolean => {
+  clearErrors()
+
   const emailError = validateEmail(formData.email)
   const passwordError = validatePassword(formData.password)
   const captchaError = validateCaptcha(
@@ -113,18 +117,35 @@ const handleSubmit = async () => {
     formData.captcha_answer
   )
 
-  if (emailError) {
-    errors.email = emailError
-  }
-  if (passwordError) {
-    errors.password = passwordError
-  }
-  if (captchaError) {
-    errors.captcha_answer = captchaError
-  }
+  if (emailError) errors.email = emailError
+  if (passwordError) errors.password = passwordError
+  if (captchaError) errors.captcha_answer = captchaError
 
-  // 如果有任何错误，停止提交
-  if (emailError || passwordError || captchaError) {
+  return !emailError && !passwordError && !captchaError
+}
+
+// 刷新验证码
+const refreshCaptcha = async () => {
+  if (captchaRef.value && typeof captchaRef.value.refreshCaptcha === 'function') {
+    await captchaRef.value.refreshCaptcha()
+  }
+}
+
+// 处理登录成功
+const handleLoginSuccess = async () => {
+  await router.push('/')
+}
+
+// 处理登录失败
+const handleLoginError = async (error: any) => {
+  const errorMessage = error?.message || '登录失败，请稍后重试'
+  errors.captcha_answer = errorMessage
+  await refreshCaptcha()
+}
+
+const handleSubmit = async () => {
+  // 验证表单
+  if (!validateForm()) {
     return
   }
 
@@ -137,17 +158,9 @@ const handleSubmit = async () => {
       captcha_answer: formData.captcha_answer,
     })
 
-    // 登录成功，导航到首页
-    await router.push('/')
+    await handleLoginSuccess()
   } catch (error: any) {
-    // 登录失败，显示错误信息
-    const errorMessage = error?.message || '登录失败，请稍后重试'
-    errors.captcha_answer = errorMessage
-
-    // 刷新验证码
-    if (captchaRef.value && typeof captchaRef.value.refreshCaptcha === 'function') {
-      await captchaRef.value.refreshCaptcha()
-    }
+    await handleLoginError(error)
   } finally {
     isSubmitting.value = false
   }
