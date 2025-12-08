@@ -29,6 +29,7 @@
 // REQ-ID: REQ-2025-003-user-login
 import { reactive, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { validateEmail, validateCaptcha } from '@/utils/validation'
 import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
 
@@ -57,31 +58,6 @@ const handleCaptchaUpdate = (data: {
   formData.captcha_id = data.captcha_id
   formData.captcha_answer = data.captcha_answer
   errors.captcha_answer = ''
-}
-
-// 邮箱格式验证正则
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// 验证邮箱格式
-const validateEmail = (email: string): string => {
-  if (!email) {
-    return '请输入邮箱'
-  }
-  if (!EMAIL_REGEX.test(email)) {
-    return '邮箱格式不正确'
-  }
-  return ''
-}
-
-// 验证验证码
-const validateCaptcha = (
-  captcha_id: string,
-  captcha_answer: string
-): string => {
-  if (!captcha_id || !captcha_answer) {
-    return '请输入验证码'
-  }
-  return ''
 }
 
 const handleSubmit = async () => {

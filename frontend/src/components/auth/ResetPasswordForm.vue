@@ -35,6 +35,10 @@
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import {
+  validatePassword,
+  validatePasswordConfirm,
+} from '@/utils/validation'
 import FloatingInput from './FloatingInput.vue'
 import PasswordStrength from './PasswordStrength.vue'
 
@@ -60,31 +64,6 @@ const token = computed(() => {
   const tokenParam = route.query.token
   return typeof tokenParam === 'string' ? tokenParam : null
 })
-
-// 验证密码
-const validatePassword = (password: string): string => {
-  if (!password) {
-    return '请输入密码'
-  }
-  if (password.length < 8) {
-    return '密码长度至少为8位'
-  }
-  return ''
-}
-
-// 验证确认密码
-const validatePasswordConfirm = (
-  password: string,
-  passwordConfirm: string
-): string => {
-  if (!passwordConfirm) {
-    return '请确认密码'
-  }
-  if (password !== passwordConfirm) {
-    return '两次输入的密码不一致'
-  }
-  return ''
-}
 
 const handleSubmit = async () => {
   // 检查token

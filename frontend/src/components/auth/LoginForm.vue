@@ -42,27 +42,16 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { debounce } from '@/utils/debounce'
+import {
+  EMAIL_REGEX,
+  validateEmail,
+  validatePassword,
+  validateCaptcha,
+} from '@/utils/validation'
 import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
 import UserPreview from './UserPreview.vue'
-
-// 防抖函数
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
 
 interface FormData {
   email: string
@@ -97,39 +86,6 @@ const handleCaptchaUpdate = (data: {
   formData.captcha_answer = data.captcha_answer
   errors.captcha_answer = ''
   triggerPreview()
-}
-
-// 邮箱格式验证正则
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// 验证邮箱格式
-const validateEmail = (email: string): string => {
-  if (!email) {
-    return '请输入邮箱'
-  }
-  if (!EMAIL_REGEX.test(email)) {
-    return '邮箱格式不正确'
-  }
-  return ''
-}
-
-// 验证密码
-const validatePassword = (password: string): string => {
-  if (!password) {
-    return '请输入密码'
-  }
-  if (password.length < 8) {
-    return '密码长度至少为8位'
-  }
-  return ''
-}
-
-// 验证验证码
-const validateCaptcha = (captchaId: string, captchaAnswer: string): string => {
-  if (!captchaId || !captchaAnswer) {
-    return '请输入验证码'
-  }
-  return ''
 }
 
 // 清除所有错误
