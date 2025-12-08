@@ -1038,7 +1038,7 @@
             "description": "编写端到端测试，验证用户注册后收到验证邮件，点击链接后页面跳转并显示验证结果。此为红阶段测试，预期测试失败。",
             "dependencies": [],
             "details": "在`e2e/tests/auth/email-verification.spec.ts`中编写E2E测试用例。测试应模拟用户注册流程，检查模拟的邮件服务中是否收到验证邮件，模拟点击邮件中的验证链接，并验证页面是否正确跳转以及是否显示了预期的验证结果。预期此测试在当前阶段会失败。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "运行新编写的E2E测试，确认其在当前未实现功能的情况下失败。",
             "parentId": "undefined"
           },
