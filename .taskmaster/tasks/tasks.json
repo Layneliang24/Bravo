@@ -900,7 +900,7 @@
         "testStrategy": "编写`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`组件测试，验证表单的渲染、提交和与store的交互。编写E2E测试，验证完整的密码找回流程。",
         "priority": "medium",
         "dependencies": ["11"],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -928,9 +928,10 @@
             "description": "在`auth` store中添加或修改`resetPassword` action，使其能够调用后端API完成密码重置。这是重置密码页面提交的基础。",
             "dependencies": [11],
             "details": "在`frontend/src/store/auth.js`中定义`resetPassword` action。该action应接收token、新密码和确认密码作为参数，并调用后端`/api/auth/password/reset/confirm/`接口。需要处理API响应，包括成功和错误情况。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "单元测试`auth` store的`resetPassword` action，模拟API调用并验证状态更新和错误处理逻辑。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T15:13:51.608Z"
           },
           {
             "id": 4,
@@ -938,9 +939,10 @@
             "description": "创建一个独立的页面或组件，用于用户通过重置链接访问时输入新密码并完成密码重置。",
             "dependencies": [3],
             "details": "创建一个路由（例如`/reset-password?token=...`）和对应的Vue组件。组件应从URL中获取`token`参数。集成`FloatingInput`用于新密码和确认密码输入，集成`PasswordStrength`组件显示密码强度。表单提交时，调用`auth` store的`resetPassword` action。需要实现客户端表单验证、密码强度显示和错误提示。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "编写组件测试，验证重置密码页面的渲染、token解析、输入、提交行为、密码强度显示、错误提示以及与`auth` store的交互。",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-08T15:14:09.865Z"
           },
           {
             "id": 5,
@@ -952,7 +954,8 @@
             "testStrategy": "运行所有编写的组件测试和E2E测试，确保所有测试通过，验证密码找回功能的完整性和健壮性。",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-08T15:14:09.865Z"
       },
       {
         "id": "15",
@@ -1229,9 +1232,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T13:41:20.504Z",
+      "lastModified": "2025-12-08T15:14:09.866Z",
       "taskCount": 18,
-      "completedCount": 13,
+      "completedCount": 14,
       "tags": ["REQ-2025-003-user-login"]
     }
   },
