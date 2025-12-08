@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "task-master-ai": {
-      "args": [],
+      "command": "npx",
+      "args": ["-y", "task-master-ai"],
       "env": {
         "OPENAI_API_KEY": "sk-zfgptsqmcesptnszlkdrlttgwfmmiilwrahdcdolshqkxnhm",
         "OPENAI_BASE_URL": "https://api.siliconflow.cn/v1"

@@ -918,7 +918,7 @@
             "description": "在前端创建`PasswordResetForm.vue`组件，用于收集用户邮箱和验证码，并触发密码重置邮件发送。",
             "dependencies": [1, 2],
             "details": "在`frontend/src/components/auth/`目录下创建`PasswordResetForm.vue`。集成`FloatingInput`用于邮箱输入，集成`Captcha`组件用于验证码输入。表单提交时，调用`auth` store的`sendPasswordReset` action。需要实现客户端表单验证和错误提示。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "编写组件测试`frontend/src/components/auth/__tests__/PasswordResetForm.spec.ts`，验证表单渲染、输入、提交行为、错误提示以及与`auth` store的交互。",
             "parentId": "undefined"
           },
