@@ -27,6 +27,69 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.TXYUN_SSH_KEY }}
 
+      - name: SSH Connection Diagnostics
+        env:
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+        run: |
+          echo "🔍 SSH连接诊断..."
+          echo "=========================================="
+          echo "1. 获取当前GitHub Actions Runner IP地址"
+          echo "=========================================="
+          RUNNER_IP=$(curl -s https://api.ipify.org 2>/dev/null || curl -s https://ifconfig.me 2>/dev/null || echo "无法获取")
+          echo "Runner IP: $RUNNER_IP"
+          echo ""
+          echo "=========================================="
+          echo "2. 显示目标服务器信息（隐藏敏感部分）"
+          echo "=========================================="
+          echo "目标主机: ${HOST:0:10}***"
+          echo "目标用户: $USER"
+          echo ""
+          echo "=========================================="
+          echo "3. 测试网络连通性（端口22）"
+          echo "=========================================="
+          # 使用timeout和bash内置的TCP连接测试
+          if command -v nc >/dev/null 2>&1; then
+            timeout 5 nc -zv -w 3 $HOST 22 2>&1 || echo "⚠️ nc测试: 端口22连接失败或超时"
+          else
+            echo "⚠️ nc命令不可用，跳过端口测试"
+          fi
+          # 使用bash的/dev/tcp测试
+          if timeout 3 bash -c "echo > /dev/tcp/$HOST/22" 2>/dev/null; then
+            echo "✅ /dev/tcp测试: 端口22可达"
+          else
+            echo "⚠️ /dev/tcp测试: 端口22不可达或超时"
+          fi
+          echo ""
+          echo "=========================================="
+          echo "4. 检查SSH密钥是否已加载"
+          echo "=========================================="
+          ssh-add -l 2>&1 || echo "⚠️ SSH密钥未加载或ssh-agent未运行"
+          echo ""
+          echo "=========================================="
+          echo "5. 测试SSH连接（详细模式，10秒超时）"
+          echo "=========================================="
+          ssh -vvv -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=3 \
+              -o LogLevel=DEBUG \
+              $USER@$HOST "echo '✅ SSH连接测试成功'" 2>&1 | head -50 || {
+            echo ""
+            echo "❌ SSH连接失败"
+            echo ""
+            echo "=========================================="
+            echo "可能的原因："
+            echo "1. GitHub Actions IP ($RUNNER_IP) 未在白名单中"
+            echo "2. 服务器SSH服务未启动或端口被防火墙阻止"
+            echo "3. SSH密钥配置不正确"
+            echo "4. 网络路由问题"
+            echo "=========================================="
+            exit 1
+          }
+          echo ""
+          echo "✅ 诊断完成，SSH连接正常"
+
       - name: Deploy to dev server
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
