@@ -73,14 +73,14 @@
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
 import { useAuthStore } from '@/stores/auth'
+import {
+    validateCaptcha,
+    validateEmail,
+    validatePassword,
+    validatePasswordConfirm,
+} from '@/utils/validation'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  validateEmail,
-  validatePassword,
-  validatePasswordConfirm,
-  validateCaptcha,
-} from '@/utils/validation'
 import Captcha from './Captcha.vue'
 import FloatingInput from './FloatingInput.vue'
 import PasswordStrength from './PasswordStrength.vue'

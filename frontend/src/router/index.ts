@@ -1,6 +1,6 @@
 // REQ-ID: REQ-2025-003-user-login
-import { createRouter, createWebHistory } from 'vue-router'
 import type { Component } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(),

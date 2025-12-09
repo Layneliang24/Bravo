@@ -21,6 +21,7 @@ api-contracts/
 - **文件名**：`REQ-{YYYY}-{NNN}-{feature-name}-api.yaml`
 
 例如：
+
 - 目录：`REQ-2025-003-user-login/`
 - 文件：`REQ-2025-003-user-login-api.yaml`
 
@@ -46,11 +47,13 @@ api-contracts/
 ### 1. Swagger UI（交互式文档）
 
 访问地址：
+
 - **本地开发**：http://localhost:8000/api/docs/
 - **开发环境**：https://dev.layneliang.com/api/docs/
 - **生产环境**：https://layneliang.com/api/docs/
 
 **功能特性**：
+
 - ✅ 交互式API测试
 - ✅ 实时请求/响应示例
 - ✅ JWT Token认证支持
@@ -59,22 +62,26 @@ api-contracts/
 ### 2. ReDoc（美观的文档）
 
 访问地址：
+
 - **本地开发**：http://localhost:8000/api/redoc/
 - **开发环境**：https://dev.layneliang.com/api/redoc/
 - **生产环境**：https://layneliang.com/api/redoc/
 
 **功能特性**：
+
 - ✅ 三栏布局，阅读体验优秀
 - ✅ 自动生成的文档（基于代码）
 
 ### 3. OpenAPI Schema（JSON格式）
 
 访问地址：
+
 - **本地开发**：http://localhost:8000/api/schema/
 - **开发环境**：https://dev.layneliang.com/api/schema/
 - **生产环境**：https://layneliang.com/api/schema/
 
 **用途**：
+
 - ✅ 导入到Postman/Insomnia
 - ✅ 生成Mock Server
 - ✅ CI/CD自动化测试
@@ -84,6 +91,7 @@ api-contracts/
 **位置**：`docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
 
 **用途**：
+
 - ✅ 版本控制和变更追踪
 - ✅ 前后端协作的参考文档
 - ✅ 设计阶段的API规范定义
@@ -94,6 +102,7 @@ api-contracts/
 ### 场景1：前后端并行开发
 
 **流程**：
+
 1. 后端架构师根据PRD设计API契约（OpenAPI YAML）
 2. 前端基于契约文档创建Mock Server
 3. 前端独立开发，不依赖后端实现
@@ -101,6 +110,7 @@ api-contracts/
 5. 契约测试验证前后端一致性
 
 **工具推荐**：
+
 - **Mock Server**：使用 [Prism](https://stoplight.io/open-source/prism) 基于OpenAPI文档生成Mock API
 - **前端开发**：直接调用Mock API，无需等待后端
 
@@ -115,6 +125,7 @@ prism mock docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-
 ### 场景2：API测试
 
 **使用Postman导入**：
+
 1. 打开Postman
 2. Import → Link
 3. 输入：`http://localhost:8000/api/schema/`
@@ -164,10 +175,10 @@ python -c "import yaml; yaml.safe_load(open('docs/01_guideline/api-contracts/REQ
 
 ## 🔍 当前API契约文档列表
 
-| REQ-ID | 功能 | 文档路径 | 状态 |
-|--------|------|----------|------|
-| REQ-2025-003 | 用户登录认证 | `REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml` | ✅ 已完成 |
-| REQ-2025-EXAMPLE | 示例文档 | `REQ-2025-EXAMPLE-demo/api.yaml` | 📝 示例 |
+| REQ-ID           | 功能         | 文档路径                                                   | 状态      |
+| ---------------- | ------------ | ---------------------------------------------------------- | --------- |
+| REQ-2025-003     | 用户登录认证 | `REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml` | ✅ 已完成 |
+| REQ-2025-EXAMPLE | 示例文档     | `REQ-2025-EXAMPLE-demo/api.yaml`                           | 📝 示例   |
 
 ## ⚠️ 重要提示
 
@@ -188,5 +199,3 @@ python -c "import yaml; yaml.safe_load(open('docs/01_guideline/api-contracts/REQ
 - **文档格式**：OpenAPI 3.0 (YAML)
 - **交互式文档**：Swagger UI / ReDoc
 - **Mock Server**：Prism
-
-

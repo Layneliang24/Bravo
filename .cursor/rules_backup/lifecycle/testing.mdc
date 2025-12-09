@@ -1,0 +1,256 @@
+---
+description: 测试阶段的TDD规则和测试编写规范
+globs: backend/tests/**/*.py, frontend/**/__tests__/**/*.{ts,tsx,js,jsx}, e2e/tests/**/*.spec.ts
+priority: 850
+---
+
+# 测试阶段规则
+
+## 角色切换
+
+**当前角色**: 测试专家 (Test-Writer)
+
+**你的职责**:
+1. 根据PRD和Task-Master任务编写测试
+2. 确保测试文件在正确的目录
+3. 确保测试覆盖所有场景（正常、异常、边界）
+4. 编写清晰的测试断言和错误消息
+
+**你不应该**:
+- 直接实现功能代码（由Developer角色负责）
+- 跳过测试用例
+- 修改PRD（由PRD设计专家负责）
+
+## TDD三阶段循环
+
+### 红色阶段 (Red)
+
+**目标**: 编写失败的测试用例
+
+**步骤**:
+1. 根据PRD中的测试用例清单编写测试
+2. 测试应该描述期望的行为
+3. 运行测试，确认失败（这是预期的）
+4. 提交测试文件（标记为WIP）
+
+**示例**:
+```python
+# backend/tests/unit/test_user_login.py
+# REQ-ID: REQ-2025-003-user-login
+
+def test_login_with_valid_credentials():
+    """测试使用有效凭证登录"""
+    # Arrange
+    user = User.objects.create_user(
+        email="user@example.com",
+        password="SecurePass123"
+    )
+
+    # Act
+    response = client.post("/api/auth/login/", {
+        "email": "user@example.com",
+        "password": "SecurePass123",
+        "captcha_id": "test-id",
+        "captcha_answer": "test"
+    })
+
+    # Assert
+    assert response.status_code == 200
+    assert "token" in response.json()
+    assert "refresh_token" in response.json()
+```
+
+**验证**: 运行测试，确认失败（因为功能尚未实现）
+
+### 绿色阶段 (Green)
+
+**目标**: 编写最少代码使测试通过
+
+**步骤**:
+1. 查看失败的测试错误信息
+2. 编写刚好能通过测试的代码
+3. 不要过度设计，只实现测试要求的功能
+4. 运行测试，确认通过
+
+**原则**:
+- 最少代码原则：只写刚好通过测试的代码
+- 不要添加测试未要求的功能
+- 不要优化或重构（这是下一阶段的工作）
+
+### 重构阶段 (Refactor)
+
+**目标**: 优化代码结构，保持测试通过
+
+**步骤**:
+1. 在测试通过的基础上优化代码
+2. 提取重复逻辑
+3. 改善代码可读性
+4. 运行测试，确保仍然通过
+
+**原则**:
+- 重构不能改变功能行为
+- 每次重构后必须运行测试
+- 如果测试失败，回退重构
+
+## 四层测试体系
+
+### 1. 单元测试 (Unit Tests)
+
+**目录**: `backend/tests/unit/`
+
+**命名**: `test_{module}.py`
+
+**覆盖范围**:
+- 单个函数/方法
+- 单个类
+- 单个模块
+
+**工具**: pytest
+
+**示例**:
+```python
+# backend/tests/unit/test_captcha.py
+# REQ-ID: REQ-2025-003-user-login
+
+def test_generate_captcha():
+    """测试验证码生成"""
+    captcha_id, image = generate_captcha()
+    assert captcha_id is not None
+    assert image.startswith("data:image/png;base64,")
+```
+
+### 2. 集成测试 (Integration Tests)
+
+**目录**: `backend/tests/integration/`
+
+**命名**: `test_{feature}.py`
+
+**覆盖范围**:
+- 多个模块协作
+- 数据库交互
+- API端点完整流程
+
+**工具**: pytest + Django TestClient
+
+**示例**:
+```python
+# backend/tests/integration/test_auth_api.py
+# REQ-ID: REQ-2025-003-user-login
+
+def test_complete_login_flow():
+    """测试完整登录流程"""
+    # 1. 获取验证码
+    captcha_response = client.get("/api/auth/captcha/")
+    captcha_id = captcha_response.json()["captcha_id"]
+
+    # 2. 注册用户
+    register_response = client.post("/api/auth/register/", {
+        "email": "user@example.com",
+        "password": "SecurePass123",
+        "captcha_id": captcha_id,
+        "captcha_answer": "test"
+    })
+    assert register_response.status_code == 201
+
+    # 3. 登录
+    login_response = client.post("/api/auth/login/", {
+        "email": "user@example.com",
+        "password": "SecurePass123",
+        "captcha_id": captcha_id,
+        "captcha_answer": "test"
+    })
+    assert login_response.status_code == 200
+```
+
+### 3. E2E测试 (End-to-End Tests)
+
+**目录**: `e2e/tests/`
+
+**命名**: `{feature}.spec.ts`
+
+**覆盖范围**:
+- 完整用户流程
+- 前端+后端集成
+- UI交互
+
+**工具**: Playwright
+
+**示例**:
+```typescript
+// e2e/tests/auth/login.spec.ts
+// REQ-ID: REQ-2025-003-user-login
+
+import { test, expect } from '@playwright/test';
+
+test('用户登录完整流程', async ({ page }) => {
+  // 1. 访问登录页面
+  await page.goto('/login');
+
+  // 2. 填写表单
+  await page.fill('input[name="email"]', 'user@example.com');
+  await page.fill('input[name="password"]', 'SecurePass123');
+
+  // 3. 提交表单
+  await page.click('button[type="submit"]');
+
+  // 4. 验证跳转
+  await expect(page).toHaveURL('/dashboard');
+});
+```
+
+### 4. 回归测试 (Regression Tests)
+
+**目录**: `backend/tests/regression/`, `e2e/tests/regression/`
+
+**命名**: `test_{bug_id}.py` 或 `test-{bug_id}.spec.ts`
+
+**目的**: 防止已修复的Bug复现
+
+**参考**: @.cursor/rules/golden_test_protection.mdc
+
+## 测试覆盖率要求
+
+**最低要求**: 代码覆盖率 >= 80%
+
+**检查命令**:
+```bash
+# 后端覆盖率
+docker-compose exec backend pytest --cov=. --cov-report=html
+
+# 前端覆盖率
+cd frontend && npm run test:coverage
+```
+
+**参考**: @.cursor/rules/test_coverage.mdc
+
+## 测试文件关联
+
+**规则**: 测试文件必须关联到PRD
+
+**方式**:
+1. 测试文件头部包含REQ-ID注释
+2. PRD元数据中的`test_files`字段包含测试文件路径
+3. Pre-commit验证关联关系
+
+**参考**: @.cursor/rules/compliance_workflow.mdc
+
+## API契约测试
+
+**规则**: API测试必须基于OpenAPI契约
+
+**步骤**:
+1. 查看API契约文档: `docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
+2. 根据契约编写测试
+3. 验证请求/响应Schema符合契约
+
+**工具**: 可以使用`drf-spectacular`自动生成测试
+
+**参考**: @docs/01_guideline/api-contracts/README.md
+
+## 禁止事项
+
+- ❌ 不能跳过TDD流程（先写代码后写测试）
+- ❌ 不能编写没有REQ-ID注释的测试文件
+- ❌ 不能将测试文件放在错误目录
+- ❌ 不能忽略边界和异常场景
+- ❌ 不能提交覆盖率 < 80% 的代码
