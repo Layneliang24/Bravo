@@ -34,13 +34,21 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Event: ${{ github.event_name }}"
 
-      # 检查1：分支保护（仅对push事件，PR时跳过）
+      # 检查1：分支保护（仅对push事件，PR时跳过；允许PR合并产生的merge提交）
       - name: Check 1 - Branch Protection
         if: github.event_name == 'push'
         run: |
           BRANCH="${{ github.ref_name }}"
+          COMMIT_MSG=$(git log -1 --pretty=%s || echo "")
 
           if [[ "$BRANCH" == "main" || "$BRANCH" == "dev" ]]; then
+            # 允许通过PR合并产生的merge提交（消息以"Merge pull request"开头）
+            if [[ "$COMMIT_MSG" =~ ^Merge\ pull\ request ]]; then
+              echo "ℹ️ 检测到PR合并提交，允许推送到受保护分支: $BRANCH"
+              echo "✅ 分支保护检查通过（PR合并）"
+              exit 0
+            fi
+
             echo "❌ 检测到直接推送到受保护分支: $BRANCH"
             echo "⚠️ 这违反了分支保护策略"
             echo "💡 正确流程："
