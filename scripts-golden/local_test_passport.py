@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# REQ-ID: REQ-2025-003-user-login
 """
 本地测试通行证生成器
 强制Cursor进行本地测试，生成推送通行证
@@ -855,7 +856,9 @@ class LocalTestPassport:
         test_results = {
             "backend_check": False,
             "frontend_check": False,
+            "frontend_tests": False,
             "backend_tests": False,
+            "e2e_tests": False,
         }
 
         # 1. 后端Django配置检查
@@ -1139,8 +1142,96 @@ class LocalTestPassport:
                 self.log_detail("前端检查错误汇总", "\n".join(frontend_errors))
             raise RuntimeError(error_msg)
 
-        # 3. 后端单元测试（运行少量关键测试）——改为必选
-        self.log("🔍 步骤3: 后端单元测试（快速模式，必选）...")
+        # 3. 前端单元测试（Vitest快速模式，必选）
+        self.log("🔍 步骤3: 前端单元测试（Vitest快速模式，必选）...")
+        frontend_test_desc = (
+            "docker-compose run --rm frontend npm run test:unit:fast "
+            "-- --reporter=dot --passWithNoTests"
+        )
+        self.log_detail("执行命令", frontend_test_desc)
+
+        try:
+            # 复用前面的容器检查逻辑，尽量使用exec减少冷启动
+            check_frontend_for_test = subprocess.run(
+                ["docker-compose", "-p", "bravo", "ps", "-q", "frontend"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            if (
+                check_frontend_for_test.returncode == 0
+                and check_frontend_for_test.stdout.strip()
+            ):
+                frontend_test_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "exec",
+                    "-T",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test:unit:fast",
+                    "--",
+                    "--reporter=dot",
+                    "--passWithNoTests",
+                ]
+            else:
+                # 若未启动则直接使用run，避免附带依赖重启
+                frontend_test_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test:unit:fast",
+                    "--",
+                    "--reporter=dot",
+                    "--passWithNoTests",
+                ]
+
+            result = subprocess.run(
+                frontend_test_cmd,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=240,
+                cwd=str(self.workspace),
+            )
+            self.log_command(frontend_test_cmd, result)
+
+            if result.returncode == 0:
+                self.log("✅ 前端单元测试通过")
+                test_results["frontend_tests"] = True
+            else:
+                error_msg = "❌ 前端单元测试失败"
+                self.log(error_msg, level="ERROR")
+                self.log_detail(
+                    "前端单元测试失败详情",
+                    result.stderr[:500] if result.stderr else result.stdout[:500],
+                )
+                raise RuntimeError(error_msg)
+        except subprocess.TimeoutExpired:
+            error_msg = "❌ 前端单元测试超时（4分钟）"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except FileNotFoundError:
+            error_msg = "❌ 前端测试命令未找到，检查npm或容器状态"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            error_msg = f"❌ 前端单元测试异常：{type(e).__name__}: {str(e)}"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg) from e
+
+        # 4. 后端单元测试（运行少量关键测试）——改为必选
+        self.log("🔍 步骤4: 后端单元测试（快速模式，必选）...")
         pytest_cmd_desc = (
             "docker-compose run --rm backend pytest tests/unit/ -v "
             "--maxfail=3 -k 'test_' --tb=short"
@@ -1316,6 +1407,69 @@ class LocalTestPassport:
             self.log(error_msg, level="ERROR")
             raise RuntimeError(error_msg) from e
 
+        # 5. E2E冒烟测试（Playwright快速冒烟，必选）
+        self.log("🔍 步骤5: E2E冒烟测试（Playwright冒烟集）...")
+        self.log("  🔄 确保前后端服务运行以供E2E访问...")
+        try:
+            subprocess.run(
+                ["docker-compose", "-p", "bravo", "up", "-d", "backend", "frontend"],
+                capture_output=True,
+                timeout=120,
+            )
+        except Exception:
+            # 不中断，仅记录
+            self.log("⚠️ 启动前后端服务时遇到问题，继续尝试运行E2E", level="WARNING")
+
+        e2e_cmd = [
+            "docker-compose",
+            "-p",
+            "bravo",
+            "run",
+            "--rm",
+            "--no-deps",
+            "e2e",
+            "npm",
+            "run",
+            "test:smoke",
+        ]
+        self.log_detail("执行命令", " ".join(e2e_cmd))
+
+        try:
+            result = subprocess.run(
+                e2e_cmd,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=480,
+                cwd=str(self.workspace),
+            )
+            self.log_command(e2e_cmd, result)
+
+            if result.returncode == 0:
+                self.log("✅ E2E冒烟测试通过")
+                test_results["e2e_tests"] = True
+            else:
+                error_msg = "❌ E2E冒烟测试失败"
+                self.log(error_msg, level="ERROR")
+                self.log_detail(
+                    "E2E失败详情",
+                    result.stderr[:500] if result.stderr else result.stdout[:500],
+                )
+                raise RuntimeError(error_msg)
+        except subprocess.TimeoutExpired:
+            error_msg = "❌ E2E冒烟测试超时（8分钟）"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except FileNotFoundError:
+            error_msg = "❌ Playwright未安装或e2e依赖缺失"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            error_msg = f"❌ E2E冒烟测试异常：{type(e).__name__}: {str(e)}"
+            self.log(error_msg, level="ERROR")
+            raise RuntimeError(error_msg) from e
+
         # 记录耗时
         end_time = datetime.now(BEIJING_TZ)
         start_dt = datetime.fromtimestamp(start_time).replace(tzinfo=BEIJING_TZ)
@@ -1325,7 +1479,9 @@ class LocalTestPassport:
         self.log(f"\n📊 功能测试结果汇总（耗时: {duration:.2f}秒）:")
         self.log(f"  后端配置检查: {'✅' if test_results['backend_check'] else '❌'}")
         self.log(f"  前端基础检查: {'✅' if test_results['frontend_check'] else '❌'}")
+        self.log(f"  前端单元测试: {'✅' if test_results['frontend_tests'] else '❌'}")
         self.log(f"  后端单元测试: {'✅' if test_results['backend_tests'] else '❌'}")
+        self.log(f"  E2E冒烟测试: {'✅' if test_results['e2e_tests'] else '❌'}")
 
         # 严格模式：任一检查失败都视为功能验证失败（理论上到这里都应为True）
         if not all(test_results.values()):
@@ -1568,7 +1724,9 @@ class LocalTestPassport:
         summary = {
             "backend_check": "unknown",
             "frontend_check": "unknown",
+            "frontend_tests": "unknown",
             "backend_tests": "unknown",
+            "e2e_tests": "unknown",
         }
 
         try:
@@ -1586,10 +1744,20 @@ class LocalTestPassport:
                     elif "⚠️  前端检查跳过" in log_content:
                         summary["frontend_check"] = "skipped"
 
+                    if "✅ 前端单元测试通过" in log_content:
+                        summary["frontend_tests"] = "passed"
+                    elif "前端单元测试" in log_content and "失败" in log_content:
+                        summary["frontend_tests"] = "failed"
+
                     if "✅ 后端单元测试通过" in log_content:
                         summary["backend_tests"] = "passed"
                     elif "⚠️  未找到后端单元测试" in log_content:
                         summary["backend_tests"] = "skipped"
+
+                    if "✅ E2E冒烟测试通过" in log_content:
+                        summary["e2e_tests"] = "passed"
+                    elif "E2E冒烟测试失败" in log_content:
+                        summary["e2e_tests"] = "failed"
         except Exception:
             pass
 
