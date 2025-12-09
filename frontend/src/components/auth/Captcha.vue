@@ -6,7 +6,7 @@
     </div>
     <div v-else-if="error" class="error" role="alert">
       <span>{{ error }}</span>
-      <button type="button" @click="loadCaptcha" :disabled="disabled">
+      <button type="button" @click="handleRetry" :disabled="disabled">
         重试
       </button>
     </div>
@@ -157,6 +157,10 @@ const handleInput = () => {
     captcha_id: captchaId.value,
     captcha_answer: captchaAnswer.value,
   })
+}
+
+const handleRetry = () => {
+  loadCaptcha(false)
 }
 
 // 组件挂载时加载验证码
