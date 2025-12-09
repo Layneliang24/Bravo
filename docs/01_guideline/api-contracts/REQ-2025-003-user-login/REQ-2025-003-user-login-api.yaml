@@ -1,0 +1,812 @@
+openapi: 3.0.0
+info:
+  title: 用户登录认证API
+  version: 1.0.0
+  description: REQ-2025-003 用户登录页面功能的API契约文档
+  contact:
+    name: Bravo Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8000/api/auth
+    description: 本地开发环境
+  - url: https://dev.layneliang.com/api/auth
+    description: 开发环境
+  - url: https://layneliang.com/api/auth
+    description: 生产环境
+
+tags:
+  - name: 验证码
+    description: 验证码相关API
+  - name: 认证
+    description: 用户认证相关API
+  - name: 邮箱验证
+    description: 邮箱验证相关API
+  - name: 密码重置
+    description: 密码重置相关API
+
+paths:
+  /captcha/:
+    get:
+      summary: 获取验证码
+      description: 生成并返回图形验证码图片和ID
+      operationId: getCaptcha
+      tags:
+        - 验证码
+      responses:
+        "200":
+          description: 成功返回验证码
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptchaResponse"
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /captcha/refresh/:
+    post:
+      summary: 刷新验证码
+      description: 刷新现有验证码，生成新的验证码图片和ID
+      operationId: refreshCaptcha
+      tags:
+        - 验证码
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                captcha_id:
+                  type: string
+                  format: uuid
+                  description: 旧的验证码ID（可选）
+              example:
+                captcha_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: 成功返回新验证码
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptchaResponse"
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /preview/:
+    post:
+      summary: 登录预验证（获取头像）
+      description: |
+        验证账号密码是否正确，正确则返回用户头像和显示名称（不实际登录）。
+
+        **安全特性**：
+        - 需要验证码保护
+        - 频率限制：同一IP每分钟最多10次请求
+        - 无论成功失败都返回200状态码，仅通过`valid`字段区分（防止用户枚举攻击）
+      operationId: previewLogin
+      tags:
+        - 认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewLoginRequest"
+      responses:
+        "200":
+          description: 预验证响应（始终返回200）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewLoginResponse"
+        "400":
+          description: 验证码错误或其他验证失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: 请求频率超限
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /register/:
+    post:
+      summary: 用户注册
+      description: 注册新用户账户，需要邮箱、密码和验证码
+      operationId: register
+      tags:
+        - 认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+        "400":
+          description: 注册失败（邮箱已存在、密码不符合要求、验证码错误等）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /login/:
+    post:
+      summary: 用户登录
+      description: |
+        用户登录，支持邮箱或用户名登录。
+
+        **安全特性**：
+        - 登录失败5次后账户锁定10分钟
+        - 需要验证码保护
+        - 邮箱需要验证后才能登录
+      operationId: login
+      tags:
+        - 认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: 验证码错误或其他验证失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 邮箱或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginErrorResponse"
+        "403":
+          description: 账户被锁定或邮箱未验证
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountLockedResponse"
+
+  /token/refresh/:
+    post:
+      summary: 刷新Token
+      description: 使用Refresh Token获取新的Access Token
+      operationId: refreshToken
+      tags:
+        - 认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh
+              properties:
+                refresh:
+                  type: string
+                  description: JWT Refresh Token
+              example:
+                refresh: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+      responses:
+        "200":
+          description: Token刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: 新的Access Token
+                example:
+                  access: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+        "400":
+          description: Refresh Token无效或已过期
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /logout/:
+    post:
+      summary: 用户登出
+      description: 登出当前用户，使Refresh Token失效
+      operationId: logout
+      tags:
+        - 认证
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh Token（可选，用于加入黑名单）
+      responses:
+        "200":
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "登出成功"
+        "401":
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /email/verify/send/:
+    post:
+      summary: 发送邮箱验证邮件
+      description: 向指定邮箱发送验证邮件
+      operationId: sendEmailVerification
+      tags:
+        - 邮箱验证
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 要验证的邮箱地址
+              example:
+                email: "user@example.com"
+      responses:
+        "200":
+          description: 验证邮件发送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "验证邮件已发送，请查收"
+        "400":
+          description: 邮箱不属于当前用户或验证失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 邮件发送失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /email/verify/{token}/:
+    get:
+      summary: 验证邮箱
+      description: 通过验证链接中的token验证邮箱
+      operationId: verifyEmail
+      tags:
+        - 邮箱验证
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 邮箱验证令牌
+      responses:
+        "200":
+          description: 邮箱验证成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "邮箱验证成功"
+        "400":
+          description: Token无效、已过期或已被使用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 验证失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /password/reset/send/:
+    post:
+      summary: 发送密码重置邮件
+      description: |
+        向指定邮箱发送密码重置邮件。
+
+        **安全特性**：
+        - 需要验证码保护
+        - 无论邮箱是否存在都返回成功（防止用户枚举攻击）
+      operationId: sendPasswordReset
+      tags:
+        - 密码重置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendPasswordResetRequest"
+      responses:
+        "200":
+          description: 重置邮件发送成功（无论邮箱是否存在）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "密码重置邮件已发送，请查收"
+        "400":
+          description: 验证码错误或邮箱格式错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 邮件发送失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /password/reset/:
+    post:
+      summary: 重置密码
+      description: 使用重置token重置用户密码
+      operationId: resetPassword
+      tags:
+        - 密码重置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "200":
+          description: 密码重置成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "密码重置成功，请使用新密码登录"
+        "400":
+          description: Token无效、已过期、已使用或密码不符合要求
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 密码重置失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Access Token
+
+  schemas:
+    CaptchaResponse:
+      type: object
+      required:
+        - captcha_id
+        - captcha_image
+        - expires_in
+      properties:
+        captcha_id:
+          type: string
+          format: uuid
+          description: 验证码ID
+        captcha_image:
+          type: string
+          format: byte
+          description: Base64编码的验证码图片（data:image/png;base64,...格式）
+        expires_in:
+          type: integer
+          description: 过期时间（秒）
+          example: 300
+
+    PreviewLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - captcha_id
+        - captcha_answer
+      properties:
+        email:
+          type: string
+          description: 用户邮箱或用户名
+        password:
+          type: string
+          format: password
+          description: 用户密码
+        captcha_id:
+          type: string
+          format: uuid
+          description: 验证码ID
+        captcha_answer:
+          type: string
+          description: 验证码答案
+      example:
+        email: "user@example.com"
+        password: "SecurePass123"
+        captcha_id: "550e8400-e29b-41d4-a716-446655440000"
+        captcha_answer: "A3B7"
+
+    PreviewLoginResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+          description: 账号密码是否验证通过
+        user:
+          type: object
+          nullable: true
+          description: 用户信息（仅在valid=true时返回）
+          properties:
+            display_name:
+              type: string
+              description: 用户显示名称
+            avatar_url:
+              type: string
+              nullable: true
+              format: uri
+              description: 头像URL（如果用户没有设置头像则为null）
+            default_avatar:
+              type: boolean
+              description: 是否使用默认头像
+            avatar_letter:
+              type: string
+              nullable: true
+              description: 默认头像显示的首字母（仅在default_avatar=true时返回）
+      oneOf:
+        - description: 验证成功且用户有头像
+          properties:
+            valid:
+              type: boolean
+              example: true
+            user:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  example: "张三"
+                avatar_url:
+                  type: string
+                  example: "https://example.com/avatars/user.jpg"
+                default_avatar:
+                  type: boolean
+                  example: false
+        - description: 验证成功但用户无头像
+          properties:
+            valid:
+              type: boolean
+              example: true
+            user:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  example: "张三"
+                avatar_url:
+                  type: string
+                  nullable: true
+                  example: null
+                default_avatar:
+                  type: boolean
+                  example: true
+                avatar_letter:
+                  type: string
+                  example: "张"
+        - description: 验证失败
+          properties:
+            valid:
+              type: boolean
+              example: false
+            user:
+              type: object
+              nullable: true
+              example: null
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - password_confirm
+        - captcha_id
+        - captcha_answer
+      properties:
+        email:
+          type: string
+          format: email
+          description: 用户邮箱地址
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: 用户密码（至少8位，包含字母和数字）
+        password_confirm:
+          type: string
+          format: password
+          description: 确认密码，必须与password一致
+        captcha_id:
+          type: string
+          format: uuid
+          description: 验证码ID
+        captcha_answer:
+          type: string
+          description: 验证码答案
+      example:
+        email: "user@example.com"
+        password: "SecurePass123"
+        password_confirm: "SecurePass123"
+        captcha_id: "550e8400-e29b-41d4-a716-446655440000"
+        captcha_answer: "A3B7"
+
+    RegisterResponse:
+      type: object
+      required:
+        - user
+        - token
+        - refresh_token
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: 用户ID
+            email:
+              type: string
+              format: email
+              description: 用户邮箱
+            is_email_verified:
+              type: boolean
+              description: 邮箱是否已验证
+        token:
+          type: string
+          description: JWT Access Token
+        refresh_token:
+          type: string
+          description: JWT Refresh Token
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - captcha_id
+        - captcha_answer
+      properties:
+        email:
+          type: string
+          description: 用户邮箱或用户名
+        password:
+          type: string
+          format: password
+          description: 用户密码
+        captcha_id:
+          type: string
+          format: uuid
+          description: 验证码ID
+        captcha_answer:
+          type: string
+          description: 验证码答案
+      example:
+        email: "user@example.com"
+        password: "SecurePass123"
+        captcha_id: "550e8400-e29b-41d4-a716-446655440000"
+        captcha_answer: "A3B7"
+
+    LoginResponse:
+      type: object
+      required:
+        - user
+        - token
+        - refresh_token
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            is_email_verified:
+              type: boolean
+        token:
+          type: string
+          description: JWT Access Token
+        refresh_token:
+          type: string
+          description: JWT Refresh Token
+
+    SendPasswordResetRequest:
+      type: object
+      required:
+        - email
+        - captcha_id
+        - captcha_answer
+      properties:
+        email:
+          type: string
+          format: email
+          description: 用户邮箱地址
+        captcha_id:
+          type: string
+          format: uuid
+          description: 验证码ID
+        captcha_answer:
+          type: string
+          description: 验证码答案
+      example:
+        email: "user@example.com"
+        captcha_id: "550e8400-e29b-41d4-a716-446655440000"
+        captcha_answer: "A3B7"
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - token
+        - password
+        - password_confirm
+      properties:
+        token:
+          type: string
+          description: 密码重置令牌
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: 新密码（至少8位，包含字母和数字）
+        password_confirm:
+          type: string
+          format: password
+          description: 确认密码，必须与password一致
+      example:
+        token: "reset-token-from-email"
+        password: "NewSecurePass123"
+        password_confirm: "NewSecurePass123"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: 错误消息
+        code:
+          type: string
+          description: 错误代码
+          enum:
+            - INVALID_CAPTCHA
+            - EMAIL_EXISTS
+            - WEAK_PASSWORD
+            - PASSWORD_MISMATCH
+            - VALIDATION_ERROR
+            - INVALID_EMAIL
+            - INVALID_TOKEN
+            - TOKEN_EXPIRED
+            - TOKEN_ALREADY_VERIFIED
+            - TOKEN_ALREADY_USED
+            - TOKEN_REQUIRED
+            - EMAIL_MISMATCH
+            - EMAIL_SEND_FAILED
+            - VERIFICATION_FAILED
+            - RESET_FAILED
+            - INVALID_REFRESH_TOKEN
+            - REFRESH_FAILED
+            - UNAUTHORIZED
+        details:
+          type: object
+          description: 详细的错误信息（可选）
+      example:
+        error: "验证码错误"
+        code: "INVALID_CAPTCHA"
+
+    LoginErrorResponse:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          properties:
+            failed_attempts:
+              type: integer
+              description: 当前登录失败次数
+            locked_until:
+              type: string
+              nullable: true
+              format: date-time
+              description: 账户锁定到期时间（如果账户被锁定）
+      example:
+        error: "邮箱或密码错误"
+        code: "INVALID_CREDENTIALS"
+        failed_attempts: 3
+        locked_until: null
+
+    AccountLockedResponse:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          properties:
+            locked_until:
+              type: string
+              format: date-time
+              description: 账户锁定到期时间
+      example:
+        error: "账户已锁定，请10分钟后重试"
+        code: "ACCOUNT_LOCKED"
+        locked_until: "2025-12-03T10:10:00Z"

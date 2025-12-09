@@ -1,4 +1,220 @@
 ---
+description: Taskmaster 开发流程中文指南
+globs: **/*
+alwaysApply: true
+---
+
+# Taskmaster 开发工作流（中文）
+
+本指南说明如何使用 Taskmaster 管理任务驱动的开发流程，面向 AI 代理的执行指令。
+
+- **默认姿态**：默认在 `master` 标签上下文工作，除非明确出现多上下文需求。
+- **核心目标**：在合适场景主动引入 **标签化任务列表**，提升组织与并行能力；不要强推。
+
+## 基础循环
+1. **`list`**：列出待办
+2. **`next`**：获取下一个可执行任务
+3. **`show <id>`**：查看任务详情
+4. **`expand <id>`**：拆分复杂任务
+5. **实现**：编写代码与测试
+6. **`update-subtask`**：记录进展与发现
+7. **`set-status`**：标记完成
+8. **重复**
+所有命令默认使用当前标签（默认为 `master`）。
+
+---
+
+## 标准开发流程
+
+### 简单模式（默认起点）
+- `initialize_project` / `task-master init` 或 `parse_prd` / `task-master parse-prd --input='<prd-file.txt>'` 生成初始 tasks.json（带标签结构）
+- 初始化可用 `--rules` 配置规则集；也可后续 `task-master rules add/remove`
+- 每次编码前：`get_tasks` / `task-master list`
+- 选下一个任务：`next_task` / `task-master next`
+- 拆分前先做复杂度分析：`analyze_project_complexity --research`
+- 查看复杂度报告：`complexity_report`
+- 按依赖、优先级、ID 选择任务
+- 查看详情：`get_task` / `task-master show <id>`
+- 拆分复杂任务：`expand_task --id=<id> --force --research`
+- 开发实现并遵循依赖与规范
+- 完成后：`set_task_status --id=<id> --status=done`
+- 方案偏移时：`update --from=<id> --prompt="..."` 或 `update_task --id=<id> --prompt="..."`
+
+---
+
+## 进阶：多标签与场景化
+
+**关键原则**：仅在明确需要时引入高级标签化；大多数用户无需感知差异。
+
+### 何时引入标签（决策模式）
+- **模式1：Git 分支**
+  触发：新建分支 `feature/*`。
+  行动：创建同名标签隔离任务。
+  提示语：创建 `feature-user-auth` 标签？
+  工具：`task-master add-tag --from-branch`
+
+- **模式2：团队协作**
+  触发：提到同事协作。
+  行动：为自己创建独立标签，避免与 master 冲突。
+  提示语：要为你的工作单独建标签吗？
+  工具：`task-master add-tag my-work --copy-from-current --description="..."`
+
+- **模式3：实验/风险重构**
+  触发：尝试可能丢弃的方案。
+  行动：建 `experiment-*` 沙盒标签，可随时删除。
+  工具：`task-master add-tag experiment-zustand --description="..."`
+
+- **模式4：大型特性（PRD 驱动）**
+  触发：多步骤大功能需要规划。
+  行动：建 `feature-xyz` 标签，协作撰写 PRD，然后 parse。
+  流程：
+  1) `add_tag feature-xyz --description="..."`
+  2) 写 PRD `.taskmaster/docs/feature-xyz-prd.txt`
+  3) `parse_prd ... --tag feature-xyz`
+  4) `analyze_project_complexity` + `expand_all`
+
+- **模式5：版本成熟度**
+  - `prototype/mvp/poc/v0.x`：追求速度与可用性，少量子任务，提示强调“先跑通”。
+  - `v1.0+/production/stable`：强调可靠性、测试、文档与优化，子任务更细，提示强调“稳健可维护”。
+
+### 进阶（标签化 + PRD 驱动）
+**迁移信号**：团队协作、多任务（15+）、大量分支、复杂代码基、重大特性。
+**转换策略**：
+- master 只放高价值里程碑/阻塞事项/基础设施。
+- 具体实现子任务放各自特性标签。
+- 试验/重构/个人工作创建独立标签（如 `experiment-*`、`refactor-*`）。
+- PRD 解析到对应标签，必要时 `--append` 支持多 PRD。
+
+### 迁移示例
+- **简单→团队**：`add_tag my-api-work --copy-from-current`
+- **简单→PRD 驱动**：`add_tag feature-dashboard ...` → 写 PRD → `parse_prd ... --tag=feature-dashboard`
+- **存量项目→规划**：先 `research --tree --files=...` → 写改进 PRD → 按领域建标签 → master 只保留关键里程碑
+
+---
+
+## 主要交互方式：MCP vs CLI
+1. **MCP（推荐）**
+   - 集成环境优先，工具：`get_tasks`、`add_subtask` 等
+   - 性能更好、数据结构化、错误处理更丰富
+   - 参考 @`mcp.mdc`、@`taskmaster.mdc`
+   - 修改 `scripts/modules` 或 MCP 工具定义后需重启 MCP
+   - 完整支持标签管理
+
+2. **`task-master` CLI（用户/兜底）**
+   - 终端交互友好，`npx task-master-ai ...` 或全局安装
+   - 命令与 MCP 对应（如 `task-master list` = `get_tasks`）
+   - 标签系统完整支持
+
+## 标签系统速览
+- 数据隔离：各标签互不影响
+- 静默迁移：旧项目自动迁移到 `master`
+- 手动切换：`task-master use-tag <name>`
+- 全量命令：详见 @`taskmaster.mdc`
+
+---
+
+## 复杂度分析
+- `analyze_project_complexity --research` 进行分析
+- `complexity_report` 查看可读报告
+- 聚焦高复杂度（8-10）任务优先拆分
+- `expand_task` 会自动利用报告
+
+## 拆分流程
+- `expand_task --id=<id>`：优先使用复杂度报告
+- `--num` 指定子任务数量；`--research` 启用研究；`--force` 先清空旧子任务
+- 需要额外上下文时用 `--prompt="..."`
+- 多任务批量：`expand_all --all`，必要时先 `clear_subtasks`
+
+## 实施偏移处理
+- 方案变化 / 新依赖 / 需求变更
+- 多任务批量更新：`update --from=<id> --prompt="..." --research`
+- 单任务更新：`update_task --id=<id> --prompt="..." --research`
+
+## 状态管理
+- `pending` 待做，`in-progress` 进行中，`done` 完成，`deferred` 延后
+- 可按需自定义状态
+
+## 任务字段
+- **id**：唯一 ID（如 `1`、`1.1`）
+- **title**：简短标题
+- **description**：任务概述
+- **status**：状态
+- **dependencies**：前置任务 ID，带状态图标（✅ / ⏱️）
+- **priority**：优先级
+- **details**：实现细节
+- **testStrategy**：验证/测试策略
+- **subtasks**：子任务列表
+（更多细节参见 `tasks.mdc`）
+
+## 配置管理
+1. **`.taskmaster/config.json`（主配置）**
+   - 根目录，存放模型、maxTokens、temperature、logLevel、默认优先级/子任务、defaultTag 等
+   - 通过 `task-master models --setup` 管理；查看/设置模型用 `task-master models` 或 MCP `models`
+2. **环境变量（`.env` / `.cursor/mcp.json`）**
+   - 仅存放各模型提供商 API Key、特殊 endpoint
+3. **`.taskmaster/state.json`**
+   - 记录当前标签与迁移状态
+
+重要：非敏感配置不再用环境变量。MCP 失败请检查 `.cursor/mcp.json`；CLI 失败检查 `.env`。
+
+## 规则集管理
+- 可选配置集：claude / cline / codex / cursor / roo / trae / windsurf
+- 初始化：`task-master init --rules cursor,windsurf`
+- 追加/移除：`task-master rules add/remove <profiles>`
+- 交互式：`task-master rules setup`
+- 每个规则集有独立目录（如 `.cursor/rules`）
+
+## 选择下一个任务
+- `next_task` / `task-master next`
+- 只给出依赖满足的任务；按优先级/依赖数/ID 排序
+- 展示详情、实现要点、子任务、建议动作
+- 开工前推荐先跑一次
+
+## 查看任务详情
+- `get_task` / `task-master show <id>`（子任务用点号：`1.2`）
+- 展示父子关系、状态、建议动作；用于开工前或状态检查
+
+## 依赖管理
+- 增加：`add_dependency` / `task-master add-dependency --id=<id> --depends-on=<id>`
+- 移除：`remove_dependency` / `task-master remove-dependency --id=<id> --depends-on=<id>`
+- 防循环、防重复，自动校验存在性，变更后自动再生成任务文件，列表带状态指示
+
+## 任务重组
+- 移动：`move_task` / `task-master move --from=<id> --to=<id>`
+- 场景：任务→子任务、子任务→任务、跨父级移动、同级重排、移动到新 ID、批量移动
+- 校验：不存在则占位创建，避免覆盖已有内容，保持父子与依赖一致，移动后自动再生成文件
+- 常用于多人分支产生的任务冲突调和
+
+## 合规警告处理（强制）
+**⚠️ 所有警告必须立即修复，不能忽略。**
+1. 查看 pre-commit 输出的 ⚠️
+2. 逐项修复：
+   - 缺 REQ-ID：在文件头补上
+   - 缺测试：补对应测试文件
+   - PRD 状态：修正为 approved/implementing
+   - 其他按提示修复
+3. 重新运行 pre-commit 验证
+4. 禁止忽略任何警告
+详见 @`compliance_workflow.mdc`
+
+## 迭代式子任务实施
+1. **理解目标**：`get_task <subtaskId>` 先读清需求。
+2. **探索与计划（迭代1）**：找出需要改的文件/函数/行，拟定改动与风险。
+3. **记录计划**：`update_subtask --id=<subtaskId> --prompt='<详细计划>'`，写全文件路径、行号、拟议 diff、理由、风险。
+4. **校验记录**：再次 `get_task` 确认计划已写入。
+5. **开始实现**：`set_task_status --id=<subtaskId> --status=in-progress`，按计划编码。
+6. **持续记录（迭代2+）**：遇到新发现/问题时，再次 `update_subtask`，补充“有效做法/失败原因/决策/偏离原因”，先检查已有记录避免重复。
+7. **规则更新**：完成后，梳理新模式，更新/新增规则文件。
+8. **收尾**：`set_task_status --id=<subtaskId> --status=done`。
+9. **提交（Git）**：`git add .`；撰写提交信息概述实现与规则变更；必要时 `npm run changeset`。
+10. **下一个子任务**：`next_task`。
+
+## 代码分析与重构技巧
+- **顶层函数查找**：`rg "export (async function|function|const) \w+"` 等，了解模块结构/命名冲突/迁移对比。
+
+---
+*以上为通用指引，可根据项目实际裁剪。*
+---
 description: Guide for using Taskmaster to manage task-driven development workflows
 globs: **/*
 alwaysApply: true
@@ -358,6 +574,23 @@ Taskmaster supports multiple AI coding assistant rule sets that can be configure
 - Task files are automatically regenerated after the move operation
 - This provides greater flexibility in organizing and refining your task structure as project understanding evolves
 - This is especially useful when dealing with potential merge conflicts arising from teams creating tasks on separate branches. Solve these conflicts very easily by moving your tasks and keeping theirs.
+
+## Compliance Warning Handling (Critical)
+
+**⚠️ 关键原则：所有合规警告都必须主动修复，不得等待用户指出**
+
+Before committing code, you MUST:
+
+1. **Check pre-commit output** for compliance warnings (⚠️ warnings)
+2. **Immediately fix all warnings**:
+   - Missing REQ-ID → Add REQ-ID comment to file header
+   - Missing test files → Create corresponding test files
+   - PRD status issues → Fix PRD status
+   - Other warnings → Fix according to the warning message
+3. **Verify fixes** by re-running pre-commit checks
+4. **Never ignore warnings** - they indicate compliance issues that need attention
+
+See @`compliance_workflow.mdc` for detailed compliance warning handling procedures.
 
 ## Iterative Subtask Implementation
 

@@ -1,0 +1,52 @@
+---
+description: V4契约驱动开发规则
+globs: docs/01_guideline/api-contracts/**/*.yaml, backend/apps/**/*.py, frontend/src/api/**/*.{ts,js}
+priority: 850
+---
+
+# V4契约驱动开发规则
+
+## 核心原则
+
+**前后端通过API契约并行开发**
+
+## 工作流程
+
+1. **架构师设计API契约**: 根据PRD创建OpenAPI 3.0契约文档
+2. **前端基于契约开发**: 使用Mock Server，不依赖后端
+3. **后端按照契约实现**: 确保API符合契约定义
+4. **契约测试验证**: 自动验证前后端是否符合契约
+
+## API契约位置
+
+**路径**: `docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
+
+**格式**: OpenAPI 3.0
+
+**参考**: @docs/01_guideline/api-contracts/README.md
+
+## 契约要求
+
+### 实现必须遵循契约
+
+- 请求参数必须符合Schema
+- 响应格式必须符合Schema
+- 状态码必须符合契约定义
+- 错误响应格式必须符合契约
+
+### 契约测试
+
+- 使用`drf-spectacular`自动生成文档
+- 对比生成的文档与契约文档
+- 运行契约测试验证一致性
+
+## Mock Server使用
+
+**工具**: Prism
+
+**命令**:
+```bash
+prism mock docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml
+```
+
+**参考**: @docs/01_guideline/api-contracts/README.md

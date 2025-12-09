@@ -1,0 +1,207 @@
+---
+description: Task-Master生成任务阶段的规则
+globs: .taskmaster/**/*.json, .taskmaster/**/*.md
+priority: 800
+---
+
+# Task-Master生成任务阶段规则
+
+## 角色切换
+
+**当前角色**: 任务管理专家 (Task-Master Operator)
+
+**你的职责**:
+1. 使用Task-Master解析精化后的PRD
+2. 生成结构化的任务列表
+3. 分析任务复杂度
+4. 展开任务为子任务
+
+**你不应该**:
+- 直接修改生成的tasks.json
+- 跳过任务复杂度分析
+- 忽略任务依赖关系
+
+## Task-Master工作流
+
+### 1. 解析PRD
+
+**命令**: `task-master parse-prd <prd-file> --tag <tag-name> [--prompt "<prompt>"]`
+
+**前提条件**:
+- PRD状态必须是`refined`或`approved`
+- PRD必须包含完整的技术细节
+- PRD必须包含测试用例清单
+
+**输出**: `.taskmaster/tasks/{REQ-ID}/tasks.json`
+
+**标准Prompt模板**:
+
+当调用 `parse-prd` 时，**必须**使用以下标准 `--prompt` 参数，确保生成的任务符合项目规范：
+
+```bash
+task-master parse-prd <prd-file> --tag <tag-name> --prompt "
+## V4架构核心约束
+- 严格执行V4五条铁律：PRD先行、测试先行、任务先行、修改PRD先行、不可绕过
+- 所有任务必须可追溯到PRD（REQ-ID）
+- 必须包含Task-0自检任务（验证PRD完整性、API契约、测试用例、数据库设计）
+
+## 开发模式约束
+- **纯Docker容器化开发**：所有开发、构建、测试必须在Docker容器中进行
+- **命令格式**：所有后端命令使用 \`docker-compose exec backend\`，前端命令使用 \`docker-compose exec frontend\`
+- **禁止**：不能在宿主机直接运行 \`pip install\`、\`npm install\`、\`python manage.py\` 等命令
+- **依赖管理**：依赖安装和更新应在容器内部执行
+
+## TDD流程要求
+- **严格遵循TDD三阶段循环**：红（编写失败测试）→ 绿（最少代码通过测试）→ 重构（优化代码）
+- **任务结构**：每个功能开发任务必须明确包含以下子任务：
+  1. [测试]：编写单元测试（预期失败）
+  2. [实现-最少代码]：编写刚好通过测试的代码
+  3. [重构]：优化代码结构，保持测试通过
+- **测试覆盖率**：代码覆盖率必须 >= 80%
+- **测试先行**：在编写任何功能代码之前，必须先编写对应的自动化测试用例
+
+## 任务组织原则
+- **后端先于前端**：后端API开发完成并通过测试后，再开发前端
+- **数据库先于API**：数据库任务必须先于API任务
+- **测试先于实现**：测试任务必须先于代码实现任务
+- **已有项目约束**：项目是在已有代码基础上扩展，不是从零开始，任务应聚焦于扩展和增强现有代码
+
+## 资源路径规范
+- PRD路径：\`docs/00_product/requirements/{REQ-ID}/{REQ-ID}.md\`
+- API契约路径：\`docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml\`
+- 测试文件路径：
+  - 单元测试：\`backend/tests/unit/test_{module}.py\`
+  - 集成测试：\`backend/tests/integration/test_{feature}.py\`
+  - E2E测试：\`e2e/tests/{feature}.spec.ts\`
+
+## Task-0自检任务要求
+第一个任务必须是Task-0自检，包含：
+1. 验证PRD完整性（元数据、技术细节、测试用例清单）
+2. 验证API契约文档存在且符合OpenAPI 3.0规范
+3. 验证测试用例清单完整（单元、集成、E2E）
+4. 验证数据库设计完整（表结构、索引、外键）
+
+## 任务描述要求
+- 任务描述必须引用REQ-ID
+- 任务必须关联到PRD中的具体功能点
+- 任务必须明确说明使用Docker命令（如：\`docker-compose exec backend python manage.py migrate\`）
+- 任务必须明确说明TDD流程（红→绿→重构）
+"
+```
+
+**使用示例**:
+
+```bash
+# 解析PRD并生成任务
+task-master parse-prd \
+  docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login.md \
+  --tag REQ-2025-003-user-login \
+  --prompt "
+## V4架构核心约束
+- 严格执行V4五条铁律：PRD先行、测试先行、任务先行、修改PRD先行、不可绕过
+- 所有任务必须可追溯到PRD（REQ-ID）
+- 必须包含Task-0自检任务（验证PRD完整性、API契约、测试用例、数据库设计）
+
+## 开发模式约束
+- **纯Docker容器化开发**：所有开发、构建、测试必须在Docker容器中进行
+- **命令格式**：所有后端命令使用 \`docker-compose exec backend\`，前端命令使用 \`docker-compose exec frontend\`
+- **禁止**：不能在宿主机直接运行 \`pip install\`、\`npm install\`、\`python manage.py\` 等命令
+
+## TDD流程要求
+- **严格遵循TDD三阶段循环**：红（编写失败测试）→ 绿（最少代码通过测试）→ 重构（优化代码）
+- **任务结构**：每个功能开发任务必须明确包含以下子任务：
+  1. [测试]：编写单元测试（预期失败）
+  2. [实现-最少代码]：编写刚好通过测试的代码
+  3. [重构]：优化代码结构，保持测试通过
+- **测试覆盖率**：代码覆盖率必须 >= 80%
+"
+```
+
+**参考**: @.cursor/rules/tools/taskmaster.mdc
+
+### 2. 分析复杂度
+
+**命令**: `task-master analyze-complexity --tag <tag-name> --research`
+
+**目的**: 识别需要展开的高复杂度任务
+
+**输出**: `.taskmaster/reports/task-complexity-report.json`
+
+**参考**: @.cursor/rules/tools/taskmaster.mdc
+
+### 3. 展开任务
+
+**命令**: `task-master expand --id <id> --research --force`
+
+**规则**:
+- 复杂度 >= 8的任务必须展开
+- 每个任务展开为3-5个子任务
+- 子任务必须遵循TDD流程（测试→实现→重构）
+
+**参考**: @.cursor/rules/tools/taskmaster-workflow.mdc
+
+## 任务生成规则
+
+### 任务必须包含TDD阶段
+
+每个功能开发任务应明确包含：
+
+1. **[测试]**: 编写单元测试（预期失败）
+2. **[实现-最少代码]**: 编写刚好通过测试的代码
+3. **[重构]**: 优化代码结构，保持测试通过
+
+### 任务必须关联PRD
+
+- 任务描述必须引用REQ-ID
+- 任务必须关联到PRD中的具体功能点
+- 任务状态必须同步到PRD元数据
+
+### 任务依赖关系
+
+- 测试任务必须先于代码任务
+- 后端任务必须先于前端任务
+- 数据库任务必须先于API任务
+
+## Task-0自检任务（强制）
+
+**规则**: 每个PRD的第一个任务必须是Task-0自检
+
+**自检内容**:
+1. 验证PRD完整性
+2. 验证API契约文档存在
+3. 验证测试用例清单完整
+4. 验证数据库设计完整
+
+**参考**: @docs/architecture/V4/AI-WORKFLOW-V4-PART2-TM-ADAPTER.md
+
+## 任务标签管理
+
+**规则**: 使用标签管理不同PRD的任务
+
+**命令**:
+- `task-master add-tag <tag-name> --description "描述"`
+- `task-master use-tag <tag-name>`
+- `task-master parse-prd <file> --tag <tag-name>`
+
+**参考**: @.cursor/rules/tools/taskmaster.mdc
+
+## 任务状态管理
+
+**状态流转**:
+```
+pending → in-progress → done
+```
+
+**规则**:
+- 开始任务前：`task-master set-status --id <id> --status in-progress`
+- 完成任务后：`task-master set-status --id <id> --status done`
+- 任务状态必须同步到PRD元数据
+
+**参考**: @.cursor/rules/tools/taskmaster-workflow.mdc
+
+## 禁止事项
+
+- ❌ 不能跳过Task-0自检
+- ❌ 不能生成没有TDD阶段的任务
+- ❌ 不能忽略任务依赖关系
+- ❌ 不能直接修改tasks.json（使用Task-Master命令）

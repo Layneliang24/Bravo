@@ -25,14 +25,14 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
+          ssh-private-key: ${{ secrets.TXYUN_SSH_KEY }}
 
       - name: Deploy to dev server
         env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USER: ${{ secrets.ALIYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
@@ -149,10 +149,10 @@ jobs:
         id: health-check
         if: always()
         env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USER: ${{ secrets.ALIYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
             set -e

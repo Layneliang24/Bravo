@@ -171,6 +171,9 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "preview_login": "10/min",  # 登录预验证API：每分钟10次
+    },
 }
 
 # JWT 配置
@@ -259,5 +262,32 @@ LOGGING = {
     "root": {
         "handlers": ["console", "file"],
         "level": "INFO",
+    },
+}
+
+# drf-spectacular (OpenAPI/Swagger) 配置
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Bravo API 文档",
+    "DESCRIPTION": "Bravo项目API文档，基于OpenAPI 3.0规范",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "TAGS": [
+        {"name": "验证码", "description": "验证码相关API"},
+        {"name": "认证", "description": "用户认证相关API"},
+        {"name": "邮箱验证", "description": "邮箱验证相关API"},
+        {"name": "密码重置", "description": "密码重置相关API"},
+    ],
+    # 自定义安全方案
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "displayOperationId": True,
+        "defaultModelsExpandDepth": 2,
+        "defaultModelExpandDepth": 2,
+    },
+    "REDOC_UI_SETTINGS": {
+        "hideDownloadButton": False,
+        "expandResponses": "200,201",
     },
 }

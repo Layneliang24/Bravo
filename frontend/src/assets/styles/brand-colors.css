@@ -1,0 +1,51 @@
+/* REQ-ID: REQ-2025-003-user-login */
+/* 品牌配色方案 - 根据PRD设计规范 */
+
+:root {
+  /* 主色调 */
+  --color-primary-dark-blue: #1a237e;
+  --color-primary-gold: #ffd700;
+
+  /* 背景渐变 */
+  --gradient-background-start: #667eea;
+  --gradient-background-end: #764ba2;
+  --gradient-background: linear-gradient(
+    135deg,
+    var(--gradient-background-start) 0%,
+    var(--gradient-background-end) 100%
+  );
+
+  /* 按钮渐变 */
+  --gradient-button: linear-gradient(
+    135deg,
+    var(--color-primary-dark-blue) 0%,
+    #283593 50%,
+    var(--color-primary-gold) 100%
+  );
+  --gradient-button-hover: linear-gradient(
+    135deg,
+    #0d47a1 0%,
+    #1a237e 50%,
+    #ffc107 100%
+  );
+
+  /* 输入框 */
+  --input-background: #ffffff;
+  --input-border: #1a237e;
+  --input-border-focus: var(--color-primary-gold);
+  --input-text: #1f2937;
+
+  /* 状态颜色 */
+  --color-error: #ef4444;
+  --color-success: #10b981;
+
+  /* 文本颜色 */
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-light: #ffffff;
+
+  /* 边框和阴影 */
+  --border-radius: 0.375rem;
+  --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}

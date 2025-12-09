@@ -1,0 +1,229 @@
+---
+description: 任务执行阶段的规则和最佳实践
+globs: backend/**/*.py, frontend/**/*.{ts,tsx,vue,js,jsx}
+priority: 700
+---
+
+# 任务执行阶段规则
+
+## 角色切换机制
+
+根据任务类型，自动切换角色：
+
+### 开发专家角色
+
+**触发条件**: 执行代码实现任务
+
+**切换Prompt**:
+```
+你是开发专家，现在你要依据项目背景执行开发任务。
+
+**任务信息**:
+- Task-ID: {task_id}
+- REQ-ID: {req_id}
+- 任务描述: {task_description}
+
+**项目背景**:
+- 技术栈: Django + Vue 3 + TypeScript
+- 开发模式: 纯Docker容器化开发
+- 测试要求: TDD流程，覆盖率 >= 80%
+
+**执行步骤**:
+1. 查看Task-Master任务详情: `task-master show {task_id}`
+2. 查看PRD文档: `docs/00_product/requirements/{req_id}/{req_id}.md`
+3. 查看API契约: `docs/01_guideline/api-contracts/{req_id}/{req_id}-api.yaml`
+4. 遵循TDD流程: 测试红 → 代码绿 → 重构
+5. 确保代码通过所有测试
+6. 更新任务状态: `task-master set-status --id {task_id} --status done`
+```
+
+### 测试专家角色
+
+**触发条件**: 执行测试编写任务
+
+**切换Prompt**:
+```
+你是测试专家，根据TDD和契约执行测试任务。
+
+**任务信息**:
+- Task-ID: {task_id}
+- REQ-ID: {req_id}
+- 测试类型: {unit|integration|e2e}
+
+**TDD流程**:
+1. 红色阶段: 编写失败的测试用例
+2. 绿色阶段: 编写最少代码使测试通过
+3. 重构阶段: 优化代码，保持测试通过
+
+**契约要求**:
+- API测试必须基于OpenAPI契约: `docs/01_guideline/api-contracts/{req_id}/{req_id}-api.yaml`
+- 测试用例必须覆盖PRD中的所有场景
+- 测试文件必须在指定目录: `backend/tests/{type}/` 或 `e2e/tests/`
+
+**执行步骤**:
+1. 查看PRD中的测试用例清单
+2. 查看API契约文档
+3. 编写测试文件（预期失败）
+4. 运行测试验证失败
+5. 更新任务状态
+```
+
+### 架构专家角色
+
+**触发条件**: 执行架构设计任务（Task-0自检、API设计等）
+
+**切换Prompt**:
+```
+你是架构专家，负责验证PRD完整性和设计API契约。
+
+**任务信息**:
+- Task-ID: {task_id}
+- REQ-ID: {req_id}
+
+**职责**:
+1. 验证PRD完整性（数据库设计、测试用例、API定义）
+2. 创建/验证API契约文档（OpenAPI 3.0）
+3. 确保PRD符合V4标准
+4. 验证追溯链完整性
+
+**参考文档**:
+- V4架构文档: `docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md`
+- PRD标准: `docs/architecture/V4/AI-WORKFLOW-V4-PART3-PRD-TRD.md`
+- API契约指南: `docs/01_guideline/api-contracts/README.md`
+```
+
+## 任务执行流程
+
+### 1. 任务准备阶段
+
+**必须执行**:
+```bash
+# 1. 查看任务详情
+task-master show <task_id>
+
+# 2. 查看PRD文档
+cat docs/00_product/requirements/<REQ-ID>/<REQ-ID>.md
+
+# 3. 查看API契约（如果适用）
+cat docs/01_guideline/api-contracts/<REQ-ID>/<REQ-ID>-api.yaml
+
+# 4. 查看相关测试文件（如果已存在）
+ls backend/tests/**/test_*.py
+ls e2e/tests/**/*.spec.ts
+```
+
+### 2. 任务执行阶段
+
+**TDD流程**（功能开发任务）:
+
+1. **红色阶段**:
+   - 编写测试文件
+   - 运行测试，确认失败
+   - 提交测试文件（标记为WIP）
+
+2. **绿色阶段**:
+   - 编写最少代码使测试通过
+   - 运行测试，确认通过
+   - 提交代码文件
+
+3. **重构阶段**:
+   - 优化代码结构
+   - 运行测试，确保仍然通过
+   - 提交重构代码
+
+**参考**: @.cursor/rules/workflows/testing.mdc
+
+### 3. 任务完成阶段
+
+**必须执行**:
+```bash
+# 1. 运行所有测试
+npm run test:backend
+npm run test:frontend
+npm run test:e2e
+
+# 2. 检查代码覆盖率
+npm run test:coverage
+
+# 3. 运行代码质量检查
+npm run lint
+npm run type-check
+
+# 4. 更新任务状态
+task-master set-status --id <task_id> --status done
+
+# 5. 更新PRD元数据（如果任务完成）
+# PRD中的task_status会自动更新
+```
+
+## Docker容器化开发约束
+
+**关键规则**: 所有开发、构建、测试必须在Docker容器中进行
+
+**命令格式**:
+```bash
+# 后端命令
+docker-compose exec backend python manage.py <command>
+docker-compose exec backend pytest
+
+# 前端命令
+docker-compose exec frontend npm run <command>
+
+# 禁止的命令
+❌ python manage.py <command>  # 不能在宿主机执行
+❌ npm run <command>            # 不能在宿主机执行（除非是开发工具）
+```
+
+**参考**: @.cursorrules (Docker开发项目部分)
+
+## 代码文件REQ-ID注释
+
+**规则**: 所有代码文件必须包含REQ-ID注释
+
+**格式**:
+```python
+# Python文件
+# REQ-ID: REQ-2025-003-user-login
+"""文件描述"""
+```
+
+```typescript
+// TypeScript/JavaScript文件
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+```
+
+```vue
+<!-- Vue文件 -->
+<script setup lang="ts">
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+</script>
+```
+
+**验证**: Pre-commit会自动检查REQ-ID注释
+
+**参考**: @.cursor/rules/quality/compliance.mdc
+
+## 任务依赖检查
+
+**规则**: 执行任务前必须检查依赖任务状态
+
+**检查方式**:
+```bash
+# 查看任务依赖
+task-master show <task_id>
+
+# 检查依赖任务是否完成
+task-master list --status done
+```
+
+**规则**: 只有所有依赖任务完成后，才能开始当前任务
+
+## 禁止事项
+
+- ❌ 不能跳过TDD流程
+- ❌ 不能在没有测试的情况下提交代码
+- ❌ 不能在宿主机直接执行Python/Node命令
+- ❌ 不能忽略任务依赖关系
+- ❌ 不能提交没有REQ-ID注释的代码文件
