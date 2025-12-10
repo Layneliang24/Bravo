@@ -17,10 +17,9 @@
 #   DJANGO_SECRET_KEY: Django密钥（必需）
 
 services:
-  # MySQL - 内存优化配置（使用国内镜像加速）
+  # MySQL - 内存优化配置
   mysql:
-    # 优先使用国内镜像源，如果不可用则回退到官方镜像
-    image: ${MYSQL_IMAGE:-docker.mirrors.ustc.edu.cn/library/mysql:8.0}
+    image: mysql:8.0
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-bravo_prod_2024}
@@ -45,10 +44,9 @@ services:
           memory: 200M
     restart: unless-stopped
 
-  # Redis - 轻量配置（使用国内镜像加速）
+  # Redis - 轻量配置
   redis:
-    # 优先使用国内镜像源，如果不可用则回退到官方镜像
-    image: ${REDIS_IMAGE:-docker.mirrors.ustc.edu.cn/library/redis:7-alpine}
+    image: redis:7-alpine
     container_name: ${COMPOSE_PROJECT_NAME:-bravo-prod}-redis
     command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
     ports:
