@@ -181,9 +181,15 @@ jobs:
             git config --global http.lowSpeedTime 300
             git config --global http.version HTTP/1.1
 
-            # 先获取远程dev分支的最新信息（带重试）
+            # 强制更新所有远程分支引用（包括dev）
+            echo "🔄 强制更新所有远程分支引用..."
+            git_retry "git fetch --all --force --prune" || \
+            git_retry "git fetch --all --force --prune" || \
+            git fetch --all --force --prune
+
+            # 先获取远程dev分支的最新信息（带重试，确保获取到最新）
             echo "🔄 获取远程dev分支最新信息..."
-            git_retry "git fetch --force --prune origin dev" || \
+            git_retry "git fetch origin dev:refs/remotes/origin/dev --force" || \
             git_retry "git fetch --force --prune origin dev" || \
             git fetch --force --prune origin dev
 
@@ -195,33 +201,55 @@ jobs:
               exit 1
             fi
 
-            # 确保当前在dev分支，如果不在则切换
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-            if [ "$CURRENT_BRANCH" != "dev" ]; then
-              echo "⚠️ 当前分支是 $CURRENT_BRANCH，切换到dev分支..."
-              git checkout -B dev origin/dev 2>/dev/null || {
-                echo "⚠️ 切换失败，强制重置到dev..."
-                git fetch origin dev:dev --force || true
-                git checkout -f dev || true
-              }
-            fi
-
-            # 先清理所有未提交的改动和未跟踪文件
-            git reset --hard HEAD || true
-            git clean -fdx || true
-
-            # 强制重置到远程dev分支最新代码（确保使用dev分支，不是main）
-            echo "🔄 重置到远程dev分支最新代码..."
-            git_retry "git reset --hard origin/dev" || git reset --hard origin/dev
-
-            # 验证最终HEAD是否与远程dev分支一致
-            FINAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
-            echo "📍 最终HEAD: $FINAL_HEAD"
+            # 显示当前状态
+            CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+            echo "📍 当前HEAD: $CURRENT_HEAD"
+            echo "📍 当前分支: $CURRENT_BRANCH"
             echo "📍 远程dev HEAD: $REMOTE_DEV_HEAD"
 
-            if [ "$FINAL_HEAD" != "$REMOTE_DEV_HEAD" ]; then
-              echo "⚠️ HEAD与远程dev分支不一致，强制同步..."
-              git reset --hard origin/dev
+            # 如果当前HEAD已经是远程dev的最新HEAD，检查是否需要切换分支
+            if [ "$CURRENT_HEAD" != "$REMOTE_DEV_HEAD" ]; then
+              echo "⚠️ 当前HEAD ($CURRENT_HEAD) 与远程dev HEAD ($REMOTE_DEV_HEAD) 不一致，需要更新"
+
+              # 确保当前在dev分支，如果不在则切换
+              if [ "$CURRENT_BRANCH" != "dev" ]; then
+                echo "⚠️ 当前分支是 $CURRENT_BRANCH，切换到dev分支..."
+                git checkout -B dev origin/dev 2>/dev/null || {
+                  echo "⚠️ 切换失败，强制重置到dev..."
+                  git fetch origin dev:dev --force || true
+                  git checkout -f dev || true
+                }
+              fi
+
+              # 清理所有未提交的改动和未跟踪文件
+              echo "🧹 清理本地改动..."
+              git reset --hard HEAD || true
+              git clean -fdx || true
+
+              # 强制重置到远程dev分支最新代码（确保使用dev分支，不是main）
+              echo "🔄 重置到远程dev分支最新代码..."
+              git_retry "git reset --hard origin/dev" || git reset --hard origin/dev
+
+              # 验证最终HEAD是否与远程dev分支一致
+              FINAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+              echo "📍 最终HEAD: $FINAL_HEAD"
+              echo "📍 远程dev HEAD: $REMOTE_DEV_HEAD"
+
+              if [ "$FINAL_HEAD" != "$REMOTE_DEV_HEAD" ]; then
+                echo "❌ HEAD与远程dev分支仍然不一致，尝试强制同步..."
+                git fetch origin dev --force
+                git reset --hard origin/dev
+                FINAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+                if [ "$FINAL_HEAD" != "$REMOTE_DEV_HEAD" ]; then
+                  echo "❌ 强制同步后仍然不一致，退出部署"
+                  echo "当前HEAD: $FINAL_HEAD"
+                  echo "期望HEAD: $REMOTE_DEV_HEAD"
+                  exit 1
+                fi
+              fi
+            else
+              echo "✅ 当前HEAD已经是远程dev的最新HEAD，无需更新"
             fi
 
             # 显示最终提交信息
