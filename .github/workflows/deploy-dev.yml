@@ -108,11 +108,24 @@ jobs:
             REGISTRY_PASSWORD="$2"
 
           echo "📁 进入项目目录..."
+          # 先确保父目录存在并有正确权限
+          echo "🔧 检查和修复目录权限..."
+          sudo mkdir -p /home/layne/project 2>/dev/null || true
+          sudo chown -R $USER:$USER /home/layne/project 2>/dev/null || true
+          sudo chmod 755 /home/layne/project 2>/dev/null || true
+
+          # 如果项目目录不存在，先创建
+          if [ ! -d "/home/layne/project/bravo-dev" ]; then
+            echo "📁 创建项目目录..."
+            sudo mkdir -p /home/layne/project/bravo-dev 2>/dev/null || true
+          fi
+
           cd /home/layne/project/bravo-dev
 
           echo "🔧 修复权限问题..."
           # 确保当前用户拥有项目目录权限
           sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
+          sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
           # 检查Docker权限，如果没有权限则使用sudo包装
           if ! docker ps &>/dev/null; then
             echo "⚠️ 当前用户无Docker权限，检查docker组..."
@@ -143,10 +156,15 @@ jobs:
             # 如果.git不存在或无法访问，删除目录重新克隆
             echo "⚠️ .git目录不存在或权限不足，重新克隆..."
             cd /home/layne/project
-            sudo rm -rf bravo-dev
+            # 先修复权限再删除，确保可以删除
+            sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
+            rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
+            # 确保目录权限正确后克隆
             git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
             cd bravo-dev
-            sudo chown -R $USER:$USER .
+            # 修复克隆后的权限
+            sudo chown -R $USER:$USER . 2>/dev/null || true
+            sudo chmod -R 755 . 2>/dev/null || true
           fi
 
           echo "⏹️  停止旧容器..."
