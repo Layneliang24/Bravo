@@ -94,8 +94,8 @@ jobs:
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
@@ -145,13 +145,60 @@ jobs:
           fi
 
           echo "🔄 拉取最新代码..."
+
+          # Git操作重试函数
+          git_retry() {
+            local cmd="$1"
+            local max_retry=3
+            local retry=0
+            local delay=5
+
+            while [ $retry -lt $max_retry ]; do
+              echo "🔄 执行: $cmd (尝试 $((retry+1))/$max_retry)..."
+              if eval "$cmd"; then
+                echo "✅ Git操作成功"
+                return 0
+              else
+                retry=$((retry+1))
+                if [ $retry -lt $max_retry ]; then
+                  echo "⚠️ Git操作失败，${delay}秒后重试..."
+                  sleep $delay
+                  delay=$((delay + 5))  # 递增延迟
+                fi
+              fi
+            done
+
+            echo "❌ Git操作失败，已重试${max_retry}次"
+            return 1
+          }
+
           if [ -d ".git" ] && [ -r ".git" ]; then
+            echo "📁 .git目录存在，更新代码..."
             # 先清理所有未提交的改动和未跟踪文件
-            git reset --hard HEAD
-            git clean -fdx
-            # 强制更新远程分支信息
-            git fetch --force --prune origin
-            git reset --hard origin/dev
+            git reset --hard HEAD || true
+            git clean -fdx || true
+
+            # 配置Git使用更稳定的网络设置
+            git config --global http.postBuffer 524288000
+            git config --global http.lowSpeedLimit 1000
+            git config --global http.lowSpeedTime 300
+            git config --global http.version HTTP/1.1
+
+            # 强制更新远程分支信息（带重试）
+            git_retry "git fetch --force --prune --depth=1 origin dev" || \
+            git_retry "git fetch --force --prune origin dev" || \
+            git fetch --force --prune origin dev
+
+            # 显示当前和远程的HEAD信息
+            echo "📍 当前HEAD: $(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
+            echo "📍 远程dev HEAD: $(git rev-parse origin/dev 2>/dev/null || echo 'unknown')"
+
+            # 强制重置到远程最新代码
+            git_retry "git reset --hard origin/dev" || git reset --hard origin/dev
+
+            # 验证最终HEAD
+            echo "✅ 最终HEAD: $(git rev-parse HEAD)"
+            echo "✅ 最新提交: $(git log -1 --oneline)"
           else
             # 如果.git不存在或无法访问，删除目录重新克隆
             echo "⚠️ .git目录不存在或权限不足，重新克隆..."
@@ -159,12 +206,26 @@ jobs:
             # 先修复权限再删除，确保可以删除
             sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
             rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
-            # 确保目录权限正确后克隆
+
+            # 配置Git使用更稳定的网络设置
+            git config --global http.postBuffer 524288000
+            git config --global http.lowSpeedLimit 1000
+            git config --global http.lowSpeedTime 300
+            git config --global http.version HTTP/1.1
+
+            # 确保目录权限正确后克隆（带重试）
+            git_retry "git clone -b dev --depth=1 https://github.com/Layneliang24/Bravo.git bravo-dev" || \
+            git_retry "git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev" || \
             git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
+
             cd bravo-dev
             # 修复克隆后的权限
             sudo chown -R $USER:$USER . 2>/dev/null || true
             sudo chmod -R 755 . 2>/dev/null || true
+
+            # 显示克隆后的HEAD信息
+            echo "✅ 克隆完成，HEAD: $(git rev-parse HEAD)"
+            echo "✅ 最新提交: $(git log -1 --oneline)"
           fi
 
           echo "⏹️  停止旧容器..."
