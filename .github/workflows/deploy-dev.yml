@@ -126,18 +126,67 @@ jobs:
           # 确保当前用户拥有项目目录权限
           sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
           sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
+          # 检查Docker权限和docker-compose可用性
+          echo "🔍 检查Docker和Docker Compose可用性..."
+
+          # 检测docker-compose命令类型（V1: docker-compose 或 V2: docker compose）
+          DOCKER_COMPOSE_CMD=""
+          if command -v docker-compose &>/dev/null; then
+            DOCKER_COMPOSE_CMD="docker-compose"
+            echo "✅ 发现docker-compose V1: $DOCKER_COMPOSE_CMD"
+          elif docker compose version &>/dev/null 2>&1; then
+            DOCKER_COMPOSE_CMD="docker compose"
+            echo "✅ 发现docker compose V2: $DOCKER_COMPOSE_CMD"
+          else
+            # 尝试查找docker-compose路径
+            DOCKER_COMPOSE_PATH=$(which docker-compose 2>/dev/null || find /usr -name docker-compose 2>/dev/null | head -1 || echo "")
+            if [ -n "$DOCKER_COMPOSE_PATH" ]; then
+              DOCKER_COMPOSE_CMD="$DOCKER_COMPOSE_PATH"
+              echo "✅ 通过路径找到docker-compose: $DOCKER_COMPOSE_CMD"
+            else
+              echo "❌ docker-compose命令不可用，退出"
+              exit 1
+            fi
+          fi
+
           # 检查Docker权限，如果没有权限则使用sudo包装
+          NEED_SUDO=false
           if ! docker ps &>/dev/null; then
             echo "⚠️ 当前用户无Docker权限，检查docker组..."
             if ! groups | grep -q docker; then
               echo "将用户添加到docker组..."
               sudo usermod -aG docker $USER 2>/dev/null || true
               echo "⚠️ 已添加用户到docker组，但需要重新登录才能生效"
-              echo "临时使用sudo执行Docker命令..."
-              # 创建docker命令的sudo包装函数
-              docker() { sudo docker "$@"; }
-              docker-compose() { sudo docker-compose "$@"; }
+              NEED_SUDO=true
             fi
+          fi
+
+          # 创建docker和docker-compose包装函数（确保在所有情况下都可用）
+          if [ "$NEED_SUDO" = "true" ]; then
+            echo "临时使用sudo执行Docker命令..."
+            docker() { sudo docker "$@"; }
+            if [[ "$DOCKER_COMPOSE_CMD" == "docker compose" ]]; then
+              docker-compose() { sudo docker compose "$@"; }
+            else
+              docker-compose() { sudo $DOCKER_COMPOSE_CMD "$@"; }
+            fi
+          else
+            if [[ "$DOCKER_COMPOSE_CMD" == "docker compose" ]]; then
+              # Docker Compose V2作为docker的子命令
+              docker-compose() { docker compose "$@"; }
+            else
+              # Docker Compose V1独立命令
+              docker-compose() { $DOCKER_COMPOSE_CMD "$@"; }
+            fi
+          fi
+
+          # 验证docker-compose是否可用
+          echo "🧪 验证docker-compose命令..."
+          if docker-compose --version &>/dev/null; then
+            echo "✅ docker-compose命令验证成功: $(docker-compose --version 2>&1 | head -1)"
+          else
+            echo "❌ docker-compose命令验证失败，退出"
+            exit 1
           fi
           # 修复.git目录权限（如果存在）
           if [ -d ".git" ]; then
