@@ -94,8 +94,8 @@ jobs:
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
