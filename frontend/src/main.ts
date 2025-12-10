@@ -5,6 +5,9 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+// REQ-ID: REQ-2025-003-user-login
+import './assets/styles/brand-colors.css'
+import './assets/styles/auth-common.css'
 
 const app = createApp(App)
 const pinia = createPinia()

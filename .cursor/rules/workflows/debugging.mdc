@@ -1,0 +1,189 @@
+---
+description: Debug阶段的调试规则和方法论
+globs: **/*
+priority: 600
+---
+
+# Debug阶段规则
+
+## 调试方法论（基于30轮CI修复经验）
+
+### 问题抽象层次识别
+
+**核心原则**: 在正确的抽象层次寻找问题根因
+
+**层次识别矩阵**:
+```
+错误现象 → 可能的抽象层次 → 验证命令
+├── 语法错误 → bash脚本层、配置文件层 → act/yamllint
+├── 命令不存在 → 环境依赖层、路径配置层 → which/whereis
+├── 连接超时 → 网络层、服务配置层 → curl/netstat
+├── 404/500错误 → 应用层、路由配置层 → API测试/日志
+├── 数据库错误 → 数据层、权限配置层 → SQL测试/权限检查
+└── 容器退出 → 容器层、依赖关系层 → docker logs/inspect
+```
+
+**步骤**:
+1. **症状识别**: 错误表现在哪个层次？
+2. **根因定位**: 实际问题发生在哪个层次？
+3. **层次跳跃**: 如果当前层次修复无效，检查其他层次
+
+### 系统性问题搜索
+
+**规则**: 发现一个问题时，系统性搜索所有相同问题
+
+**命令**:
+```bash
+# 全局搜索相同错误模式
+grep -r "错误关键词" .
+
+# 查找所有相关文件
+find . -name "*.py" -o -name "*.ts" | xargs grep "错误模式"
+
+# 检查历史修复记录
+git log --all --grep="类似问题"
+```
+
+**原则**: 避免"打地鼠式修复"（修复一个文件，遗漏其他文件）
+
+### 环境差异检查
+
+**规则**: 对比不同环境的配置差异
+
+**检查清单**:
+```bash
+# 配置文件差异
+diff backend/bravo/settings/development.py backend/bravo/settings/test.py
+diff docker-compose.yml docker-compose.test.yml
+
+# 工作流文件差异
+diff .github/workflows/on-pr.yml .github/workflows/on-push-dev.yml
+
+# 版本一致性
+docker --version && echo "vs remote environment"
+node --version && echo "vs package.json engines"
+```
+
+### 多维验证策略
+
+**四层验证体系**:
+
+1. **语法验证**:
+   - 使用act验证GitHub Actions工作流语法
+   - 运行本地格式化器和语法检查器
+   - **限制**: 只能发现语法错误
+
+2. **环境验证**:
+   - 使用docker-compose模拟完整运行环境
+   - 验证服务间连通性和依赖关系
+   - **关键**: 模拟目标运行环境
+
+3. **功能验证**:
+   - 实际执行核心功能和API端点
+   - 验证数据库连接和数据操作
+   - **方式**: curl/wget测试API
+
+4. **环境差异验证**:
+   - 对比不同环境配置文件
+   - 检查工作流文件差异
+   - 验证工具版本一致性
+
+**参考**: @.cursorrules (多维验证策略部分)
+
+### 自我质疑机制
+
+**触发条件**: 连续失败3次
+
+**检查清单**:
+```
+□ 我在正确的抽象层次修复问题吗？
+  - bash层 vs 容器层 vs 应用层 vs 数据层？
+□ 我有搜索所有相关的文件吗？
+  - grep -r "错误模式" . 执行了吗？
+□ 我验证了不同环境的配置差异吗？
+  - PR环境 vs post-merge环境对比了吗？
+□ 我使用了合适的验证工具链吗？
+  - act → docker-compose → 功能测试 → 远程验证？
+□ 用户的反馈是否指向了不同方向？
+  - 质疑信号是否被忽视了？
+□ 我是否在"打地鼠式修复"？
+  - 系统性搜索 vs 单点修复？
+```
+
+**原则**: 3次失败后必须质疑基础假设和方法论
+
+### 用户反馈价值最大化
+
+**原则**: 用户质疑往往指向真正问题
+
+**响应策略**:
+- 用户质疑时立即深度分析
+- 考虑完全不同的问题根因
+- 不要忽视用户的质疑信号
+
+## Docker容器调试
+
+### 查看容器日志
+
+```bash
+# 查看所有服务日志
+docker-compose logs
+
+# 查看特定服务日志
+docker-compose logs backend
+docker-compose logs frontend
+
+# 实时跟踪日志
+docker-compose logs -f backend
+```
+
+### 进入容器调试
+
+```bash
+# 进入backend容器
+docker-compose exec backend bash
+
+# 进入frontend容器
+docker-compose exec frontend bash
+
+# 在容器内执行命令
+docker-compose exec backend python manage.py shell
+docker-compose exec backend pytest -v
+```
+
+### 检查容器状态
+
+```bash
+# 查看容器状态
+docker-compose ps
+
+# 查看容器详细信息
+docker-compose inspect backend
+
+# 查看容器资源使用
+docker stats
+```
+
+## 问题记录
+
+**规则**: 解决困难后必须记录
+
+**记录位置**: `DOCS/FAQ.md`
+
+**记录内容**:
+- 问题描述
+- 错误消息
+- 尝试的解决方案
+- 最终解决方案
+- 抽象层次判断经验
+- 方法论教训
+
+**参考**: @.cursorrules (解决困难后部分)
+
+## 禁止事项
+
+- ❌ 不能连续失败3次后继续尝试
+- ❌ 不能只修复表面错误，不找根因
+- ❌ 不能忽略用户反馈
+- ❌ 不能跳过环境差异检查
+- ❌ 不能"打地鼠式修复"（修复一个文件，遗漏其他）

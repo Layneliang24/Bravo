@@ -1,3 +1,4 @@
+// REQ-ID: REQ-2025-003-user-login
 import { describe, it, expect, beforeEach } from 'vitest'
 import router from './index'
 
@@ -10,7 +11,7 @@ describe('Router', () => {
 
   it('应该正确配置路由', () => {
     expect(router).toBeDefined()
-    expect(router.getRoutes()).toHaveLength(4) // Home, Login, Blog, BlogDetail
+    expect(router.getRoutes()).toHaveLength(5) // Home, Login, Blog, BlogDetail, VerifyEmail
   })
 
   it('应该有Home路由', () => {
@@ -37,6 +38,14 @@ describe('Router', () => {
       .find(route => route.name === 'BlogDetail')
     expect(blogDetailRoute).toBeDefined()
     expect(blogDetailRoute?.path).toBe('/blog/:id')
+  })
+
+  it('应该有VerifyEmail路由', () => {
+    const verifyEmailRoute = router
+      .getRoutes()
+      .find(route => route.name === 'VerifyEmail')
+    expect(verifyEmailRoute).toBeDefined()
+    expect(verifyEmailRoute?.path).toBe('/verify-email')
   })
 
   it('应该能够导航到Home页面', async () => {
@@ -77,6 +86,9 @@ describe('Router', () => {
     await router.push({ name: 'BlogDetail', params: { id: '456' } })
     expect(router.currentRoute.value.name).toBe('BlogDetail')
     expect(router.currentRoute.value.params.id).toBe('456')
+
+    await router.push({ name: 'VerifyEmail' })
+    expect(router.currentRoute.value.name).toBe('VerifyEmail')
   })
 
   it('应该使用createWebHistory', () => {

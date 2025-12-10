@@ -75,8 +75,19 @@ class CodeChecker:
                             cwd=git_dir,
                         )
                         # 使用git show获取暂存文件内容
+                        # 如果是绝对路径，转换为相对路径（相对于git_dir）
+                        git_file_path = file_path
+                        if Path(file_path).is_absolute():
+                            try:
+                                git_file_path = str(
+                                    Path(file_path).relative_to(Path(git_dir))
+                                )
+                            except ValueError:
+                                # 如果无法转换为相对路径，尝试直接使用文件名
+                                git_file_path = Path(file_path).name
+
                         result = subprocess.run(
-                            ["git", "show", f":{file_path}"],
+                            ["git", "show", f":{git_file_path}"],
                             capture_output=True,
                             text=True,
                             check=False,
@@ -159,8 +170,19 @@ class CodeChecker:
                                     check=False,
                                     cwd=git_dir,
                                 )
+                                # 如果是绝对路径，转换为相对路径（相对于git_dir）
+                                git_file_path = file_path
+                                if Path(file_path).is_absolute():
+                                    try:
+                                        git_file_path = str(
+                                            Path(file_path).relative_to(Path(git_dir))
+                                        )
+                                    except ValueError:
+                                        # 如果无法转换为相对路径，尝试直接使用文件名
+                                        git_file_path = Path(file_path).name
+
                                 result = subprocess.run(
-                                    ["git", "show", f":{file_path}"],
+                                    ["git", "show", f":{git_file_path}"],
                                     capture_output=True,
                                     text=True,
                                     check=False,
@@ -349,8 +371,19 @@ class CodeChecker:
                                 check=False,
                                 cwd=git_dir,
                             )
+                            # 如果是绝对路径，转换为相对路径（相对于git_dir）
+                            git_file_path = file_path
+                            if Path(file_path).is_absolute():
+                                try:
+                                    git_file_path = str(
+                                        Path(file_path).relative_to(Path(git_dir))
+                                    )
+                                except ValueError:
+                                    # 如果无法转换为相对路径，尝试直接使用文件名
+                                    git_file_path = Path(file_path).name
+
                             result = subprocess.run(
-                                ["git", "show", f":{file_path}"],
+                                ["git", "show", f":{git_file_path}"],
                                 capture_output=True,
                                 text=True,
                                 check=False,

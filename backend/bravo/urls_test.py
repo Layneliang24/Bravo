@@ -33,4 +33,6 @@ urlpatterns = [
     path("api-info/", api_info, name="api_info"),
     # 通用应用URL (使用common/前缀避免与根路径冲突)
     path("common/", include("apps.common.urls")),
+    # 用户认证相关API
+    path("api/auth/", include("apps.users.urls")),
 ]

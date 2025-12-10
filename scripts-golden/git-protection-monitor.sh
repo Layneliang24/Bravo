@@ -149,7 +149,13 @@ restore_protection() {
         fi
     fi
 
-    # 3. 更新保护状态记录
+    # 3. 更新保护状态记录（merge操作时跳过，避免冲突）
+    # 检查是否是merge操作
+    if git rev-parse --verify MERGE_HEAD >/dev/null 2>&1; then
+        log_message "⏭️  MERGE | 检测到merge操作，跳过时间戳更新（避免冲突）"
+        return 0
+    fi
+
     echo "$(date '+%Y-%m-%d %H:%M:%S') | RESTORED | $reason" > "$PROTECTION_CONFIG"
 
     # 4. 发出警告

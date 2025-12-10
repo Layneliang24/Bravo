@@ -25,14 +25,77 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
+          ssh-private-key: ${{ secrets.TXYUN_SSH_KEY }}
+
+      - name: SSH Connection Diagnostics
+        env:
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+        run: |
+          echo "🔍 SSH连接诊断..."
+          echo "=========================================="
+          echo "1. 获取当前GitHub Actions Runner IP地址"
+          echo "=========================================="
+          RUNNER_IP=$(curl -s https://api.ipify.org 2>/dev/null || curl -s https://ifconfig.me 2>/dev/null || echo "无法获取")
+          echo "Runner IP: $RUNNER_IP"
+          echo ""
+          echo "=========================================="
+          echo "2. 显示目标服务器信息（隐藏敏感部分）"
+          echo "=========================================="
+          echo "目标主机: ${HOST:0:10}***"
+          echo "目标用户: $USER"
+          echo ""
+          echo "=========================================="
+          echo "3. 测试网络连通性（端口22）"
+          echo "=========================================="
+          # 使用timeout和bash内置的TCP连接测试
+          if command -v nc >/dev/null 2>&1; then
+            timeout 5 nc -zv -w 3 $HOST 22 2>&1 || echo "⚠️ nc测试: 端口22连接失败或超时"
+          else
+            echo "⚠️ nc命令不可用，跳过端口测试"
+          fi
+          # 使用bash的/dev/tcp测试
+          if timeout 3 bash -c "echo > /dev/tcp/$HOST/22" 2>/dev/null; then
+            echo "✅ /dev/tcp测试: 端口22可达"
+          else
+            echo "⚠️ /dev/tcp测试: 端口22不可达或超时"
+          fi
+          echo ""
+          echo "=========================================="
+          echo "4. 检查SSH密钥是否已加载"
+          echo "=========================================="
+          ssh-add -l 2>&1 || echo "⚠️ SSH密钥未加载或ssh-agent未运行"
+          echo ""
+          echo "=========================================="
+          echo "5. 测试SSH连接（详细模式，10秒超时）"
+          echo "=========================================="
+          ssh -vvv -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=3 \
+              -o LogLevel=DEBUG \
+              $USER@$HOST "echo '✅ SSH连接测试成功'" 2>&1 | head -50 || {
+            echo ""
+            echo "❌ SSH连接失败"
+            echo ""
+            echo "=========================================="
+            echo "可能的原因："
+            echo "1. GitHub Actions IP ($RUNNER_IP) 未在白名单中"
+            echo "2. 服务器SSH服务未启动或端口被防火墙阻止"
+            echo "3. SSH密钥配置不正确"
+            echo "4. 网络路由问题"
+            echo "=========================================="
+            exit 1
+          }
+          echo ""
+          echo "✅ 诊断完成，SSH连接正常"
 
       - name: Deploy to dev server
         env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USER: ${{ secrets.ALIYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
@@ -45,10 +108,44 @@ jobs:
             REGISTRY_PASSWORD="$2"
 
           echo "📁 进入项目目录..."
+          # 先确保父目录存在并有正确权限
+          echo "🔧 检查和修复目录权限..."
+          sudo mkdir -p /home/layne/project 2>/dev/null || true
+          sudo chown -R $USER:$USER /home/layne/project 2>/dev/null || true
+          sudo chmod 755 /home/layne/project 2>/dev/null || true
+
+          # 如果项目目录不存在，先创建
+          if [ ! -d "/home/layne/project/bravo-dev" ]; then
+            echo "📁 创建项目目录..."
+            sudo mkdir -p /home/layne/project/bravo-dev 2>/dev/null || true
+          fi
+
           cd /home/layne/project/bravo-dev
 
-          echo "🔄 拉取最新代码..."
+          echo "🔧 修复权限问题..."
+          # 确保当前用户拥有项目目录权限
+          sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
+          sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
+          # 检查Docker权限，如果没有权限则使用sudo包装
+          if ! docker ps &>/dev/null; then
+            echo "⚠️ 当前用户无Docker权限，检查docker组..."
+            if ! groups | grep -q docker; then
+              echo "将用户添加到docker组..."
+              sudo usermod -aG docker $USER 2>/dev/null || true
+              echo "⚠️ 已添加用户到docker组，但需要重新登录才能生效"
+              echo "临时使用sudo执行Docker命令..."
+              # 创建docker命令的sudo包装函数
+              docker() { sudo docker "$@"; }
+              docker-compose() { sudo docker-compose "$@"; }
+            fi
+          fi
+          # 修复.git目录权限（如果存在）
           if [ -d ".git" ]; then
+            sudo chown -R $USER:$USER .git 2>/dev/null || true
+          fi
+
+          echo "🔄 拉取最新代码..."
+          if [ -d ".git" ] && [ -r ".git" ]; then
             # 先清理所有未提交的改动和未跟踪文件
             git reset --hard HEAD
             git clean -fdx
@@ -56,7 +153,18 @@ jobs:
             git fetch --force --prune origin
             git reset --hard origin/dev
           else
-            git clone -b dev https://github.com/Layneliang24/Bravo.git .
+            # 如果.git不存在或无法访问，删除目录重新克隆
+            echo "⚠️ .git目录不存在或权限不足，重新克隆..."
+            cd /home/layne/project
+            # 先修复权限再删除，确保可以删除
+            sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
+            rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
+            # 确保目录权限正确后克隆
+            git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
+            cd bravo-dev
+            # 修复克隆后的权限
+            sudo chown -R $USER:$USER . 2>/dev/null || true
+            sudo chmod -R 755 . 2>/dev/null || true
           fi
 
           echo "⏹️  停止旧容器..."
@@ -149,10 +257,10 @@ jobs:
         id: health-check
         if: always()
         env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USER: ${{ secrets.ALIYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          HOST: ${{ secrets.TXYUN_HOST }}
+          USER: ${{ secrets.TXYUN_USER }}
+          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
             set -e
