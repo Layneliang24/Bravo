@@ -94,8 +94,8 @@ jobs:
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
@@ -174,9 +174,6 @@ jobs:
 
           if [ -d ".git" ] && [ -r ".git" ]; then
             echo "📁 .git目录存在，更新代码..."
-            # 先清理所有未提交的改动和未跟踪文件
-            git reset --hard HEAD || true
-            git clean -fdx || true
 
             # 配置Git使用更稳定的网络设置
             git config --global http.postBuffer 524288000
@@ -184,20 +181,52 @@ jobs:
             git config --global http.lowSpeedTime 300
             git config --global http.version HTTP/1.1
 
-            # 强制更新远程分支信息（带重试）
-            git_retry "git fetch --force --prune --depth=1 origin dev" || \
+            # 先获取远程dev分支的最新信息（带重试）
+            echo "🔄 获取远程dev分支最新信息..."
+            git_retry "git fetch --force --prune origin dev" || \
             git_retry "git fetch --force --prune origin dev" || \
             git fetch --force --prune origin dev
 
-            # 显示当前和远程的HEAD信息
-            echo "📍 当前HEAD: $(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
+            # 显示远程dev分支的HEAD信息
             echo "📍 远程dev HEAD: $(git rev-parse origin/dev 2>/dev/null || echo 'unknown')"
+            REMOTE_DEV_HEAD=$(git rev-parse origin/dev 2>/dev/null || echo "")
+            if [ -z "$REMOTE_DEV_HEAD" ]; then
+              echo "❌ 无法获取远程dev分支HEAD，退出"
+              exit 1
+            fi
 
-            # 强制重置到远程最新代码
+            # 确保当前在dev分支，如果不在则切换
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            if [ "$CURRENT_BRANCH" != "dev" ]; then
+              echo "⚠️ 当前分支是 $CURRENT_BRANCH，切换到dev分支..."
+              git checkout -B dev origin/dev 2>/dev/null || {
+                echo "⚠️ 切换失败，强制重置到dev..."
+                git fetch origin dev:dev --force || true
+                git checkout -f dev || true
+              }
+            fi
+
+            # 先清理所有未提交的改动和未跟踪文件
+            git reset --hard HEAD || true
+            git clean -fdx || true
+
+            # 强制重置到远程dev分支最新代码（确保使用dev分支，不是main）
+            echo "🔄 重置到远程dev分支最新代码..."
             git_retry "git reset --hard origin/dev" || git reset --hard origin/dev
 
-            # 验证最终HEAD
+            # 验证最终HEAD是否与远程dev分支一致
+            FINAL_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+            echo "📍 最终HEAD: $FINAL_HEAD"
+            echo "📍 远程dev HEAD: $REMOTE_DEV_HEAD"
+
+            if [ "$FINAL_HEAD" != "$REMOTE_DEV_HEAD" ]; then
+              echo "⚠️ HEAD与远程dev分支不一致，强制同步..."
+              git reset --hard origin/dev
+            fi
+
+            # 显示最终提交信息
             echo "✅ 最终HEAD: $(git rev-parse HEAD)"
+            echo "✅ 当前分支: $(git rev-parse --abbrev-ref HEAD)"
             echo "✅ 最新提交: $(git log -1 --oneline)"
           else
             # 如果.git不存在或无法访问，删除目录重新克隆
