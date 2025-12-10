@@ -90,22 +90,52 @@ jobs:
           echo ""
           echo "✅ 诊断完成，SSH连接正常"
 
+      - name: Setup GitHub SSH Key for Server
+        run: |
+          echo "🔑 配置GitHub SSH密钥..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITHUB_DEPLOY_KEY }}" > ~/.ssh/github_deploy_key
+          chmod 600 ~/.ssh/github_deploy_key
+          ssh-add ~/.ssh/github_deploy_key || true
+
       - name: Deploy to dev server
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
           REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
               -o ServerAliveCountMax=30 \
-              $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
+              -o ForwardAgent=yes \
+              $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD" "$GITHUB_DEPLOY_KEY"
             set -e
 
             # 接收参数
             REGISTRY_USERNAME="$1"
             REGISTRY_PASSWORD="$2"
+            GITHUB_DEPLOY_KEY="$3"
+
+            # 配置GitHub SSH密钥（如果有）
+            if [ -n "$GITHUB_DEPLOY_KEY" ]; then
+              echo "🔑 配置GitHub SSH密钥..."
+              mkdir -p ~/.ssh
+              echo "$GITHUB_DEPLOY_KEY" > ~/.ssh/github_deploy_key
+              chmod 600 ~/.ssh/github_deploy_key
+              # 配置SSH使用这个密钥连接GitHub
+              {
+                echo "Host github.com"
+                echo "  HostName github.com"
+                echo "  User git"
+                echo "  IdentityFile ~/.ssh/github_deploy_key"
+                echo "  StrictHostKeyChecking no"
+                echo "  IdentitiesOnly yes"
+              } >> ~/.ssh/config
+              chmod 600 ~/.ssh/config
+              echo "✅ GitHub SSH密钥已配置"
+            fi
 
           echo "📁 进入项目目录..."
           # 先确保父目录存在并有正确权限
@@ -126,19 +156,90 @@ jobs:
           # 确保当前用户拥有项目目录权限
           sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
           sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
+          # 检查Docker权限和docker-compose可用性
+          echo "🔍 检查Docker和Docker Compose可用性..."
+
+          # 检测docker-compose命令类型（V1: docker-compose 或 V2: docker compose）
+          DOCKER_COMPOSE_CMD=""
+          if command -v docker-compose &>/dev/null; then
+            DOCKER_COMPOSE_CMD="docker-compose"
+            echo "✅ 发现docker-compose V1: $DOCKER_COMPOSE_CMD"
+          elif docker compose version &>/dev/null 2>&1; then
+            DOCKER_COMPOSE_CMD="docker compose"
+            echo "✅ 发现docker compose V2: $DOCKER_COMPOSE_CMD"
+          else
+            # 尝试查找docker-compose路径
+            DOCKER_COMPOSE_PATH=$(which docker-compose 2>/dev/null || find /usr -name docker-compose 2>/dev/null | head -1 || echo "")
+            if [ -n "$DOCKER_COMPOSE_PATH" ]; then
+              DOCKER_COMPOSE_CMD="$DOCKER_COMPOSE_PATH"
+              echo "✅ 通过路径找到docker-compose: $DOCKER_COMPOSE_CMD"
+            else
+              echo "❌ docker-compose命令不可用，退出"
+              exit 1
+            fi
+          fi
+
           # 检查Docker权限，如果没有权限则使用sudo包装
+          NEED_SUDO=false
           if ! docker ps &>/dev/null; then
             echo "⚠️ 当前用户无Docker权限，检查docker组..."
             if ! groups | grep -q docker; then
               echo "将用户添加到docker组..."
               sudo usermod -aG docker $USER 2>/dev/null || true
               echo "⚠️ 已添加用户到docker组，但需要重新登录才能生效"
-              echo "临时使用sudo执行Docker命令..."
-              # 创建docker命令的sudo包装函数
-              docker() { sudo docker "$@"; }
-              docker-compose() { sudo docker-compose "$@"; }
+              NEED_SUDO=true
             fi
           fi
+
+          # 创建docker和docker-compose包装函数（确保在所有情况下都可用）
+          if [ "$NEED_SUDO" = "true" ]; then
+            echo "临时使用sudo执行Docker命令..."
+            docker() { sudo docker "$@"; }
+            if [[ "$DOCKER_COMPOSE_CMD" == "docker compose" ]]; then
+              docker-compose() { sudo docker compose "$@"; }
+            else
+              docker-compose() { sudo $DOCKER_COMPOSE_CMD "$@"; }
+            fi
+          else
+            if [[ "$DOCKER_COMPOSE_CMD" == "docker compose" ]]; then
+              # Docker Compose V2作为docker的子命令
+              docker-compose() { docker compose "$@"; }
+            else
+              # Docker Compose V1独立命令
+              docker-compose() { $DOCKER_COMPOSE_CMD "$@"; }
+            fi
+          fi
+
+          # 验证docker-compose是否可用
+          echo "🧪 验证docker-compose命令..."
+          if docker-compose --version &>/dev/null; then
+            echo "✅ docker-compose命令验证成功: $(docker-compose --version 2>&1 | head -1)"
+          else
+            echo "❌ docker-compose命令验证失败，退出"
+            exit 1
+          fi
+
+          # 配置Docker镜像加速器（国内服务器优化）
+          echo "🐳 配置Docker镜像加速器..."
+          sudo mkdir -p /etc/docker
+          if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json 2>/dev/null; then
+            echo "配置Docker国内镜像加速器..."
+            printf '%s\n' '{"registry-mirrors":["https://docker.mirrors.ustc.edu.cn","https://hub-mirror.c.163.com","https://mirror.ccs.tencentyun.com","https://registry.docker-cn.com"],"log-driver":"json-file","log-opts":{"max-size":"10m","max-file":"3"}}' | sudo tee /etc/docker/daemon.json > /dev/null
+            echo "✅ Docker镜像加速器配置完成，重启Docker服务..."
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker || true
+            # 等待Docker重启完成
+            sleep 5
+            # 验证Docker是否正常运行
+            if ! docker ps &>/dev/null; then
+              echo "⚠️ Docker重启后验证失败，但继续执行..."
+            else
+              echo "✅ Docker服务重启成功"
+            fi
+          else
+            echo "✅ Docker镜像加速器已配置"
+          fi
+
           # 修复.git目录权限（如果存在）
           if [ -d ".git" ]; then
             sudo chown -R $USER:$USER .git 2>/dev/null || true
@@ -175,14 +276,29 @@ jobs:
           if [ -d ".git" ] && [ -r ".git" ]; then
             echo "📁 .git目录存在，更新代码..."
 
-            # 配置Git使用更稳定的网络设置
-            git config --global http.postBuffer 524288000
-            git config --global http.lowSpeedLimit 1000
-            git config --global http.lowSpeedTime 300
-            git config --global http.version HTTP/1.1
+            # 强制使用SSH而不是HTTPS（速度快，无超时问题）
+            echo "🔑 配置Git使用SSH连接GitHub..."
+            CURRENT_URL=$(git remote get-url origin 2>/dev/null || echo "")
+            if [[ "$CURRENT_URL" == https://github.com/* ]]; then
+              SSH_URL="git@github.com:${CURRENT_URL#https://github.com/}"
+              echo "🔄 切换Git远程URL到SSH: $SSH_URL"
+              git remote set-url origin "$SSH_URL"
+              echo "✅ Git远程URL已切换到SSH"
+            elif [[ "$CURRENT_URL" == git@github.com:* ]]; then
+              echo "✅ Git已使用SSH: $CURRENT_URL"
+            else
+              echo "⚠️ 无法识别的Git URL格式: $CURRENT_URL"
+            fi
 
-            # 强制更新所有远程分支引用（包括dev）
-            echo "🔄 强制更新所有远程分支引用..."
+            # 配置SSH（使用forwarded agent）
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            # 添加GitHub到known_hosts（避免首次连接确认）
+            ssh-keyscan -t rsa,ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+            chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
+
+            # 强制更新所有远程分支引用（使用SSH，快速）
+            echo "🔄 强制更新所有远程分支引用（使用SSH）..."
             git_retry "git fetch --all --force --prune" || \
             git_retry "git fetch --all --force --prune" || \
             git fetch --all --force --prune
@@ -264,16 +380,20 @@ jobs:
             sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
             rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
 
-            # 配置Git使用更稳定的网络设置
-            git config --global http.postBuffer 524288000
-            git config --global http.lowSpeedLimit 1000
-            git config --global http.lowSpeedTime 300
-            git config --global http.version HTTP/1.1
+            # 强制使用SSH克隆（速度快，无超时问题）
+            echo "🔑 使用SSH克隆代码库..."
 
-            # 确保目录权限正确后克隆（带重试）
-            git_retry "git clone -b dev --depth=1 https://github.com/Layneliang24/Bravo.git bravo-dev" || \
-            git_retry "git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev" || \
-            git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
+            # 配置SSH
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            # 添加GitHub到known_hosts（避免首次连接确认）
+            ssh-keyscan -t rsa,ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+            chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
+
+            # 使用SSH URL克隆
+            git_retry "git clone -b dev --depth=1 git@github.com:Layneliang24/Bravo.git bravo-dev" || \
+            git_retry "git clone -b dev git@github.com:Layneliang24/Bravo.git bravo-dev" || \
+            git clone -b dev git@github.com:Layneliang24/Bravo.git bravo-dev
 
             cd bravo-dev
             # 修复克隆后的权限
