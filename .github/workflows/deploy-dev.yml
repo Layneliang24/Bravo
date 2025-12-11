@@ -164,6 +164,29 @@ jobs:
             fi
           fi
 
+          echo "🔄 拉取最新代码..."
+          if [ -d ".git" ] && [ -r ".git" ]; then
+            # 先清理所有未提交的改动和未跟踪文件
+            git reset --hard HEAD
+            git clean -fdx
+            # 强制更新远程分支信息
+            git fetch --force --prune origin
+            git reset --hard origin/dev
+          else
+            # 如果.git不存在或无法访问，删除目录重新克隆
+            echo "⚠️ .git目录不存在或权限不足，重新克隆..."
+            cd /home/layne/project
+            # 先修复权限再删除，确保可以删除
+            sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
+            rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
+            # 确保目录权限正确后克隆
+            git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
+            cd bravo-dev
+            # 修复克隆后的权限
+            sudo chown -R $USER:$USER . 2>/dev/null || true
+            sudo chmod -R 755 . 2>/dev/null || true
+          fi
+
           echo "⏹️  停止旧容器..."
           COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
 
