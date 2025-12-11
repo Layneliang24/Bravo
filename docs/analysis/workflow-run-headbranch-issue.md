@@ -17,10 +17,12 @@
 ### 2. 实际发生的情况
 
 从运行记录分析：
+
 - 构建工作流（20120249577）：`headBranch: "dev"`，成功
 - 自动部署工作流（20120288322）：`headBranch: "main"`，`headSha: "7242a76"`（旧commit），失败
 
 **问题**：虽然构建工作流从 dev 分支触发，但自动部署工作流的 `headBranch` 却是 `main`，说明：
+
 - 可能有其他构建工作流从 main 分支触发，导致部署工作流被错误触发
 - 或者 `workflow_run` 的 `branches: [dev]` 限制没有正确工作
 
@@ -33,15 +35,18 @@ if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.c
 ```
 
 **优点**：
+
 - 确保只有从 dev 分支触发的构建工作流才会触发部署
 - 即使 `workflow_run` 被错误触发，也会在 if 条件中被过滤
 
 **缺点**：
+
 - 如果构建工作流从 main 分支触发，部署工作流不会执行（这是期望的行为）
 
 ### 方案2：确保构建工作流只从 dev 分支触发
 
 检查 `build-and-push-images.yml` 的触发条件，确保：
+
 - 只有 dev 分支的 push 才会触发构建
 - 或者，在构建工作流中添加分支检查
 
@@ -52,11 +57,13 @@ if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.c
 ## 验证方法
 
 1. **检查构建工作流的触发分支**：
+
    ```bash
    gh run list --workflow="🐳 Build and Push Docker Images" --limit 10 --json headBranch,event
    ```
 
 2. **检查部署工作流的触发来源**：
+
    ```bash
    gh run view <run-id> --json event,headBranch,headSha
    ```
@@ -69,4 +76,3 @@ if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.c
 
 - [GitHub Actions: workflow_run](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run)
 - [GitHub Actions: workflow_run context](https://docs.github.com/en/actions/learn-github-actions/contexts#workflow_run-context)
-

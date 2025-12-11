@@ -15,7 +15,7 @@
         <div class="brand-section">
           <div class="brand-content">
             <h1 class="brand-title">Bravo</h1>
-            <p class="brand-subtitle">您的智能工作伙伴</p>
+            <p class="brand-subtitle">您的智能协作伙伴第二次</p>
             <div class="brand-features">
               <div class="feature-item">
                 <span class="feature-icon">🔒</span>
