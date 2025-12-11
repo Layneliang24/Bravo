@@ -1240,7 +1240,9 @@ class LocalTestPassport:
                 break
             else:
                 err_msg = (
-                    res.stderr[:200] if hasattr(res, "stderr") and res.stderr else str(res)
+                    res.stderr[:200]
+                    if hasattr(res, "stderr") and res.stderr
+                    else str(res)
                 )
                 frontend_unit_errors.append(err_msg)
 
@@ -1436,7 +1438,10 @@ class LocalTestPassport:
                 text=True,
                 timeout=5,
             )
-            if check_backend_for_it.returncode == 0 and check_backend_for_it.stdout.strip():
+            if (
+                check_backend_for_it.returncode == 0
+                and check_backend_for_it.stdout.strip()
+            ):
                 it_cmd = [
                     "docker-compose",
                     "-p",
