@@ -9,12 +9,18 @@ on:
     branches: [dev]
   # 保留手动触发选项
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "强制部署（即使构建失败）"
+        required: false
+        default: "false"
+        type: boolean
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # 只有在镜像构建成功时才部署
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # 只有在镜像构建成功时才部署（手动触发可强制部署）
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev') }}
 
     steps:
       - name: Checkout code
