@@ -153,7 +153,19 @@ jobs:
           echo "🔐 登录阿里云镜像仓库..."
           echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
 
-          echo "📦 拉取最新镜像（强制模式）..."
+          # 获取构建工作流的Commit SHA（优先使用workflow_run的head_sha，否则使用当前checkout的SHA）
+          if [ -n "${{ github.event.workflow_run.head_sha }}" ]; then
+            BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
+            echo "📌 使用构建工作流的Commit SHA: ${BUILD_SHA}"
+          else
+            BUILD_SHA="${{ github.sha }}"
+            echo "📌 使用当前工作流的Commit SHA: ${BUILD_SHA}"
+          fi
+
+          echo "📦 拉取最新镜像（使用Commit SHA标签确保100%是新代码）..."
+          # 优先使用Commit SHA标签（不可变，确保100%是新代码）
+          # 如果SHA标签不存在，回退到dev标签（辅助标签）
+          COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev-${BUILD_SHA} docker-compose -f docker-compose.prod.yml pull || \
           COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
 
           # 验证镜像是否拉取成功
@@ -166,7 +178,7 @@ jobs:
             echo "❌ Frontend镜像拉取失败，无法继续部署"
             exit 1
           fi
-          echo "✅ 镜像验证通过"
+          echo "✅ 镜像验证通过（Commit SHA: ${BUILD_SHA}）"
 
           echo "🚀 启动服务（强制重建容器）..."
           # 检查是否配置了SSL证书（域名模式）
@@ -185,8 +197,9 @@ jobs:
           fi
 
           # 为dev环境使用不同端口避免与prod冲突
+          # 使用Commit SHA标签（优先），如果不存在则使用dev标签
           COMPOSE_PROJECT_NAME=bravo-dev \
-          IMAGE_TAG=dev \
+          IMAGE_TAG=dev-${BUILD_SHA} \
           USE_DOMAIN=$USE_DOMAIN \
           DOMAIN_NAME=$DOMAIN_NAME \
           MYSQL_PORT=3307 \
