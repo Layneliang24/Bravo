@@ -26,7 +26,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: dev # 强制拉取dev分支最新代码，确保使用最新的workflow和健康检查逻辑
+          # 动态选择分支：workflow_run 用 head_branch，手动触发用 ref_name
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -131,166 +132,157 @@ jobs:
             REGISTRY_USERNAME="$1"
             REGISTRY_PASSWORD="$2"
 
-          echo "📁 进入项目目录..."
-          # 先确保父目录存在并有正确权限
-          echo "🔧 检查和修复目录权限..."
-          sudo mkdir -p /home/layne/project 2>/dev/null || true
-          sudo chown -R $USER:$USER /home/layne/project 2>/dev/null || true
-          sudo chmod 755 /home/layne/project 2>/dev/null || true
+            echo "📁 进入项目目录..."
+            # 先确保父目录存在并有正确权限
+            echo "🔧 检查和修复目录权限..."
+            sudo mkdir -p /home/layne/project 2>/dev/null || true
+            sudo chown -R $USER:$USER /home/layne/project 2>/dev/null || true
+            sudo chmod 755 /home/layne/project 2>/dev/null || true
 
-          # 如果项目目录不存在，先创建
-          if [ ! -d "/home/layne/project/bravo-dev" ]; then
-            echo "📁 创建项目目录..."
-            sudo mkdir -p /home/layne/project/bravo-dev 2>/dev/null || true
-          fi
-
-          cd /home/layne/project/bravo-dev
-
-          echo "🔧 修复权限问题..."
-          # 确保当前用户拥有项目目录权限
-          sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
-          sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
-          # 检查Docker权限，如果没有权限则使用sudo包装
-          if ! docker ps &>/dev/null; then
-            echo "⚠️ 当前用户无Docker权限，检查docker组..."
-            if ! groups | grep -q docker; then
-              echo "将用户添加到docker组..."
-              sudo usermod -aG docker $USER 2>/dev/null || true
-              echo "⚠️ 已添加用户到docker组，但需要重新登录才能生效"
-              echo "临时使用sudo执行Docker命令..."
-              # 创建docker命令的sudo包装函数
-              docker() { sudo docker "$@"; }
-              docker-compose() { sudo docker-compose "$@"; }
+            # 如果项目目录不存在，先创建
+            if [ ! -d "/home/layne/project/bravo-dev" ]; then
+              echo "📁 创建项目目录..."
+              sudo mkdir -p /home/layne/project/bravo-dev 2>/dev/null || true
             fi
-          fi
 
-          echo "🔄 拉取最新代码..."
-          if [ -d ".git" ] && [ -r ".git" ]; then
-            # 先清理所有未提交的改动和未跟踪文件
-            git reset --hard HEAD
-            git clean -fdx
-            # 强制更新远程分支信息
-            git fetch --force --prune origin
-            git reset --hard origin/dev
-          else
-            # 如果.git不存在或无法访问，删除目录重新克隆
-            echo "⚠️ .git目录不存在或权限不足，重新克隆..."
-            cd /home/layne/project
-            # 先修复权限再删除，确保可以删除
-            sudo chown -R $USER:$USER bravo-dev 2>/dev/null || true
-            rm -rf bravo-dev 2>/dev/null || sudo rm -rf bravo-dev 2>/dev/null || true
-            # 确保目录权限正确后克隆
-            git clone -b dev https://github.com/Layneliang24/Bravo.git bravo-dev
-            cd bravo-dev
-            # 修复克隆后的权限
-            sudo chown -R $USER:$USER . 2>/dev/null || true
-            sudo chmod -R 755 . 2>/dev/null || true
-          fi
+            cd /home/layne/project/bravo-dev
 
-          echo "⏹️  停止旧容器..."
-          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
+            echo "🔧 修复权限问题..."
+            # 确保当前用户拥有项目目录权限
+            sudo chown -R $USER:$USER /home/layne/project/bravo-dev 2>/dev/null || true
+            sudo chmod -R 755 /home/layne/project/bravo-dev 2>/dev/null || true
 
-          echo "🔐 登录阿里云镜像仓库..."
-          echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+            # 检测docker-compose命令（V1或V2）
+            if command -v docker-compose &>/dev/null; then
+              docker-compose() { docker-compose "$@"; }
+            elif docker compose version &>/dev/null 2>&1; then
+              docker-compose() { docker compose "$@"; }
+            else
+              echo "❌ docker-compose命令不可用，退出"
+              exit 1
+            fi
 
-          # 使用当前checkout的Commit SHA（构建工作流已确保使用正确的分支）
-          BUILD_SHA="${{ github.sha }}"
-          echo "📌 使用当前工作流的Commit SHA: ${BUILD_SHA}"
+            # 检查Docker权限，如果没有权限则使用sudo包装
+            if ! docker ps &>/dev/null; then
+              echo "⚠️ 当前用户无Docker权限，检查docker组..."
+              if ! groups | grep -q docker; then
+                echo "将用户添加到docker组..."
+                sudo usermod -aG docker $USER 2>/dev/null || true
+                echo "⚠️ 已添加用户到docker组，但需要重新登录才能生效"
+                echo "临时使用sudo执行Docker命令..."
+                # 创建docker命令的sudo包装函数
+                docker() { sudo docker "$@"; }
+                docker-compose() { sudo docker-compose "$@"; }
+              fi
+            fi
 
-          echo "📦 拉取最新镜像（使用Commit SHA标签确保100%是新代码）..."
-          # 优先使用Commit SHA标签（不可变，确保100%是新代码）
-          # 如果SHA标签不存在，回退到dev标签（辅助标签）
-          COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev-${BUILD_SHA} docker-compose -f docker-compose.prod.yml pull || \
-          COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
+            # ✅ 不再需要git操作，配置文件已通过scp传输
+            echo "✅ 使用已传输的配置文件（纯镜像部署，无需git操作）"
 
-          # 验证镜像是否拉取成功
-          echo "🔍 验证镜像拉取..."
-          if ! docker images | grep -q "backend.*dev"; then
-            echo "❌ Backend镜像拉取失败，无法继续部署"
-            exit 1
-          fi
-          if ! docker images | grep -q "frontend.*dev"; then
-            echo "❌ Frontend镜像拉取失败，无法继续部署"
-            exit 1
-          fi
-          echo "✅ 镜像验证通过（Commit SHA: ${BUILD_SHA}）"
+            echo "⏹️  停止旧容器..."
+            COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml down || true
 
-          echo "🚀 启动服务（强制重建容器）..."
-          # 检查是否配置了SSL证书（域名模式）
-          if [ -d "/etc/letsencrypt/live/dev.layneliang.com" ]; then
-            echo "检测到SSL证书，使用域名配置..."
+            echo "🔐 登录阿里云镜像仓库..."
+            echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
+
+            # 使用当前checkout的Commit SHA（构建工作流已确保使用正确的分支）
+            BUILD_SHA="${{ github.sha }}"
+            echo "📌 使用当前工作流的Commit SHA: ${BUILD_SHA}"
+
+            echo "📦 拉取最新镜像（使用Commit SHA标签确保100%是新代码）..."
+            # 优先使用Commit SHA标签（不可变，确保100%是新代码）
+            # 如果SHA标签不存在，回退到dev标签（辅助标签）
+            COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev-${BUILD_SHA} docker-compose -f docker-compose.prod.yml pull || \
+            COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
+
+            # 验证镜像是否拉取成功
+            echo "🔍 验证镜像拉取..."
+            if ! docker images | grep -q "backend.*dev"; then
+              echo "❌ Backend镜像拉取失败，无法继续部署"
+              exit 1
+            fi
+            if ! docker images | grep -q "frontend.*dev"; then
+              echo "❌ Frontend镜像拉取失败，无法继续部署"
+              exit 1
+            fi
+            echo "✅ 镜像验证通过（Commit SHA: ${BUILD_SHA}）"
+
+            echo "🚀 启动服务（强制重建容器）..."
+            # 检查是否配置了SSL证书（域名模式）
+            if [ -d "/etc/letsencrypt/live/dev.layneliang.com" ]; then
+              echo "检测到SSL证书，使用域名配置..."
+              if [ -f "frontend/nginx.domain-dev.conf" ]; then
+                cp frontend/nginx.domain-dev.conf frontend/nginx.conf.tmp
+                echo "使用域名Nginx配置"
+              fi
+              USE_DOMAIN=true
+              DOMAIN_NAME=dev.layneliang.com
+            else
+              echo "未检测到SSL证书，使用IP配置..."
+              USE_DOMAIN=false
+              DOMAIN_NAME=""
+            fi
+
+            # 为dev环境使用不同端口避免与prod冲突
+            # 使用Commit SHA标签（优先），如果不存在则使用dev标签
+            COMPOSE_PROJECT_NAME=bravo-dev \
+            IMAGE_TAG=dev-${BUILD_SHA} \
+            USE_DOMAIN=$USE_DOMAIN \
+            DOMAIN_NAME=$DOMAIN_NAME \
+            MYSQL_PORT=3307 \
+            REDIS_PORT=6380 \
+            BACKEND_PORT=8001 \
+            FRONTEND_HTTP_PORT=8080 \
+            FRONTEND_HTTPS_PORT=8443 \
+            DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-$(date +%s)}" \
+            docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
+
+            echo "⏳ 等待服务就绪..."
+            sleep 10
+
+            echo "🔧 配置Nginx SSL..."
+            # 复制开发环境SSL配置到容器
             if [ -f "frontend/nginx.domain-dev.conf" ]; then
-              cp frontend/nginx.domain-dev.conf frontend/nginx.conf.tmp
-              echo "使用域名Nginx配置"
+              docker cp frontend/nginx.domain-dev.conf bravo-dev-frontend:/etc/nginx/conf.d/default.conf
+              docker exec bravo-dev-frontend nginx -t && docker exec bravo-dev-frontend nginx -s reload
+              echo "✅ 开发环境SSL配置已应用（dev.layneliang.com）"
+            else
+              echo "⚠️  未找到nginx.domain-dev.conf，跳过SSL配置"
             fi
-            USE_DOMAIN=true
-            DOMAIN_NAME=dev.layneliang.com
-          else
-            echo "未检测到SSL证书，使用IP配置..."
-            USE_DOMAIN=false
-            DOMAIN_NAME=""
-          fi
 
-          # 为dev环境使用不同端口避免与prod冲突
-          # 使用Commit SHA标签（优先），如果不存在则使用dev标签
-          COMPOSE_PROJECT_NAME=bravo-dev \
-          IMAGE_TAG=dev-${BUILD_SHA} \
-          USE_DOMAIN=$USE_DOMAIN \
-          DOMAIN_NAME=$DOMAIN_NAME \
-          MYSQL_PORT=3307 \
-          REDIS_PORT=6380 \
-          BACKEND_PORT=8001 \
-          FRONTEND_HTTP_PORT=8080 \
-          FRONTEND_HTTPS_PORT=8443 \
-          DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-$(date +%s)}" \
-          docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
+            echo "📊 检查服务状态..."
+            COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml ps
 
-          echo "⏳ 等待服务就绪..."
-          sleep 10
+            echo "🔍 验证Nginx端口..."
+            docker exec bravo-dev-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
 
-          echo "🔧 配置Nginx SSL..."
-          # 复制开发环境SSL配置到容器
-          if [ -f "frontend/nginx.domain-dev.conf" ]; then
-            docker cp frontend/nginx.domain-dev.conf bravo-dev-frontend:/etc/nginx/conf.d/default.conf
-            docker exec bravo-dev-frontend nginx -t && docker exec bravo-dev-frontend nginx -s reload
-            echo "✅ 开发环境SSL配置已应用（dev.layneliang.com）"
-          else
-            echo "⚠️  未找到nginx.domain-dev.conf，跳过SSL配置"
-          fi
+            echo "📁 验证静态文件..."
+            echo "Backend镜像内的原始静态文件:"
+            docker exec bravo-dev-backend ls -la /app/staticfiles/ | head -20 || echo "⚠️ Backend镜像内静态文件为空"
+            echo "Backend容器共享卷中的静态文件:"
+            docker exec bravo-dev-backend ls -la /shared/static/ | head -20 || echo "⚠️ Backend共享卷为空"
+            echo "Frontend容器内的静态文件:"
+            docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/ | head -20 || echo "⚠️ Frontend静态文件目录为空"
+            echo "检查admin静态文件:"
+            docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/admin/ | head -10 || echo "⚠️ Admin静态文件不存在"
+            echo "检查Backend的STATIC_ROOT配置:"
+            docker exec bravo-dev-backend python -c "from bravo.settings.production import STATIC_ROOT; print(f'STATIC_ROOT: {STATIC_ROOT}')" || echo "⚠️ 无法获取STATIC_ROOT"
 
-          echo "📊 检查服务状态..."
-          COMPOSE_PROJECT_NAME=bravo-dev docker-compose -f docker-compose.prod.yml ps
+            # 在部署前备份当前运行的镜像（用于回滚）
+            echo "📦 备份当前镜像作为回滚点..."
+            if docker images | grep -q bravo-dev-backend; then
+              docker tag bravo-dev-backend:latest bravo-dev-backend-backup:latest || echo "Backend backup created"
+            fi
+            if docker images | grep -q bravo-dev-frontend; then
+              docker tag bravo-dev-frontend:latest bravo-dev-frontend-backup:latest || echo "Frontend backup created"
+            fi
 
-          echo "🔍 验证Nginx端口..."
-          docker exec bravo-dev-frontend netstat -tlnp | grep -E '(:80|:443)' || echo "Nginx端口检查完成"
+            # 记录部署信息
+            echo "DEPLOYED_AT=$(date '+%Y-%m-%d %H:%M:%S')" > .deployment-current
+            echo "GITHUB_SHA=${{ github.sha }}" >> .deployment-current
+            echo "GITHUB_RUN_ID=${{ github.run_id }}" >> .deployment-current
 
-          echo "📁 验证静态文件..."
-          echo "Backend镜像内的原始静态文件:"
-          docker exec bravo-dev-backend ls -la /app/staticfiles/ | head -20 || echo "⚠️ Backend镜像内静态文件为空"
-          echo "Backend容器共享卷中的静态文件:"
-          docker exec bravo-dev-backend ls -la /shared/static/ | head -20 || echo "⚠️ Backend共享卷为空"
-          echo "Frontend容器内的静态文件:"
-          docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/ | head -20 || echo "⚠️ Frontend静态文件目录为空"
-          echo "检查admin静态文件:"
-          docker exec bravo-dev-frontend ls -la /usr/share/nginx/html/static/admin/ | head -10 || echo "⚠️ Admin静态文件不存在"
-          echo "检查Backend的STATIC_ROOT配置:"
-          docker exec bravo-dev-backend python -c "from bravo.settings.production import STATIC_ROOT; print(f'STATIC_ROOT: {STATIC_ROOT}')" || echo "⚠️ 无法获取STATIC_ROOT"
-
-          # 在部署前备份当前运行的镜像（用于回滚）
-          echo "📦 备份当前镜像作为回滚点..."
-          if docker images | grep -q bravo-dev-backend; then
-            docker tag bravo-dev-backend:latest bravo-dev-backend-backup:latest || echo "Backend backup created"
-          fi
-          if docker images | grep -q bravo-dev-frontend; then
-            docker tag bravo-dev-frontend:latest bravo-dev-frontend-backup:latest || echo "Frontend backup created"
-          fi
-
-          # 记录部署信息
-          echo "DEPLOYED_AT=$(date '+%Y-%m-%d %H:%M:%S')" > .deployment-current
-          echo "GITHUB_SHA=${{ github.sha }}" >> .deployment-current
-          echo "GITHUB_RUN_ID=${{ github.run_id }}" >> .deployment-current
-
-          echo "✅ Dev环境部署步骤完成，准备健康检查..."
+            echo "✅ Dev环境部署步骤完成，准备健康检查..."
           ENDSSH
 
       - name: Health Check with Auto Rollback
