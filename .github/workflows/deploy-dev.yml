@@ -12,7 +12,7 @@ on:
       force_deploy:
         description: "强制部署（即使构建失败）"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 jobs:
