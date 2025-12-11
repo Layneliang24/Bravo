@@ -6,14 +6,13 @@ on:
     workflows: ["🐳 Build and Push Docker Images"]
     types:
       - completed
-    branches: [dev]  # 关键：只响应dev分支的构建完成
   # 保留手动触发选项
   workflow_dispatch:
     inputs:
       force_deploy:
         description: "强制部署（即使构建失败）"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 jobs:
@@ -185,8 +184,8 @@ jobs:
             echo "🔐 登录阿里云镜像仓库..."
             echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
 
-            # 使用当前checkout的Commit SHA（构建工作流已确保使用正确的分支）
-            BUILD_SHA="${{ github.sha }}"
+            # 使用构建来源分支的 head_sha（workflow_run），手动触发时退回 github.sha
+            BUILD_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
             echo "📌 使用当前工作流的Commit SHA: ${BUILD_SHA}"
 
             echo "📦 拉取最新镜像（使用Commit SHA标签确保100%是新代码）..."

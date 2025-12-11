@@ -17,16 +17,19 @@
 #### 原因1：容器没有强制重建 ⚠️ **最可能的原因**
 
 **当前代码（第169行）**：
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 **问题**：
+
 - `up -d` 如果容器已存在且配置未变，**不会重建容器**
 - 即使拉取了新镜像，Docker可能认为"容器配置没变，不需要重建"
 - 容器继续使用**旧镜像**运行
 
 **验证方法**：
+
 ```bash
 # 在服务器上检查
 docker ps --format "table {{.Names}}\t{{.Image}}\t{{.CreatedAt}}"
@@ -36,17 +39,20 @@ docker inspect bravo-dev-backend | grep Image
 #### 原因2：可变标签 `dev` 的缓存问题
 
 **当前代码（第140行）**：
+
 ```bash
 COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
 ```
 
 **问题**：
+
 - `dev` 是**可变标签**（mutable tag），每次推送都会覆盖
 - Docker的缓存机制可能导致：
   - 如果本地已有 `backend:dev`，Docker可能认为"已是最新"而不拉取
   - 即使拉取，如果镜像仓库的 `dev` 标签指向旧镜像，拉取的还是旧镜像
 
 **验证方法**：
+
 ```bash
 # 检查镜像创建时间
 docker images | grep backend
@@ -56,6 +62,7 @@ docker inspect crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-
 #### 原因3：镜像拉取失败但未报错
 
 **可能情况**：
+
 - `docker-compose pull` 执行失败，但脚本继续执行
 - 使用了本地缓存的旧镜像
 - 没有验证镜像是否真的拉取成功
@@ -63,6 +70,7 @@ docker inspect crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-
 #### 原因4：构建和部署时间差
 
 **场景**：
+
 1. 构建镜像时使用的是 Commit A
 2. 镜像构建完成，推送到仓库
 3. 部署工作流触发，但此时 GitHub 上已经是 Commit B
@@ -76,6 +84,7 @@ docker inspect crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com/bravo-
 ### 当前流程分析
 
 **第123-131行的代码**：
+
 ```bash
 echo "🔄 拉取最新代码..."
 if [ -d ".git" ]; then
@@ -93,11 +102,13 @@ fi
 #### 原因1：获取配置文件 ✅ **合理**
 
 服务器需要以下配置文件（不在镜像中）：
+
 - `docker-compose.prod.yml` - Docker Compose配置
 - `frontend/nginx.domain-dev.conf` - Nginx配置
 - `.env` 或其他环境配置文件
 
 **这些文件需要从代码库获取**，因为：
+
 - 镜像里只包含业务代码，不包含部署配置
 - 配置文件可能经常变更
 - 不同环境（dev/prod）需要不同配置
@@ -105,11 +116,13 @@ fi
 #### 原因2：混合部署模式的遗留 ⚠️ **不合理**
 
 **当前是混合模式**：
+
 - ✅ 业务代码在镜像中（正确）
 - ⚠️ 配置文件在代码库中（需要拉取）
 - ❌ 但拉取了**整个代码库**（不必要）
 
 **问题**：
+
 - 拉取整个代码库（包括源代码）是**冗余的**
 - 只需要配置文件，不需要源代码
 - 增加了部署时间和网络依赖
@@ -121,6 +134,7 @@ fi
 ### 方案1：强制重建容器（快速修复）✅ **推荐**
 
 **修改第169行**：
+
 ```bash
 # ❌ 当前（有问题）
 docker-compose -f docker-compose.prod.yml up -d
@@ -130,6 +144,7 @@ docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphan
 ```
 
 **同时修改第348行（回滚部分）**：
+
 ```bash
 # ❌ 当前
 docker-compose -f docker-compose.prod.yml up -d
@@ -139,6 +154,7 @@ docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphan
 ```
 
 **效果**：
+
 - 强制删除旧容器并创建新容器
 - 确保使用最新拉取的镜像
 - 移除孤立的容器
@@ -148,6 +164,7 @@ docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphan
 ### 方案2：改进镜像拉取机制（确保拉取最新）
 
 **修改第139-140行**：
+
 ```bash
 # ❌ 当前
 echo "📦 拉取最新镜像..."
@@ -185,14 +202,16 @@ echo "  Frontend: $FRONTEND_IMAGE"
 **解决方案**：使用 Commit SHA 作为镜像标签
 
 **修改构建工作流**（需要修改 `build-and-push-images.yml`）：
+
 ```yaml
 # 构建时使用SHA作为标签
 IMAGE_TAG=${{ github.sha }}
 docker build -t backend:${IMAGE_TAG} .
-docker tag backend:${IMAGE_TAG} backend:dev  # 同时打dev标签
+docker tag backend:${IMAGE_TAG} backend:dev # 同时打dev标签
 ```
 
 **修改部署工作流**：
+
 ```bash
 # 使用SHA标签，确保部署的是构建时的确切版本
 IMAGE_TAG=${{ github.sha }}
@@ -200,6 +219,7 @@ IMAGE_TAG=${{ github.sha }}
 ```
 
 **优点**：
+
 - 每个镜像都有唯一标识
 - 可以精确回滚到任意版本
 - 避免标签覆盖问题
@@ -213,6 +233,7 @@ IMAGE_TAG=${{ github.sha }}
 **优化方案**：只传输必要的配置文件
 
 **修改第123-131行**：
+
 ```bash
 # ❌ 当前（拉取整个代码库）
 echo "🔄 拉取最新代码..."
@@ -249,6 +270,7 @@ fi
 ```
 
 **优点**：
+
 - 不依赖GitHub访问（服务器不需要配置SSH Key）
 - 只传输必要文件，速度快
 - 减少网络依赖和失败点
@@ -261,11 +283,13 @@ fi
 ### 组合方案：方案1 + 方案2 + 方案4
 
 **修改点1：强制重建容器（第169行）**
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
 ```
 
 **修改点2：改进镜像拉取（第139-140行）**
+
 ```bash
 echo "📦 拉取最新镜像（强制模式）..."
 COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
@@ -282,6 +306,7 @@ fi
 ```
 
 **修改点3：优化代码拉取（第123-131行）**
+
 ```bash
 # 删除git操作，改为传输配置文件
 # （见方案4的代码）
@@ -294,11 +319,13 @@ fi
 ### Q1: 为什么部署的是旧代码？
 
 **A**: 三个可能原因：
+
 1. **容器没有强制重建**（最可能）- 使用了 `up -d` 而不是 `up -d --force-recreate`
 2. **可变标签缓存问题** - `dev` 标签可能指向旧镜像
 3. **镜像拉取失败但未检测** - 没有验证镜像是否真的拉取成功
 
 **解决方案**：
+
 - ✅ 添加 `--force-recreate` 强制重建容器
 - ✅ 添加镜像拉取验证
 - 💡 长期：使用不可变标签（Commit SHA）
@@ -308,11 +335,13 @@ fi
 **A**: 当前需要拉取代码是为了获取配置文件（`docker-compose.prod.yml`、`nginx.conf`等），这些文件不在镜像中。
 
 **但这是不合理的**：
+
 - ❌ 拉取了整个代码库（包括不需要的源代码）
 - ❌ 增加了网络依赖和失败点
 - ❌ 服务器需要配置GitHub访问权限
 
 **优化方案**：
+
 - ✅ 只传输必要的配置文件（通过scp）
 - ✅ 不依赖GitHub访问
 - ✅ 配置文件版本与部署版本一致（从Runner传输）
@@ -322,12 +351,10 @@ fi
 ## 🚀 立即修复建议
 
 **优先级1（必须修复）**：
+
 1. 添加 `--force-recreate` 到 `up -d` 命令
 2. 添加镜像拉取验证
 
-**优先级2（建议优化）**：
-3. 优化代码拉取，只传输配置文件
+**优先级2（建议优化）**：3. 优化代码拉取，只传输配置文件
 
-**优先级3（长期改进）**：
-4. 使用不可变标签（Commit SHA）
-
+**优先级3（长期改进）**：4. 使用不可变标签（Commit SHA）
