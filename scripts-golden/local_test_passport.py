@@ -855,7 +855,9 @@ class LocalTestPassport:
         test_results = {
             "backend_check": False,
             "frontend_check": False,
+            "frontend_unit": False,
             "backend_tests": False,
+            "backend_integration": False,
         }
 
         # 1. 后端Django配置检查
@@ -1139,8 +1141,117 @@ class LocalTestPassport:
                 self.log_detail("前端检查错误汇总", "\n".join(frontend_errors))
             raise RuntimeError(error_msg)
 
-        # 3. 后端单元测试（运行少量关键测试）——改为必选
-        self.log("🔍 步骤3: 后端单元测试（快速模式，必选）...")
+        # 3. 前端单元测试（必选，至少跑一轮）
+        self.log("🔍 步骤3: 前端单元测试（必选）...")
+        frontend_unit_ok = False
+        frontend_unit_errors = []
+
+        def _run_frontend_unit(cmd):
+            self.log_detail("执行前端单测命令", " ".join(cmd))
+            try:
+                res = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=180,
+                    cwd=str(self.workspace),
+                )
+                self.log_command(cmd, res)
+                return res.returncode == 0, res
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                return False, e
+
+        frontend_unit_cmds = []
+        if check_frontend.returncode == 0 and check_frontend.stdout.strip():
+            # 容器已运行，优先用 exec
+            frontend_unit_cmds.append(
+                [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "exec",
+                    "-T",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test:unit",
+                    "--",
+                    "--runInBand",
+                ]
+            )
+            frontend_unit_cmds.append(
+                [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "exec",
+                    "-T",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test",
+                    "--",
+                    "--runInBand",
+                ]
+            )
+        else:
+            # 容器未运行，使用 run
+            frontend_unit_cmds.append(
+                [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test:unit",
+                    "--",
+                    "--runInBand",
+                ]
+            )
+            frontend_unit_cmds.append(
+                [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "frontend",
+                    "npm",
+                    "run",
+                    "test",
+                    "--",
+                    "--runInBand",
+                ]
+            )
+
+        for cmd in frontend_unit_cmds:
+            ok, res = _run_frontend_unit(cmd)
+            if ok:
+                self.log("✅ 前端单元测试通过")
+                test_results["frontend_unit"] = True
+                frontend_unit_ok = True
+                break
+            else:
+                err_msg = (
+                    res.stderr[:200] if hasattr(res, "stderr") and res.stderr else str(res)
+                )
+                frontend_unit_errors.append(err_msg)
+
+        if not frontend_unit_ok:
+            self.log("❌ 前端单元测试失败", level="ERROR")
+            if frontend_unit_errors:
+                self.log_detail("前端单测错误汇总", "\n".join(frontend_unit_errors))
+            raise RuntimeError("前端单元测试未通过")
+
+        # 4. 后端单元测试（运行少量关键测试）——必选
+        self.log("🔍 步骤4: 后端单元测试（快速模式，必选）...")
         pytest_cmd_desc = (
             "docker-compose run --rm backend pytest tests/unit/ -v "
             "--maxfail=3 -k 'test_' --tb=short"
@@ -1316,18 +1427,82 @@ class LocalTestPassport:
             self.log(error_msg, level="ERROR")
             raise RuntimeError(error_msg) from e
 
+        # 5. 后端集成测试（快速模式，必选）
+        self.log("🔍 步骤5: 后端集成测试（必选，快速模式）...")
+        try:
+            check_backend_for_it = subprocess.run(
+                ["docker-compose", "-p", "bravo", "ps", "-q", "backend"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if check_backend_for_it.returncode == 0 and check_backend_for_it.stdout.strip():
+                it_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "exec",
+                    "-T",
+                    "backend",
+                    "pytest",
+                    "tests/integration/",
+                    "-v",
+                    "--maxfail=2",
+                    "--tb=short",
+                ]
+            else:
+                it_cmd = [
+                    "docker-compose",
+                    "-p",
+                    "bravo",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "backend",
+                    "pytest",
+                    "tests/integration/",
+                    "-v",
+                    "--maxfail=2",
+                    "--tb=short",
+                ]
+            self.log_detail("执行命令", " ".join(it_cmd))
+            it_result = subprocess.run(
+                it_cmd,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=180,
+                cwd=str(self.workspace),
+            )
+            self.log_command(it_cmd, it_result)
+            if it_result.returncode == 0:
+                self.log("✅ 后端集成测试通过")
+                test_results["backend_integration"] = True
+            else:
+                err_preview = it_result.stderr or it_result.stdout
+                self.log_detail("集成测试失败详情", err_preview[:500])
+                raise RuntimeError("后端集成测试失败")
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("后端集成测试超时（3分钟）")
+        except FileNotFoundError:
+            raise RuntimeError("pytest未找到，无法运行后端集成测试")
+        except Exception as e:
+            raise RuntimeError(f"后端集成测试异常：{type(e).__name__}: {str(e)}") from e
+
         # 记录耗时
         end_time = datetime.now(BEIJING_TZ)
         start_dt = datetime.fromtimestamp(start_time).replace(tzinfo=BEIJING_TZ)
         duration = self.log_timing("功能测试", start_dt, end_time)
 
-        # 总结测试结果（此时三项检查都应为必选且成功）
+        # 总结测试结果
         self.log(f"\n📊 功能测试结果汇总（耗时: {duration:.2f}秒）:")
         self.log(f"  后端配置检查: {'✅' if test_results['backend_check'] else '❌'}")
         self.log(f"  前端基础检查: {'✅' if test_results['frontend_check'] else '❌'}")
+        self.log(f"  前端单元测试: {'✅' if test_results['frontend_unit'] else '❌'}")
         self.log(f"  后端单元测试: {'✅' if test_results['backend_tests'] else '❌'}")
+        self.log(f"  后端集成测试: {'✅' if test_results['backend_integration'] else '❌'}")
 
-        # 严格模式：任一检查失败都视为功能验证失败（理论上到这里都应为True）
         if not all(test_results.values()):
             raise RuntimeError("功能测试结果中存在失败项，请检查日志")
 
