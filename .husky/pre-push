@@ -4,33 +4,47 @@
 echo "[PRE-PUSH] 🛡️ Git推送安全检查"
 echo "[INFO] 验证本地测试通行证和推送安全性"
 
-GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
+# 检查是否允许绕过通行证验证（用于紧急情况）
+if [ "$SKIP_PASSPORT_CHECK" = "1" ] || [ "$ALLOW_PASSPORT_BYPASS" = "1" ]; then
+    echo "[WARNING] ⚠️  检测到环境变量，跳过通行证验证"
+    echo "[WARNING] SKIP_PASSPORT_CHECK=$SKIP_PASSPORT_CHECK"
+    echo "[WARNING] ALLOW_PASSPORT_BYPASS=$ALLOW_PASSPORT_BYPASS"
+    echo "[WARNING] 这是紧急绕过，请确保代码质量"
+    # 跳过通行证检查，继续执行后续检查
+else
+    GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 
-# 第一层：强制本地测试通行证验证
-if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
-    echo ""
-    echo "🎫 [第一层] 本地测试通行证验证（必需）..."
+    # 第一层：强制本地测试通行证验证
+    if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
+        echo ""
+        echo "🎫 [第一层] 本地测试通行证验证（必需）..."
 
-    if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
-        echo ""
-        echo "[ERROR] ======================================"
-        echo "[ERROR] ❌ 本地测试通行证验证失败！"
-        echo "[ERROR] ======================================"
-        echo "[HELP] 推送前必须获得有效的本地测试通行证："
-        echo "[HELP] 1. 运行本地测试: ./test"
-        echo "[HELP] 2. 检查通行证: ./passport"
-        echo "[HELP] 3. 安全推送: ./safe-push"
-        echo ""
-        echo "[INFO] 💡 或直接使用便捷命令："
-        echo "[INFO]    ./test && ./safe-push"
-        echo ""
-        echo "[ERROR] 推送被阻止，请先完成本地测试验证"
-        exit 1
+        if ! python "$GOLDEN_SCRIPTS/local_test_passport.py" --check; then
+            echo ""
+            echo "[ERROR] ======================================"
+            echo "[ERROR] ❌ 本地测试通行证验证失败！"
+            echo "[ERROR] ======================================"
+            echo "[HELP] 推送前必须获得有效的本地测试通行证："
+            echo "[HELP] 1. 运行本地测试: ./test"
+            echo "[HELP] 2. 检查通行证: ./passport"
+            echo "[HELP] 3. 安全推送: ./safe-push"
+            echo ""
+            echo "[INFO] 💡 或直接使用便捷命令："
+            echo "[INFO]    ./test && ./safe-push"
+            echo ""
+            echo "[INFO] 💡 紧急情况可使用环境变量绕过："
+            echo "[INFO]    export SKIP_PASSPORT_CHECK=1"
+            echo "[INFO]    git push ..."
+            echo ""
+            echo "[ERROR] 推送被阻止，请先完成本地测试验证"
+            exit 1
+        fi
+        echo "✅ 本地测试通行证验证通过"
     fi
-    echo "✅ 本地测试通行证验证通过"
 fi
 
 # 第二层：防篡改依赖检查
+GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 if [ -f "$GOLDEN_SCRIPTS/dependency-guard.sh" ]; then
     echo ""
     echo "🛡️ [第二层] 防篡改依赖安全检查..."
@@ -56,5 +70,9 @@ echo "[SUCCESS] =================================="
 echo "[SUCCESS] 🎉 所有推送前检查通过！"
 echo "[SUCCESS] =================================="
 echo "[INFO] 🚀 安全推送到远程仓库..."
-echo "[INFO] 📊 已执行的检查：通行证验证 + 依赖安全 + Git完整性"
+if [ "$SKIP_PASSPORT_CHECK" = "1" ] || [ "$ALLOW_PASSPORT_BYPASS" = "1" ]; then
+    echo "[INFO] 📊 已执行的检查：依赖安全 + Git完整性（通行证已绕过）"
+else
+    echo "[INFO] 📊 已执行的检查：通行证验证 + 依赖安全 + Git完整性"
+fi
 echo ""
