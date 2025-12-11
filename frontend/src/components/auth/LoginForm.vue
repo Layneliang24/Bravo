@@ -8,21 +8,41 @@
     :loading="previewLoading"
   />
   <form @submit.prevent="handleSubmit" class="login-form">
-    <FloatingInput
-      v-model="formData.email"
-      label="邮箱"
-      type="email"
-      :error="errors.email"
-      required
-    />
-    <FloatingInput
-      v-model="formData.password"
-      label="密码"
-      type="password"
-      :error="errors.password"
-      @blur="handlePasswordBlur"
-      required
-    />
+    <!-- Username 输入框 -->
+    <div class="username-input">
+      <label class="username-label">Username</label>
+      <input
+        v-model="formData.email"
+        type="text"
+        placeholder="Enter your username"
+        class="input-field"
+        :class="{ 'has-error': errors.email }"
+        required
+      />
+      <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
+    </div>
+
+    <!-- Password 输入框 -->
+    <div class="password-input">
+      <label class="password-label">Password</label>
+      <input
+        v-model="formData.password"
+        type="password"
+        placeholder="Enter your password"
+        class="input-field"
+        :class="{ 'has-error': errors.password }"
+        @blur="handlePasswordBlur"
+        required
+      />
+      <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
+    </div>
+
+    <!-- Forgot Password 链接 -->
+    <div class="forgot-password-wrapper">
+      <a href="#" class="forgot-password">Forgot Password?</a>
+    </div>
+
+    <!-- 验证码 -->
     <div v-if="errors.captcha_answer" class="error-message">
       {{ errors.captcha_answer }}
     </div>
@@ -31,9 +51,14 @@
       :disabled="isSubmitting"
       @captcha-update="handleCaptchaUpdate"
     />
-    <button type="submit" :disabled="isSubmitting" class="submit-button">
-      {{ isSubmitting ? '登录中...' : '登录' }}
+
+    <!-- 登录按钮 -->
+    <button type="submit" :disabled="isSubmitting" class="login-button">
+      {{ isSubmitting ? '登录中...' : 'LOGIN' }}
     </button>
+
+    <!-- Register 文本 -->
+    <p class="register-text">New to Logo? Register Here</p>
   </form>
 </template>
 
@@ -201,35 +226,196 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+/* Glassmorphism 设计 - 根据 Figma 设计规范 */
 .login-form {
   width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
-.submit-button {
+/* 输入框容器 */
+.username-input,
+.password-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--gradient-button);
-  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* 标签样式 - 15px, Montserrat Regular, 白色 */
+.username-label,
+.password-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 18.28px;
+  color: rgb(255, 255, 255);
+  text-align: left;
+}
+
+/* 输入框样式 - 419x50px, 圆角 7px，深色背景 */
+.input-field {
+  width: 100%;
+  height: 50px;
+  padding: 0 1rem;
+  background: rgba(40, 40, 40, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  color: rgb(255, 255, 255);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 18.28px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input-field:focus {
+  border-color: rgba(100, 150, 255, 0.5);
+  background: rgba(50, 50, 50, 0.7);
+  box-shadow: 0 0 0 2px rgba(100, 150, 255, 0.2);
+}
+
+.input-field.has-error {
+  border-color: rgba(255, 80, 80, 0.6);
+  background: rgba(60, 40, 40, 0.6);
+}
+
+/* Forgot Password 链接 */
+.forgot-password-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.forgot-password {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14.63px;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.forgot-password:hover {
+  opacity: 0.8;
+}
+
+/* 登录按钮 - 419x50px, 背景色 rgb(165, 217, 208), 圆角 7px */
+.login-button {
+  width: 100%;
+  height: 50px;
+  background: rgb(165, 217, 208);
   border: none;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: 7px;
+  color: rgb(0, 0, 0);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18.28px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: var(--box-shadow);
+  margin-top: 1rem;
+  margin-bottom: 0;
 }
 
-.submit-button:hover:not(:disabled) {
-  background: var(--gradient-button-hover);
-  box-shadow: var(--box-shadow-lg);
+.login-button:hover:not(:disabled) {
+  background: rgb(145, 197, 188);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.submit-button:disabled {
-  background: #9ca3af;
+.login-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-button:disabled {
+  background: rgba(165, 217, 208, 0.5);
   cursor: not-allowed;
   transform: none;
+}
+
+/* Register 文本 - 15px, Montserrat Light, 白色 */
+.register-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 18.28px;
+  color: rgb(255, 255, 255);
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+/* 错误消息 - 红色文本 */
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 0.5rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+}
+
+/* 验证码错误框 - 红色背景框样式 */
+:deep(.captcha-container .error) {
+  background: rgba(255, 100, 100, 0.2);
+  border: 1px solid rgba(255, 100, 100, 0.5);
+  border-radius: 7px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+:deep(.captcha-container .error span) {
+  color: #ff6b6b;
+  font-size: 14px;
+}
+
+:deep(.captcha-container .error button) {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .login-form {
+    gap: 1.25rem;
+  }
+
+  .input-field,
+  .login-button {
+    height: 45px;
+  }
+
+  .username-label,
+  .password-label {
+    font-size: 14px;
+  }
+
+  .forgot-password {
+    font-size: 11px;
+  }
+
+  .register-text {
+    font-size: 14px;
+  }
 }
 </style>

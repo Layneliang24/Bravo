@@ -185,40 +185,52 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .error {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.75rem;
   padding: 1rem;
-  color: var(--color-error);
-  font-size: 0.875rem;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--border-radius);
+  color: #ff6b6b;
+  font-size: 14px;
+  background: rgba(255, 100, 100, 0.15);
+  border: 1px solid rgba(255, 100, 100, 0.4);
+  border-radius: 7px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.error span {
+  color: #ff6b6b;
+  font-weight: 400;
 }
 
 .error button {
   padding: 0.5rem 1rem;
-  background-color: var(--color-error);
-  color: var(--text-light);
+  background-color: #ff6b6b;
+  color: rgb(255, 255, 255);
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  transition: all 0.3s ease;
 }
 
 .error button:hover:not(:disabled) {
-  background-color: #dc2626;
+  background-color: #ff5252;
+  transform: translateY(-1px);
 }
 
 .error button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .captcha-content {
@@ -232,23 +244,28 @@ defineExpose({
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 40px;
-  border: 1px solid #d1d5db;
-  border-radius: var(--border-radius);
-  background-color: #f9fafb;
+  height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  background: rgba(40, 40, 40, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   overflow: hidden;
 }
 
 .captcha-image {
-  width: 100%;
-  height: auto;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
   display: block;
+  object-fit: contain;
 }
 
 .captcha-placeholder {
   padding: 1rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
   text-align: center;
 }
 
@@ -261,38 +278,50 @@ defineExpose({
 .captcha-input {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  background: rgba(40, 40, 40, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgb(255, 255, 255);
+  font-size: 15px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+.captcha-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .captcha-input:focus {
-  border-color: var(--input-border-focus);
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  border-color: rgba(100, 150, 255, 0.5);
+  background: rgba(50, 50, 50, 0.7);
+  box-shadow: 0 0 0 2px rgba(100, 150, 255, 0.2);
 }
 
 .captcha-input:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
+  outline: none;
 }
 
 .captcha-input:disabled {
-  background-color: #f3f4f6;
+  background: rgba(40, 40, 40, 0.4);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .refresh-button {
   padding: 0.75rem 1rem;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  background: rgba(40, 40, 40, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
   cursor: pointer;
   font-size: 1.25rem;
-  transition: all 0.2s ease;
+  color: rgb(255, 255, 255);
+  transition: all 0.3s ease;
   min-width: 3rem;
   display: flex;
   align-items: center;
@@ -300,8 +329,8 @@ defineExpose({
 }
 
 .refresh-button:hover:not(:disabled) {
-  background-color: #e5e7eb;
-  border-color: #9ca3af;
+  background: rgba(50, 50, 50, 0.7);
+  border-color: rgba(100, 150, 255, 0.4);
 }
 
 .refresh-button:active:not(:disabled) {
@@ -311,5 +340,6 @@ defineExpose({
 .refresh-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 </style>

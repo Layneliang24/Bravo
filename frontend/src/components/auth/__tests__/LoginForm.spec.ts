@@ -20,14 +20,16 @@ describe('LoginForm', () => {
     const wrapper = mount(LoginForm)
 
     expect(wrapper.find('form').exists()).toBe(true)
-    expect(wrapper.find('input[type="email"]').exists()).toBe(true)
+    expect(wrapper.find('.username-input input[type="text"]').exists()).toBe(
+      true
+    )
     expect(wrapper.find('input[type="password"]').exists()).toBe(true)
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
   })
 
   it('应该包含邮箱输入框', () => {
     const wrapper = mount(LoginForm)
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
 
     expect(emailInput.exists()).toBe(true)
   })
@@ -56,7 +58,7 @@ describe('LoginForm', () => {
   it('应该验证邮箱格式', async () => {
     const wrapper = mount(LoginForm)
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
 
     await emailInput.setValue('invalid-email')
     await form.trigger('submit')
@@ -69,7 +71,7 @@ describe('LoginForm', () => {
   it('应该验证密码长度', async () => {
     const wrapper = mount(LoginForm)
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
 
     await emailInput.setValue('test@example.com')
@@ -84,7 +86,7 @@ describe('LoginForm', () => {
   it('应该验证验证码必填', async () => {
     const wrapper = mount(LoginForm)
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
 
     await emailInput.setValue('test@example.com')
@@ -111,7 +113,7 @@ describe('LoginForm', () => {
     const wrapper = mount(LoginForm)
 
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
 
@@ -145,7 +147,7 @@ describe('LoginForm', () => {
 
     const wrapper = mount(LoginForm)
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
 
@@ -191,7 +193,7 @@ describe('LoginForm', () => {
     const wrapper = mount(LoginForm)
 
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
 
@@ -224,7 +226,7 @@ describe('LoginForm', () => {
 
     const form = wrapper.find('form')
     const submitButton = wrapper.find('button[type="submit"]')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
 
@@ -284,7 +286,7 @@ describe('LoginForm', () => {
     const wrapper = mount(LoginForm)
 
     const form = wrapper.find('form')
-    const emailInput = wrapper.find('input[type="email"]')
+    const emailInput = wrapper.find('.username-input input[type="text"]')
     const passwordInput = wrapper.find('input[type="password"]')
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
 
