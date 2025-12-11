@@ -6,7 +6,7 @@ on:
     workflows: ["🐳 Build and Push Docker Images"]
     types:
       - completed
-    branches: [main]  # 关键：只响应main分支的构建完成
+    branches: [main] # 关键：只响应main分支的构建完成
   # 保留手动触发选项
   workflow_dispatch:
     inputs:
