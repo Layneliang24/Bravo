@@ -162,6 +162,7 @@ jobs:
               docker() { sudo docker "$@"; }
               docker-compose() { sudo docker-compose "$@"; }
             fi
+          fi
 
           echo "🔄 拉取最新代码..."
           if [ -d ".git" ] && [ -r ".git" ]; then
