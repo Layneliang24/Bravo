@@ -1,20 +1,26 @@
 name: Deploy to Dev Environment
 
 on:
-  # 在镜像构建完成后自动触发
+  # 在镜像构建完成后自动触发（使用main分支的YAML文件，但只响应dev分支的构建）
   workflow_run:
     workflows: ["🐳 Build and Push Docker Images"]
     types:
       - completed
-    branches: [dev]
+    branches: [dev]  # 关键：只响应dev分支的构建完成
   # 保留手动触发选项
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "强制部署（即使构建失败）"
+        required: false
+        default: "false"
+        type: boolean
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # 只有在镜像构建成功时才部署
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # 只有在dev分支的构建成功时才部署（确保使用main分支的YAML，但只响应dev分支的构建）
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev') }}
 
     steps:
       - name: Checkout code
@@ -90,13 +96,31 @@ jobs:
           echo ""
           echo "✅ 诊断完成，SSH连接正常"
 
+      - name: Prepare deployment configs
+        run: |
+          echo "📋 准备部署配置文件..."
+          mkdir -p /tmp/bravo-deploy-config/frontend
+          cp docker-compose.prod.yml /tmp/bravo-deploy-config/
+          if [ -f "frontend/nginx.domain-dev.conf" ]; then
+            cp frontend/nginx.domain-dev.conf /tmp/bravo-deploy-config/frontend/
+          fi
+          echo "✅ 配置文件准备完成"
+
       - name: Deploy to dev server
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
+          echo "🚚 传输配置文件到服务器..."
+          ssh -o StrictHostKeyChecking=no $USER@$HOST "mkdir -p /home/layne/project/bravo-dev/frontend"
+          scp -o StrictHostKeyChecking=no /tmp/bravo-deploy-config/docker-compose.prod.yml $USER@$HOST:/home/layne/project/bravo-dev/docker-compose.prod.yml
+          if [ -f "/tmp/bravo-deploy-config/frontend/nginx.domain-dev.conf" ]; then
+            scp -o StrictHostKeyChecking=no /tmp/bravo-deploy-config/frontend/nginx.domain-dev.conf $USER@$HOST:/home/layne/project/bravo-dev/frontend/nginx.domain-dev.conf
+          fi
+          echo "✅ 配置文件传输完成"
+
           ssh -o StrictHostKeyChecking=no \
               -o ServerAliveInterval=30 \
               -o ServerAliveCountMax=30 \
@@ -138,11 +162,6 @@ jobs:
               docker() { sudo docker "$@"; }
               docker-compose() { sudo docker-compose "$@"; }
             fi
-          fi
-          # 修复.git目录权限（如果存在）
-          if [ -d ".git" ]; then
-            sudo chown -R $USER:$USER .git 2>/dev/null || true
-          fi
 
           echo "🔄 拉取最新代码..."
           if [ -d ".git" ] && [ -r ".git" ]; then
@@ -173,10 +192,29 @@ jobs:
           echo "🔐 登录阿里云镜像仓库..."
           echo "${REGISTRY_PASSWORD}" | docker login crpi-noqbdktswju6cuew.cn-shenzhen.personal.cr.aliyuncs.com --username "${REGISTRY_USERNAME}" --password-stdin
 
-          echo "📦 拉取最新镜像..."
+          # 使用当前checkout的Commit SHA（构建工作流已确保使用正确的分支）
+          BUILD_SHA="${{ github.sha }}"
+          echo "📌 使用当前工作流的Commit SHA: ${BUILD_SHA}"
+
+          echo "📦 拉取最新镜像（使用Commit SHA标签确保100%是新代码）..."
+          # 优先使用Commit SHA标签（不可变，确保100%是新代码）
+          # 如果SHA标签不存在，回退到dev标签（辅助标签）
+          COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev-${BUILD_SHA} docker-compose -f docker-compose.prod.yml pull || \
           COMPOSE_PROJECT_NAME=bravo-dev IMAGE_TAG=dev docker-compose -f docker-compose.prod.yml pull
 
-          echo "🚀 启动服务..."
+          # 验证镜像是否拉取成功
+          echo "🔍 验证镜像拉取..."
+          if ! docker images | grep -q "backend.*dev"; then
+            echo "❌ Backend镜像拉取失败，无法继续部署"
+            exit 1
+          fi
+          if ! docker images | grep -q "frontend.*dev"; then
+            echo "❌ Frontend镜像拉取失败，无法继续部署"
+            exit 1
+          fi
+          echo "✅ 镜像验证通过（Commit SHA: ${BUILD_SHA}）"
+
+          echo "🚀 启动服务（强制重建容器）..."
           # 检查是否配置了SSL证书（域名模式）
           if [ -d "/etc/letsencrypt/live/dev.layneliang.com" ]; then
             echo "检测到SSL证书，使用域名配置..."
@@ -193,8 +231,9 @@ jobs:
           fi
 
           # 为dev环境使用不同端口避免与prod冲突
+          # 使用Commit SHA标签（优先），如果不存在则使用dev标签
           COMPOSE_PROJECT_NAME=bravo-dev \
-          IMAGE_TAG=dev \
+          IMAGE_TAG=dev-${BUILD_SHA} \
           USE_DOMAIN=$USE_DOMAIN \
           DOMAIN_NAME=$DOMAIN_NAME \
           MYSQL_PORT=3307 \
@@ -203,7 +242,7 @@ jobs:
           FRONTEND_HTTP_PORT=8080 \
           FRONTEND_HTTPS_PORT=8443 \
           DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-$(date +%s)}" \
-          docker-compose -f docker-compose.prod.yml up -d
+          docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
 
           echo "⏳ 等待服务就绪..."
           sleep 10
@@ -259,8 +298,8 @@ jobs:
         env:
           HOST: ${{ secrets.TXYUN_HOST }}
           USER: ${{ secrets.TXYUN_USER }}
-          REGISTRY_USERNAME: ${{ secrets.TXYUN_REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.TXYUN_REGISTRY_PASSWORD }}
+          REGISTRY_USERNAME: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'ENDSSH' "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
             set -e
@@ -270,6 +309,13 @@ jobs:
 
             echo "🏥 开始Dev环境健康检查..."
             cd /home/layne/project/bravo-dev
+
+            # 检测docker-compose命令（V1或V2）
+            if command -v docker-compose &>/dev/null; then
+              docker-compose() { docker-compose "$@"; }
+            elif docker compose version &>/dev/null 2>&1; then
+              docker-compose() { docker compose "$@"; }
+            fi
 
             # 健康检查函数
             check_health() {
@@ -375,7 +421,7 @@ jobs:
               FRONTEND_HTTP_PORT=8080 \
               FRONTEND_HTTPS_PORT=8443 \
               DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-$(date +%s)}" \
-              docker-compose -f docker-compose.prod.yml up -d
+              docker-compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
 
               echo "⏳ 等待回滚后的服务就绪..."
               sleep 15

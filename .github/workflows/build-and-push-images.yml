@@ -42,30 +42,38 @@ jobs:
         id: tags
         run: |
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          FULL_SHA=${GITHUB_SHA}
           SHORT_SHA=${GITHUB_SHA::8}
           TIMESTAMP=$(date -u +%Y.%m.%d-%H%M%S)
 
           if [ "$BRANCH_NAME" = "main" ]; then
-            # 生产环境：3个标签（版本号、latest、prod-stable）
-            VERSION=${TIMESTAMP}-${SHORT_SHA}
-            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${VERSION},${REGISTRY}/${NAMESPACE}/backend:latest,${REGISTRY}/${NAMESPACE}/backend:prod-stable"
-            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${VERSION},${REGISTRY}/${NAMESPACE}/frontend:latest,${REGISTRY}/${NAMESPACE}/frontend:prod-stable"
+            # 生产环境：使用Commit SHA作为主要标签（不可变），同时保留latest和prod-stable作为辅助标签
+            # 主要标签：${FULL_SHA}（确保100%是新代码）
+            # 辅助标签：latest, prod-stable（用于快速引用）
+            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${FULL_SHA},${REGISTRY}/${NAMESPACE}/backend:latest,${REGISTRY}/${NAMESPACE}/backend:prod-stable"
+            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${FULL_SHA},${REGISTRY}/${NAMESPACE}/frontend:latest,${REGISTRY}/${NAMESPACE}/frontend:prod-stable"
+            VERSION=${FULL_SHA}
             echo "environment=production" >> $GITHUB_OUTPUT
           else
-            # 开发环境：3个标签（版本号、dev、dev-stable）
-            VERSION=dev-${TIMESTAMP}-${SHORT_SHA}
-            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:${VERSION},${REGISTRY}/${NAMESPACE}/backend:dev,${REGISTRY}/${NAMESPACE}/backend:dev-stable"
-            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:${VERSION},${REGISTRY}/${NAMESPACE}/frontend:dev,${REGISTRY}/${NAMESPACE}/frontend:dev-stable"
+            # 开发环境：使用Commit SHA作为主要标签（不可变），同时保留dev和dev-stable作为辅助标签
+            # 主要标签：dev-${FULL_SHA}（确保100%是新代码）
+            # 辅助标签：dev, dev-stable（用于快速引用）
+            BACKEND_TAGS="${REGISTRY}/${NAMESPACE}/backend:dev-${FULL_SHA},${REGISTRY}/${NAMESPACE}/backend:dev,${REGISTRY}/${NAMESPACE}/backend:dev-stable"
+            FRONTEND_TAGS="${REGISTRY}/${NAMESPACE}/frontend:dev-${FULL_SHA},${REGISTRY}/${NAMESPACE}/frontend:dev,${REGISTRY}/${NAMESPACE}/frontend:dev-stable"
+            VERSION=dev-${FULL_SHA}
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
 
           echo "backend_tags=${BACKEND_TAGS}" >> $GITHUB_OUTPUT
           echo "frontend_tags=${FRONTEND_TAGS}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "commit_sha=${FULL_SHA}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
           echo "📦 Backend镜像标签: ${BACKEND_TAGS}"
           echo "📦 Frontend镜像标签: ${FRONTEND_TAGS}"
-          echo "🏷️  版本号: ${VERSION}"
+          echo "🏷️  版本号（Commit SHA）: ${VERSION}"
+          echo "🔖 短SHA: ${SHORT_SHA}"
 
       - name: 设置Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -114,4 +122,5 @@ jobs:
           echo "📦 Frontend镜像:"
           echo "   ${{ steps.tags.outputs.frontend_tags }}"
           echo ""
-          echo "🚀 后续将自动触发部署流程..."
+          echo "🚀 后续将自动触发部署流程（workflow_run）..."
+          echo "📌 注意：部署工作流使用main分支的YAML文件，但只响应当前分支的构建"
