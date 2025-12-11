@@ -1,7 +1,13 @@
 name: Deploy to Production
 
 on:
-  # 手动触发（由构建工作流显式调用，确保使用正确的分支）
+  # 在镜像构建完成后自动触发（使用main分支的YAML文件，但只响应main分支的构建）
+  workflow_run:
+    workflows: ["🐳 Build and Push Docker Images"]
+    types:
+      - completed
+    branches: [main]  # 关键：只响应main分支的构建完成
+  # 保留手动触发选项
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -19,7 +25,8 @@ jobs:
   pre-deploy:
     name: Pre-deployment Checks
     runs-on: ubuntu-latest
-    # workflow_dispatch总是执行
+    # 只有在main分支的构建成功时才部署（确保使用main分支的YAML，但只响应main分支的构建）
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     outputs:
       should-deploy: ${{ steps.check.outputs.should-deploy }}
     steps:

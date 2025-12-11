@@ -122,38 +122,5 @@ jobs:
           echo "📦 Frontend镜像:"
           echo "   ${{ steps.tags.outputs.frontend_tags }}"
           echo ""
-          echo "🚀 触发部署流程..."
-
-      - name: 触发部署工作流
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const branch = context.ref.replace('refs/heads/', '');
-            const environment = '${{ steps.tags.outputs.environment }}';
-            
-            console.log(`📌 当前分支: ${branch}`);
-            console.log(`🌍 目标环境: ${environment}`);
-            
-            if (branch === 'dev' && environment === 'dev') {
-              console.log('🚀 触发开发环境部署...');
-              await github.rest.actions.createWorkflowDispatch({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'deploy-dev.yml',
-                ref: 'dev'
-              });
-              console.log('✅ 开发环境部署工作流已触发');
-            } else if (branch === 'main' && environment === 'production') {
-              console.log('🚀 触发生产环境部署...');
-              await github.rest.actions.createWorkflowDispatch({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'deploy-production.yml',
-                ref: 'main'
-              });
-              console.log('✅ 生产环境部署工作流已触发');
-            } else {
-              console.log(`⏭️  跳过部署（分支: ${branch}, 环境: ${environment}）`);
-            }
+          echo "🚀 后续将自动触发部署流程（workflow_run）..."
+          echo "📌 注意：部署工作流使用main分支的YAML文件，但只响应当前分支的构建"
