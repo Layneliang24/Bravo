@@ -10,10 +10,10 @@ author: human
 refined_by: claude-opus-4
 testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
 testcase_status:
-  total_cases: 56
+  total_cases: 62
   p0_cases: 12
-  p1_cases: 35
-  p2_cases: 9
+  p1_cases: 39
+  p2_cases: 11
   p3_cases: 0
   reviewed: true
   reviewed_by: ["cursor-ai"]
@@ -48,6 +48,7 @@ implementation_files:
   - frontend/src/stores/auth.ts
   - frontend/src/api/auth.ts
 api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml
+figma_design: https://www.figma.com/design/n7oYkASiqv2vgBpix0X9mi/Login-register-V1.0?node-id=0-1
 deletable: false
 ---
 
@@ -841,6 +842,225 @@ interface AuthActions {
 - **发送队列**: 使用Redis作为消息队列
 
 ### UI设计规范
+
+## Figma设计规范（权威标准）
+
+**Figma设计链接**: https://www.figma.com/design/n7oYkASiqv2vgBpix0X9mi/Login-register-V1.0?node-id=0-1
+
+**⚠️ 重要**: 以下设计规范来自Figma设计稿，是实现的唯一标准。所有实现必须严格按照这些规范执行。
+
+### 整体布局
+
+**主容器 (AuthCard)**:
+
+- 宽度: 1152px
+- 高度: 721.333px
+- 背景: `rgba(255,255,255,0.75)` (白色75%透明度)
+- 边框: `0.667px solid rgba(255,255,255,0.5)`
+- 圆角: `16px`
+- 阴影: `0px 8px 32px 0px rgba(249,115,22,0.1), 0px 0px 0px 1px rgba(249,115,22,0.1)`
+- 内阴影: `inset 0px 0px 60px 0px rgba(255,255,255,0.3)`
+
+**左右分栏布局**:
+
+- 左侧面板: 460.26px (品牌展示区)
+- 右侧面板: 690.406px (登录表单区)
+- 分隔线: `2px solid rgba(255,237,212,1)` (右侧边框)
+
+### 颜色规范
+
+**主色调**:
+
+- 橙色主色: `#f97316` / `#ff6900` / `#ff8904`
+- 橙色渐变: `linear-gradient(135deg, rgba(255, 137, 4, 1) 0%, rgba(253, 199, 0, 1) 100%)`
+- 绿色: `#22c55e` / `rgba(5, 223, 114, 1)`
+- 绿色渐变: `linear-gradient(135deg, rgba(5, 223, 114, 1) 0%, rgba(0, 212, 146, 1) 100%)`
+- 蓝色: `rgba(81, 162, 255, 1)` / `rgba(0, 211, 242, 1)`
+- 蓝色渐变: `linear-gradient(135deg, rgba(81, 162, 255, 1) 0%, rgba(0, 184, 219, 1) 100%)`
+
+**文字颜色**:
+
+- 主标题: `#1e2939` (深灰黑)
+- 副标题/正文: `#4a5565` (中灰)
+- 占位符: `#99a1af` (浅灰)
+- 标签文字: `#364153` (深灰)
+- 链接/强调: `#ff6900` (橙色)
+
+**背景颜色**:
+
+- 输入框背景: `rgba(255,255,255,0.6)` (白色60%透明度)
+- 验证码背景: `linear-gradient(158.2deg, rgba(255, 237, 213, 1) 0%, rgba(254, 243, 199, 1) 100%)`
+- Demo提示框: `linear-gradient(to right, #fff7ed, #fefce8)`
+- 功能卡片背景:
+  - English Learning: `linear-gradient(to right, rgba(255,247,237,0.5), #fff7ed)`
+  - Coding Practice: `linear-gradient(to right, rgba(240,253,244,0.5), #f0fdf4)`
+  - Career Growth: `linear-gradient(to right, rgba(239,246,255,0.5), #eff6ff)`
+
+**边框颜色**:
+
+- 输入框边框: `2px solid rgba(249,115,22,0.15)` (橙色15%透明度)
+- 验证码边框: `2px solid #ffd6a7` (浅橙色)
+- 装饰边框: `rgba(255,137,4,0.4)` (橙色40%透明度)
+
+### 尺寸规范
+
+**输入框**:
+
+- 高度: 60px
+- 圆角: 14px
+- 内边距: `16px 48px` (上下16px, 左右48px，左侧为图标预留空间)
+- 图标尺寸: 20px × 20px
+- 图标位置: 左侧16px，垂直居中
+
+**验证码区域**:
+
+- 验证码显示框: 160px × 64px
+- 验证码输入框: 402.406px × 64px
+- 验证码文字: 30px，粗体
+- 刷新按钮: 24px × 24px
+
+**标签**:
+
+- 高度: 20px
+- 字体大小: 14px，粗体
+- 字间距: 0.35px
+- 颜色: `#364153`
+
+**按钮**:
+
+- 登录按钮: 需要根据设计确定（当前代码中未明确）
+
+### 字体规范
+
+**字体族**: Arial (Bold/Regular)
+
+**字体大小**:
+
+- 主标题 (Welcome Back): 20px, 粗体, 行高30px, 字间距0.5px
+- 副标题: 16px, 常规, 行高24px
+- 标签: 14px, 粗体, 行高20px, 字间距0.35px
+- 占位符: 16px, 常规
+- 验证码文字: 30px, 粗体, 行高36px
+- 验证码输入: 20px, 粗体, 字间距2px, 居中
+
+### 间距规范
+
+**容器内边距**:
+
+- 右侧面板: `56px` (左右)
+- 左侧面板: `48px` (左右上下)
+
+**元素间距**:
+
+- 输入框组间距: 24px
+- 标签与输入框间距: 12px
+- 功能卡片间距: 16px
+
+### 左侧品牌展示区
+
+**Logo区域**:
+
+- Logo尺寸: 56.179px × 56.179px
+- Logo背景: 橙色渐变，圆角14px
+- 标题: "Learning Hub" - 16px, 粗体, `#1e2939`
+- 副标题: "Grow Every Day" - 14px, 常规, `#ff6900`
+
+**欢迎文字**:
+
+- 字体: 16px, 常规, 行高26px
+- 颜色: `#4a5565`
+- 内容: "Welcome to your personal learning space for English, Coding, and Career Growth"
+
+**中央插图**:
+
+- 尺寸: 256px × 256px
+- 包含: 圆形装饰线条、渐变方块（橙色/绿色/蓝色）、小圆点装饰
+- 位置: 居中
+
+**功能卡片** (3个):
+
+- 高度: 60px
+- 圆角: 14px
+- 图标: 36px × 36px，渐变背景
+- 标题: 14px, 粗体, `#1e2939`
+- 描述: 12px, 常规, `#4a5565`
+
+### 右侧登录表单区
+
+**标题区域**:
+
+- "Welcome Back" - 20px, 粗体, `#1e2939`
+- "Continue your learning journey" - 16px, 常规, `#4a5565`
+- 间距: 8px
+
+**输入框组**:
+
+- USERNAME: 标签 + 输入框 (92px总高度)
+- PASSWORD: 标签 + 输入框 (92px总高度)
+- SECURITY CODE: 标签 + 验证码区域 (96px总高度)
+
+**Demo账户提示框**:
+
+- 高度: 72px
+- 圆角: 14px
+- 边框: `2px solid #ffd6a7`
+- 背景: 橙色到黄色渐变
+- 图标: 36px × 36px，橙色背景 `#ff8904`
+- 文字: 14px, `#ca3500`
+
+**注册链接**:
+
+- 文字: "Don't have an account?" - 14px, `#4a5565`
+- 链接: "Sign up now →" - 14px, 粗体, `#ff6900`
+
+### 装饰元素
+
+**顶部渐变条**:
+
+- 高度: 4px
+- 渐变: `linear-gradient(90deg, rgba(249, 115, 22, 0.5) 0%, rgba(234, 179, 8, 0.5) 33.333%, rgba(34, 197, 94, 0.5) 66.667%, rgba(249, 115, 22, 0.5) 100%)`
+
+**四角装饰边框**:
+
+- 尺寸: 80px × 80px
+- 边框: 2px, 40%透明度
+- 颜色: 橙色/黄色/绿色
+
+### 响应式断点
+
+**桌面端** (当前设计):
+
+- 最小宽度: 1152px
+- 左右分栏布局
+
+**平板端** (需要设计):
+
+- 768px - 1024px
+- 可能需要调整布局
+
+**移动端** (需要设计):
+
+- < 768px
+- 单列布局，可能需要隐藏左侧面板
+
+### 动画效果
+
+**输入框交互**:
+
+- Focus状态: 边框颜色可能需要变化（设计稿中未明确，需确认）
+- 内阴影效果: `inset 0px 0px 20px 0px rgba(255,255,255,0.5)`
+
+**验证码刷新**:
+
+- 刷新按钮有旋转动画（162.36deg）
+
+### 实现注意事项
+
+1. **精确还原**: 所有尺寸、颜色、间距必须严格按照上述规范实现
+2. **透明度处理**: 使用`rgba`或CSS变量确保透明度准确
+3. **渐变实现**: 使用CSS `linear-gradient`精确还原渐变角度和颜色
+4. **字体回退**: Arial不可用时使用系统sans-serif字体
+5. **响应式适配**: 桌面端严格按照设计，移动端需要合理适配
 
 **配色方案**（避免AI通用配色）:
 
