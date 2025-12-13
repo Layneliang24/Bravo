@@ -45,6 +45,18 @@ refined_by: cursor | claude-opus-4
 # Task-Master任务
 task_master_task: .taskmaster/tasks/{REQ-ID}/tasks.json
 
+# 测试用例列表（必须创建，在测试代码之前）
+testcase_file: docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv
+testcase_status:
+  total_cases: 0
+  p0_cases: 0
+  p1_cases: 0
+  p2_cases: 0
+  p3_cases: 0
+  reviewed: false
+  reviewed_by: []
+  reviewed_at: null
+
 # 测试文件（必须预先推断）
 test_files:
   - backend/tests/unit/test_{module}.py
@@ -64,7 +76,9 @@ api_contract: docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml
 trd: docs/00_product/requirements/{REQ-ID}/{REQ-ID}-TRD.md
 ```
 
-**参考**: @docs/architecture/V4/AI-WORKFLOW-V4-PART3-PRD-TRD.md
+**参考**:
+- @docs/architecture/V4/AI-WORKFLOW-V4-PART3-PRD-TRD.md
+- @.cursor/rules/workflows/testcase-design.mdc
 
 ## PRD内容结构
 
@@ -145,10 +159,22 @@ draft → refined → reviewed → approved → implementing → completed → a
 - [ ] 已推断所有实现文件路径
 - [ ] 已创建API契约文档（OpenAPI 3.0）
 - [ ] 数据库设计完整（表、字段、索引、外键）
-- [ ] 测试用例清单完整（单元、集成、E2E）
+- [ ] 功能点和验收标准完整（用于测试用例设计）
 - [ ] 前端组件设计清晰
 - [ ] 验收标准明确
 - [ ] PRD状态设置为`refined`或`approved`
+
+## PRD批准后的下一步
+
+PRD状态变为`approved`后，必须按以下顺序执行：
+
+1. **Task生成**: 使用Task-Master解析PRD生成任务
+2. **测试用例设计**: 创建测试用例CSV文件
+3. **测试用例评审**: 评审并确认测试用例完整性
+4. **测试代码编写**: 根据CSV编写测试代码（TDD红色阶段）
+5. **功能代码实现**: 实现功能使测试通过（TDD绿色阶段）
+
+**参考**: @.cursor/rules/workflows/testcase-design.mdc
 
 ## 示例PRD结构
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
+# TESTCASE-IDS: TC-AUTH_RESET-001
 """密码找回API集成测试
 
 测试密码找回API的功能，包括发送重置邮件、重置密码等场景。

@@ -11,15 +11,31 @@ priority: 850
 **当前角色**: 测试专家 (Test-Writer)
 
 **你的职责**:
-1. 根据PRD和Task-Master任务编写测试
+1. 根据测试用例列表（CSV）和PRD编写测试代码
 2. 确保测试文件在正确的目录
 3. 确保测试覆盖所有场景（正常、异常、边界）
 4. 编写清晰的测试断言和错误消息
 
 **你不应该**:
 - 直接实现功能代码（由Developer角色负责）
-- 跳过测试用例
+- 跳过测试用例设计阶段直接编写测试代码
 - 修改PRD（由PRD设计专家负责）
+
+## 前置条件
+
+**必须满足以下条件才能开始编写测试代码**:
+
+1. ✅ PRD状态为`approved`或`implementing`
+2. ✅ 测试用例CSV文件已创建并评审通过
+3. ✅ 测试用例CSV包含当前要实现的测试场景
+
+**检查命令**:
+```bash
+# 检查测试用例文件是否存在
+ls docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv
+```
+
+**参考**: @.cursor/rules/workflows/testcase-design.mdc
 
 ## TDD三阶段循环
 
@@ -253,10 +269,40 @@ cd frontend && npm run test:coverage
 
 **参考**: @docs/01_guideline/api-contracts/README.md
 
+## 测试代码与CSV用例的对应
+
+### 对应规则
+
+| CSV测试类型 | 测试代码文件 | 测试函数命名 |
+|-------------|--------------|--------------|
+| UNIT | backend/tests/unit/test_{module}.py | test_{用例ID}_{场景} |
+| INTEGRATION | backend/tests/integration/test_{feature}.py | test_{用例ID}_{场景} |
+| E2E | e2e/tests/{feature}.spec.ts | test('{用例ID}: {用例名称}', ...) |
+| REGRESSION | backend/tests/regression/test_{bug_id}.py | test_{用例ID}_{场景} |
+
+### 示例
+
+**CSV用例**:
+```csv
+TC-AUTH-001,用户成功登录,E2E,P0,REQ-2025-003,...
+```
+
+**对应测试代码**:
+```typescript
+// e2e/tests/auth/login.spec.ts
+// REQ-ID: REQ-2025-003
+
+test('TC-AUTH-001: 用户成功登录', async ({ page }) => {
+  // 实现测试用例CSV中定义的测试步骤
+});
+```
+
 ## 禁止事项
 
+- ❌ 不能跳过测试用例设计阶段直接编写测试代码
 - ❌ 不能跳过TDD流程（先写代码后写测试）
 - ❌ 不能编写没有REQ-ID注释的测试文件
+- ❌ 不能编写没有对应CSV用例的测试
 - ❌ 不能将测试文件放在错误目录
 - ❌ 不能忽略边界和异常场景
 - ❌ 不能提交覆盖率 < 80% 的代码

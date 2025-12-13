@@ -50,6 +50,10 @@ file_rules_mapping:
     rules: [task]
   - pattern: ".taskmaster/tasks/**/*.md"
     rules: [task]
+  - pattern: "docs/00_product/requirements/**/*-test-cases.csv"
+    rules: [testcase]
+  - pattern: "docs/00_product/requirements/**/*-testcases.csv"
+    rules: [testcase]
 
 # 排除路径（不检查）
 exclude_paths:

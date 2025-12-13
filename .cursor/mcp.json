@@ -7,6 +7,21 @@
         "OPENAI_API_KEY": "sk-zfgptsqmcesptnszlkdrlttgwfmmiilwrahdcdolshqkxnhm",
         "OPENAI_BASE_URL": "https://api.siliconflow.cn/v1"
       }
+    },
+    "Figma MCP PRO": {
+      "command": "npx",
+      "args": [
+        "figma-mcp-pro@latest",
+        "--figma-api-key",
+        "figd_ZsBjKRMNzt_qXexHUzKNThFApAXkxnL_0y7MLoIj"
+      ],
+      "env": {
+        "DEBUG": "true"
+      }
+    },
+    "TalkToFigma": {
+      "command": "bunx",
+      "args": ["cursor-talk-to-figma-mcp@latest"]
     }
   },
   "tools": {

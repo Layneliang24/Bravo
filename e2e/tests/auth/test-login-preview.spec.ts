@@ -1,6 +1,7 @@
 // REQ-ID: REQ-2025-003-user-login
 // 登录预验证 E2E 测试
 // 使用 Playwright 进行端到端测试
+// TESTCASE-IDS: TC-AUTH_PREVIEW-003
 
 import { test, expect, Page } from '@playwright/test';
 

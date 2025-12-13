@@ -140,6 +140,48 @@ class PRDChecker:
             )
             return
 
+        # V4.1：测试用例设计与评审元数据校验
+        # - draft/review：允许不完整，但会给出警告，便于迁移
+        # - approved/implementing/completed：必须完整（否则阻止进入实现阶段）
+        must_have_testcase_meta = status in ["approved", "implementing", "completed"]
+
+        if "testcase_file" not in metadata or not metadata.get("testcase_file"):
+            msg = "缺少测试用例清单字段 testcase_file（应指向 {REQ-ID}-test-cases.csv）"
+            if must_have_testcase_meta:
+                self.errors.append(msg)
+            else:
+                self.warnings.append(msg)
+        else:
+            testcase_file = metadata.get("testcase_file")
+            if testcase_file and not str(testcase_file).endswith(".csv"):
+                self.warnings.append("testcase_file 应该是一个 .csv 文件")
+
+        if "testcase_status" not in metadata or metadata.get("testcase_status") is None:
+            msg = "缺少测试用例状态字段 testcase_status（需包含 reviewed/reviewed_by/reviewed_at 等）"
+            if must_have_testcase_meta:
+                self.errors.append(msg)
+            else:
+                self.warnings.append(msg)
+        else:
+            tc_status = metadata.get("testcase_status")
+            if not isinstance(tc_status, dict):
+                self.errors.append("testcase_status 必须是字典格式")
+            else:
+                # 强化：implementing/completed 状态必须评审通过
+                if (
+                    status in ["implementing", "completed"]
+                    and tc_status.get("reviewed") is not True
+                ):
+                    self.errors.append(
+                        "PRD状态为 implementing/completed 时，测试用例必须评审通过 "
+                        "(testcase_status.reviewed=true)"
+                    )
+                if tc_status.get("reviewed") is True:
+                    if not tc_status.get("reviewed_by"):
+                        self.warnings.append("测试用例已评审通过，但未记录评审人 (reviewed_by)")
+                    if not tc_status.get("reviewed_at"):
+                        self.warnings.append("测试用例已评审通过，但未记录评审时间 (reviewed_at)")
+
         # 检查2：draft状态不允许开发
         if status == "draft":
             self.errors.append(
@@ -190,6 +232,10 @@ class PRDChecker:
                     self.errors.append(f"字段 {field} 必须是列表类型")
                 elif expected_type == "boolean" and not isinstance(value, bool):
                     self.errors.append(f"字段 {field} 必须是布尔类型")
+                elif expected_type == "dict" and not isinstance(value, dict):
+                    self.errors.append(f"字段 {field} 必须是字典类型")
+                elif expected_type == "string" and not isinstance(value, str):
+                    self.errors.append(f"字段 {field} 必须是字符串类型")
 
             # 检查列表长度
             if isinstance(value, list) and "min_items" in rules:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
+# TESTCASE-IDS: TC-AUTH_MODELS-001
 """认证相关模型单元测试
 
 根据PRD要求，验证User模型新增字段、EmailVerification和PasswordReset模型的创建

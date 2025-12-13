@@ -8,17 +8,30 @@ created_at: 2025-12-03T10:00:00Z
 updated_at: 2025-12-06T10:34:00Z
 author: human
 refined_by: claude-opus-4
+testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
+testcase_status:
+  total_cases: 56
+  p0_cases: 12
+  p1_cases: 35
+  p2_cases: 9
+  p3_cases: 0
+  reviewed: true
+  reviewed_by: ["cursor-ai"]
+  reviewed_at: 2025-12-13T00:00:00Z
 test_files:
-  - backend/tests/unit/test_auth_views.py
-  - backend/tests/unit/test_captcha.py
+  - backend/tests/unit/test_auth_models.py
   - backend/tests/unit/test_auth_preview.py
-  - backend/tests/integration/test_auth_api.py
+  - backend/tests/unit/test_captcha.py
+  - backend/tests/integration/test_captcha_api.py
+  - backend/tests/integration/test_email_verification_api.py
+  - backend/tests/integration/test_login_api.py
   - backend/tests/integration/test_password_reset.py
   - backend/tests/integration/test_preview_throttling.py
-  - e2e/tests/auth/login.spec.ts
-  - e2e/tests/auth/register.spec.ts
-  - e2e/tests/auth/password-reset.spec.ts
-  - e2e/tests/auth/login-preview.spec.ts
+  - backend/tests/integration/test_register_api.py
+  - backend/tests/integration/test_token_api.py
+  - e2e/tests/auth/test-email-verification.spec.ts
+  - e2e/tests/auth/test-login-preview.spec.ts
+  - e2e/tests/auth/test-password-reset.spec.ts
 implementation_files:
   - backend/apps/users/models.py
   - backend/apps/users/views.py

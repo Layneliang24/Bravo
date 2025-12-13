@@ -9,6 +9,16 @@ created_at: 2025-11-30T10:00:00Z
 updated_at: 2025-11-30T10:00:00Z
 author: system
 task_master_task: .taskmaster/tasks/REQ-2025-001-example-demo/tasks.json
+testcase_file: docs/00_product/requirements/REQ-2025-001-example-demo/REQ-2025-001-example-demo-test-cases.csv
+testcase_status:
+  total_cases: 5
+  p0_cases: 1
+  p1_cases: 2
+  p2_cases: 2
+  p3_cases: 0
+  reviewed: true
+  reviewed_by: ["cursor-ai"]
+  reviewed_at: 2025-12-13T00:00:00Z
 test_files:
   - backend/tests/unit/test_example.py
   - e2e/tests/test-example.spec.ts

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
+# TESTCASE-IDS: TC-AUTH_REGISTER-001
 """用户注册API集成测试
 
 测试用户注册API的功能，包括成功注册、邮箱已存在、密码强度验证、验证码验证等场景。

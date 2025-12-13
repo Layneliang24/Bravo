@@ -6,7 +6,9 @@
 
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+
+import yaml
 
 
 class TestChecker:
@@ -100,6 +102,146 @@ class TestChecker:
             self._check_content(file_path)
 
         return len(self.errors) == 0, self.errors, self.warnings
+
+    def _find_project_root(self, file_path: str) -> Optional[Path]:
+        """
+        尝试从当前文件路径向上寻找项目根目录（以 docs/00_product/requirements 为锚点）
+        """
+        p = Path(file_path).resolve()
+        for parent in [p] + list(p.parents):
+            if (parent / "docs" / "00_product" / "requirements").exists():
+                return parent
+        # 兜底：当前工作目录
+        cwd = Path.cwd().resolve()
+        if (cwd / "docs" / "00_product" / "requirements").exists():
+            return cwd
+        return None
+
+    def _extract_req_id_from_text(self, text: str) -> Optional[str]:
+        m = re.search(r"REQ-\d{4}-\d{3}(?:-[a-z0-9-]+)?", text, re.IGNORECASE)
+        return m.group(0) if m else None
+
+    def _enforce_testcase_gate(self, file_path: str, content: str):
+        """
+        V4.1 强制门禁：
+        - 提交测试代码时，必须已经存在对应的测试用例CSV
+        - 且 PRD 中 testcase_status.reviewed 必须为 true
+        """
+        req_id = self._extract_req_id_from_text(
+            content
+        ) or self._extract_req_id_from_text(str(file_path))
+        if not req_id:
+            # 没有REQ-ID无法做追溯校验，交给其他规则/警告处理
+            return
+
+        project_root = self._find_project_root(file_path)
+        if not project_root:
+            self.warnings.append(f"无法定位项目根目录，跳过测试用例CSV门禁校验（REQ-ID: {req_id}）")
+            return
+
+        prd_path = (
+            project_root
+            / "docs"
+            / "00_product"
+            / "requirements"
+            / req_id
+            / f"{req_id}.md"
+        )
+        testcase_csv = (
+            project_root
+            / "docs"
+            / "00_product"
+            / "requirements"
+            / req_id
+            / f"{req_id}-test-cases.csv"
+        )
+
+        if not testcase_csv.exists():
+            self.errors.append(f"缺少测试用例CSV文件（V4.1强制）：{testcase_csv.as_posix()}")
+            return
+
+        if not prd_path.exists():
+            self.errors.append(f"缺少PRD文件，无法验证测试用例评审状态：{prd_path.as_posix()}")
+            return
+
+        try:
+            prd_content = prd_path.read_text(encoding="utf-8")
+            parts = prd_content.split("---", 2)
+            if len(parts) < 3:
+                self.errors.append(f"PRD frontmatter格式错误：{prd_path.as_posix()}")
+                return
+            meta = yaml.safe_load(parts[1]) or {}
+            status = str(meta.get("status", "")).lower()
+            if status not in ["approved", "implementing", "completed"]:
+                self.errors.append(
+                    f"PRD状态为 '{status}'，不允许提交测试代码"
+                    f"（需 approved/implementing）：{prd_path.as_posix()}"
+                )
+                return
+
+            tc_status = meta.get("testcase_status") or {}
+            reviewed = bool(tc_status.get("reviewed"))
+            if not reviewed:
+                self.errors.append(
+                    "测试用例CSV未评审通过（testcase_status.reviewed != true），不允许提交测试代码"
+                )
+                return
+
+            # reviewed=true 后进一步强化：测试代码必须引用至少一个TC-xxx-000，并且必须存在于CSV中
+            testcase_file_path = meta.get("testcase_file") or testcase_csv.as_posix()
+            # 允许PRD里写相对路径
+            tc_csv_path = Path(str(testcase_file_path))
+            if not tc_csv_path.is_absolute():
+                tc_csv_path = project_root / tc_csv_path
+            if not tc_csv_path.exists():
+                self.errors.append(
+                    f"PRD声明的testcase_file不存在，无法校验TestCase-ID引用：{tc_csv_path.as_posix()}"
+                )
+                return
+
+            # 解析测试文件中的TestCase-ID引用
+            # （支持新格式 TC-{MODULE}_{FEATURE}-{序号} 和旧格式 TC-{MODULE}-{序号}）
+            # 使用非捕获组或直接匹配整个ID
+            referenced_tc_ids = set(
+                re.findall(r"TC-[A-Z0-9]+(?:_[A-Z0-9]+)?-\d{3}", content)
+            )
+            if not referenced_tc_ids:
+                self.errors.append(
+                    "测试文件缺少TestCase-ID引用"
+                    "（示例：TESTCASE-IDS: TC-AUTH_LOGIN-001 或 TC-AUTH-001）。"
+                    "当测试用例已评审通过后，测试代码必须显式引用CSV中的用例ID。"
+                )
+                return
+
+            # 读取CSV中的用例ID集合
+            import csv
+
+            csv_ids = set()
+            try:
+                with open(tc_csv_path, "r", encoding="utf-8-sig") as f:
+                    reader = csv.DictReader(f)
+                    if not reader.fieldnames or "用例ID" not in reader.fieldnames:
+                        self.errors.append(
+                            f"测试用例CSV缺少'用例ID'列，无法校验：{tc_csv_path.as_posix()}"
+                        )
+                        return
+                    for row in reader:
+                        tc_id = (row.get("用例ID") or "").strip()
+                        if tc_id:
+                            csv_ids.add(tc_id)
+            except Exception as e:
+                self.errors.append(f"读取测试用例CSV失败：{tc_csv_path.as_posix()}，错误：{e}")
+                return
+
+            missing = sorted([tc for tc in referenced_tc_ids if tc not in csv_ids])
+            if missing:
+                self.errors.append(
+                    "测试文件引用了不存在的TestCase-ID："
+                    + ", ".join(missing[:10])
+                    + (f" ... 等{len(missing)}个" if len(missing) > 10 else "")
+                )
+        except Exception as e:
+            self.errors.append(f"读取/解析PRD失败，无法验证测试用例评审状态: {e}")
 
     def _check_location(self, file_path: str):
         """检查文件位置"""
@@ -195,6 +337,9 @@ class TestChecker:
             self.errors.append(f"无法从git暂存区读取文件: {file_path}")
             return
 
+        # V4.1：测试用例CSV门禁
+        self._enforce_testcase_gate(file_path, content)
+
         # 检查测试函数定义
         if "test_function_definitions" in required_content:
             if file_path.endswith(".py"):
@@ -230,6 +375,9 @@ class TestChecker:
         except Exception as e:
             self.errors.append(f"无法读取文件: {e}")
             return
+
+        # V4.1：测试用例CSV门禁
+        self._enforce_testcase_gate(file_path, content)
 
         # 检查测试函数定义
         if "test_function_definitions" in required_content:

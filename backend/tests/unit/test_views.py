@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-001-example-demo
+# TESTCASE-IDS: TC-EXAMPLE_TRACE-001
 """Example、Test Optimized、Test Scenario2、Test Scenario3、Test T01 视图模块单元测试"""
 
 import pytest
