@@ -8,57 +8,59 @@
     :loading="previewLoading"
   />
   <form @submit.prevent="handleSubmit" class="login-form">
-    <!-- Username 输入框 -->
-    <div class="username-input">
-      <label class="username-label">Username</label>
-      <input
+    <!-- USERNAME 输入框 -->
+    <div class="input-group">
+      <label class="input-label">USERNAME</label>
+      <FloatingInput
         v-model="formData.email"
+        label="USERNAME"
         type="text"
         placeholder="Enter your username"
-        class="input-field"
-        :class="{ 'has-error': errors.email }"
+        :error="errors.email"
+        icon="👤"
         required
+        @blur="validateEmail"
       />
-      <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
     </div>
 
-    <!-- Password 输入框 -->
-    <div class="password-input">
-      <label class="password-label">Password</label>
-      <input
+    <!-- PASSWORD 输入框 -->
+    <div class="input-group">
+      <label class="input-label">PASSWORD</label>
+      <FloatingInput
         v-model="formData.password"
+        label="PASSWORD"
         type="password"
         placeholder="Enter your password"
-        class="input-field"
-        :class="{ 'has-error': errors.password }"
-        @blur="handlePasswordBlur"
+        :error="errors.password"
+        icon="🔒"
         required
+        @blur="handlePasswordBlur"
       />
-      <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
     </div>
 
-    <!-- Forgot Password 链接 -->
-    <div class="forgot-password-wrapper">
-      <a href="#" class="forgot-password">Forgot Password?</a>
+    <!-- SECURITY CODE 验证码 -->
+    <div class="input-group">
+      <label class="input-label">SECURITY CODE</label>
+      <div v-if="errors.captcha_answer" class="error-message">
+        {{ errors.captcha_answer }}
+      </div>
+      <Captcha
+        ref="captchaRef"
+        :disabled="isSubmitting"
+        @captcha-update="handleCaptchaUpdate"
+      />
     </div>
-
-    <!-- 验证码 -->
-    <div v-if="errors.captcha_answer" class="error-message">
-      {{ errors.captcha_answer }}
-    </div>
-    <Captcha
-      ref="captchaRef"
-      :disabled="isSubmitting"
-      @captcha-update="handleCaptchaUpdate"
-    />
 
     <!-- 登录按钮 -->
     <button type="submit" :disabled="isSubmitting" class="login-button">
       {{ isSubmitting ? '登录中...' : 'LOGIN' }}
     </button>
 
-    <!-- Register 文本 -->
-    <p class="register-text">New to Logo? Register Here</p>
+    <!-- Register 链接 -->
+    <p class="register-text">
+      Don't have an account?
+      <router-link to="/register" class="register-link">Sign up now →</router-link>
+    </p>
   </form>
 </template>
 
@@ -77,6 +79,7 @@ import {
 import FloatingInput from './FloatingInput.vue'
 import Captcha from './Captcha.vue'
 import UserPreview from './UserPreview.vue'
+import { useRouter } from 'vue-router'
 
 interface FormData {
   email: string
@@ -98,6 +101,15 @@ const previewLoading = ref(false)
 const captchaRef = ref<InstanceType<typeof Captcha> | null>(null)
 const router = useRouter()
 const authStore = useAuthStore()
+
+// 验证邮箱格式
+const validateEmail = () => {
+  if (formData.email && !EMAIL_REGEX.test(formData.email)) {
+    errors.email = 'Please enter a valid email address'
+  } else {
+    errors.email = ''
+  }
+}
 const previewUser = computed(() => authStore.preview?.user || null)
 const previewVisible = computed(
   () => previewLoading.value || !!previewUser.value
@@ -226,115 +238,60 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-/* Glassmorphism 设计 - 根据 Figma 设计规范 */
+/* Figma设计规范 - 登录表单 */
 .login-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  font-family: 'Montserrat', sans-serif;
+  gap: var(--spacing-input-gap);
+  font-family: var(--font-family);
 }
 
-/* 输入框容器 */
-.username-input,
-.password-input {
+/* 输入框组 */
+.input-group {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0;
+  gap: var(--spacing-label-input);
 }
 
-/* 标签样式 - 15px, Montserrat Regular, 白色 */
-.username-label,
-.password-label {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 18.28px;
-  color: rgb(255, 255, 255);
+/* 标签样式 - 14px, Arial Bold */
+.input-label {
+  font-family: var(--font-family);
+  font-size: var(--font-size-label);
+  font-weight: bold;
+  line-height: var(--line-height-label);
+  letter-spacing: 0.35px;
+  color: var(--text-label);
   text-align: left;
+  height: 20px;
 }
 
-/* 输入框样式 - 419x50px, 圆角 7px，深色背景 */
-.input-field {
-  width: 100%;
-  height: 50px;
-  padding: 0 1rem;
-  background: rgba(40, 40, 40, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 7px;
-  color: rgb(255, 255, 255);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 300;
-  line-height: 18.28px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.input-field::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.input-field:focus {
-  border-color: rgba(100, 150, 255, 0.5);
-  background: rgba(50, 50, 50, 0.7);
-  box-shadow: 0 0 0 2px rgba(100, 150, 255, 0.2);
-}
-
-.input-field.has-error {
-  border-color: rgba(255, 80, 80, 0.6);
-  background: rgba(60, 40, 40, 0.6);
-}
-
-/* Forgot Password 链接 */
-.forgot-password-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.forgot-password {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 14.63px;
-  color: rgb(255, 255, 255);
-  text-decoration: none;
-  transition: opacity 0.3s ease;
-}
-
-.forgot-password:hover {
-  opacity: 0.8;
-}
-
-/* 登录按钮 - 419x50px, 背景色 rgb(165, 217, 208), 圆角 7px */
+/* 登录按钮 */
 .login-button {
   width: 100%;
-  height: 50px;
-  background: rgb(165, 217, 208);
+  height: var(--input-height);
+  background: linear-gradient(
+    135deg,
+    var(--color-orange-gradient-start) 0%,
+    var(--color-orange-gradient-end) 100%
+  );
   border: none;
-  border-radius: 7px;
-  color: rgb(0, 0, 0);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 18.28px;
+  border-radius: var(--input-border-radius);
+  color: white;
+  font-family: var(--font-family);
+  font-size: var(--font-size-label);
+  font-weight: bold;
+  line-height: var(--line-height-label);
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1rem;
-  margin-bottom: 0;
+  margin-top: 8px;
+  box-shadow: var(--shadow-input);
 }
 
 .login-button:hover:not(:disabled) {
-  background: rgb(145, 197, 188);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 16px 0px rgba(249, 115, 22, 0.2);
 }
 
 .login-button:active:not(:disabled) {
@@ -342,80 +299,59 @@ const handleSubmit = async () => {
 }
 
 .login-button:disabled {
-  background: rgba(165, 217, 208, 0.5);
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Register 文本 - 15px, Montserrat Light, 白色 */
+/* Register 文本 */
 .register-text {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 300;
-  line-height: 18.28px;
-  color: rgb(255, 255, 255);
+  font-family: var(--font-family);
+  font-size: var(--font-size-label);
+  font-weight: 400;
+  line-height: var(--line-height-label);
+  color: var(--text-secondary);
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 16px;
   margin-bottom: 0;
 }
 
-/* 错误消息 - 红色文本 */
+.register-link {
+  color: var(--text-link);
+  font-weight: bold;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.register-link:hover {
+  opacity: 0.8;
+}
+
+/* 错误消息 */
 .error-message {
-  color: #ff6b6b;
+  color: var(--color-error);
   font-size: 14px;
-  margin-top: 0.5rem;
-  font-family: 'Montserrat', sans-serif;
+  margin-top: 4px;
+  font-family: var(--font-family);
   font-weight: 400;
-}
-
-/* 验证码错误框 - 红色背景框样式 */
-:deep(.captcha-container .error) {
-  background: rgba(255, 100, 100, 0.2);
-  border: 1px solid rgba(255, 100, 100, 0.5);
-  border-radius: 7px;
-  padding: 1rem;
-  margin-top: 1rem;
-}
-
-:deep(.captcha-container .error span) {
-  color: #ff6b6b;
-  font-size: 14px;
-}
-
-:deep(.captcha-container .error button) {
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .login-form {
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
-  .input-field,
+  .input-label {
+    font-size: 13px;
+  }
+
   .login-button {
-    height: 45px;
-  }
-
-  .username-label,
-  .password-label {
-    font-size: 14px;
-  }
-
-  .forgot-password {
-    font-size: 11px;
+    height: 56px;
   }
 
   .register-text {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 </style>
