@@ -5,7 +5,7 @@ status: approved
 priority: high
 type: feature
 created_at: 2025-12-03T10:00:00Z
-updated_at: 2025-12-06T10:34:00Z
+updated_at: 2025-12-18T11:00:00Z
 author: human
 refined_by: claude-opus-4
 testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
@@ -158,6 +158,74 @@ deletable: false
 - 验证码有效期（5分钟）
 - 验证码存储在Redis中
 
+#### 4.1 验证码加载与显示
+
+**初始加载**：
+
+- 页面加载时自动获取验证码（GET `/api/auth/captcha/`）
+- 验证码图片以base64格式返回，直接显示在验证码区域
+- 验证码ID存储在组件状态中，用于后续验证
+
+**加载失败处理**：
+
+- 网络错误：显示"Failed to fetch"错误信息和"重试"按钮
+- API错误（如500）：显示错误状态码和"重试"按钮
+- 点击重试按钮：重新调用获取验证码API
+
+**验证码刷新**：
+
+- 用户点击验证码图片区域：触发刷新（POST `/api/auth/captcha/refresh/`）
+- 刷新时会删除旧的验证码ID（如果提供了captcha_id）
+- 刷新后自动清空验证码输入框
+- 刷新不影响头像预览的显示状态
+
+#### 4.2 验证码输入与实时校验
+
+**输入限制**：
+
+- 验证码输入框限制最大长度为4位
+- 自动转换为大写字母
+- 只允许输入字母和数字
+
+**实时校验触发条件**：
+
+- 用户输入验证码，输入满4位后立即触发校验
+- **重要**：实时校验需要账号密码已填写（因为通过预览API验证）
+
+**校验流程**：
+
+1. 用户输入4位验证码
+2. 调用预览API验证验证码（POST `/api/auth/preview/`，包含email、password、captcha_id、captcha_answer）
+3. 根据API响应处理：
+   - **验证码正确**（API返回200，无INVALID_CAPTCHA错误）：
+     - 显示绿色打勾图标
+     - 清除所有错误提示
+     - 如果账号密码正确，触发头像预览
+   - **验证码错误**（API返回400，code=INVALID_CAPTCHA）：
+     - 自动刷新验证码图片
+     - 清空验证码输入框
+     - 显示错误提示"验证码错误，已自动刷新"
+     - **重要**：验证码错误不影响头像预览的显示状态
+
+**校验失败处理**：
+
+- 如果只输入验证码，没有输入账号密码，无法进行实时校验（这是设计限制）
+- 验证码校验错误不会清除头像预览（如果头像已显示）
+
+#### 4.3 验证码错误处理
+
+**错误场景**：
+
+1. 验证码输入错误：自动刷新验证码，清空输入，显示错误提示
+2. 验证码过期：用户提交时后端返回错误，前端显示错误提示并刷新验证码
+3. 验证码获取失败：显示错误信息和重试按钮
+
+**错误提示显示**：
+
+- 验证码输入框下方显示红色错误文字
+- 错误提示在用户开始重新输入时自动清除（输入长度<4时）
+- 验证码错误提示不会影响其他字段的错误提示
+
 ### 5. 邮箱验证
 
 - 注册后发送验证邮件
@@ -167,16 +235,116 @@ deletable: false
 
 ### 6. 登录预览头像（实时验证）
 
-- **触发时机**：用户输入邮箱和密码后，密码框失焦或停止输入500ms后触发
-- **预验证API**：调用预验证接口检查账号密码是否正确（不实际登录）
-- **成功显示**：账号密码正确时，在登录表单上方/旁边显示用户头像和用户名
-- **头像来源**：有头像显示用户头像，无头像显示基于用户名首字母生成的默认头像
-- **失败处理**：账号密码错误时，不显示头像区域或显示占位符
-- **安全防护**：
-  - 预验证API需要验证码保护，防止暴力枚举
-  - 限制预验证请求频率（同一IP每分钟最多10次）
-  - 预验证不返回详细错误信息（只返回成功/失败+用户信息）
-- **用户体验**：头像加载时显示loading动画，增强交互反馈
+#### 6.1 触发时机与条件
+
+**触发时机**：
+
+1. **密码框失焦**：用户输入密码后，光标离开密码输入框时立即触发
+2. **防抖触发**：用户输入邮箱或密码后，停止输入500ms后触发（避免频繁调用API）
+3. **验证码更新后**：如果邮箱和密码已填写，验证码ID更新后也会触发预览
+
+**触发条件**（必须同时满足）：
+
+- 邮箱已填写且格式正确
+- 密码已填写且长度>=8位
+- 验证码ID已存在（验证码组件已加载）
+
+**重要**：预览时验证码答案可以为空（根据PRD，预览时验证码可选）
+
+#### 6.2 预览API调用
+
+**API端点**：POST `/api/auth/preview/`
+
+**请求参数**：
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "captcha_id": "uuid-string",
+  "captcha_answer": "" // 可选，预览时可以为空
+}
+```
+
+**API响应**：
+
+- **成功（200）**：
+  - `valid: true` + `user`对象：账号密码正确，返回用户信息
+  - `valid: false` + `user: null`：账号密码错误
+- **验证码错误（400）**：
+  - `code: "INVALID_CAPTCHA"`：验证码错误（如果提供了验证码答案）
+- **网络错误**：抛出异常
+
+#### 6.3 头像显示逻辑
+
+**成功显示**：
+
+- 当API返回`valid: true`时，在登录表单上方显示用户头像和用户名
+- 头像来源：
+  - 有头像：显示用户真实头像（`avatar_url`）
+  - 无头像：显示基于用户名首字母生成的默认头像（`avatar_letter`）
+- 显示动画：淡入动画效果，增强用户体验
+
+**失败处理**：
+
+- 当API返回`valid: false`时，不显示头像区域或清除已显示的头像
+- 网络错误：不显示头像，但不清除已显示的头像（避免闪烁）
+
+#### 6.4 头像显示状态管理
+
+**保持显示条件**：
+一旦账号密码验证成功（`valid: true`），头像应该一直显示，直到以下情况发生：
+
+- 用户修改了邮箱或密码（导致账号密码验证失败）
+- 用户清空了邮箱或密码输入框
+- 预览API返回`valid: false`（账号密码错误）
+
+**不受影响的情况**（头像保持显示）：
+
+- **验证码错误**：验证码错误不影响头像显示，头像应保持显示状态
+- **验证码刷新**：验证码刷新不影响头像显示，头像应保持显示状态
+- **验证码输入**：验证码输入过程不影响头像显示，头像应保持显示状态
+- **网络错误**：如果头像已显示，网络错误不应该清除头像（避免闪烁）
+
+**清除条件**：
+只有当以下情况发生时，才清除头像显示：
+
+- 账号密码变化导致验证失败（API返回`valid: false`）
+- 用户清空了邮箱或密码输入框
+- 用户修改了邮箱或密码，新的组合验证失败
+
+#### 6.5 加载状态与错误处理
+
+**加载状态**：
+
+- 调用预览API时显示loading动画
+- Loading状态不影响已显示的头像（如果头像已显示）
+
+**错误处理**：
+
+- **验证码错误**：由验证码实时校验处理，不影响头像预览
+  - 显示错误提示"验证码错误，已自动刷新"
+  - 自动刷新验证码图片
+  - 清空验证码输入框
+- **网络错误**：不显示错误提示，但记录日志（避免影响用户体验）
+- **限流错误（429）**：显示用户友好的提示信息
+  - 显示错误提示"请求过于频繁，请稍后再试"
+  - 不清除头像（如果头像已显示）
+  - 不刷新验证码（避免触发更多API调用）
+  - 记录日志用于监控
+
+#### 6.6 安全防护
+
+- **验证码保护**：预验证API需要验证码ID（captcha_id必填），但验证码答案可选（预览时）
+- **频率限制**：限制预验证请求频率（同一IP每分钟最多10次）
+- **错误信息**：预验证不返回详细错误信息（只返回成功/失败+用户信息），防止暴力枚举
+
+#### 6.7 用户体验优化
+
+- **防抖处理**：避免用户输入时频繁调用API（500ms防抖）
+- **加载动画**：头像加载时显示loading动画，增强交互反馈
+- **淡入动画**：头像显示时使用淡入动画，提升视觉体验
+- **状态保持**：头像一旦显示，不会因为验证码相关操作而消失
 
 ## 数据库设计
 
@@ -674,31 +842,162 @@ interface AuthActions {
 
 ### 交互流程
 
-#### 登录流程
+#### 登录流程（详细交互逻辑）
 
-1. 用户访问 `/login`
-2. 自动获取验证码
-3. 用户填写邮箱、密码、验证码
-4. **预验证触发**（密码框失焦或停止输入500ms）：
-   - 调用API: `POST /api/auth/preview/`
-   - 成功：在表单上方显示用户头像和显示名称
-   - 失败：隐藏头像区域或显示占位符
-5. 用户确认头像正确，点击"登录"按钮
-6. 前端验证（格式、非空）
-7. 调用API: `POST /api/auth/login/`
-8. 成功：保存token，跳转首页
-9. 失败：显示错误，刷新验证码，清除预览
+**步骤1：页面加载**
 
-#### 注册流程
+- 用户访问 `/login`
+- 自动获取验证码（GET `/api/auth/captcha/`）
+- 验证码图片显示在验证码区域
+- 验证码ID存储在组件状态中
 
-1. 切换到注册表单
-2. 获取验证码
-3. 用户填写邮箱、密码、确认密码、验证码
-4. 实时密码强度检测
-5. 点击"注册"按钮
-6. 调用API: `POST /api/auth/register/`
-7. 成功：自动登录，提示验证邮箱
-8. 失败：显示错误，刷新验证码
+**步骤2：用户输入邮箱**
+
+- 用户输入邮箱地址
+- 实时验证邮箱格式（使用EMAIL_REGEX）
+- 格式正确：显示绿色打勾图标
+- 格式错误：显示错误提示"请输入有效的邮箱地址"
+
+**步骤3：用户输入密码**
+
+- 用户输入密码
+- 实时验证密码长度（>=8位）
+- 长度正确：显示绿色打勾图标
+- 长度不足：显示错误提示"密码长度至少为8位"
+- **密码框失焦**：如果邮箱和密码都已填写且格式正确，触发预览API
+
+**步骤4：头像预览触发（预验证）**
+
+- **触发条件**：
+  - 邮箱已填写且格式正确
+  - 密码已填写且长度>=8位
+  - 验证码ID已存在（验证码组件已加载）
+- **触发时机**：
+  - 密码框失焦时立即触发
+  - 停止输入500ms后触发（防抖）
+  - 验证码ID更新后触发（如果邮箱和密码已填写）
+- **API调用**：POST `/api/auth/preview/`
+  - 请求参数：`{email, password, captcha_id, captcha_answer: ""}`（验证码答案可选）
+  - 成功（valid: true）：显示用户头像和用户名
+  - 失败（valid: false）：不显示头像或清除已显示的头像
+  - 验证码错误（400）：由验证码实时校验处理，不影响头像预览
+
+**步骤5：用户输入验证码**
+
+- 用户输入验证码（4位）
+- **实时校验**（输入满4位后立即触发）：
+  - 调用预览API验证验证码（需要账号密码已填写）
+  - 验证码正确：显示绿色打勾图标，清除错误提示
+  - 验证码错误：自动刷新验证码，清空输入框，显示错误提示"验证码错误，已自动刷新"
+  - **重要**：验证码校验不影响头像预览的显示状态
+
+**步骤6：用户点击登录按钮**
+
+- **前端验证**（必须全部通过）：
+  - 邮箱格式正确
+  - 密码长度>=8位
+  - 验证码ID已存在
+  - 验证码答案已输入（4位）
+- **验证失败**：显示对应字段的错误提示，不提交
+- **验证通过**：调用登录API
+
+**步骤7：登录API调用**
+
+- API调用：POST `/api/auth/login/`
+- 请求参数：`{email, password, captcha_id, captcha_answer}`
+- **成功（200）**：
+  - 保存token到localStorage
+  - 更新auth store状态
+  - 跳转到首页（`router.push('/')`）
+- **失败处理**：
+  - 验证码错误（400, code=INVALID_CAPTCHA）：
+    - 显示错误提示"验证码错误，请重新输入"
+    - 自动刷新验证码
+    - **不清除头像预览**（如果头像已显示）
+  - 账号密码错误（401, code=INVALID_CREDENTIALS）：
+    - 显示错误提示"邮箱或密码错误"（在密码输入框下方）
+    - **清除头像预览**（因为账号密码错误）
+  - 其他错误：显示错误提示在邮箱输入框下方
+
+**步骤8：错误提示显示规则**
+
+- 邮箱错误：显示在邮箱输入框下方（红色文字）
+- 密码错误：显示在密码输入框下方（红色文字）
+- 验证码错误：显示在验证码输入框下方（红色文字）
+- 错误提示在用户开始重新输入时自动清除（对应字段）
+
+#### 注册流程（详细交互逻辑）
+
+**步骤1：切换到注册表单**
+
+- 用户点击"注册"链接或切换到注册表单
+- 自动获取验证码（GET `/api/auth/captcha/`）
+- 验证码图片显示在验证码区域（Captcha组件）
+
+**步骤2：用户填写邮箱**
+
+- 用户输入邮箱地址
+- 实时验证邮箱格式
+- 格式正确：显示绿色打勾图标
+- 格式错误：显示错误提示
+
+**步骤3：用户输入密码**
+
+- 用户输入密码
+- 实时密码强度检测（显示密码强度指示器）
+- 密码强度要求：最少8位，包含字母和数字
+- 强度不足：显示错误提示
+
+**步骤4：用户输入确认密码**
+
+- 用户输入确认密码
+- 实时验证密码是否匹配
+- 不匹配：显示错误提示"密码和确认密码不一致"
+
+**步骤5：用户输入验证码**
+
+- 用户在Captcha组件的输入框中输入验证码（4位）
+- **注意**：注册页面只有一个验证码输入框（在Captcha组件内部）
+- 验证码输入通过`@captcha-update`事件传递给RegisterForm
+- 输入满4位后自动验证（如果邮箱和密码已填写）
+
+**步骤6：用户点击注册按钮**
+
+- **前端验证**（必须全部通过）：
+  - 邮箱格式正确
+  - 密码强度符合要求
+  - 确认密码匹配
+  - 验证码ID已存在
+  - 验证码答案已输入（4位）
+- **验证失败**：显示对应字段的错误提示，不提交
+- **验证通过**：调用注册API
+
+**步骤7：注册API调用**
+
+- API调用：POST `/api/auth/register/`
+- 请求参数：`{email, password, password_confirm, captcha_id, captcha_answer}`
+- **成功（201）**：
+  - 保存token到localStorage
+  - 更新auth store状态
+  - 显示邮箱验证提示界面
+  - 提示用户查收验证邮件
+- **失败处理**：
+  - 验证码错误（400, code=INVALID_CAPTCHA）：
+    - 显示错误提示"验证码错误"
+    - 自动刷新验证码
+    - 清空验证码输入框
+  - 邮箱已存在（400, code=EMAIL_EXISTS）：
+    - 显示错误提示"该邮箱已被注册"
+  - 密码强度不足（400, code=WEAK_PASSWORD）：
+    - 显示错误提示"密码必须包含字母和数字"
+  - 其他错误：显示错误提示
+
+**步骤8：邮箱验证提示**
+
+- 注册成功后显示邮箱验证提示界面
+- 提示用户查收验证邮件（包括垃圾邮件文件夹）
+- 提供"重新发送验证邮件"按钮
+- 提供"返回首页"按钮
 
 #### 密码找回流程
 
@@ -790,6 +1089,191 @@ interface AuthActions {
 - 测试密码重置邮件发送
 - 测试密码重置链接点击
 - 测试密码重置表单提交
+
+**E2E测试错误监听机制（重要）**
+
+**问题背景**：
+
+- Playwright默认不会因控制台错误而失败测试
+- 测试只检查UI状态，不检查JavaScript错误
+- 运行时错误（如`ReferenceError`）可能被Promise catch捕获，但测试应该验证是否有未处理的错误
+
+**解决方案**：
+所有E2E测试必须使用 `ConsoleErrorListener` 来捕获控制台错误和未处理的Promise rejection：
+
+```typescript
+import { ConsoleErrorListener } from "../_helpers/console-error-listener";
+
+test.describe("功能测试", () => {
+  let errorListener: ConsoleErrorListener;
+
+  test.beforeEach(async ({ page }) => {
+    // 设置控制台错误监听器（必须在页面加载前设置）
+    errorListener = new ConsoleErrorListener(page);
+    errorListener.startListening();
+
+    // ... 其他初始化代码（如goto页面）
+  });
+
+  test.afterEach(async () => {
+    // 验证是否有控制台错误（如果有错误，测试会失败）
+    errorListener.assertNoErrors();
+    await errorListener.assertNoUnhandledRejections();
+  });
+});
+```
+
+**错误监听器功能**：
+
+- **监听控制台错误**：捕获所有 `console.error` 输出
+- **监听页面错误**：捕获 `pageerror` 事件（包括未处理的异常）
+- **监听未处理的Promise rejection**：捕获 `unhandledrejection` 事件
+- **测试失败机制**：在测试结束时验证是否有错误，如果有错误则测试失败
+- **智能过滤**：自动过滤第三方脚本错误、浏览器警告、预期网络错误
+
+**为什么需要错误监听**：
+
+1. **发现隐藏的bug**：JavaScript错误可能不影响UI显示，但会导致功能异常
+2. **提高测试质量**：确保测试不仅验证UI，还验证代码质量
+3. **早期发现问题**：在开发阶段就能发现运行时错误，而不是等到用户报告
+
+**智能错误过滤（解决三大挑战）**：
+
+**挑战1：第三方脚本的噪音**
+
+- **问题**：Google Analytics、Sentry、广告脚本等可能产生错误，但这些错误与业务代码无关
+- **解决方案**：自动识别并过滤第三方脚本错误（通过域名/URL模式匹配）
+- **配置**：
+
+```typescript
+// 默认已启用第三方脚本错误过滤
+errorListener = new ConsoleErrorListener(page, {
+  ignoreThirdPartyErrors: true, // 默认true
+});
+```
+
+**挑战2：浏览器兼容性警告**
+
+- **问题**：浏览器经常输出 [Deprecation] 警告或 Resource failed to load 错误，这些通常不影响功能
+- **解决方案**：自动识别并过滤浏览器兼容性警告
+- **配置**：
+
+```typescript
+errorListener = new ConsoleErrorListener(page, {
+  ignoreBrowserWarnings: true, // 默认true
+});
+```
+
+**挑战3："预期的"错误**
+
+- **问题**：测试用例可能故意触发错误（如测试"输入错误密码"功能，可能产生401错误日志）
+- **解决方案**：自动过滤网络错误（400/401/404等），支持自定义过滤规则
+- **配置**：
+
+```typescript
+// 方式1：使用默认配置（自动过滤网络错误）
+errorListener = new ConsoleErrorListener(page, {
+  ignoreNetworkErrors: true, // 默认true
+});
+
+// 方式2：自定义过滤规则
+errorListener = new ConsoleErrorListener(page, {
+  ignorePatterns: [/特定的错误消息/i, /另一个错误模式/i],
+  // 或者使用函数过滤
+  ignoreBySource: (error) => {
+    // 自定义过滤逻辑
+    return error.message.includes("特定错误");
+  },
+});
+
+// 方式3：在断言时临时覆盖配置
+errorListener.assertNoErrors({
+  ignoreNetworkErrors: false, // 临时不忽略网络错误
+});
+```
+
+**高级配置示例**：
+
+```typescript
+import {
+  ConsoleErrorListener,
+  ErrorFilterConfig,
+} from "../_helpers/console-error-listener";
+
+test.describe("功能测试", () => {
+  let errorListener: ConsoleErrorListener;
+
+  test.beforeEach(async ({ page }) => {
+    // 自定义过滤配置
+    const filterConfig: Partial<ErrorFilterConfig> = {
+      ignoreNetworkErrors: true, // 忽略网络错误（默认true）
+      ignoreBrowserWarnings: true, // 忽略浏览器警告（默认true）
+      ignoreThirdPartyErrors: true, // 忽略第三方脚本错误（默认true）
+      ignorePatterns: [
+        /特定的错误消息/i, // 自定义忽略模式
+      ],
+      allowedPatterns: [
+        /必须捕获的错误/i, // 白名单：即使匹配忽略规则，也要捕获
+      ],
+      ignoreBySource: (error) => {
+        // 自定义过滤函数
+        if (error.message.includes("特定条件")) {
+          return true; // 忽略此错误
+        }
+        return false;
+      },
+    };
+
+    errorListener = new ConsoleErrorListener(page, filterConfig);
+    errorListener.startListening();
+  });
+
+  test.afterEach(async () => {
+    // 获取错误统计（用于调试）
+    const stats = errorListener.getErrorStats();
+    console.log("错误统计:", stats);
+    // 输出示例：
+    // {
+    //   total: 2,
+    //   byType: { console: 1, pageerror: 1 },
+    //   bySource: { application: 2 }
+    // }
+
+    // 验证是否有错误
+    errorListener.assertNoErrors();
+    await errorListener.assertNoUnhandledRejections();
+  });
+});
+```
+
+**错误来源分类**：
+
+- `application`：业务代码错误（必须修复）
+- `third-party`：第三方脚本错误（默认忽略）
+- `browser`：浏览器兼容性警告（默认忽略）
+- `network`：网络请求错误（默认忽略，测试中可能故意触发）
+
+**实施要求**：
+
+- ✅ 所有新的E2E测试必须使用 `ConsoleErrorListener`
+- ✅ 现有测试逐步迁移到使用错误监听器
+- ✅ CI/CD中如果测试有控制台错误，应该失败
+- ✅ 根据项目实际情况配置错误过滤规则
+
+**已应用错误监听器的测试文件**（共11个文件）：
+
+- ✅ `test-login-preview.spec.ts` - 登录预览功能测试（5个测试）
+- ✅ `test-captcha-realtime-validation.spec.ts` - 验证码实时校验功能测试（3个测试）
+- ✅ `test-captcha-refresh.spec.ts` - 验证码刷新功能测试（3个测试）
+- ✅ `test-email-verification.spec.ts` - 邮箱验证功能测试
+- ✅ `test-password-reset.spec.ts` - 密码找回功能测试
+- ✅ `test-register-integration.spec.ts` - 注册流程集成测试
+- ✅ `test-register-button.spec.ts` - 注册页面按钮验证测试
+- ✅ `test-register-form-instances.spec.ts` - 注册表单实例验证测试
+- ✅ `test-captcha-lifecycle.spec.ts` - 验证码生命周期测试
+- ✅ `test-captcha-data-flow.spec.ts` - 验证码数据流完整性测试
+- ✅ `test-ui-design.spec.ts` - UI设计规范测试
+- ✅ `test-ui-animations.spec.ts` - UI动画效果测试
 
 ## 技术实现细节
 

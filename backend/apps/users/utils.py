@@ -122,6 +122,20 @@ def store_captcha(captcha_id: str, answer: str, expires_in: int = 300):
     return True
 
 
+def get_captcha_answer(captcha_id: str) -> str | None:
+    """
+    获取验证码答案（仅测试环境使用）
+
+    参数:
+        captcha_id: 验证码ID
+
+    返回:
+        str | None: 验证码答案，如果不存在或已过期则返回None
+    """
+    key = f"captcha:{captcha_id}"
+    return cache.get(key)
+
+
 def verify_captcha(captcha_id: str, answer: str) -> bool:
     """
     验证验证码答案是否正确
@@ -132,23 +146,54 @@ def verify_captcha(captcha_id: str, answer: str) -> bool:
 
     返回:
         bool: 验证是否成功（验证成功后会自动删除验证码，防止重复使用）
+
+    注意:
+        在测试环境下，支持万能验证码（TEST_CAPTCHA_BYPASS），用于E2E测试
+        这解决了验证码E2E测试的随机性问题，避免"调试地狱"
     """
+    import logging
+
+    from django.conf import settings
+
+    logger = logging.getLogger(__name__)
+
     if not captcha_id or not answer:
+        logger.warning(
+            f"Captcha verification failed: missing captcha_id or answer "
+            f"(captcha_id={captcha_id}, answer={answer})"
+        )
         return False
+
+    # 测试环境万能验证码支持（仅测试环境）
+    # 如果输入的是万能验证码，直接通过验证（不区分大小写）
+    if hasattr(settings, "TEST_CAPTCHA_BYPASS"):
+        bypass_code = settings.TEST_CAPTCHA_BYPASS
+        if bypass_code and answer.upper() == bypass_code.upper():
+            logger.info(f"Captcha verification bypassed (test environment): {answer}")
+            return True
 
     key = f"captcha:{captcha_id}"
     stored_answer = cache.get(key)
 
     if stored_answer is None:
         # 验证码不存在或已过期
+        logger.warning(
+            f"Captcha verification failed: captcha not found or expired "
+            f"(captcha_id={captcha_id})"
+        )
         return False
 
     # 不区分大小写比较
     if stored_answer.upper() == answer.upper():
         # 验证成功后删除验证码（防止重复使用）
         cache.delete(key)
+        logger.info(f"Captcha verification succeeded (captcha_id={captcha_id})")
         return True
 
+    logger.warning(
+        f"Captcha verification failed: answer mismatch "
+        f"(captcha_id={captcha_id}, stored={stored_answer}, provided={answer})"
+    )
     return False
 
 

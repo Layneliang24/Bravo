@@ -65,45 +65,80 @@ class RegisterAPITests(TestCase):
 
     def test_register_success(self):
         """测试成功注册场景"""
+        from unittest.mock import patch
+
+        from apps.users.models import EmailVerification
+
         captcha_id, captcha_answer = self._get_valid_captcha()
 
-        response = self.client.post(
-            "/api/auth/register/",
-            data=json.dumps(
-                {
-                    "email": "newuser@example.com",
-                    "password": "SecurePass123",
-                    "password_confirm": "SecurePass123",
-                    "captcha_id": captcha_id,
-                    "captcha_answer": captcha_answer,
-                }
-            ),
-            content_type="application/json",
-        )
+        # Mock Celery任务
+        with patch("apps.users.views.send_email_verification.delay") as mock_send_email:
+            response = self.client.post(
+                "/api/auth/register/",
+                data=json.dumps(
+                    {
+                        "email": "newuser@example.com",
+                        "password": "SecurePass123",
+                        "password_confirm": "SecurePass123",
+                        "captcha_id": captcha_id,
+                        "captcha_answer": captcha_answer,
+                    }
+                ),
+                content_type="application/json",
+            )
 
-        # 验证响应状态码
-        self.assertEqual(response.status_code, 201)
+            # 验证响应状态码
+            self.assertEqual(response.status_code, 201)
 
-        # 验证响应数据格式
-        data = response.json()
-        self.assertIn("user", data)
-        self.assertIn("token", data)
-        self.assertIn("refresh_token", data)
-        self.assertIn("message", data)
+            # 验证响应数据格式
+            data = response.json()
+            self.assertIn("user", data)
+            self.assertIn("token", data)
+            self.assertIn("refresh_token", data)
+            self.assertIn("message", data)
 
-        # 验证用户信息
-        user_data = data["user"]
-        self.assertEqual(user_data["email"], "newuser@example.com")
-        self.assertFalse(user_data["is_email_verified"])
+            # 验证用户信息
+            user_data = data["user"]
+            self.assertEqual(user_data["email"], "newuser@example.com")
+            self.assertFalse(user_data["is_email_verified"])
 
-        # 验证用户已创建
-        user = User.objects.get(email="newuser@example.com")
-        self.assertIsNotNone(user)
-        self.assertFalse(user.is_email_verified)
+            # 验证用户已创建
+            user = User.objects.get(email="newuser@example.com")
+            self.assertIsNotNone(user)
+            self.assertFalse(user.is_email_verified)
 
-        # 验证Token存在
-        self.assertIsNotNone(data["token"])
-        self.assertIsNotNone(data["refresh_token"])
+            # 验证Token存在
+            self.assertIsNotNone(data["token"])
+            self.assertIsNotNone(data["refresh_token"])
+
+            # ✅ 验证EmailVerification记录已创建
+            verification = EmailVerification.objects.filter(user=user).first()
+            self.assertIsNotNone(verification, "注册时应该创建EmailVerification记录")
+            self.assertEqual(verification.user, user)
+            self.assertEqual(verification.email, user.email)
+            self.assertIsNotNone(verification.token)
+            self.assertIsNotNone(verification.expires_at)
+            self.assertIsNone(verification.verified_at)
+
+            # ✅ 验证邮件发送任务被调用
+            self.assertTrue(mock_send_email.called, "注册时应该触发邮件发送任务")
+            self.assertEqual(mock_send_email.call_count, 1)
+            # 获取调用参数（call_args是((args,), {kwargs})格式）
+            call_args_tuple = mock_send_email.call_args
+            if call_args_tuple:
+                # 位置参数在call_args[0]中
+                args = call_args_tuple[0]
+                if args and len(args) >= 3:
+                    self.assertEqual(args[0], user.id)
+                    self.assertEqual(args[1], user.email)
+                    self.assertEqual(args[2], verification.token)
+                else:
+                    # 如果没有位置参数，检查关键字参数
+                    kwargs = call_args_tuple[1] if len(call_args_tuple) > 1 else {}
+                    if kwargs:
+                        self.assertEqual(kwargs.get("user_id"), user.id)
+                        self.assertEqual(kwargs.get("email"), user.email)
+                        self.assertEqual(kwargs.get("token"), verification.token)
 
     def test_register_with_existing_email_fails(self):
         """测试使用已存在的邮箱注册失败"""

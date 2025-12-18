@@ -297,6 +297,91 @@ test('TC-AUTH-001: 用户成功登录', async ({ page }) => {
 });
 ```
 
+## E2E测试环境差异验证（强制）
+
+**规则**: E2E测试通过不等于浏览器环境正常，必须额外验证浏览器环境
+
+**环境差异**:
+- **E2E测试**: 容器内运行，使用容器名（`http://backend:8000`），无CORS限制
+- **浏览器**: 宿主机运行，使用`localhost`（`http://localhost:8000`），有CORS限制
+
+**必须执行的验证步骤**:
+1. ✅ E2E测试通过后，使用MCP工具打开浏览器验证
+2. ✅ 检查浏览器控制台是否有错误（CORS、网络等）
+3. ✅ 验证实际用户操作流程是否正常
+4. ✅ 如果发现浏览器环境问题，立即修复并更新测试
+
+**MCP工具检查清单**:
+```typescript
+// 每次E2E测试通过后必须执行：
+1. browser_navigate('http://localhost:3000/...')
+2. browser_console_messages() // 检查控制台错误
+3. browser_network_requests() // 检查API调用
+4. 如果发现CORS错误，检查后端CORS配置
+```
+
+**禁止行为**:
+- ❌ 不能假设E2E测试通过就等于浏览器正常
+- ❌ 不能忽略浏览器环境的CORS问题
+- ❌ 不能等用户报告浏览器错误
+
+## 系统状态验证测试（新增，强制）
+
+**规则**: 除了功能测试，必须验证系统状态是否正确
+
+**测试类型**:
+1. **组件实例数量验证**: 确保响应式布局下只有一个组件实例被激活
+2. **数据流完整性验证**: 验证数据从生成到提交的完整传递链
+3. **环境配置一致性验证**: 验证测试环境与开发环境配置一致
+4. **响应式布局验证**: 在不同屏幕尺寸下验证组件行为
+
+**必须测试的场景**:
+- ✅ 响应式布局下的组件实例数量（防止多个实例同时激活）
+- ✅ 数据ID的唯一性和传递链（如captcha_id从生成到提交）
+- ✅ 缓存配置类型（Redis vs DummyCache）
+- ✅ 不同屏幕尺寸下的组件行为
+
+**测试文件位置**:
+- `e2e/tests/auth/test-register-form-instances.spec.ts` - 组件实例验证
+- `e2e/tests/auth/test-captcha-data-flow.spec.ts` - 数据流完整性
+- `e2e/tests/infrastructure/test-environment-config.spec.ts` - 环境配置一致性
+
+**参考**: @docs/architecture/V4/TESTING-SYSTEM-IMPROVEMENTS.md
+
+## 测试前/后检查（新增，强制）
+
+**规则**: 每个测试套件必须包含测试前检查和测试后验证
+
+**测试前检查**:
+- ✅ 后端服务可用性
+- ✅ 前端页面加载
+- ✅ API端点可用性
+- ✅ 组件实例数量
+- ✅ 环境配置一致性
+
+**测试后验证**:
+- ✅ 控制台错误检查
+- ✅ 网络请求失败检查
+- ✅ 未处理的Promise rejection检查
+
+**使用方式**:
+```typescript
+import { runPreTestChecks } from '../_helpers/pre-test-checks';
+import { verifyTestResults } from '../_helpers/post-test-verification';
+
+test.beforeEach(async ({ page, request }) => {
+  await runPreTestChecks(page, request);
+});
+
+test.afterEach(async ({ page }) => {
+  await verifyTestResults(page);
+});
+```
+
+**参考**:
+- `e2e/tests/_helpers/pre-test-checks.ts`
+- `e2e/tests/_helpers/post-test-verification.ts`
+
 ## 禁止事项
 
 - ❌ 不能跳过测试用例设计阶段直接编写测试代码
@@ -306,3 +391,4 @@ test('TC-AUTH-001: 用户成功登录', async ({ page }) => {
 - ❌ 不能将测试文件放在错误目录
 - ❌ 不能忽略边界和异常场景
 - ❌ 不能提交覆盖率 < 80% 的代码
+- ❌ **不能跳过浏览器环境验证（E2E测试≠浏览器验证）**

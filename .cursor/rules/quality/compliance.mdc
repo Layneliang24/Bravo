@@ -2,6 +2,7 @@
 description: 合规检查警告主动修复工作流程
 globs: **/*
 alwaysApply: true
+priority: 960
 ---
 
 # 合规检查警告主动修复工作流程

@@ -1,0 +1,6 @@
+用例ID,用例名称,测试类型,优先级,关联REQ-ID,关联功能点,测试场景,前置条件,测试步骤,预期结果,备注
+TC-TEST_TASK-001,PRD存在但无Task任务应报警,UNIT,P0,REQ-2025-005-t01-test,任务关联,PRD存在但tasks.json中缺少对应任务时给出提示,PRD存在,"1. 触发Task关联检查 2. 检查输出",输出缺少任务的告警/错误,
+TC-TEST_TRACE-001,REQ-ID缺失时给出警告,UNIT,P1,REQ-2025-005-t01-test,追溯链,代码文件缺少REQ-ID时Task0给出warning,无,"1. 提交无REQ-ID代码 2. 执行合规检查",产生warning提示添加REQ-ID,
+TC-TEST_STATE-001,tasks.json修改需PRD approved,INTEGRATION,P1,REQ-2025-005-t01-test,状态机,tasks.json修改时相关PRD若为draft/review则拒绝,存在tasks.json改动,"1. 设置PRD为review 2. 修改tasks.json 3. 运行合规检查",合规检查失败并提示先approved,
+TC-TEST_GATE-001,测试用例CSV缺失时阻止提交测试代码,INTEGRATION,P2,REQ-2025-005-t01-test,测试门禁,提交测试代码但没有CSV/未评审时拒绝,无,"1. 删除/不提供CSV 2. 修改测试文件 3. 运行合规检查",合规检查失败并提示补齐CSV并评审,
+TC-TEST_CSV-001,测试用例CSV命名必须统一,UNIT,P2,REQ-2025-005-t01-test,测试用例CSV,CSV命名不为*-test-cases.csv时拒绝,无,"1. 创建错误命名CSV 2. 运行合规检查",合规检查失败并提示统一命名,

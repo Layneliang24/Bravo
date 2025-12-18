@@ -1,0 +1,713 @@
+---
+description: 根据用户意图路由到对应的工作流/角色规则
+globs: **/*
+alwaysApply: true
+priority: 980
+---
+
+# 意图识别与规则路由
+
+> **重要**：本规则不依赖打开任何文件，只根据**对话内容**来决定该激活哪些规则。即使文件还没打开，也要严格遵守相应规则。
+
+## 核心原则
+
+**当用户表达特定意图时，AI必须主动应用相应的规则，即使相关文件还没打开，同时需明确告知，你当前在引用哪条规则**
+
+### 意图识别检查清单（必须执行）
+
+**在响应任何请求前，必须检查以下关键词（使用包含匹配，不要求精确匹配）**：
+
+**第一步：基础关键词检查**
+1. [ ] 是否包含PRD相关关键词？（"PRD"、"需求文档"、"分析PRD"、"检查PRD"等）
+2. [ ] 是否包含任务相关关键词？（"生成任务"、"Task-Master"、"parse-prd"等）
+3. [ ] 是否包含开发/实现相关关键词？（"实现"、"开发"、"编码"等）
+4. [ ] 是否包含测试相关关键词？（"测试"、"测试用例"、"单元测试"、"E2E"、"测试架构"等）
+5. [ ] 是否包含提交相关关键词？（"提交代码"、"commit"、"push"等）
+6. [ ] 是否包含调试/排查相关关键词？（"调试"、"排查"、"排查问题"、"修复bug"、"问题"、"难排查"等）
+7. [ ] 是否包含API契约相关关键词？（"API契约"、"OpenAPI"、"设计API"等）
+8. [ ] 是否包含文档维护相关关键词？（"更新文档"、"写文档"、"文档维护"等）
+9. [ ] 是否包含代码审查相关关键词？（"代码审查"、"review"、"审查代码"等）
+10. [ ] 是否包含项目初始化相关关键词？（"项目初始化"、"项目启动"、"setup"等）
+11. [ ] 是否包含架构相关关键词？（"架构"、"架构设计"、"架构分析"、"测试架构"等）
+
+**第二步：上下文和语义理解（智能匹配）**
+- [ ] 分析用户意图的上下文（如"分析本项目测试架构" → 测试 + 架构）
+- [ ] 识别隐含意图（如"这个测试用例到底什么问题，怎么这么难排查" → 测试 + 排查）
+- [ ] 识别组合意图（使用"并"、"和"、"同时"等连接词，或语义上明显需要多个意图）
+
+**第三步：组合意图判断**
+- [ ] 如果匹配多个意图，判断是否需要组合应用
+- [ ] 组合意图的判断标准：
+  - 用户明确使用连接词（"并"、"和"、"同时"）
+  - 语义上明显需要多个角色/规则（如"分析测试架构"需要测试专家+架构专家）
+  - 上下文暗示需要多个意图（如"测试用例问题难排查"需要测试+调试）
+
+**如果匹配任何意图，必须按以下格式响应**：
+
+**单一意图**：
+```
+[识别到{意图类型}意图：{用户的具体请求}]
+[应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+[应用规则：@.cursor/rules/workflows/{具体规则文件}.mdc]
+[应用规则：@.cursor/rules/roles/{具体角色文件}.mdc]
+[切换到{角色名称}角色]
+[开始执行：{具体操作}]
+```
+
+**组合意图**（如果匹配多个意图）：
+```
+[识别到组合意图：{意图1} + {意图2}]
+[应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+[应用规则：@.cursor/rules/workflows/{规则文件1}.mdc]
+[应用规则：@.cursor/rules/workflows/{规则文件2}.mdc]
+[应用规则：@.cursor/rules/roles/{角色文件1}.mdc]
+[应用规则：@.cursor/rules/roles/{角色文件2}.mdc]
+[切换到{角色1} + {角色2}角色]
+[开始执行：{具体操作}]
+```
+
+**禁止行为**：
+- ❌ 不能直接执行操作而不明确告知规则引用
+- ❌ 不能跳过意图识别步骤
+- ❌ 不能省略"明确告知"步骤
+
+---
+
+## 1. PRD相关意图 → PRD设计/精化规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "生成PRD"、"创建PRD"、"写PRD"、"设计PRD"
+- "分析PRD"、"检查PRD"、"验证PRD"、"审查PRD"、"评估PRD"
+- "PRD完整性"、"PRD是否完整"、"PRD检查"、"PRD分析"
+- "帮我写这个REQ的PRD"、"把这个需求写成PRD"
+- "精化需求"、"把这个草稿变成正式PRD"
+- "PRD"、"需求文档"、"产品需求"
+
+**英文关键词**：
+- "create PRD"、"generate PRD"、"write PRD"、"design PRD"
+- "analyze PRD"、"check PRD"、"verify PRD"、"review PRD"、"evaluate PRD"
+- "PRD completeness"、"PRD analysis"、"PRD check"
+- "product requirements"、"requirements document"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入PRD设计阶段**
+2. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/prd-design.mdc`
+   - `@.cursor/rules/workflows/prd-refinement.mdc`（如果是从raw文本/草稿开始）
+   - `@.cursor/rules/roles/prd-designer.mdc`
+   - `@.cursor/rules/roles/architect.mdc`
+
+3. **即使PRD文件还没打开，也要遵守规则**：
+   - 必须有完整的frontmatter（req_id, title, status, priority, type）
+   - 必须包含test_files、implementation_files、api_contract字段
+   - 必须符合V4追溯链要求
+   - 必须创建OpenAPI契约文档
+
+### AI行为强制要求
+
+**当识别到PRD相关意图时，必须按以下格式响应**：
+
+```
+[识别到PRD相关意图：{用户的具体请求}]
+[应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+[应用规则：@.cursor/rules/workflows/prd-design.mdc]
+[应用规则：@.cursor/rules/roles/prd-designer.mdc]
+[应用规则：@.cursor/rules/roles/architect.mdc]
+[切换到PRD设计专家角色]
+[开始执行：{具体操作}]
+```
+
+### AI行为示例
+
+**示例1：生成PRD**
+```
+用户: 生成PRD
+AI: [识别到PRD相关意图：生成PRD]
+    [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+    [应用规则：@.cursor/rules/workflows/prd-design.mdc]
+    [应用规则：@.cursor/rules/roles/prd-designer.mdc]
+    [切换到PRD设计专家角色]
+    [开始生成PRD，严格遵守规则，即使文件还没打开]
+```
+
+**示例2：分析PRD完整性**
+```
+用户: 分析登录的PRD是否完整
+AI: [识别到PRD相关意图：分析登录的PRD是否完整]
+    [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+    [应用规则：@.cursor/rules/workflows/prd-design.mdc]
+    [应用规则：@.cursor/rules/roles/prd-designer.mdc]
+    [切换到PRD设计专家角色]
+    [开始分析PRD完整性，严格遵守规则]
+```
+
+---
+
+## 2. 任务相关意图 → Task-Master任务规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "生成任务"、"解析PRD生成任务"、"帮我用Task-Master拆任务"
+- "parse-prd"、"task-master parse-prd"
+- "创建任务"、"拆分任务"
+
+**英文关键词**：
+- "generate tasks"、"parse PRD"、"create tasks"
+- "task-master"、"break down tasks"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入任务生成阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到任务相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/task-generation.mdc]
+   [应用规则：@.cursor/rules/tools/taskmaster.mdc]
+   [应用规则：@.cursor/rules/tools/taskmaster-workflow.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/task-generation.mdc`
+   - `@.cursor/rules/tools/taskmaster.mdc`
+   - `@.cursor/rules/tools/taskmaster-workflow.mdc`
+
+4. **即使tasks.json还没打开，也要遵守规则**：
+   - 必须包含Task-0自检任务
+   - 必须遵循TDD流程（测试→实现→重构）
+   - 必须关联到PRD（REQ-ID）
+   - 必须使用Docker命令
+
+---
+
+## 3. 开发/实现相关意图 → 开发/任务执行规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "实现这个需求"、"写后端/前端代码"、"帮我改这个接口/组件"
+- "开始做Task-X"、"完成登录接口实现"
+- "开发"、"编码"、"实现功能"
+
+**英文关键词**：
+- "implement"、"develop"、"write code"
+- "start task"、"complete task"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入任务执行+开发阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到开发/实现相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/task-execution.mdc]
+   [应用规则：@.cursor/rules/workflows/development.mdc]
+   [应用规则：@.cursor/rules/roles/developer.mdc]
+   [切换到开发专家角色]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/task-execution.mdc`
+   - `@.cursor/rules/workflows/development.mdc`
+   - `@.cursor/rules/roles/developer.mdc`
+
+4. **即使代码文件还没打开，也要遵守规则**：
+   - 必须先查看Task-Master任务详情
+   - 必须先查看PRD文档
+   - 必须先查看API契约
+   - 必须遵循TDD流程（红→绿→重构）
+   - 必须使用Docker命令
+
+---
+
+## 4. 测试相关意图 → 测试/E2E规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "写测试"、"加E2E"、"为这个REQ写测试"
+- "验证登录流程的E2E"、"补单测/集成测试"
+- "测试"、"单元测试"、"集成测试"、"E2E测试"
+- "测试用例"、"单元测试用例"、"集成测试用例"、"E2E测试用例"
+- "测试架构"、"测试体系"、"测试框架"（可能组合架构意图）
+- "检查测试"、"分析测试"、"评估测试"、"看看测试"、"审查测试"
+- "检查单元测试"、"分析单元测试"、"评估单元测试"、"看看单元测试"
+- "检查测试用例"、"分析测试用例"、"评估测试用例"、"看看测试用例"
+- "测试是否合理"、"测试用例是否合理"、"单元测试是否合理"
+- "测试用例问题"、"测试用例排查"（可能组合调试意图）
+
+**英文关键词**：
+- "write tests"、"add E2E"、"create tests"
+- "unit test"、"integration test"、"E2E test"
+- "test case"、"unit test case"、"integration test case"
+- "check test"、"analyze test"、"review test"、"evaluate test"
+- "check test case"、"analyze test case"、"review test case"
+- "is test reasonable"、"is test case reasonable"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入测试编写阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到测试相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/testing.mdc]
+   [应用规则：@.cursor/rules/workflows/e2e.mdc]
+   [应用规则：@.cursor/rules/workflows/testcase-design.mdc]（如果是设计测试用例）
+   [应用规则：@.cursor/rules/roles/tester.mdc]
+   [切换到测试专家角色]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/testing.mdc`
+   - `@.cursor/rules/workflows/e2e.mdc`
+   - `@.cursor/rules/workflows/testcase-design.mdc`（如果是设计测试用例）
+   - `@.cursor/rules/roles/tester.mdc`
+   - `@.cursor/rules/quality/testing.mdc`
+
+4. **即使测试文件还没打开，也要遵守规则**：
+   - 必须先写测试（红色阶段）
+   - 测试文件必须有REQ-ID注释
+   - 测试文件必须在指定目录
+   - 测试覆盖率必须 >= 80%
+
+5. **遇到"调试地狱"场景时，必须主动质疑测试策略**（新增）：
+   - 验证码E2E测试失败 → 主动建议使用万能验证码或Mock接口
+   - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
+   - 连续失败3次以上 → 停止修代码，质疑基础假设
+   - 参考：`@.cursor/rules/workflows/e2e.mdc`（验证码测试最佳实践）
+   - 参考：`@.cursor/rules/workflows/debugging.mdc`（策略质疑机制）
+
+---
+
+## 5. 提交/推送相关意图 → 提交/追溯链规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "提交代码"、"推送代码"、"帮我git commit"
+- "生成提交信息"、"生成commit message"
+- "commit"、"push"、"提交"
+
+**英文关键词**：
+- "commit code"、"push code"、"git commit"
+- "generate commit message"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入提交阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到提交/推送相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/tools/pre-commit.mdc]
+   [应用规则：@.cursor/rules/principles/v4-traceability.mdc]
+   [应用规则：@.cursor/rules/quality/compliance.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/tools/pre-commit.mdc`
+   - `@.cursor/rules/principles/v4-traceability.mdc`
+   - `@.cursor/rules/quality/compliance.mdc`
+
+4. **提交前必须检查**：
+   - **Task-ID检查**：必须从上下文或用户输入中获取Task-ID
+   - **REQ-ID检查**：必须从代码文件中提取REQ-ID
+   - **提交消息格式**：`[REQ-ID] Task-X 描述`
+   - **如果缺少Task-ID或REQ-ID，必须询问用户，不能直接提交**
+
+### AI行为规范
+
+**当用户说"推送代码"、"提交代码"、"git commit"时**：
+
+1. **第一步**：检查Task-ID和REQ-ID
+2. **第二步**：如果缺少，询问用户（不能直接提交）
+3. **第三步**：确认提交消息格式正确
+4. **第四步**：执行提交命令
+
+**禁止行为**：
+- ❌ 不能在没有Task-ID的情况下直接提交
+- ❌ 不能忽略REQ-ID要求
+- ❌ 不能使用模糊的提交消息
+
+---
+
+## 6. 调试相关意图 → 调试规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "调试"、"排查"、"排查问题"、"修复bug"
+- "为什么报错"、"怎么解决这个问题"、"怎么这么难排查"
+- "问题"、"问题排查"、"难排查"、"排查困难"
+- "错误"、"报错"、"异常"、"bug"
+- "调试来调试去都找不到问题点"、"为什么这么难排查"、"为什么前端调试会这么困难"
+- "让AI定位一个e2e的失败测试用例"（可能触发策略质疑）
+
+**英文关键词**：
+- "debug"、"troubleshoot"、"fix bug"
+- "why error"、"how to solve"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入调试阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到调试相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/debugging.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/debugging.mdc`
+
+4. **调试流程**：
+   - 必须遵循3次失败规则
+   - 必须进行抽象层次检查
+   - 必须进行系统性问题搜索
+   - 必须进行环境差异检查
+
+5. **遇到"调试地狱"场景时，必须主动质疑测试策略**（新增）：
+   - 验证码E2E测试失败 → 立即停止修代码，主动建议使用万能验证码或Mock接口
+   - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
+   - 连续失败3次以上 → 停止修代码，质疑基础假设
+   - 用户表达"调试来调试去都找不到问题点" → 触发策略质疑机制
+   - 参考：`@.cursor/rules/workflows/e2e.mdc`（验证码测试最佳实践）
+   - 参考：`@.cursor/rules/workflows/debugging.mdc`（策略质疑机制）
+
+---
+
+## 7. API契约相关意图 → API契约设计规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "设计API契约"、"创建API契约"、"写API契约"
+- "API契约"、"OpenAPI"、"API设计"、"契约文档"
+- "设计API"、"定义API"、"API接口设计"
+
+**英文关键词**：
+- "design API contract"、"create API contract"、"write API contract"
+- "API contract"、"OpenAPI"、"API design"、"contract document"
+- "design API"、"define API"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入API契约设计阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到API契约相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/principles/v4-contract-driven.mdc]
+   [应用规则：@.cursor/rules/roles/architect.mdc]
+   [切换到架构专家角色]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/principles/v4-contract-driven.mdc`
+   - `@.cursor/rules/roles/architect.mdc`
+
+4. **即使API契约文件还没打开，也要遵守规则**：
+   - 必须创建OpenAPI 3.0格式的契约文档
+   - 路径：`docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
+   - 必须包含所有端点的请求/响应Schema
+   - 必须符合OpenAPI 3.0规范
+
+---
+
+## 8. 文档维护相关意图 → 文档维护规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "更新文档"、"写文档"、"文档维护"、"创建文档"
+- "文档"、"文档更新"、"补充文档"
+
+**英文关键词**：
+- "update documentation"、"write documentation"、"maintain documentation"
+- "documentation"、"update docs"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入文档维护阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到文档维护相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/documentation.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/documentation.mdc`
+
+4. **即使文档文件还没打开，也要遵守规则**：
+   - 禁止创建虚文档（说明文档、组织文档、最佳实践文档）
+   - 能做的直接做（改善代码、完善规则、补充测试）
+   - 不能做的规则拦截（合规检查器、pre-commit hook）
+
+---
+
+## 9. 代码审查相关意图 → 代码审查规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "代码审查"、"代码评审"、"审查代码"、"review代码"
+- "审查"、"评审"、"review"
+
+**英文关键词**：
+- "code review"、"review code"、"code inspection"
+- "review"、"inspect"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入代码审查阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到代码审查相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/code-review.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/code-review.mdc`
+   - `@.cursor/rules/quality/code-standards.mdc`
+   - `@.cursor/rules/quality/security.mdc`
+   - `@.cursor/rules/quality/performance.mdc`
+
+4. **审查检查清单**：
+   - 代码符合项目规范
+   - 测试覆盖率 >= 80%
+   - 所有测试通过
+   - 代码包含REQ-ID注释
+   - 代码关联到PRD
+   - API实现符合契约
+
+---
+
+## 10. 项目初始化相关意图 → 项目启动规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "项目初始化"、"项目启动"、"初始化项目"、"项目设置"
+- "setup"、"启动项目"
+
+**英文关键词**：
+- "project setup"、"project initialization"、"initialize project"
+- "setup"、"init"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入项目初始化阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到项目初始化相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/project-setup.mdc]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/workflows/project-setup.mdc`
+
+4. **初始化检查清单**：
+   - 阅读项目架构文档
+   - 确认目录结构
+   - 确认技术栈
+   - 检查开发环境配置
+
+---
+
+## 11. 架构相关意图 → 架构设计规则
+
+### 触发语义（关键词匹配）
+
+**中文关键词**：
+- "架构"、"架构设计"、"架构分析"、"架构评估"
+- "系统架构"、"测试架构"、"项目架构"
+- "分析架构"、"设计架构"、"优化架构"
+- "架构师"、"架构设计"、"架构规划"
+
+**英文关键词**：
+- "architecture"、"architect"、"architectural design"
+- "system architecture"、"test architecture"、"project architecture"
+- "analyze architecture"、"design architecture"
+
+### 应用规则
+
+当检测到上述意图时，AI必须：
+
+1. **视为进入架构设计/分析阶段**
+2. **必须明确告知规则引用**：
+   ```
+   [识别到架构相关意图：{用户的具体请求}]
+   [应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/workflows/prd-design.mdc]（架构设计相关）
+   [应用规则：@.cursor/rules/roles/architect.mdc]
+   [切换到架构专家角色]
+   ```
+3. **主动应用并严格遵守以下规则**：
+   - `@.cursor/rules/roles/architect.mdc`
+   - `@.cursor/rules/workflows/prd-design.mdc`（如果涉及架构设计）
+
+4. **组合意图场景**：
+   - "分析测试架构" → 测试意图 + 架构意图 → 测试专家 + 架构专家
+   - "设计API架构" → API契约意图 + 架构意图 → 架构专家
+   - "项目架构分析" → 项目初始化意图 + 架构意图 → 架构专家
+
+---
+
+## 12. 意图识别逻辑
+
+### 关键词匹配方式（增强版）
+
+**匹配规则**：使用**包含匹配**（子串匹配）+ **语义理解**，不是精确匹配
+
+**基础匹配示例**：
+- ✅ "看看单元测试用例是否合理" → 包含"单元测试" → **匹配测试相关意图**
+- ✅ "分析PRD完整性" → 包含"PRD" → **匹配PRD相关意图**
+- ✅ "检查登录接口的测试" → 包含"测试" → **匹配测试相关意图**
+- ✅ "评估这个测试用例" → 包含"测试用例" → **匹配测试相关意图**
+
+**智能匹配示例**（新增）：
+- ✅ "分析本项目测试架构" → 包含"测试" + "架构" → **匹配测试意图 + 架构意图**（组合意图）
+- ✅ "这个测试用例到底什么问题，怎么这么难排查" → 包含"测试用例" + "问题" + "排查" → **匹配测试意图 + 调试意图**（组合意图）
+- ✅ "检查测试覆盖率并优化性能" → 包含"测试" + "性能" → **匹配测试意图 + 性能优化意图**（组合意图）
+- ✅ "设计API并写文档" → 包含"API" + "文档" → **匹配API契约意图 + 文档维护意图**（组合意图）
+
+**匹配逻辑**：
+1. **基础匹配**：检查用户输入是否**包含**任何关键词（不要求完整匹配）
+2. **语义理解**：分析上下文，识别隐含意图（如"测试架构"需要测试+架构）
+3. **组合判断**：如果匹配多个意图，判断是否需要组合应用
+4. **关键词可以是短语的一部分**（如"单元测试用例"包含"单元测试"）
+5. **支持模糊匹配**：即使关键词不完全匹配，也要从语义上理解意图
+
+### 优先级规则（更新）
+
+1. **组合意图优先**：如果识别到组合意图，优先应用组合意图（不要只选一个）
+2. **显性意图优先**：用户明确表达的意图（如"生成PRD"）优先于隐式意图
+3. **语义理解优先**：从上下文和语义理解意图（如"测试架构"需要测试+架构）
+4. **最近意图优先**：如果对话中有多个意图，以最近一次为准
+5. **上下文理解**：结合对话历史理解意图（如果用户之前提到PRD，后续的"生成"可能指PRD）
+
+### 智能意图识别（新增）
+
+**核心原则**：不仅要匹配关键词，还要理解语义和上下文
+
+**识别策略**：
+
+1. **上下文分析**：
+   - "分析本项目测试架构" → 虽然没明确说"测试规则"，但"测试架构"明显需要测试专家视角
+   - "这个测试用例到底什么问题" → 虽然没明确说"调试"，但"问题"+"难排查"明显需要调试规则
+
+2. **语义推断**：
+   - "架构"相关词汇 → 可能需要架构专家角色
+   - "排查"、"问题"、"难" → 可能需要调试规则
+   - "分析" + 领域词 → 可能需要该领域的专家角色
+
+3. **组合判断**：
+   - 如果问题涉及多个领域，自动组合相关意图
+   - 如果分析需要多个视角，自动组合相关角色
+
+**示例**：
+- "分析本项目测试架构" → 测试意图（测试架构） + 架构意图（架构分析） → 测试专家 + 架构专家
+- "这个测试用例到底什么问题，怎么这么难排查" → 测试意图（测试用例） + 调试意图（问题排查） → 测试专家 + 调试规则
+
+### 组合意图处理（新增）
+
+**支持组合意图**：如果用户表达需要多个意图，必须同时应用所有相关规则
+
+**组合意图识别标准**：
+
+1. **显式组合**（使用连接词）：
+   - "生成PRD并写测试" → PRD意图 + 测试意图
+   - "实现功能并写测试" → 开发意图 + 测试意图
+   - "设计API并更新文档" → API契约意图 + 文档维护意图
+
+2. **语义组合**（从上下文推断）：
+   - "分析本项目测试架构" → 测试意图 + 架构意图（需要测试专家+架构专家）
+   - "这个测试用例到底什么问题，怎么这么难排查" → 测试意图 + 调试意图（需要测试专家+调试规则）
+   - "检查PRD并设计API" → PRD意图 + API契约意图
+
+3. **上下文组合**（从问题性质推断）：
+   - 如果问题涉及多个领域，自动组合相关意图
+   - 如果分析需要多个角色视角，自动组合相关角色
+
+**组合意图应用规则**：
+
+当识别到组合意图时，AI必须：
+1. **识别所有匹配的意图**（不要只选一个）
+2. **按顺序应用所有意图的规则**
+3. **切换到所有相关角色**（可以同时应用多个角色）
+4. **明确告知所有应用的规则**
+
+**示例响应格式**：
+```
+[识别到组合意图：测试相关 + 架构相关]
+[应用规则：@.cursor/rules/workflows/intent-recognition.mdc]
+[应用规则：@.cursor/rules/workflows/testing.mdc]
+[应用规则：@.cursor/rules/workflows/prd-design.mdc]（架构设计相关）
+[应用规则：@.cursor/rules/roles/tester.mdc]
+[应用规则：@.cursor/rules/roles/architect.mdc]
+[切换到测试专家 + 架构专家角色]
+[开始执行：分析测试架构，从测试和架构两个角度分析]
+```
+
+### 单一意图处理（如果只匹配一个意图）
+
+如果只匹配一个意图：
+- 按原有规则处理
+- 应用单一意图的规则和角色
+
+### 意图识别失败
+
+如果无法识别用户意图：
+- 保持当前规则状态
+- 不强制应用任何规则
+- 但核心原则（alwaysApply）仍然生效
+
+---
+
+## 13. 规则应用说明
+
+### 不替代file-based globs
+
+- 工作流程规则仍保留自己的`globs`配置
+- 当你打开对应文件时，规则仍然会通过file-based方式触发
+- 本规则只是补充"通过对话意图触发"的通路
+- 解决"不爱先打开文件"的使用习惯
+
+### 规则叠加
+
+- 意图识别规则不会覆盖file-based规则
+- 两者可以同时生效
+- 如果同时触发，按优先级应用
+
+### 性能考虑
+
+- 意图识别规则优先级980，低于核心原则（1000），高于pre-commit（950）
+- 确保在大多数工作流程规则之前应用
+- 但不会影响核心原则的优先级
+
+---
+
+## 14. 参考规则
+
+- `@.cursor/rules/principles/v4-core.mdc`（核心原则，alwaysApply）
+- `@.cursor/rules/principles/v4-traceability.mdc`（追溯链规则，alwaysApply）
+- `@.cursor/rules/tools/pre-commit.mdc`（提交前检查，alwaysApply）

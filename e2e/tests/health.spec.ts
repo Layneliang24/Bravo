@@ -5,7 +5,11 @@ import { test, expect } from '@playwright/test';
 
 // 测试配置
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3001';
-const API_URL = process.env.BACKEND_URL || 'http://localhost:8000';
+// Docker环境中使用backend服务名，否则使用localhost
+// 注意：在Docker网络中，e2e容器可以直接访问backend服务
+const API_URL =
+  process.env.BACKEND_URL ||
+  (process.env.DOCKER_ENV === 'true' ? 'http://backend:8000' : 'http://localhost:8000');
 
 // 健康检查测试套件
 test.describe('服务健康检查', () => {

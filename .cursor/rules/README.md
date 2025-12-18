@@ -2,7 +2,27 @@
 
 ## 📋 规则组织结构
 
-本项目的Cursor规则系统采用**分层管理**策略：全局宪法 + 模块化领域规则。
+本项目的Cursor规则系统采用**分层管理 + 意图路由**策略：
+
+### 三层架构
+
+1. **核心原则层**（alwaysApply，5个规则）
+
+   - 总是生效，不依赖文件或意图
+   - `principles/v4-core.mdc`
+   - `principles/v4-traceability.mdc`
+   - `tools/pre-commit.mdc`
+   - `quality/compliance.mdc`
+   - `workflows/intent-recognition.mdc`（路由层）
+
+2. **意图路由层**（alwaysApply，1个规则）
+
+   - `workflows/intent-recognition.mdc`
+   - 根据用户意图动态加载工作流程规则
+
+3. **工作流程层**（按需加载）
+   - 通过意图路由或文件类型匹配触发
+   - 不设置 alwaysApply
 
 ### 目录结构（按规则类型）
 
@@ -179,6 +199,41 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 </example>
 ```
 
+## 🎯 意图路由机制
+
+### 工作原理
+
+规则通过两种方式触发：
+
+1. **意图路由**（推荐）：
+
+   - 用户表达意图（如"生成PRD"、"写测试"）
+   - `intent-recognition.mdc` 识别意图
+   - 动态加载相应规则
+   - **即使文件还没打开，规则也会生效**
+
+2. **文件类型匹配**：
+   - 打开特定类型的文件（如 `.py`、`.vue`）
+   - 通过 `globs` 匹配触发规则
+   - 传统方式，仍然有效
+
+### 已注册的意图
+
+| 意图类型   | 关键词示例              | 应用规则                            |
+| ---------- | ----------------------- | ----------------------------------- |
+| PRD设计    | "生成PRD"、"分析PRD"    | prd-design.mdc                      |
+| 任务生成   | "生成任务"、"parse-prd" | task-generation.mdc                 |
+| 开发实现   | "实现功能"、"写代码"    | task-execution.mdc, development.mdc |
+| 测试编写   | "写测试"、"E2E"         | testing.mdc, e2e.mdc                |
+| 提交代码   | "提交代码"、"commit"    | pre-commit.mdc, compliance.mdc      |
+| 调试问题   | "调试"、"排查问题"      | debugging.mdc                       |
+| API契约    | "API契约"、"OpenAPI"    | v4-contract-driven.mdc              |
+| 文档维护   | "更新文档"、"写文档"    | documentation.mdc                   |
+| 代码审查   | "代码审查"、"review"    | code-review.mdc                     |
+| 项目初始化 | "项目初始化"、"setup"   | project-setup.mdc                   |
+
+**参考**: `@.cursor/rules/workflows/intent-recognition.mdc`
+
 ## 📖 快速导航
 
 ### 按场景查找规则
@@ -231,16 +286,44 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 
 ### 添加新规则
 
-1. 确定规则分类（lifecycle/roles/v4/技术栈）
-2. 创建`.mdc`文件，包含frontmatter
-3. 编写规则内容，使用示例和引用
-4. 更新本README.md，添加到相应分类
+1. **确定规则分类**：
+
+   - `principles/`: 核心原则（alwaysApply）
+   - `workflows/`: 工作流程（按需加载）
+   - `roles/`: 角色规则（按需加载）
+   - `quality/`: 质量规则（按需加载）
+   - `tech/`: 技术栈规则（按文件类型加载）
+   - `tools/`: 工具规则（按需加载）
+
+2. **使用模板创建规则**：
+
+   - 参考 `RULE_TEMPLATE.mdc`
+   - 包含完整的 frontmatter（description, globs, priority）
+   - **不要设置 alwaysApply**（除非是核心原则）
+
+3. **注册到意图路由**（如果是工作流程规则）：
+
+   - 在 `workflows/intent-recognition.mdc` 中添加意图识别
+   - 定义触发关键词
+   - 指定应用规则
+
+4. **更新文档**：
+   - 更新本 README.md，添加到相应分类
+   - 确保规则边界清晰，不与其他规则重复
 
 ### 更新现有规则
 
-1. 直接编辑对应的`.mdc`文件
-2. 保持frontmatter格式一致
-3. 更新相关引用
+1. **直接编辑对应的`.mdc`文件**
+2. **保持frontmatter格式一致**
+3. **更新相关引用**
+4. **如果修改了意图关键词，更新 `intent-recognition.mdc`**
+
+### 规则边界原则
+
+- **单一职责**：每个规则文件只负责一个明确的职责
+- **避免重复**：不要在不同规则文件中重复相同的内容，使用引用
+- **清晰边界**：规则之间边界清晰，不重叠
+- **可扩展性**：新规则可以轻松添加，不影响现有规则
 
 ### 规则版本控制
 

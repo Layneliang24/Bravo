@@ -137,6 +137,33 @@ class CaptchaRefreshAPIView(BaseCaptchaView):
         return self._create_captcha_response()
 
 
+class CaptchaAnswerAPIView(BaseCaptchaView):
+    """获取验证码答案API视图（仅测试环境）"""
+
+    def get(self, request, captcha_id):
+        """
+        获取验证码答案（仅测试环境）
+
+        参数:
+            captcha_id: 验证码ID
+
+        返回:
+            Response: 包含answer的JSON响应（仅测试环境）
+        """
+        # 仅允许测试环境访问
+        if not request.META.get("HTTP_X_TEST_ENVIRONMENT") == "true":
+            return Response({"error": "此API仅用于测试环境"}, status=status.HTTP_403_FORBIDDEN)
+
+        # 从Redis获取验证码答案
+        from apps.users.utils import get_captcha_answer
+
+        answer = get_captcha_answer(captcha_id)
+        if answer is None:
+            return Response({"error": "验证码不存在或已过期"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"answer": answer}, status=status.HTTP_200_OK)
+
+
 class RegisterAPIView(BaseCaptchaView):
     """用户注册API视图"""
 
@@ -243,6 +270,27 @@ class RegisterAPIView(BaseCaptchaView):
 
         # 创建用户
         user = serializer.save()
+
+        # 生成邮箱验证token
+        import secrets
+
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timedelta(hours=24)
+
+        # 创建EmailVerification记录
+        EmailVerification.objects.create(
+            user=user,
+            email=user.email,
+            token=token,
+            expires_at=expires_at,
+        )
+
+        # 调用Celery任务发送验证邮件
+        send_email_verification.delay(
+            user_id=user.id,
+            email=user.email,
+            token=token,
+        )
 
         # 生成JWT Token
         access_token, refresh_token = self._generate_tokens(user)
@@ -745,6 +793,87 @@ class VerifyEmailAPIView(APIView):
 
             return Response(
                 {"error": "邮箱验证失败，请稍后重试", "code": "VERIFICATION_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ResendEmailVerificationAPIView(APIView):
+    """通过验证token重新发送邮箱验证邮件API视图"""
+
+    permission_classes = []  # 允许匿名访问（通过token验证）
+
+    def post(self, request):
+        """
+        通过验证token重新发送邮箱验证邮件
+
+        查询参数:
+            token: 验证令牌（从URL获取）
+
+        返回:
+            Response: 包含成功消息的JSON响应
+        """
+        try:
+            # 从查询参数获取token
+            token = request.query_params.get("token")
+            if not token:
+                return Response(
+                    {"error": "缺少验证令牌", "code": "MISSING_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 查找验证记录
+            try:
+                verification = EmailVerification.objects.get(token=token)
+            except EmailVerification.DoesNotExist:
+                return Response(
+                    {"error": "无效的验证令牌", "code": "INVALID_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已验证（已验证的不能重新发送）
+            if verification.is_verified():
+                return Response(
+                    {"error": "该邮箱已验证，无需重新发送", "code": "ALREADY_VERIFIED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 生成新的验证token
+            new_token = secrets.token_urlsafe(32)
+
+            # 设置过期时间（24小时）
+            expires_at = timezone.now() + timedelta(hours=24)
+
+            # 更新验证记录
+            verification.token = new_token
+            verification.expires_at = expires_at
+            verification.verified_at = None  # 重置验证状态
+            verification.save()
+
+            # 调用Celery任务发送邮件
+            send_email_verification.delay(
+                user_id=verification.user.id,
+                email=verification.email,
+                token=new_token,
+            )
+
+            return Response(
+                {"message": "验证邮件已重新发送，请查收您的邮箱"},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"重新发送邮箱验证邮件时发生错误: "
+                f"token={request.query_params.get('token')}, error={str(e)}",
+                exc_info=True,
+            )
+
+            return Response(
+                {"error": "重新发送验证邮件失败，请稍后重试", "code": "RESEND_FAILED"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

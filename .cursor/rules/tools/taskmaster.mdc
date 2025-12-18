@@ -1,7 +1,7 @@
 ---
 description: Taskmaster MCP工具与CLI命令中文参考
-globs: **/*
-alwaysApply: true
+globs: .taskmaster/**/*.json, .taskmaster/**/*.md
+priority: 800
 ---
 
 # Taskmaster 工具与命令参考（中文）

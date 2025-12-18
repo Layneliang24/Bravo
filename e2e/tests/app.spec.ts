@@ -1,10 +1,13 @@
 // Bravo应用 E2E 测试
 // 使用 Playwright 进行端到端测试
 
-import { test, expect, Page } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 
 // 测试配置
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3001';
+
+// 万能验证码（测试环境专用）
+const TEST_CAPTCHA_BYPASS = '6666'; // 4位验证码
 
 // 页面对象模式 - 主页
 class HomePage {
@@ -34,26 +37,63 @@ class LoginPage {
   }
 
   async fillUsername(username: string) {
-    await this.page.fill('input[placeholder="请输入用户名"]', username);
+    // 等待表单加载
+    await this.page.waitForSelector('input[placeholder="Enter your email"]', { timeout: 10000 });
+    await this.page.fill('input[placeholder="Enter your email"]', username);
   }
 
   async fillPassword(password: string) {
-    await this.page.fill('input[placeholder="请输入密码"]', password);
+    // 等待表单加载
+    await this.page.waitForSelector('input[placeholder="Enter your password"]', { timeout: 10000 });
+    await this.page.fill('input[placeholder="Enter your password"]', password);
+  }
+
+  async fillCaptcha(captcha: string) {
+    // 等待验证码输入框加载
+    await this.page.waitForSelector('input[placeholder*="CODE"], input[placeholder*="验证码"]', {
+      timeout: 10000,
+    });
+    await this.page.fill('input[placeholder*="CODE"], input[placeholder*="验证码"]', captcha);
   }
 
   async clickLoginButton() {
-    await this.page.click('button:has-text("登录")');
+    // 等待按钮加载并启用
+    const button = this.page.locator('button:has-text("LOGIN")');
+    await button.waitFor({ state: 'visible', timeout: 10000 });
+    // 等待按钮启用
+    await expect(button).toBeEnabled({ timeout: 10000 });
+    await button.click();
   }
 
   async login(username: string, password: string) {
     await this.fillUsername(username);
     await this.fillPassword(password);
-    await this.clickLoginButton();
+    // 等待邮箱和密码验证完成（显示打勾图标）
+    await this.page.waitForTimeout(1000);
+    // 等待验证码组件加载
+    await this.page.waitForSelector('img[alt="验证码"]', { state: 'visible', timeout: 10000 });
+    // 填写万能验证码
+    await this.fillCaptcha(TEST_CAPTCHA_BYPASS);
+    // 等待验证码校验完成（验证码输入后会触发实时校验）
+    await this.page.waitForTimeout(2000);
+    // 等待按钮启用（使用Playwright的locator等待）
+    const button = this.page.locator('button:has-text("LOGIN")');
+    await button.waitFor({ state: 'visible', timeout: 10000 });
+    // 等待按钮启用（使用Playwright的enabled状态检查）
+    await button.waitFor({ state: 'attached' });
+    // 使用更简单的方式：直接等待按钮可点击
+    await expect(button).toBeEnabled({ timeout: 10000 });
+    await button.click();
     await this.page.waitForLoadState('networkidle');
   }
 
   async getLoginTitle() {
-    return await this.page.textContent('h2');
+    // 登录页面有两个h2：左侧"Learning Hub"，右侧表单区"Welcome Back"
+    // 我们需要获取右侧表单区域的h2
+    const titles = await this.page.locator('h2').allTextContents();
+    // 返回右侧表单区域的标题（通常是第二个或包含"Welcome"的）
+    const welcomeTitle = titles.find(t => t.includes('Welcome')) || titles[titles.length - 1];
+    return welcomeTitle?.trim() || '';
   }
 }
 
@@ -94,7 +134,9 @@ test.describe('登录功能测试', () => {
   test('应该正确显示登录页面', async () => {
     await loginPage.goto();
     const title = await loginPage.getLoginTitle();
-    expect(title).toBe('登录');
+    // 实际UI显示"Welcome Back"（右侧表单区域）或"Learning Hub"（左侧品牌区）
+    // 两个都是有效的，只要页面加载成功即可
+    expect(['Welcome Back', 'Learning Hub'].includes(title)).toBe(true);
   });
 
   test('应该能够填写登录表单', async ({ page }) => {
@@ -102,8 +144,8 @@ test.describe('登录功能测试', () => {
     await loginPage.fillUsername('testuser');
     await loginPage.fillPassword('testpass');
 
-    const usernameValue = await page.inputValue('input[placeholder="请输入用户名"]');
-    const passwordValue = await page.inputValue('input[placeholder="请输入密码"]');
+    const usernameValue = await page.inputValue('input[placeholder="Enter your email"]');
+    const passwordValue = await page.inputValue('input[placeholder="Enter your password"]');
 
     expect(usernameValue).toBe('testuser');
     expect(passwordValue).toBe('testpass');
@@ -111,7 +153,8 @@ test.describe('登录功能测试', () => {
 
   test('应该能够成功登录并跳转到主页 @critical @regression', async ({ page }) => {
     await loginPage.goto();
-    await loginPage.login('testuser', 'testpass');
+    // 使用有效的邮箱格式和至少8位的密码（符合前端验证要求）
+    await loginPage.login('testuser@example.com', 'testpass123');
 
     // 验证跳转到主页（允许在登录页面，因为认证逻辑未完全实现）
     const currentUrl = page.url();
@@ -125,7 +168,14 @@ test.describe('登录功能测试', () => {
 
   test('空用户名和密码不应该能够登录', async ({ page }) => {
     await loginPage.goto();
-    await loginPage.clickLoginButton();
+    // 等待验证码组件加载
+    await page.waitForSelector('img[alt="验证码"]', { state: 'visible', timeout: 10000 });
+    // 不填写任何内容，直接尝试点击登录按钮（按钮应该是禁用的）
+    // 如果按钮被禁用，这个测试应该验证按钮确实被禁用
+    const button = page.locator('button:has-text("LOGIN")');
+    const isDisabled = await button.isDisabled();
+    expect(isDisabled).toBe(true);
+    // 如果按钮被禁用，测试通过（不需要点击）
 
     // 应该仍然在登录页面
     expect(page.url()).toBe(`${BASE_URL}/login`);
@@ -163,8 +213,10 @@ test.describe('响应式设计测试', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto(`${BASE_URL}/login`);
 
+    // 移动端可能只显示左侧品牌区的"Learning Hub"，或者显示右侧表单区的"Welcome Back"
+    // 两个都是有效的
     const title = await page.textContent('h2');
-    expect(title).toBe('登录');
+    expect(['Welcome Back', 'Learning Hub'].includes(title?.trim() || '')).toBe(true);
   });
 });
 

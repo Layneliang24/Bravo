@@ -1,163 +1,108 @@
 <!-- REQ-ID: REQ-2025-003-user-login -->
 <template>
-  <div class="login-view">
-    <div class="auth-card" data-testid="auth-card">
-      <!-- 左侧品牌展示区 -->
-      <BrandSection />
+  <div class="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50">
+    <!-- 动态渐变背景 -->
+    <div class="absolute inset-0">
+      <div class="absolute inset-0 bg-gradient-to-br from-orange-100/50 via-yellow-100/30 to-green-100/50" />
+      <div
+        class="absolute inset-0 bg-gradient-to-tr from-orange-200/20 via-transparent to-green-200/20 animate-pulse-slow"
+      />
+    </div>
 
-      <!-- 分隔线 -->
-      <div class="divider-line"></div>
+    <!-- 网格背景 -->
+    <div class="absolute inset-0 opacity-10">
+      <svg width="100%" height="100%">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(249, 115, 22, 0.3)" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
 
-      <!-- 右侧登录表单区 -->
-      <div class="form-section" data-testid="form-section">
-        <div class="form-header">
-          <h1 class="form-title">Welcome Back</h1>
-          <p class="form-subtitle">Continue your learning journey</p>
-        </div>
-        <LoginForm />
-      </div>
+    <!-- 动态粒子系统 -->
+    <div
+      v-for="i in 40"
+      :key="`particle-${i}`"
+      class="absolute rounded-full animate-float"
+      :style="{
+        width: `${Math.random() * 4 + 1}px`,
+        height: `${Math.random() * 4 + 1}px`,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        background: i % 3 === 0
+          ? 'rgba(249, 115, 22, 0.4)'
+          : i % 3 === 1
+          ? 'rgba(234, 179, 8, 0.4)'
+          : 'rgba(34, 197, 94, 0.4)',
+        boxShadow: `0 0 ${Math.random() * 10 + 5}px ${Math.random() * 3 + 1}px currentColor`,
+        animationDelay: `${Math.random() * 5}s`,
+        animationDuration: `${Math.random() * 10 + 10}s`
+      }"
+    />
+
+    <!-- 扫描线效果 -->
+    <div class="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-20 animate-scan" />
+
+    <!-- 光晕效果 -->
+    <div
+      class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 animate-glow"
+      style="background: radial-gradient(circle, rgba(249, 115, 22, 0.3), transparent)"
+    />
+
+    <div
+      class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 animate-glow-delayed"
+      style="background: radial-gradient(circle, rgba(34, 197, 94, 0.3), transparent)"
+    />
+
+    <!-- 浮动的学习元素 -->
+    <div
+      v-for="(icon, i) in ['📚', '💻', '💼', '✏️']"
+      :key="`icon-${i}`"
+      class="absolute text-4xl select-none animate-code-float opacity-20"
+      :style="{
+        left: `${20 + i * 20}%`,
+        top: `${10 + i * 15}%`,
+        animationDelay: `${i * 0.5}s`,
+        animationDuration: `${5 + i}s`
+      }"
+    >
+      {{ icon }}
+    </div>
+
+    <!-- 书本装饰 -->
+    <div
+      v-for="i in 6"
+      :key="`book-${i}`"
+      class="absolute animate-spin-slow"
+      :style="{
+        left: `${10 + i * 15}%`,
+        top: `${20 + Math.sin(i) * 30}%`,
+        animationDuration: `${20 + i * 2}s`,
+        animationDelay: `${i * 0.3}s`
+      }"
+    >
+      <svg width="40" height="40" viewBox="0 0 100 100">
+        <rect
+          x="30" y="20" width="40" height="60"
+          fill="none"
+          stroke="rgba(249, 115, 22, 0.3)"
+          stroke-width="2"
+          rx="2"
+        />
+        <line x1="50" y1="20" x2="50" y2="80" stroke="rgba(249, 115, 22, 0.3)" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8">
+      <AuthCard />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 // REQ-ID: REQ-2025-003-user-login
-import LoginForm from '@/components/auth/LoginForm.vue'
-import BrandSection from '@/components/auth/BrandSection.vue'
+import AuthCard from '@/components/auth/AuthCard.vue'
 </script>
-
-<style scoped>
-/* Figma设计规范 - 左右分栏布局 */
-.login-view {
-  min-height: 100vh;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 247, 237, 0.3) 0%,
-    rgba(240, 253, 244, 0.3) 50%,
-    rgba(239, 246, 255, 0.3) 100%
-  );
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  overflow: auto;
-}
-
-/* 主容器 (AuthCard) - 1152px × 721.333px */
-.auth-card {
-  width: var(--main-container-width);
-  min-height: var(--main-container-height);
-  background: var(--bg-main-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 0.667px solid rgba(255, 255, 255, 0.5);
-  box-shadow: var(--shadow-main-card);
-  display: flex;
-  overflow: hidden;
-  position: relative;
-}
-
-.auth-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    rgba(249, 115, 22, 0.5) 0%,
-    rgba(234, 179, 8, 0.5) 33.333%,
-    rgba(34, 197, 94, 0.5) 66.667%,
-    rgba(249, 115, 22, 0.5) 100%
-  );
-  z-index: 1;
-}
-
-.auth-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  box-shadow: var(--shadow-inset-card);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 分隔线 */
-.divider-line {
-  width: 2px;
-  height: 100%;
-  background: var(--border-divider);
-  flex-shrink: 0;
-}
-
-/* 右侧表单区 */
-.form-section {
-  width: var(--form-section-width);
-  padding: var(--spacing-container-padding);
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  position: relative;
-  z-index: 1;
-}
-
-.form-header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-title {
-  font-family: var(--font-family);
-  font-size: var(--font-size-title);
-  font-weight: bold;
-  line-height: var(--line-height-title);
-  letter-spacing: 0.5px;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.form-subtitle {
-  font-family: var(--font-family);
-  font-size: var(--font-size-subtitle);
-  font-weight: 400;
-  line-height: var(--line-height-subtitle);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .login-view {
-    padding: 1rem;
-  }
-
-  .auth-card {
-    width: 100%;
-    max-width: 100%;
-    min-height: auto;
-    flex-direction: column;
-  }
-
-  .divider-line {
-    width: 100%;
-    height: 2px;
-  }
-
-  .form-section {
-    width: 100%;
-    padding: 2rem 1.5rem;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1152px) {
-  .auth-card {
-    width: 95%;
-    max-width: 1152px;
-  }
-}
-</style>

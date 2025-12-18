@@ -1,0 +1,6 @@
+用例ID,用例名称,测试类型,优先级,关联REQ-ID,关联功能点,测试场景,前置条件,测试步骤,预期结果,备注
+TC-TEST_PRD-001,PRD缺少必需元数据应失败,UNIT,P0,REQ-2025-008-test-scenario4,PRD校验,PRD缺少必填字段时合规失败,无,"1. 构造缺少字段的PRD 2. 运行PRD合规检查",合规检查失败并指出缺失字段,
+TC-TEST_STATE-001,PRD状态draft禁止开发,UNIT,P1,REQ-2025-008-test-scenario4,状态机,PRD为draft时拒绝开发/提交代码,无,"1. 设置PRD为draft 2. 尝试提交实现代码 3. 运行合规检查",合规检查失败并提示先review/approved,
+TC-TEST_STATE-002,PRD状态review禁止提交实现代码,UNIT,P1,REQ-2025-008-test-scenario4,状态机,PRD为review时仅允许改PRD不允许实现代码,无,"1. 设置PRD为review 2. 修改实现文件 3. 运行合规检查",合规检查失败并提示阻止文件列表,
+TC-TEST_META-001,testcase_file缺失在approved时应失败,UNIT,P2,REQ-2025-008-test-scenario4,测试用例元数据,PRD为approved但缺少testcase_file/testcase_status应失败,无,"1. 删除testcase_file字段 2. 运行PRD合规检查",合规检查失败并提示缺少字段,
+TC-TEST_REVIEW-001,implementing时未reviewed应失败,UNIT,P2,REQ-2025-008-test-scenario4,测试用例评审,PRD为implementing但testcase_status.reviewed!=true应失败,无,"1. 设置status=implementing且reviewed=false 2. 运行PRD/Task0检查",合规检查失败并提示必须评审通过,

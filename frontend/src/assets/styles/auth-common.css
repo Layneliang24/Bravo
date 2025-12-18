@@ -1,6 +1,16 @@
 /* REQ-ID: REQ-2025-003-user-login */
 /* 认证相关组件的共享样式 */
 
+/* Orbit动画 - 用于AuthCard中的学习图标环绕效果 */
+@keyframes orbit-rotate {
+  0% {
+    transform: rotate(0deg) translateX(120px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(120px) rotate(-360deg);
+  }
+}
+
 /* 通用按钮样式 */
 .auth-button {
   width: 100%;

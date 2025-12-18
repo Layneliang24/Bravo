@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -16,6 +17,10 @@ from decouple import config
 
 # 构建项目内的路径，如下所示：BASE_DIR / 'subdir'。
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# 前端和后端域名配置（用于邮件链接等）
+FRONTEND_DOMAIN = os.environ.get("FRONTEND_DOMAIN", "http://localhost:3000")
+BACKEND_DOMAIN = os.environ.get("BACKEND_DOMAIN", "http://localhost:8000")
 
 # 安全设置
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me")

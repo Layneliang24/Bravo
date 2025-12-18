@@ -1,7 +1,7 @@
 ---
 description: Taskmaster 开发流程中文指南
-globs: **/*
-alwaysApply: true
+globs: .taskmaster/**/*.json, .taskmaster/**/*.md
+priority: 800
 ---
 
 # Taskmaster 开发工作流（中文）

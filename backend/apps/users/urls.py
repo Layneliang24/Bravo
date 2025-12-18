@@ -3,6 +3,7 @@
 """用户认证相关URL路由"""
 
 from apps.users.views import (
+    CaptchaAnswerAPIView,
     CaptchaAPIView,
     CaptchaRefreshAPIView,
     LoginAPIView,
@@ -10,6 +11,7 @@ from apps.users.views import (
     PasswordResetAPIView,
     PreviewAPIView,
     RegisterAPIView,
+    ResendEmailVerificationAPIView,
     SendEmailVerificationAPIView,
     SendPasswordResetAPIView,
     TokenRefreshAPIView,
@@ -22,6 +24,11 @@ app_name = "users"
 urlpatterns = [
     path("captcha/", CaptchaAPIView.as_view(), name="captcha"),
     path("captcha/refresh/", CaptchaRefreshAPIView.as_view(), name="captcha-refresh"),
+    path(
+        "captcha/<str:captcha_id>/answer/",
+        CaptchaAnswerAPIView.as_view(),
+        name="captcha-answer",
+    ),
     path("register/", RegisterAPIView.as_view(), name="register"),
     path("login/", LoginAPIView.as_view(), name="login"),
     path("preview/", PreviewAPIView.as_view(), name="preview"),
@@ -36,6 +43,11 @@ urlpatterns = [
         "email/verify/<str:token>/",
         VerifyEmailAPIView.as_view(),
         name="email-verify",
+    ),
+    path(
+        "email/verify/resend/",
+        ResendEmailVerificationAPIView.as_view(),
+        name="email-verify-resend",
     ),
     path(
         "password/reset/send/",

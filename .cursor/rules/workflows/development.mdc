@@ -194,6 +194,41 @@ cd frontend && npm run type-check
 
 **参考**: PRD中的"已有项目约束"部分
 
+## 浏览器环境验证（强制）
+
+**规则**: 每次修复前端问题后，必须使用MCP工具验证浏览器环境
+
+**必须执行的检查清单**:
+1. ✅ 使用 `mcp_cursor-browser-extension_browser_navigate` 打开页面
+2. ✅ 使用 `mcp_cursor-browser-extension_browser_console_messages` 检查控制台错误
+3. ✅ 验证API调用是否成功（检查网络请求）
+4. ✅ 验证CORS配置是否正确（浏览器环境与容器环境不同）
+
+**关键差异**:
+- **测试环境**: 容器内运行，使用 `http://backend:8000`（无CORS问题）
+- **浏览器环境**: 宿主机运行，使用 `http://localhost:8000`（需要CORS头）
+
+**禁止行为**:
+- ❌ 不能只验证容器内测试，忽略浏览器环境
+- ❌ 不能等用户报告浏览器错误才修复
+- ❌ 不能假设测试通过就等于浏览器正常
+
+**MCP工具使用示例**:
+```typescript
+// 1. 打开页面
+browser_navigate('http://localhost:3000/login')
+
+// 2. 检查控制台错误
+const consoleMessages = browser_console_messages()
+if (consoleMessages.some(msg => msg.type === 'error')) {
+  // 立即修复错误
+}
+
+// 3. 检查网络请求
+const networkRequests = browser_network_requests()
+// 验证API调用是否成功
+```
+
 ## 禁止事项
 
 - ❌ 不能跳过TDD流程
@@ -202,3 +237,4 @@ cd frontend && npm run type-check
 - ❌ 不能忽略API契约
 - ❌ 不能提交没有REQ-ID注释的代码
 - ❌ 不能在宿主机直接执行开发命令
+- ❌ **不能跳过浏览器环境验证（必须使用MCP工具）**

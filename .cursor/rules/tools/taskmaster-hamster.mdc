@@ -1,7 +1,7 @@
 ---
 description: 使用 Task Master CLI 处理 Hamster 任务的指南
-globs: "**/*"
-alwaysApply: true
+globs: .taskmaster/**/*.json, .taskmaster/**/*.md
+priority: 800
 ---
 
 # Hamster 集成工作流

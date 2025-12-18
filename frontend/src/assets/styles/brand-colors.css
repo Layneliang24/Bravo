@@ -95,6 +95,11 @@
   --shadow-inset-input: inset 0px 0px 20px 0px rgba(255, 255, 255, 0.5);
   --shadow-inset-card: inset 0px 0px 60px 0px rgba(255, 255, 255, 0.3);
 
+  /* 状态颜色 */
+  --color-error: #ef4444; /* 错误/危险 */
+  --color-success: #22c55e; /* 成功 */
+  --color-warning: #f59e0b; /* 警告 */
+
   /* 兼容旧变量（逐步迁移） */
   --color-primary-dark-blue: var(--color-primary-orange);
   --color-primary-gold: var(--color-primary-orange-light);

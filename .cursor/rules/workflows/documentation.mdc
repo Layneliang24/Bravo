@@ -1,17 +1,22 @@
 ---
-description: 文档维护规则
-globs: docs/**/*.md, docs/**/*.mdx, .taskmaster/docs/**/*.md
-priority: 500
+description: 文档维护规则和最佳实践
+globs: **/*
+alwaysApply: true
+priority: 960
 ---
-
 # 文档维护规则
 
 ## 核心原则：代码即文档，规则即约束
 
-**⚠️ 禁止创建虚文档**：
+**⚠️ 禁止创建虚文档（强制规则，alwaysApply）**：
 - ❌ 不要创建"说明文档"、"组织文档"、"最佳实践文档"等虚文档
 - ❌ 不要创建用户不会看的文档（浪费token）
 - ❌ 不要用文档"说明"设计，要用代码和规则"体现"设计
+- ❌ **禁止创建分析文档**（如 `*_ANALYSIS.md`、`*_ANALYSIS_REPORT.md`）
+- ❌ **禁止创建总结文档**（如 `*_SUMMARY.md`、`*_OPTIMIZATION_SUMMARY.md`）
+- ❌ **禁止创建验证报告**（如 `*_VERIFICATION_REPORT.md`、`*_REPORT.md`）
+- ❌ **禁止创建优化建议文档**（如 `*_OPTIMIZATION.md`、`*_IMPROVEMENTS.md`）
+- ❌ **除非用户明确要求，否则禁止创建任何分析、总结、报告类文档**
 
 **✅ 正确的做法**：
 - ✅ **能做的直接做**：改善代码、完善规则、补充测试
@@ -28,6 +33,12 @@ priority: 500
 
 - ❌ 错误：创建 `WORKFLOW-EXPLANATION.md` 说明工作流程
 - ✅ 正确：在pre-commit hook中强制检查，不符合流程直接拒绝提交
+
+- ❌ 错误：创建 `RULES_ANALYSIS.md`、`OPTIMIZATION_SUMMARY.md` 等分析文档
+- ✅ 正确：直接在对话中说明，或修改代码/规则，不要创建文档
+
+- ❌ 错误：创建 `INTENT_ROUTING_ANALYSIS.md`、`TOOLS_ALWAYS_APPLY_ANALYSIS.md` 等分析文档
+- ✅ 正确：直接在对话中说明，或修改代码/规则，不要创建文档
 
 ## 允许的文档类型
 
@@ -53,7 +64,12 @@ priority: 500
 - ❌ "最佳实践"文档
 - ❌ "设计说明"文档
 - ❌ "工作流程说明"文档
-- ❌ 任何用户不会主动查看的文档
+- ❌ **分析文档**（如 `*_ANALYSIS.md`、`*_ANALYSIS_REPORT.md`）
+- ❌ **总结文档**（如 `*_SUMMARY.md`、`*_OPTIMIZATION_SUMMARY.md`）
+- ❌ **验证报告**（如 `*_VERIFICATION_REPORT.md`、`*_REPORT.md`）
+- ❌ **优化建议文档**（如 `*_OPTIMIZATION.md`、`*_IMPROVEMENTS.md`）
+- ❌ **任何用户不会主动查看的文档**
+- ❌ **AI自动生成的分析、总结、报告类文档**（除非用户明确要求）
 
 **禁止创建的脚本类型**：
 - ❌ 临时脚本、辅助脚本、一次性脚本

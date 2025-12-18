@@ -158,6 +158,10 @@ const strengthHint = computed(() => {
 .password-strength {
   width: 100%;
   margin-top: 0.5rem;
+  min-height: 40px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .password-strength.hidden {
@@ -167,16 +171,25 @@ const strengthHint = computed(() => {
 .strength-indicator {
   width: 100%;
   height: 4px;
+  min-height: 4px;
   background-color: #e5e7eb;
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 0.5rem;
+  display: block;
+  position: relative;
 }
 
 .strength-bar {
   height: 100%;
+  min-height: 4px;
   transition: width 0.3s ease, background-color 0.3s ease;
   border-radius: 2px;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .strength-bar.weak {

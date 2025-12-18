@@ -173,15 +173,18 @@ class PreviewLoginSerializer(serializers.Serializer):
         help_text="用户密码",
     )
     captcha_id = serializers.CharField(required=True, help_text="验证码ID")
-    captcha_answer = serializers.CharField(required=True, help_text="验证码答案")
+    captcha_answer = serializers.CharField(
+        required=False, allow_blank=True, help_text="验证码答案（预览时可选）"
+    )
 
     def validate(self, attrs):
         """验证验证码和用户认证"""
-        # 验证验证码
+        # 验证验证码（如果提供了答案）
         captcha_id = attrs.get("captcha_id")
-        captcha_answer = attrs.get("captcha_answer")
+        captcha_answer = attrs.get("captcha_answer", "")
 
-        if not verify_captcha(captcha_id, captcha_answer):
+        # 如果提供了验证码答案，则验证；否则跳过验证码验证（用于预览功能）
+        if captcha_answer and not verify_captcha(captcha_id, captcha_answer):
             raise serializers.ValidationError(
                 {"captcha_answer": "验证码错误"}, code="INVALID_CAPTCHA"
             )

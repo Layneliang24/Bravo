@@ -36,10 +36,10 @@ def send_email_verification(self, user_id, email, token):
         Exception: 邮件发送失败时抛出异常，触发重试机制
     """
     try:
-        # 构建验证链接（使用后端API URL）
-        # 注意：这里使用后端API URL，前端会调用这个API
-        backend_domain = getattr(settings, "BACKEND_DOMAIN", "http://localhost:8000")
-        verification_url = f"{backend_domain}/api/auth/email/verify/{token}/"
+        # 构建验证链接（使用前端URL，前端页面会自动调用后端API）
+        # 前端路由: /verify-email?token={token}
+        frontend_domain = getattr(settings, "FRONTEND_DOMAIN", "http://localhost:3000")
+        verification_url = f"{frontend_domain}/verify-email?token={token}"
 
         # 邮件主题
         subject = "请验证您的邮箱"

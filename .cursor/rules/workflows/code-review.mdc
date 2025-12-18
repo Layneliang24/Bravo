@@ -6,7 +6,7 @@ priority: 600
 
 # 代码审查规则
 
-### 审查清单
+## 审查清单
 
 - [ ] 代码符合项目规范
 - [ ] 测试覆盖率 >= 80%
@@ -15,38 +15,12 @@ priority: 600
 - [ ] 代码关联到PRD
 - [ ] API实现符合契约
 
-## 文档维护规则
+## 相关规则
 
-### 文档更新时机
+**文档维护**: @.cursor/rules/workflows/documentation.mdc
 
-- PRD修改时：更新PRD文档
-- API变更时：更新API契约文档
-- 架构变更时：更新架构文档
-- Bug修复时：更新FAQ文档
+**性能优化**: @.cursor/rules/quality/performance.mdc
 
-### 文档格式要求
+**安全规则**: @.cursor/rules/quality/security.mdc
 
-- 使用Markdown格式
-- 包含清晰的标题和目录
-- 使用代码块展示示例
-- 包含参考链接
-
-## 性能优化规则
-
-### 优化原则
-
-- 先测量，后优化
-- 优化热点路径
-- 保持代码可读性
-- 记录优化效果
-
-## 安全规则
-
-### 安全检查
-
-- 密码必须哈希存储
-- API必须验证输入
-- 敏感数据必须加密
-- 定期安全扫描
-
-**参考**: @.cursor/rules/quality/security.mdc
+**代码质量**: @.cursor/rules/quality/code-standards.mdc

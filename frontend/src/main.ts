@@ -8,6 +8,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 // REQ-ID: REQ-2025-003-user-login
 import './assets/styles/brand-colors.css'
 import './assets/styles/auth-common.css'
+import './assets/styles/tailwind.css'
 
 const app = createApp(App)
 const pinia = createPinia()
