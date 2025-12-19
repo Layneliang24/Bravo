@@ -1,6 +1,7 @@
 // REQ-ID: REQ-2025-003-user-login
-// TC-AUTH_UI-014: 验证码输入错误时应该自动刷新
-// TC-AUTH_UI-018: 验证码输入正确时应该显示打勾图标
+// REQ-ID: REQ-2025-003-user-login
+// 验证码实时验证 E2E 测试
+// TESTCASE-IDS: TC-AUTH_UI-014, TC-AUTH_UI-018, TC-AUTH_PREVIEW-011
 
 import { expect, Page, test } from '@playwright/test';
 import { ConsoleErrorListener } from '../_helpers/console-error-listener';

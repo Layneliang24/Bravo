@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_PREVIEW-002
+# TESTCASE-IDS: TC-AUTH_PREVIEW-005
 """登录预验证API频率限制集成测试
 
 测试登录预验证API的频率限制是否生效，以及在限制下的行为。

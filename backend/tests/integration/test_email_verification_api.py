@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_EMAIL-001
+# TESTCASE-IDS: TC-AUTH_EMAIL-001, TC-AUTH_EMAIL-002, TC-AUTH_EMAIL-003, \
+#   TC-AUTH_EMAIL-004, TC-AUTH_EMAIL-005, TC-AUTH_EMAIL-006
 """邮箱验证API集成测试
 
 测试邮箱验证API的功能，包括发送验证邮件、验证邮箱链接等场景。

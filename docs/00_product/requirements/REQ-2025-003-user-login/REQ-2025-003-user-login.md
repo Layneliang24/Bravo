@@ -29,9 +29,16 @@ test_files:
   - backend/tests/integration/test_preview_throttling.py
   - backend/tests/integration/test_register_api.py
   - backend/tests/integration/test_token_api.py
+  - e2e/tests/auth/test-captcha-refresh.spec.ts
+  - e2e/tests/auth/test-captcha-realtime-validation.spec.ts
   - e2e/tests/auth/test-email-verification.spec.ts
   - e2e/tests/auth/test-login-preview.spec.ts
   - e2e/tests/auth/test-password-reset.spec.ts
+  - e2e/tests/auth/test-preview-ui-details.spec.ts
+  - e2e/tests/auth/test-register-accessibility.spec.ts
+  - e2e/tests/auth/test-register-button.spec.ts
+  - e2e/tests/auth/test-ui-animations.spec.ts
+  - e2e/tests/auth/test-ui-design.spec.ts
 implementation_files:
   - backend/apps/users/models.py
   - backend/apps/users/views.py

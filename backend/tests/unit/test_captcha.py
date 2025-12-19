@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_CAPTCHA-001
+# TESTCASE-IDS: TC-AUTH_CAPTCHA-001, TC-AUTH_CAPTCHA-003
 """验证码模块单元测试
 
 根据PRD要求，验证验证码生成逻辑、Redis存储、过期机制以及验证码验证功能。

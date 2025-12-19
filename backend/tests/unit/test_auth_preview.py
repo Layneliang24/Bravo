@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_PREVIEW-001
+# TESTCASE-IDS: TC-AUTH_PREVIEW-001, TC-AUTH_PREVIEW-002, TC-AUTH_PREVIEW-003, \
+#   TC-AUTH_PREVIEW-004, TC-AUTH_PREVIEW-006, TC-AUTH_PREVIEW-007
 """登录预验证API单元测试
 
 测试登录预验证API的功能，包括正确账号密码返回头像信息、错误账号密码返回valid: false、

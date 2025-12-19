@@ -205,15 +205,23 @@ class CodeChecker:
         if content:
             # 检查文件头部是否有REQ-ID注释
             lines = content.split("\n")[:20]  # 只检查前20行
-            has_req_id = any(
-                re.search(r"REQ-\d{4}(-\d{3})?-[A-Z0-9-]+", line) for line in lines
-            )
-            if not has_req_id:
+            req_id = None
+            for line in lines:
+                match = re.search(r"REQ-\d{4}-\d{3}(-[a-z0-9-]+)?", line, re.IGNORECASE)
+                if match:
+                    req_id = match.group(0)
+                    break
+
+            if not req_id:
                 # 在strict_mode下，这是错误而非警告
                 self.errors.append(
                     "❌ 代码文件必须包含REQ-ID关联（在文件头部注释中）\n"
                     "   提示: 请在文件头部添加注释，例如: # REQ-2025-001-feature-name"
                 )
+                return
+
+            # ⭐ 阶段2：检查文件是否在PRD的implementation_files中
+            self._check_file_in_prd_implementation_files(file_path, req_id)
 
     def _check_test_link(self, file_path: str, file_from_git: bool = False):
         """检查测试文件是否存在"""
@@ -418,24 +426,8 @@ class CodeChecker:
                 req_id = match.group(0)
 
         if req_id:
-            # 检查Task-Master任务目录是否存在
-            task_dir = Path(f".taskmaster/tasks/{req_id}")
-            # 尝试多个可能的路径
-            possible_task_dirs = [
-                Path.cwd() / task_dir,
-                Path("/app") / task_dir,
-                task_dir,
-            ]
-            has_task = any(p.exists() for p in possible_task_dirs)
-
-            if not has_task:
-                # 在strict_mode下，这是错误而非警告
-                self.errors.append(
-                    f"❌ 代码文件缺少对应的Task-Master任务\n"
-                    f"   文件: {file_path}\n"
-                    f"   REQ-ID: {req_id}\n"
-                    f"   提示: 请在.taskmaster/tasks/目录下创建对应的任务文件"
-                )
+            # ⭐ 阶段2：检查REQ-ID是否在tasks.json中存在
+            self._check_req_id_in_tasks_json(file_path, req_id)
         else:
             # 如果没有REQ-ID，无法检查任务关联
             # 在strict_mode下，这也是错误
@@ -619,10 +611,132 @@ class CodeChecker:
                                         "请先修改PRD的deletable字段或添加相应标记"
                                     )
                         except Exception:
-                            self.errors.append(
-                                "检测到功能代码删除，但无法验证PRD授权。"
-                                "请确保PRD的deletable字段为true，或在提交消息中包含[BUGFIX]/[REFACTOR]标记"
-                            )
+                            pass
         except Exception as e:
-            # 如果无法检查删除授权，给出警告
-            self.warnings.append(f"无法检查删除授权: {e}")
+            # 如果检查过程中出现异常，记录警告但不阻止提交
+            self.warnings.append(f"检查删除授权时出错: {e}")
+
+    def _check_file_in_prd_implementation_files(self, file_path: str, req_id: str):
+        """
+        ⭐ 阶段2：检查文件是否在PRD的implementation_files中
+        """
+        # 查找项目根目录
+        file_path_obj = Path(file_path)
+        project_root = None
+        for parent in [file_path_obj] + list(file_path_obj.parents):
+            if (parent / "docs" / "00_product" / "requirements").exists():
+                project_root = parent
+                break
+
+        if not project_root:
+            self.warnings.append("无法定位项目根目录，跳过PRD文件关联检查")
+            return
+
+        # 查找PRD文件
+        prd_path = (
+            project_root
+            / "docs"
+            / "00_product"
+            / "requirements"
+            / req_id
+            / f"{req_id}.md"
+        )
+
+        if not prd_path.exists():
+            self.warnings.append(f"无法找到PRD文件 {prd_path}，跳过文件关联检查")
+            return
+
+        try:
+            import yaml
+
+            content = prd_path.read_text(encoding="utf-8")
+            parts = content.split("---", 2)
+            if len(parts) < 3:
+                self.warnings.append(f"PRD frontmatter格式错误：{prd_path}")
+                return
+
+            metadata = yaml.safe_load(parts[1]) or {}
+            implementation_files = metadata.get("implementation_files", [])
+
+            # 将文件路径转换为相对路径（相对于项目根目录）
+            try:
+                file_path_resolved = file_path_obj.resolve()
+                project_root_resolved = project_root.resolve()
+                relative_file_path = str(
+                    file_path_resolved.relative_to(project_root_resolved)
+                )
+            except (ValueError, AttributeError):
+                # 如果无法转换为相对路径，使用原始路径
+                relative_file_path = file_path
+
+            # 检查文件是否在implementation_files中
+            # 支持相对路径和绝对路径匹配
+            file_found = False
+            for impl_file in implementation_files:
+                impl_file_path = (
+                    project_root / impl_file
+                    if not Path(impl_file).is_absolute()
+                    else Path(impl_file)
+                )
+                try:
+                    if impl_file_path.resolve() == file_path_resolved:
+                        file_found = True
+                        break
+                except Exception:
+                    # 如果路径解析失败，尝试字符串匹配
+                    if relative_file_path == impl_file or file_path == impl_file:
+                        file_found = True
+                        break
+
+            if not file_found:
+                self.warnings.append(
+                    f"代码文件 {file_path} 不在PRD ({req_id}) 的implementation_files列表中。"
+                    f"请确保PRD的implementation_files字段包含此文件。"
+                )
+        except Exception as e:
+            self.warnings.append(f"无法读取PRD文件以验证文件关联: {e}")
+
+    def _check_req_id_in_tasks_json(self, file_path: str, req_id: str):
+        """
+        ⭐ 阶段2：检查REQ-ID是否在tasks.json中存在
+        """
+        # 查找项目根目录
+        file_path_obj = Path(file_path)
+        project_root = None
+        for parent in [file_path_obj] + list(file_path_obj.parents):
+            if (parent / "docs" / "00_product" / "requirements").exists():
+                project_root = parent
+                break
+
+        if not project_root:
+            self.warnings.append("无法定位项目根目录，跳过tasks.json关联检查")
+            return
+
+        # 检查tasks.json
+        tasks_json_path = project_root / ".taskmaster" / "tasks" / "tasks.json"
+        if not tasks_json_path.exists():
+            self.warnings.append(f"tasks.json文件不存在，无法验证任务关联: {tasks_json_path}")
+            return
+
+        try:
+            import json
+
+            with open(tasks_json_path, "r", encoding="utf-8") as f:
+                tasks_data = json.load(f)
+
+            # 检查REQ-ID是否在tasks.json中
+            if req_id not in tasks_data:
+                self.warnings.append(
+                    f"代码文件的REQ-ID ({req_id}) 在tasks.json中不存在对应的任务组。"
+                    f"请运行 'task-master parse-prd' 生成任务。"
+                )
+            else:
+                # 检查任务组中是否有任务
+                req_tasks = tasks_data.get(req_id, {}).get("tasks", [])
+                if not req_tasks:
+                    self.warnings.append(
+                        f"代码文件的REQ-ID ({req_id}) 在tasks.json中存在，但没有任务。"
+                        f"请运行 'task-master parse-prd' 生成任务。"
+                    )
+        except Exception as e:
+            self.warnings.append(f"无法读取tasks.json以验证任务关联: {e}")

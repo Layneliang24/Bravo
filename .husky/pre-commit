@@ -98,7 +98,8 @@ if [ -f ".compliance/runner.py" ]; then
             else
                 echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
                 echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
-                # 非严格模式：警告但不阻止提交
+                # 合规检查失败，设置失败状态
+                COMPLIANCE_RESULT=1
             fi
         elif command -v python > /dev/null 2>&1; then
             if python .compliance/runner.py 2>&1; then
@@ -106,10 +107,14 @@ if [ -f ".compliance/runner.py" ]; then
             else
                 echo "[WARNING] 合规检查执行失败（可能缺少依赖）"
                 echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
+                # 合规检查失败，设置失败状态
+                COMPLIANCE_RESULT=1
             fi
         else
             echo "[WARNING] Python未安装，无法执行合规检查"
             echo "[INFO] 建议启动backend容器后重新提交: docker-compose up -d backend"
+            # Python未安装，无法执行合规检查，应视为失败
+            COMPLIANCE_RESULT=1
         fi
     fi
 else

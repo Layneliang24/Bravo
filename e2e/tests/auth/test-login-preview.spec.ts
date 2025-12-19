@@ -1,7 +1,7 @@
 // REQ-ID: REQ-2025-003-user-login
 // 登录预验证 E2E 测试
 // 使用 Playwright 进行端到端测试
-// TESTCASE-IDS: TC-AUTH_PREVIEW-003
+// TESTCASE-IDS: TC-AUTH_PREVIEW-003, TC-AUTH_PREVIEW-008, TC-AUTH_PREVIEW-009, TC-AUTH_PREVIEW-010, TC-AUTH_PREVIEW-011, TC-AUTH_PREVIEW-012
 
 import { expect, Page, test } from '@playwright/test';
 import { ConsoleErrorListener } from '../_helpers/console-error-listener';

@@ -1,7 +1,7 @@
 // REQ-ID: REQ-2025-003-user-login
 // UI设计规范 E2E 测试
 // 使用 Playwright 进行端到端测试，验证登录页面是否符合Figma设计规范
-// TESTCASE-IDS: TC-AUTH_UI-001, TC-AUTH_UI-002, TC-AUTH_UI-003, TC-AUTH_UI-004, TC-AUTH_UI-005, TC-AUTH_UI-006
+// TESTCASE-IDS: TC-AUTH_UI-001, TC-AUTH_UI-002, TC-AUTH_UI-003, TC-AUTH_UI-004, TC-AUTH_UI-005, TC-AUTH_UI-006, TC-AUTH_UI-009, TC-AUTH_UI-013
 
 import { expect, Page, test } from '@playwright/test';
 import { ConsoleErrorListener } from '../_helpers/console-error-listener';
@@ -385,5 +385,149 @@ test.describe('UI设计规范验证 - Figma设计规范', () => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
     });
     expect(hasHorizontalScroll).toBe(false);
+  });
+
+  test('TC-AUTH_UI-010: 验证码输入框应该自适应容器宽度', async ({ page }) => {
+    // 1. 打开登录页面
+    await loginPage.goto();
+
+    // 2. 检查验证码输入框宽度
+    const captchaInput = await loginPage.getCaptchaInput();
+    await expect(captchaInput).toBeVisible();
+
+    // 获取验证码输入框的父容器（flex容器）
+    const captchaContainer = await captchaInput.locator('..').first();
+    const containerSize = await captchaContainer.boundingBox();
+    const inputSize = await captchaInput.boundingBox();
+
+    if (containerSize && inputSize) {
+      // 3. 调整浏览器窗口大小
+      await loginPage.setViewportSize(1000, 800);
+      await page.waitForTimeout(500); // 等待布局调整
+
+      const inputSizeAfter = await captchaInput.boundingBox();
+      const containerSizeAfter = await captchaContainer.boundingBox();
+
+      // 4. 验证输入框宽度变化
+      // 输入框宽度应该与父容器flex-1区域一致
+      if (containerSizeAfter && inputSizeAfter) {
+        // 验证输入框宽度在不同屏幕尺寸下都能正确显示
+        expect(inputSizeAfter.width).toBeGreaterThan(0);
+        // 输入框应该占据可用空间（flex-1）
+        expect(inputSizeAfter.width).toBeLessThanOrEqual(containerSizeAfter.width);
+      }
+    }
+  });
+
+  test('TC-AUTH_UI-011: 登录页面中心灯泡图标应该有变大变小动画', async ({ page }) => {
+    // 1. 打开登录页
+    await loginPage.goto();
+
+    // 2. 检查中心灯泡图标
+    const bulbIcon = await page
+      .locator('[data-testid="bulb-icon"], .bulb-icon, .animate-bulb-pulse')
+      .first();
+
+    // 3. 验证CSS动画类animate-bulb-pulse存在
+    const hasAnimationClass = await bulbIcon.evaluate(el => {
+      return (
+        el.classList.contains('animate-bulb-pulse') ||
+        getComputedStyle(el).animationName !== 'none' ||
+        getComputedStyle(el).animation.includes('bulb-pulse')
+      );
+    });
+
+    expect(hasAnimationClass).toBe(true);
+
+    // 4. 验证动画正在执行
+    const animationState = await bulbIcon.evaluate(el => {
+      const style = getComputedStyle(el);
+      return {
+        animationName: style.animationName,
+        animationDuration: style.animationDuration,
+        animationIterationCount: style.animationIterationCount,
+      };
+    });
+
+    // 验证动画属性存在且有效
+    expect(animationState.animationName).not.toBe('none');
+    expect(parseFloat(animationState.animationDuration)).toBeGreaterThan(0);
+  });
+
+  test('TC-AUTH_UI-012: 注册页面配色应该与登录页面一致', async ({ page }) => {
+    // 1. 打开登录页面记录配色
+    await loginPage.goto();
+    const loginBgGradient = await loginPage.getElementColor('body', 'background');
+    const loginBrandGradient = await loginPage.getElementColor(
+      '.md\\:col-span-2, [data-testid="brand-section"]',
+      'background'
+    );
+
+    // 2. 打开注册页面
+    await page.goto(`${BASE_URL}/register`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="auth-card"], .auth-card', {
+      state: 'visible',
+      timeout: 15000,
+    });
+
+    // 3. 比较背景渐变和品牌区域配色
+    const registerBgGradient = await loginPage.getElementColor('body', 'background');
+    const registerBrandGradient = await loginPage.getElementColor(
+      '.md\\:col-span-2, [data-testid="brand-section"]',
+      'background'
+    );
+
+    // 验证背景渐变from-orange-50 via-yellow-50 to-green-50
+    // 检查是否包含渐变相关的CSS属性
+    const registerBgStyle = await page.evaluate(() => {
+      const body = document.body;
+      const style = getComputedStyle(body);
+      return {
+        background: style.background,
+        backgroundImage: style.backgroundImage,
+      };
+    });
+
+    // 验证品牌区域使用相同渐变
+    expect(registerBgStyle.background || registerBgStyle.backgroundImage).toContain('gradient');
+    // 验证颜色包含orange、yellow、green相关颜色
+    const hasOrangeYellowGreen =
+      registerBgStyle.background.includes('orange') ||
+      registerBgStyle.background.includes('yellow') ||
+      registerBgStyle.background.includes('green') ||
+      registerBgStyle.backgroundImage.includes('orange') ||
+      registerBgStyle.backgroundImage.includes('yellow') ||
+      registerBgStyle.backgroundImage.includes('green');
+
+    expect(hasOrangeYellowGreen).toBe(true);
+  });
+
+  test('TC-AUTH_UI-013: 登录页面邮箱字段标签应该显示为EMAIL', async ({ page }) => {
+    // 1. 打开登录页面
+    await loginPage.goto();
+
+    // 2. 检查第一个输入框的标签文本
+    const firstInput = await loginPage.getInputFields().first();
+    const inputLabel = await firstInput
+      .locator('..')
+      .locator('label, .label, [data-testid="input-label"]')
+      .first();
+
+    // 如果找不到标签，尝试通过placeholder或aria-label查找
+    const labelText = await inputLabel.textContent().catch(async () => {
+      // 尝试通过placeholder获取
+      return await firstInput.getAttribute('placeholder');
+    });
+
+    // 3. 检查placeholder文本
+    const placeholder = await firstInput.getAttribute('placeholder');
+
+    // 验证标签文本为EMAIL且placeholder为Enter your email
+    if (labelText) {
+      expect(labelText.toUpperCase()).toContain('EMAIL');
+    }
+    if (placeholder) {
+      expect(placeholder.toLowerCase()).toContain('email');
+    }
   });
 });

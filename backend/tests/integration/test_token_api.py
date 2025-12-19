@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_TOKEN-001
+# TESTCASE-IDS: TC-AUTH_TOKEN-001, TC-AUTH_TOKEN-002, \
+#   TC-AUTH_TOKEN-003, TC-AUTH_TOKEN-004
 """JWT Token刷新与登出API集成测试
 
 测试JWT Token刷新和登出API的功能，包括：

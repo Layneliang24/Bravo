@@ -57,6 +57,9 @@ class PRDChecker:
         # 验证元数据
         self._validate_metadata(metadata)
 
+        # ⭐ 阶段1：双向关联检查
+        self._check_bidirectional_links(file_path, metadata)
+
         # 验证文件结构
         self._validate_structure(content)
 
@@ -382,3 +385,180 @@ class PRDChecker:
                     f"当前只有 {len(list_items)} 条\n"
                     f"说明：{requirements.get('description', '')}"
                 )
+
+    def _check_bidirectional_links(self, prd_path: str, metadata: Dict):
+        """
+        ⭐ 阶段1：双向关联检查
+        1. PRD中列出的test_files和implementation_files是否存在
+        2. 这些文件中的REQ-ID注释是否匹配PRD的req_id
+        3. PRD的req_id是否在tasks.json中存在对应的任务组
+        """
+        req_id = metadata.get("req_id", "")
+        if not req_id:
+            return  # 没有req_id无法检查
+
+        # 查找项目根目录
+        prd_path_obj = Path(prd_path)
+        project_root = None
+
+        # 尝试多个可能的项目根目录
+        possible_roots = [
+            prd_path_obj,
+            *list(prd_path_obj.parents),
+            Path("/app"),  # 容器内项目根目录
+            Path.cwd(),  # 当前工作目录
+        ]
+
+        for parent in possible_roots:
+            if (parent / "docs" / "00_product" / "requirements").exists():
+                project_root = parent
+                break
+
+        if not project_root:
+            self.warnings.append("无法定位项目根目录，跳过双向关联检查")
+            return
+
+        # 容器内特殊处理：检测Docker挂载结构
+        # 如果/app/docs存在但/app/backend不存在，说明：
+        # - /app = 宿主机 ./backend 目录
+        # - /app/docs = 宿主机 ./docs 目录
+        # 所以PRD中声明的 backend/xxx 路径在容器内应该是 /app/xxx
+        is_container_env = (
+            Path("/app/docs").exists() and not Path("/app/backend").exists()
+        )
+
+        # 1. 检查test_files和implementation_files中的文件是否存在，并验证REQ-ID
+        test_files = metadata.get("test_files", [])
+        implementation_files = metadata.get("implementation_files", [])
+
+        # 检查测试文件
+        for test_file in test_files:
+            # 容器内特殊处理：如果路径以backend/开头，去掉backend/前缀
+            file_path_str = test_file
+            if is_container_env and file_path_str.startswith("backend/"):
+                file_path_str = file_path_str[8:]  # 去掉"backend/"前缀
+
+            test_file_path = (
+                project_root / file_path_str
+                if not Path(file_path_str).is_absolute()
+                else Path(file_path_str)
+            )
+
+            # 容器内特殊处理：如果project_root是/app/docs的父目录，但文件路径是backend/xxx
+            # 需要尝试 /app/xxx（因为/app是backend目录）
+            if not test_file_path.exists() and is_container_env:
+                if test_file.startswith("backend/"):
+                    alt_path = Path("/app") / test_file[8:]
+                    if alt_path.exists():
+                        test_file_path = alt_path
+                # e2e和frontend文件不在backend容器内，跳过检查
+                elif test_file.startswith("e2e/") or test_file.startswith("frontend/"):
+                    continue
+
+            if not test_file_path.exists():
+                self.errors.append(f"PRD中声明的测试文件不存在: {test_file}")
+                continue
+
+            # 检查文件中的REQ-ID是否匹配
+            try:
+                content = test_file_path.read_text(encoding="utf-8", errors="ignore")
+                # 提取REQ-ID（检查前20行）
+                lines = content.split("\n")[:20]
+                file_req_id = None
+                for line in lines:
+                    match = re.search(
+                        r"REQ-\d{4}-\d{3}(-[a-z0-9-]+)?", line, re.IGNORECASE
+                    )
+                    if match:
+                        file_req_id = match.group(0)
+                        break
+
+                if not file_req_id:
+                    self.errors.append(f"测试文件 {test_file} 缺少REQ-ID注释，无法验证关联性")
+                elif file_req_id.upper() != req_id.upper():
+                    self.errors.append(
+                        f"测试文件 {test_file} 中的REQ-ID ({file_req_id}) "
+                        f"与PRD的req_id ({req_id}) 不匹配"
+                    )
+            except Exception as e:
+                self.warnings.append(f"无法读取测试文件 {test_file} 以验证REQ-ID: {e}")
+
+        # 检查实现文件
+        for impl_file in implementation_files:
+            # 容器内特殊处理：如果路径以backend/开头，去掉backend/前缀
+            file_path_str = impl_file
+            if is_container_env and file_path_str.startswith("backend/"):
+                file_path_str = file_path_str[8:]  # 去掉"backend/"前缀
+
+            impl_file_path = (
+                project_root / file_path_str
+                if not Path(file_path_str).is_absolute()
+                else Path(file_path_str)
+            )
+
+            # 容器内特殊处理：如果project_root是/app/docs的父目录，但文件路径是backend/xxx
+            # 需要尝试 /app/xxx（因为/app是backend目录）
+            if not impl_file_path.exists() and is_container_env:
+                if impl_file.startswith("backend/"):
+                    alt_path = Path("/app") / impl_file[8:]
+                    if alt_path.exists():
+                        impl_file_path = alt_path
+                # e2e和frontend文件不在backend容器内，跳过检查
+                elif impl_file.startswith("e2e/") or impl_file.startswith("frontend/"):
+                    continue
+
+            if not impl_file_path.exists():
+                self.errors.append(f"PRD中声明的实现文件不存在: {impl_file}")
+                continue
+
+            # 检查文件中的REQ-ID是否匹配
+            try:
+                content = impl_file_path.read_text(encoding="utf-8", errors="ignore")
+                # 提取REQ-ID（检查前20行）
+                lines = content.split("\n")[:20]
+                file_req_id = None
+                for line in lines:
+                    match = re.search(
+                        r"REQ-\d{4}-\d{3}(-[a-z0-9-]+)?", line, re.IGNORECASE
+                    )
+                    if match:
+                        file_req_id = match.group(0)
+                        break
+
+                if not file_req_id:
+                    self.errors.append(f"实现文件 {impl_file} 缺少REQ-ID注释，无法验证关联性")
+                elif file_req_id.upper() != req_id.upper():
+                    self.errors.append(
+                        f"实现文件 {impl_file} 中的REQ-ID ({file_req_id}) "
+                        f"与PRD的req_id ({req_id}) 不匹配"
+                    )
+            except Exception as e:
+                self.warnings.append(f"无法读取实现文件 {impl_file} 以验证REQ-ID: {e}")
+
+        # 2. 检查PRD的req_id是否在tasks.json中存在对应的任务组
+        tasks_json_path = project_root / ".taskmaster" / "tasks" / "tasks.json"
+        if tasks_json_path.exists():
+            try:
+                import json
+
+                with open(tasks_json_path, "r", encoding="utf-8") as f:
+                    tasks_data = json.load(f)
+
+                # 检查是否有对应的REQ-ID任务组
+                if req_id not in tasks_data:
+                    self.warnings.append(
+                        f"PRD的req_id ({req_id}) 在tasks.json中不存在对应的任务组。"
+                        f"请运行 'task-master parse-prd' 生成任务。"
+                    )
+                else:
+                    # 检查任务组中是否有任务
+                    req_tasks = tasks_data.get(req_id, {}).get("tasks", [])
+                    if not req_tasks:
+                        self.warnings.append(
+                            f"PRD的req_id ({req_id}) 在tasks.json中存在，但没有任务。"
+                            f"请运行 'task-master parse-prd' 生成任务。"
+                        )
+            except Exception as e:
+                self.warnings.append(f"无法读取tasks.json以验证任务关联: {e}")
+        else:
+            self.warnings.append(f"tasks.json文件不存在，无法验证PRD与任务的关联: {tasks_json_path}")

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # REQ-ID: REQ-2025-003-user-login
-# TESTCASE-IDS: TC-AUTH_CAPTCHA-002
+# TESTCASE-IDS: TC-AUTH_CAPTCHA-002, TC-AUTH_CAPTCHA-004
 """验证码API集成测试
 
 测试获取验证码和刷新验证码API的功能和响应格式。
