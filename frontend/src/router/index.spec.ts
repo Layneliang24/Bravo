@@ -1,4 +1,8 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_UI-001
+// 路由配置单元测试（基础设施测试）
+// 对应测试用例：
+// - TC-AUTH_UI-001: 登录页面布局-左右分栏（路由配置支持页面访问）
 import { beforeEach, describe, expect, it } from 'vitest'
 import router from './index'
 

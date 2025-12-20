@@ -1,4 +1,13 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_RESET-004, TC-AUTH_RESET-005, TC-AUTH_RESET-006, TC-AUTH_RESET-009, TC-AUTH_RESET-010, TC-AUTH_RESET-011
+// 重置密码表单功能单元测试
+// 对应测试用例：
+// - TC-AUTH_RESET-004: 重置密码成功
+// - TC-AUTH_RESET-005: 重置密码失败-无效token
+// - TC-AUTH_RESET-006: 重置密码失败-token过期
+// - TC-AUTH_RESET-009: 重置密码失败-已使用token
+// - TC-AUTH_RESET-010: 重置密码失败-密码不匹配
+// - TC-AUTH_RESET-011: 重置密码失败-弱密码
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'

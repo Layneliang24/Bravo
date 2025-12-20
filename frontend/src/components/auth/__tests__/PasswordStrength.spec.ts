@@ -1,4 +1,9 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_REGISTER-003, TC-AUTH_RESET-011
+// 密码强度组件单元测试
+// 对应测试用例：
+// - TC-AUTH_REGISTER-003: 用户注册失败-密码强度不足
+// - TC-AUTH_RESET-011: 重置密码失败-弱密码
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'

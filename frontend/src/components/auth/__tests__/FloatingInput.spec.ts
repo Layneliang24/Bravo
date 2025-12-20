@@ -1,4 +1,8 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_UI-003
+// 浮动输入框组件单元测试
+// 对应测试用例：
+// - TC-AUTH_UI-003: 输入框样式验证
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import FloatingInput from '../FloatingInput.vue'
