@@ -711,3 +711,7 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
 - `@.cursor/rules/principles/v4-core.mdc`（核心原则，alwaysApply）
 - `@.cursor/rules/principles/v4-traceability.mdc`（追溯链规则，通过意图路由在提交时加载）
 - `@.cursor/rules/tools/pre-commit.mdc`（提交前检查，通过意图路由在提交时加载）
+
+**当前alwaysApply规则（仅2个）**：
+- `v4-core.mdc` (priority: 1000) - 核心宪法，必须总是生效
+- `intent-recognition.mdc` (priority: 980) - 路由层，必须总是生效

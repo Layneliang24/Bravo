@@ -1,7 +1,6 @@
 ---
 description: V4追溯链规则和要求
 globs: **/*
-alwaysApply: true
 priority: 900
 ---
 

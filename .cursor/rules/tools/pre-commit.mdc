@@ -1,7 +1,6 @@
 ---
 description: Pre-commit和本地通行证阶段的规则
 globs: **/*
-alwaysApply: true
 priority: 950
 ---
 
