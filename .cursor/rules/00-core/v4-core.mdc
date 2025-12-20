@@ -53,7 +53,7 @@ priority: 1000
 
 **文件路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv`
 
-**参考文档**: @.cursor/rules/test-case-standards.mdc
+**参考文档**: @.cursor/rules/02-testing/test-case-standards.mdc
 
 ### 3. 测试代码先行 (Test Code First)
 
