@@ -10,6 +10,39 @@
   "REQ-2025-003-user-login": {
     "tasks": [
       {
+        "id": 0,
+        "title": "Task-0: 自检与验证",
+        "description": "验证PRD元数据完整性、检查测试目录存在、验证API契约文件",
+        "details": "Task-0是强制性的自检任务，确保PRD完整性和项目准备就绪。包含3个子任务：1. 验证PRD元数据完整性（test_files、implementation_files、testcase_file等必需字段）2. 检查测试目录存在（backend/tests/unit/、backend/tests/integration/、e2e/tests/）3. 验证API契约文件（如果存在则验证OpenAPI格式）",
+        "testStrategy": "Task-0不需要代码测试，它是合规检查任务，通过合规引擎的task0_checker自动验证",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "验证PRD元数据完整性",
+            "description": "检查PRD frontmatter和必需字段（test_files、implementation_files、testcase_file、testcase_status）",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "检查测试目录存在",
+            "description": "确保所有必需的测试目录存在（backend/tests/unit/、backend/tests/integration/、e2e/tests/）",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 3,
+            "title": "验证API契约文件",
+            "description": "检查API契约文件是否存在且格式正确（OpenAPI 3.0格式，包含openapi和paths字段）",
+            "status": "done",
+            "dependencies": []
+          }
+        ]
+      },
+      {
         "id": 1,
         "title": "后端：数据库模型扩展与迁移",
         "description": "根据PRD要求，扩展现有的User模型，并创建EmailVerification和PasswordReset模型，包含所有指定字段和索引。",

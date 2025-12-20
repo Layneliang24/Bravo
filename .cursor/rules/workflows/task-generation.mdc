@@ -171,13 +171,48 @@ task-master parse-prd \
 
 **规则**: 每个PRD的第一个任务必须是Task-0自检
 
-**自检内容**:
-1. 验证PRD完整性
-2. 验证API契约文档存在
-3. 验证测试用例清单完整
-4. 验证数据库设计完整
+**自检内容**（固定，不能修改）:
+1. 验证PRD元数据完整性
+2. 检查测试目录存在
+3. 验证API契约文件
 
-**参考**: @docs/architecture/V4/AI-WORKFLOW-V4-PART2-TM-ADAPTER.md
+**自动生成Task-0**:
+
+⭐ **真正的自动化**：使用项目包装脚本 `scripts/task-master-parse-prd.sh`
+
+该脚本会在parse-prd成功后**自动生成Task-0**，无需额外命令：
+
+```bash
+# 使用包装脚本（真正的自动化，parse-prd后自动生成Task-0）
+bash scripts/task-master-parse-prd.sh <prd-file> [task-master参数]
+```
+
+**或创建alias后使用**：
+```bash
+# 创建alias（可选，更便捷）
+alias tm-parse='bash scripts/task-master-parse-prd.sh'
+
+# 然后正常使用
+tm-parse docs/00_product/requirements/REQ-2025-004-new/REQ-2025-004-new.md --tag REQ-2025-004-new
+```
+
+**工作流程**（使用包装脚本）：
+1. ✅ **`bash scripts/task-master-parse-prd.sh <prd-file> --tag <tag-name>`**
+   - 自动验证PRD状态
+   - 执行parse-prd
+   - ⭐ **自动生成Task-0**（无需额外命令）
+   - 自动更新PRD状态为implementing
+2. `task-master expand --all --research`
+
+**⚠️ 注意**：如果使用原生`task-master parse-prd`命令（不使用包装脚本），则Task-0不会自动生成，需要手动运行：
+```bash
+python scripts/task-master/adapter.py <REQ-ID>
+```
+
+**参考**:
+- @docs/architecture/V4/AI-WORKFLOW-V4-PART2-TM-ADAPTER.md
+- @docs/architecture/V4/TASK0-AUTO-GENERATION.md
+- @docs/architecture/V4/TASK0-FIXED-SUBTASKS.md
 
 ## 任务标签管理
 

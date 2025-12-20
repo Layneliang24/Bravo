@@ -55,7 +55,10 @@ class Task0Checker:
         code_files = self._filter_code_files(files)
         print(f"[Task0Checker DEBUG] 过滤后的代码文件: {code_files}", file=sys.stderr)
         if not code_files and not tasks_json_files:
-            print("[Task0Checker DEBUG] 没有代码文件或tasks.json，跳过检查", file=sys.stderr)
+            print(
+                "[Task0Checker DEBUG] 没有代码文件或tasks.json，跳过检查",
+                file=sys.stderr,
+            )
             return results
 
         # 提取所有相关的REQ-ID（只从代码文件中提取）
@@ -188,7 +191,10 @@ class Task0Checker:
             match = req_id_pattern.search(file)
             if match:
                 req_id = match.group(0)  # 保持原样，不转换大小写
-                print(f"[Task0Checker DEBUG] 从路径提取到REQ-ID: {req_id}", file=sys.stderr)
+                print(
+                    f"[Task0Checker DEBUG] 从路径提取到REQ-ID: {req_id}",
+                    file=sys.stderr,
+                )
                 req_ids.add(req_id)
                 continue
 
@@ -935,7 +941,7 @@ class Task0Checker:
         从tasks.json中查找与REQ-ID相关的任务
 
         Args:
-            tasks_data: tasks.json的数据
+            tasks_data: tasks.json的数据（标签化结构）
             req_id: 需求ID
 
         Returns:
@@ -943,7 +949,15 @@ class Task0Checker:
         """
         related_tasks = []
 
-        # 遍历所有tag
+        # ⭐ 优先：直接从对应REQ-ID的tag获取tasks（标签化结构）
+        if req_id in tasks_data:
+            req_tag_data = tasks_data.get(req_id, {})
+            if isinstance(req_tag_data, dict):
+                tasks = req_tag_data.get("tasks", [])
+                related_tasks.extend(tasks)
+                return related_tasks
+
+        # 后备方案：遍历所有tag，通过文本匹配查找（兼容旧结构）
         for tag_name, tag_data in tasks_data.items():
             if not isinstance(tag_data, dict):
                 continue
