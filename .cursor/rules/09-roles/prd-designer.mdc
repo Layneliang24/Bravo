@@ -40,7 +40,7 @@ priority: 950
 - 实现文件路径
 - API契约文件路径
 
-**参考**: @.cursor/rules/prd-standards.mdc
+**参考**: @.cursor/rules/01-product/prd-standards.mdc
 
 ## PRD元数据要求
 

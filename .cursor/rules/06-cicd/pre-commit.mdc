@@ -48,7 +48,7 @@ Pre-commit hook执行四层检查：
    - 检查PRD状态是否为`approved`或`implementing`
    - 修复PRD状态
 
-**参考**: @.cursor/rules/compliance.mdc
+**参考**: @.cursor/rules/06-cicd/compliance.mdc
 
 ## 提交前检查清单
 

@@ -93,4 +93,4 @@ docker-compose exec frontend npm run <command>
 # REQ-ID: REQ-2025-003-user-login
 ```
 
-**参考**: @.cursor/rules/compliance.mdc
+**参考**: @.cursor/rules/06-cicd/compliance.mdc

@@ -37,7 +37,7 @@ priority: 850
 2. ✅ 测试用例已通过评审
 3. ✅ PRD状态为`approved`或`implementing`
 
-**参考**: @.cursor/rules/test-case-standards.mdc
+**参考**: @.cursor/rules/02-testing/test-case-standards.mdc
 
 ## 工作流程
 
@@ -59,7 +59,7 @@ priority: 850
 - 优化测试代码
 - 确保测试仍然通过
 
-**参考**: @.cursor/rules/test-types.mdc
+**参考**: @.cursor/rules/02-testing/test-types.mdc
 
 ## 测试文件位置
 

@@ -35,7 +35,7 @@ priority: 850
 ls docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv
 ```
 
-**参考**: @.cursor/rules/test-case-standards.mdc
+**参考**: @.cursor/rules/02-testing/test-case-standards.mdc
 
 ## TDD三阶段循环
 
@@ -228,7 +228,7 @@ test('用户登录完整流程', async ({ page }) => {
 
 **目的**: 防止已修复的Bug复现
 
-**参考**: @.cursor/rules/golden-tests.mdc
+**参考**: @.cursor/rules/02-testing/golden-tests.mdc
 
 ## 测试覆盖率要求
 
@@ -243,7 +243,7 @@ docker-compose exec backend pytest --cov=. --cov-report=html
 cd frontend && npm run test:coverage
 ```
 
-**参考**: @.cursor/rules/test-coverage.mdc
+**参考**: @.cursor/rules/02-testing/test-coverage.mdc
 
 ## 测试文件关联
 
@@ -254,7 +254,7 @@ cd frontend && npm run test:coverage
 2. PRD元数据中的`test_files`字段包含测试文件路径
 3. Pre-commit验证关联关系
 
-**参考**: @.cursor/rules/compliance.mdc
+**参考**: @.cursor/rules/06-cicd/compliance.mdc
 
 ## API契约测试
 

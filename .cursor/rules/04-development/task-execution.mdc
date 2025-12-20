@@ -131,7 +131,7 @@ ls e2e/tests/**/*.spec.ts
    - 运行测试，确保仍然通过
    - 提交重构代码
 
-**参考**: @.cursor/rules/test-types.mdc
+**参考**: @.cursor/rules/02-testing/test-types.mdc
 
 ### 3. 任务完成阶段
 
@@ -203,7 +203,7 @@ import { ... } from '...'
 
 **验证**: Pre-commit会自动检查REQ-ID注释
 
-**参考**: @.cursor/rules/compliance.mdc
+**参考**: @.cursor/rules/06-cicd/compliance.mdc
 
 ## 任务依赖检查
 

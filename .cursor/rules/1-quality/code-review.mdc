@@ -19,8 +19,8 @@ priority: 600
 
 **文档维护**: @.cursor/rules/07-documentation/documentation-standards.mdc
 
-**性能优化**: @.cursor/rules/performance.mdc
+**性能优化**: @.cursor/rules/1-quality/performance.mdc
 
-**安全规则**: @.cursor/rules/security.mdc
+**安全规则**: @.cursor/rules/1-quality/security.mdc
 
 **代码质量**: @.cursor/rules/04-development/code-standards.mdc

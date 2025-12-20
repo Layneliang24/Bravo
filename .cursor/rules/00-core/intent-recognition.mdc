@@ -170,12 +170,12 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到任务相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/03-taskmaster/03-taskmaster/task-generation.mdc]
+   [应用规则：@.cursor/rules/03-taskmaster/task-generation.mdc]
    [应用规则：@.cursor/rules/03-taskmaster/taskmaster-cli.mdc]
    [应用规则：@.cursor/rules/03-taskmaster/taskmaster-workflow.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/03-taskmaster/03-taskmaster/task-generation.mdc`
+   - `@.cursor/rules/03-taskmaster/task-generation.mdc`
    - `@.cursor/rules/03-taskmaster/taskmaster-cli.mdc`
    - `@.cursor/rules/03-taskmaster/taskmaster-workflow.mdc`
 
@@ -209,13 +209,13 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到开发/实现相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/04-development/04-development/task-execution.mdc]
+   [应用规则：@.cursor/rules/04-development/task-execution.mdc]
    [应用规则：@.cursor/rules/04-development/development-workflow.mdc]
    [应用规则：@.cursor/rules/09-roles/developer.mdc]
    [切换到开发专家角色]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/04-development/04-development/task-execution.mdc`
+   - `@.cursor/rules/04-development/task-execution.mdc`
    - `@.cursor/rules/04-development/development-workflow.mdc`
    - `@.cursor/rules/09-roles/developer.mdc`
 
@@ -262,14 +262,14 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    [识别到测试相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
    [应用规则：@.cursor/rules/02-testing/test-types.mdc]
-   [应用规则：@.cursor/rules/02-testing/e2e-test-types.mdc]
+   [应用规则：@.cursor/rules/02-testing/e2e-testing.mdc]
    [应用规则：@.cursor/rules/02-testing/test-case-standards.mdc]（如果是设计测试用例）
    [应用规则：@.cursor/rules/09-roles/tester.mdc]
    [切换到测试专家角色]
    ```
 3. **主动应用并严格遵守以下规则**：
    - `@.cursor/rules/02-testing/test-types.mdc`
-   - `@.cursor/rules/02-testing/e2e-test-types.mdc`
+   - `@.cursor/rules/02-testing/e2e-testing.mdc`
    - `@.cursor/rules/02-testing/test-case-standards.mdc`（如果是设计测试用例）
    - `@.cursor/rules/09-roles/tester.mdc`
    - `@.cursor/rules/02-testing/test-types.mdc`
@@ -284,7 +284,7 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    - 验证码E2E测试失败 → 主动建议使用万能验证码或Mock接口
    - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
    - 连续失败3次以上 → 停止修代码，质疑基础假设
-   - 参考：`@.cursor/rules/02-testing/e2e-test-types.mdc`（验证码测试最佳实践）
+   - 参考：`@.cursor/rules/02-testing/e2e-testing.mdc`（验证码测试最佳实践）
    - 参考：`@.cursor/rules/05-debugging/debugging-methodology.mdc`（策略质疑机制）
 
 ---
@@ -311,12 +311,12 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到提交/推送相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/06-cicd/06-cicd/pre-commit.mdc]
+   [应用规则：@.cursor/rules/06-cicd/pre-commit.mdc]
    [应用规则：@.cursor/rules/00-core/v4-traceability.mdc]
    [应用规则：@.cursor/rules/06-cicd/compliance.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
- - `@.cursor/rules/06-cicd/06-cicd/pre-commit.mdc`
+ - `@.cursor/rules/06-cicd/pre-commit.mdc`
  - `@.cursor/rules/00-core/v4-traceability.mdc`
  - `@.cursor/rules/06-cicd/compliance.mdc`（合规检查警告主动修复）
 
@@ -383,7 +383,7 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
    - 连续失败3次以上 → 停止修代码，质疑基础假设
    - 用户表达"调试来调试去都找不到问题点" → 触发策略质疑机制
-   - 参考：`@.cursor/rules/02-testing/e2e-test-types.mdc`（验证码测试最佳实践）
+   - 参考：`@.cursor/rules/02-testing/e2e-testing.mdc`（验证码测试最佳实践）
    - 参考：`@.cursor/rules/05-debugging/debugging-methodology.mdc`（策略质疑机制）
 
 ---
@@ -411,12 +411,12 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到API契约相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/02-testing/contract-test-types.mdc]
+   [应用规则：@.cursor/rules/02-testing/contract-testing.mdc]
    [应用规则：@.cursor/rules/09-roles/architect.mdc]
    [切换到架构专家角色]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/02-testing/contract-test-types.mdc`
+   - `@.cursor/rules/02-testing/contract-testing.mdc`
    - `@.cursor/rules/09-roles/architect.mdc`
 
 4. **即使API契约文件还没打开，也要遵守规则**：
@@ -481,13 +481,13 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到代码审查相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/1-quality/1-quality/code-review.mdc]
+   [应用规则：@.cursor/rules/1-quality/code-review.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/1-quality/1-quality/code-review.mdc`
-   - `@.cursor/rules/04-development/04-development/code-standards.mdc`
-   - `@.cursor/rules/security.mdc`
-   - `@.cursor/rules/performance.mdc`
+   - `@.cursor/rules/1-quality/code-review.mdc`
+   - `@.cursor/rules/04-development/code-standards.mdc`
+   - `@.cursor/rules/1-quality/security.mdc`
+   - `@.cursor/rules/1-quality/performance.mdc`
 
 4. **审查检查清单**：
    - 代码符合项目规范
@@ -520,10 +520,10 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    ```
    [识别到项目初始化相关意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/project-setup.mdc]
+   [应用规则：@.cursor/rules/08-project/project-setup.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/project-setup.mdc`
+   - `@.cursor/rules/08-project/project-setup.mdc`
 
 4. **初始化检查清单**：
    - 阅读项目架构文档
@@ -710,7 +710,7 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
 
 - `@.cursor/rules/00-core/v4-core.mdc`（核心原则，alwaysApply）
 - `@.cursor/rules/00-core/v4-traceability.mdc`（追溯链规则，通过意图路由在提交时加载）
-- `@.cursor/rules/06-cicd/06-cicd/pre-commit.mdc`（提交前检查，通过意图路由在提交时加载）
+- `@.cursor/rules/06-cicd/pre-commit.mdc`（提交前检查，通过意图路由在提交时加载）
 
 **当前alwaysApply规则（仅2个）**：
 - `v4-core.mdc` (priority: 1000) - 核心宪法，必须总是生效

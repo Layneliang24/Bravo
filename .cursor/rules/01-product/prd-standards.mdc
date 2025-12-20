@@ -174,7 +174,7 @@ PRD状态变为`approved`后，必须按以下顺序执行：
 4. **测试代码编写**: 根据CSV编写测试代码（TDD红色阶段）
 5. **功能代码实现**: 实现功能使测试通过（TDD绿色阶段）
 
-**参考**: @.cursor/rules/test-case-standards.mdc
+**参考**: @.cursor/rules/02-testing/test-case-standards.mdc
 
 ## 示例PRD结构
 

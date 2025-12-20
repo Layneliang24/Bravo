@@ -173,7 +173,7 @@ Task生成 (Task-Master)
 - CI阶段：运行所有测试，强制覆盖率
 
 **参考文档**:
-- @.cursor/rules/test-case-standards.mdc
+- @.cursor/rules/02-testing/test-case-standards.mdc
 - @docs/architecture/V4/AI-WORKFLOW-V4-PART4-TDD-TEST.md
 
 ## 五道防线保障

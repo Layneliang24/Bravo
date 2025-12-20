@@ -243,5 +243,5 @@ testcase_status:
 ## 参考文档
 
 - PRD模板: @docs/architecture/V4/AI-WORKFLOW-V4-PART3-PRD-TRD.md
-- TDD规则: @.cursor/rules/test-types.mdc
+- TDD规则: @.cursor/rules/02-testing/test-types.mdc
 - API契约: @docs/01_guideline/api-contracts/README.md
