@@ -3,8 +3,8 @@
 // 默认头像组件单元测试
 // 对应测试用例：
 // - TC-AUTH_PREVIEW-002: 登录预验证成功-无头像返回默认
-import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it } from 'vitest'
 import DefaultAvatar from '../DefaultAvatar.vue'
 
 describe('DefaultAvatar', () => {

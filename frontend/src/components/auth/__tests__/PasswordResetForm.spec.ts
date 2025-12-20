@@ -6,12 +6,12 @@
 // - TC-AUTH_RESET-002: 发送密码重置邮件-需要验证码
 // - TC-AUTH_RESET-007: 发送密码重置邮件-邮箱不存在
 // - TC-AUTH_RESET-008: 发送密码重置邮件-验证码错误
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { useAuthStore } from '@/stores/auth'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRouter } from 'vue-router'
 import PasswordResetForm from '../PasswordResetForm.vue'
-import { useAuthStore } from '@/stores/auth'
 
 // Mock vue-router
 vi.mock('vue-router', () => ({
