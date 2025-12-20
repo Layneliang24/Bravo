@@ -296,3 +296,79 @@ class PasswordResetSerializer(serializers.Serializer):
             )
 
         return attrs
+
+
+# ==================== 响应序列化器（用于OpenAPI文档） ====================
+
+
+class UserInfoSerializer(serializers.Serializer):
+    """用户信息序列化器（响应用）"""
+
+    id = serializers.CharField(help_text="用户ID")
+    email = serializers.EmailField(help_text="用户邮箱")
+    is_email_verified = serializers.BooleanField(help_text="邮箱是否已验证")
+
+
+class CaptchaResponseSerializer(serializers.Serializer):
+    """验证码响应序列化器"""
+
+    captcha_id = serializers.CharField(help_text="验证码ID")
+    captcha_image = serializers.CharField(help_text="验证码图片（Base64编码）")
+    expires_in = serializers.IntegerField(help_text="过期时间（秒）")
+
+
+class RegisterResponseSerializer(serializers.Serializer):
+    """注册响应序列化器"""
+
+    user = UserInfoSerializer(help_text="用户信息")
+    token = serializers.CharField(help_text="JWT访问令牌")
+    refresh_token = serializers.CharField(help_text="JWT刷新令牌")
+    message = serializers.CharField(help_text="提示消息")
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    """登录响应序列化器"""
+
+    user = UserInfoSerializer(help_text="用户信息")
+    token = serializers.CharField(help_text="JWT访问令牌")
+    refresh_token = serializers.CharField(help_text="JWT刷新令牌")
+
+
+class PreviewResponseSerializer(serializers.Serializer):
+    """登录预验证响应序列化器"""
+
+    valid = serializers.BooleanField(help_text="验证是否通过")
+    user = UserInfoSerializer(
+        required=False, allow_null=True, help_text="用户信息（验证通过时返回）"
+    )
+
+
+class MessageResponseSerializer(serializers.Serializer):
+    """通用消息响应序列化器"""
+
+    message = serializers.CharField(help_text="提示消息")
+
+
+class ErrorResponseSerializer(serializers.Serializer):
+    """错误响应序列化器"""
+
+    error = serializers.CharField(help_text="错误消息")
+    code = serializers.CharField(help_text="错误代码")
+
+
+class TokenRefreshRequestSerializer(serializers.Serializer):
+    """Token刷新请求序列化器"""
+
+    refresh = serializers.CharField(required=True, help_text="Refresh Token")
+
+
+class TokenRefreshResponseSerializer(serializers.Serializer):
+    """Token刷新响应序列化器"""
+
+    access = serializers.CharField(help_text="新的JWT访问令牌")
+
+
+class CaptchaRefreshRequestSerializer(serializers.Serializer):
+    """刷新验证码请求序列化器"""
+
+    captcha_id = serializers.CharField(required=False, help_text="旧的验证码ID（可选）")

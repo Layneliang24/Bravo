@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 import datetime
 
 from django.conf import settings
@@ -62,6 +63,12 @@ urlpatterns = [
     path("health/", health_check, name="health-check"),
     path("api/", api_root, name="api-root"),
     path("api/auth/", include("apps.users.urls")),  # 用户认证相关API
+    path("api/common/", include("apps.common.urls")),  # 通用API
+    path("api/feature-flags/", include("apps.feature_flags.urls")),  # 功能开关API
+    # 其他app的URLs（目前为空，保留以便将来扩展）
+    # path("api/blog/", include("apps.blog.urls")),  # 博客API（待实现）
+    # path("api/english/", include("apps.english.urls")),  # 英语学习API（待实现）
+    # path("api/jobs/", include("apps.jobs.urls")),  # 工作API（待实现）
     # API文档路由
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

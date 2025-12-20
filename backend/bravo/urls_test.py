@@ -6,6 +6,17 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 
+try:
+    from drf_spectacular.views import (
+        SpectacularAPIView,
+        SpectacularRedocView,
+        SpectacularSwaggerView,
+    )
+
+    SPECTACULAR_AVAILABLE = True
+except ImportError:
+    SPECTACULAR_AVAILABLE = False
+
 
 def home_view(_request):
     """测试环境根路径视图，返回API信息"""
@@ -35,4 +46,29 @@ urlpatterns = [
     path("common/", include("apps.common.urls")),
     # 用户认证相关API
     path("api/auth/", include("apps.users.urls")),
+    # 通用API
+    path("api/common/", include("apps.common.urls")),
+    # 功能开关API
+    path("api/feature-flags/", include("apps.feature_flags.urls")),
+    # 其他app的URLs（目前为空，保留以便将来扩展）
+    # path("api/blog/", include("apps.blog.urls")),  # 博客API（待实现）
+    # path("api/english/", include("apps.english.urls")),  # 英语学习API（待实现）
+    # path("api/jobs/", include("apps.jobs.urls")),  # 工作API（待实现）
 ]
+
+# 如果drf-spectacular可用，添加API文档路由
+if SPECTACULAR_AVAILABLE:
+    urlpatterns += [
+        # API文档路由
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path(
+            "api/docs/",
+            SpectacularSwaggerView.as_view(url_name="schema"),
+            name="swagger-ui",
+        ),
+        path(
+            "api/redoc/",
+            SpectacularRedocView.as_view(url_name="schema"),
+            name="redoc",
+        ),
+    ]

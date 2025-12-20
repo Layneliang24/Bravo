@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",  # CORS支持（浏览器访问需要）
     "rest_framework",
+    "drf_spectacular",  # API文档生成
     "apps.users",
     "apps.common",
 ]
@@ -213,6 +214,23 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
 }
+
+# drf-spectacular (OpenAPI/Swagger) 配置
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Bravo API 文档 (测试环境)",
+    "DESCRIPTION": "Bravo项目API文档，基于OpenAPI 3.0规范",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+}
+
+# REST Framework配置（测试环境） - 添加schema类
+REST_FRAMEWORK.update(
+    {
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    }
+)
 
 # 验证码测试环境配置（E2E测试专用）
 # 万能验证码：在测试环境下，如果输入的验证码是此值，则直接通过验证
