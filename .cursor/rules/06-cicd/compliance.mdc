@@ -1,0 +1,212 @@
+---
+description: 合规检查警告主动修复工作流程
+globs: **/*
+priority: 950
+---
+
+# 合规检查警告主动修复工作流程
+
+## 核心原则
+
+**⚠️ 关键原则：所有合规警告都必须主动修复，不得等待用户指出**
+
+合规检查的警告（warning）虽然不会阻止提交，但同样需要立即处理。这是代码质量的基本要求。
+
+## 工作流程
+
+### 1. 提交前检查清单（必须执行）
+
+每次提交代码前，必须执行以下检查：
+
+```bash
+# 1. 运行pre-commit检查（会自动执行合规检查）
+git add .
+git commit -m "..."
+
+# 2. 如果看到合规警告，立即修复：
+#    - REQ-ID缺失 → 添加REQ-ID注释
+#    - 测试文件缺失 → 创建测试文件
+#    - PRD状态问题 → 检查并修复PRD状态
+#    - 其他警告 → 根据提示修复
+```
+
+### 2. 合规警告处理流程
+
+#### 步骤1：识别警告
+- 查看pre-commit输出中的"⚠️ 警告"部分
+- 查看V4合规引擎检查结果
+- 特别关注Task0检查器的警告
+
+#### 步骤2：立即修复
+- **REQ-ID缺失**：
+  - Python文件：在文件头部添加 `# REQ-ID: REQ-YYYY-NNN-description`
+  - TypeScript/JavaScript文件：在文件头部添加 `// REQ-ID: REQ-YYYY-NNN-description`
+  - Vue文件：在`<script>`标签内第一行添加 `// REQ-ID: REQ-YYYY-NNN-description`
+
+- **测试文件缺失**：
+  - 根据代码文件创建对应的测试文件
+  - 确保测试文件也包含REQ-ID注释
+
+- **PRD状态问题**：
+  - 检查PRD文件状态是否为`approved`或`implementing`
+  - 如果状态不正确，修复PRD状态
+
+#### 步骤3：验证修复
+- 重新运行pre-commit检查
+- 确认警告已消除
+- 确认所有测试通过
+
+### 3. 自动化检查脚本
+
+创建辅助脚本自动检查合规问题：
+
+```bash
+# 检查所有代码文件是否包含REQ-ID
+scripts/check-req-id.sh
+
+# 检查合规警告
+scripts/check-compliance-warnings.sh
+```
+
+### 4. 工作习惯养成
+
+#### 每次提交前必须：
+1. ✅ 检查pre-commit输出中的警告
+2. ✅ 修复所有合规警告
+3. ✅ 验证修复后重新提交
+4. ✅ 确认没有新的警告产生
+
+#### 禁止行为：
+- ❌ 忽略合规警告
+- ❌ 认为警告不重要
+- ❌ 等待用户指出问题
+- ❌ 提交包含警告的代码
+
+## 常见警告及修复方法
+
+### 警告1：无法从代码文件中提取REQ-ID
+
+**原因**：代码文件头部缺少REQ-ID注释
+
+**修复方法**：
+```python
+# Python文件
+# -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-003-user-login
+"""文件描述"""
+```
+
+```typescript
+// TypeScript/JavaScript文件
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+```
+
+```vue
+<!-- Vue文件 -->
+<script setup lang="ts">
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+</script>
+```
+
+### 警告2：PRD状态为draft/review
+
+**原因**：PRD状态不允许开发
+
+**修复方法**：
+1. 检查PRD文件：`docs/00_product/requirements/REQ-YYYY-NNN/REQ-YYYY-NNN.md`
+2. 修改PRD的frontmatter中的`status`字段为`approved`
+3. 重新提交
+
+### 警告3：缺少测试文件
+
+**原因**：代码文件没有对应的测试文件
+
+**修复方法**：
+1. 根据代码文件路径创建对应的测试文件
+2. 确保测试文件包含REQ-ID注释
+3. 编写基本的测试用例
+
+## 检查清单模板
+
+每次提交前使用此清单：
+
+```
+[ ] 代码已通过所有测试
+[ ] 代码已通过lint检查
+[ ] 代码已通过类型检查
+[ ] 已检查pre-commit输出
+[ ] 已修复所有合规警告
+[ ] 已验证修复后无新警告
+[ ] 提交信息包含REQ-ID
+[ ] 所有新文件都包含REQ-ID注释
+```
+
+## 工具支持
+
+### 自动检查REQ-ID脚本
+
+```bash
+#!/bin/bash
+# scripts/check-req-id.sh
+# 检查所有代码文件是否包含REQ-ID
+
+find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.vue" \) \
+  ! -path "*/node_modules/*" \
+  ! -path "*/__pycache__/*" \
+  ! -path "*/migrations/*" \
+  ! -path "*/tests/*" \
+  | while read file; do
+    if ! grep -q "REQ-ID" "$file" 2>/dev/null; then
+      echo "⚠️  缺少REQ-ID: $file"
+    fi
+  done
+```
+
+### 自动修复REQ-ID脚本（交互式）
+
+```bash
+#!/bin/bash
+# scripts/fix-req-id.sh
+# 交互式添加REQ-ID到文件
+
+file=$1
+req_id=$2
+
+if [ -z "$file" ] || [ -z "$req_id" ]; then
+  echo "用法: fix-req-id.sh <文件路径> <REQ-ID>"
+  exit 1
+fi
+
+# 根据文件类型添加REQ-ID
+if [[ "$file" == *.py ]]; then
+  # Python文件
+  sed -i "1i# REQ-ID: $req_id" "$file"
+elif [[ "$file" == *.ts ]] || [[ "$file" == *.tsx ]] || [[ "$file" == *.js ]]; then
+  # TypeScript/JavaScript文件
+  sed -i "1i// REQ-ID: $req_id" "$file"
+elif [[ "$file" == *.vue ]]; then
+  # Vue文件（需要找到script标签）
+  # 这里需要更复杂的处理
+  echo "Vue文件需要手动添加REQ-ID到<script>标签内"
+fi
+```
+
+## 持续改进
+
+### 定期审查
+- 每周审查合规警告趋势
+- 识别重复出现的警告模式
+- 优化工作流程
+
+### 团队培训
+- 确保所有开发者了解合规要求
+- 分享最佳实践
+- 建立代码审查检查点
+
+## 相关文档
+
+- [V4合规引擎文档](.compliance/README.md)
+- [Task0检查器文档](.compliance/checkers/task0_checker.py)
+- [代码检查器文档](.compliance/checkers/code_checker.py)

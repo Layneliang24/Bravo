@@ -1,0 +1,52 @@
+---
+description: V4追溯链规则和要求
+globs: **/*
+priority: 900
+---
+
+# V4追溯链规则
+
+## 追溯链格式
+
+```
+REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment
+```
+
+## 追溯链实现
+
+### 1. PRD元数据
+
+**位置**: PRD文件头部的YAML frontmatter
+
+**字段**:
+```yaml
+test_files:
+  - backend/tests/unit/test_user_login.py
+  - e2e/tests/auth/login.spec.ts
+
+implementation_files:
+  - backend/apps/users/views.py
+  - frontend/src/views/Login.vue
+
+api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml
+```
+
+### 2. 代码文件REQ-ID注释
+
+**规则**: 所有代码文件必须包含REQ-ID注释
+
+**格式**: `# REQ-ID: REQ-YYYY-NNN-description`
+
+### 3. 提交消息格式
+
+**格式**: `[REQ-ID] Task-X 描述`
+
+**示例**: `[REQ-2025-003] Task-1 实现用户登录API`
+
+### 4. 自动验证
+
+**Pre-commit**: 验证代码文件与PRD的关联关系
+
+**CI/CD**: 验证追溯链完整性
+
+**参考**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#6-追溯链设计
