@@ -157,7 +157,7 @@
 **示例**:
 
 ```markdown
-参考: @.cursor/rules/workflows/testing.mdc
+参考: @.cursor/rules/02-testing/test-types.mdc
 参考: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md
 ```
 
@@ -232,7 +232,7 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 | 代码审查   | "代码审查"、"review"    | code-review.mdc                     |
 | 项目初始化 | "项目初始化"、"setup"   | project-setup.mdc                   |
 
-**参考**: `@.cursor/rules/workflows/intent-recognition.mdc`
+**参考**: `@.cursor/rules/00-core/intent-recognition.mdc`
 
 ## 📖 快速导航
 
