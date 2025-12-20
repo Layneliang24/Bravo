@@ -39,6 +39,13 @@ test_files:
   - e2e/tests/auth/test-register-button.spec.ts
   - e2e/tests/auth/test-ui-animations.spec.ts
   - e2e/tests/auth/test-ui-design.spec.ts
+  - frontend/src/components/auth/__tests__/LoginForm.spec.ts
+  - frontend/src/components/auth/__tests__/LoginForm-glass.spec.ts
+  - frontend/src/components/auth/__tests__/RegisterForm.spec.ts
+  - frontend/src/components/auth/__tests__/Captcha.spec.ts
+  - frontend/src/views/__tests__/Login.spec.ts
+  - frontend/src/views/__tests__/VerifyEmailView.spec.ts
+  - frontend/src/router/index.spec.ts
 implementation_files:
   - backend/apps/users/models.py
   - backend/apps/users/views.py

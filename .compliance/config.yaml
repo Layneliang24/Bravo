@@ -46,6 +46,14 @@ file_rules_mapping:
     rules: [code]
   - pattern: "frontend/src/**/*.{vue,ts}"
     rules: [code]
+  - pattern: "frontend/src/**/__tests__/**/*.spec.ts"
+    rules: [test, code]
+  - pattern: "frontend/src/**/__tests__/**/*.spec.tsx"
+    rules: [test, code]
+  - pattern: "frontend/src/**/*.spec.ts"
+    rules: [test, code]
+  - pattern: "frontend/src/**/*.spec.tsx"
+    rules: [test, code]
   - pattern: ".taskmaster/tasks/**/*.json"
     rules: [task]
   - pattern: ".taskmaster/tasks/**/*.md"

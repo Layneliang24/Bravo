@@ -9,7 +9,7 @@
 // - TC-AUTH_REGISTER-005: 用户注册失败-验证码错误
 // - TC-AUTH_REGISTER-009: 注册时创建EmailVerification记录
 // - TC-AUTH_REGISTER-010: 注册时触发邮件发送任务
-import { mount, flushPromises } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRouter } from 'vue-router'
