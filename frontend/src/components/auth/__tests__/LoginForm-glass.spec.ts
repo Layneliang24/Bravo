@@ -1,4 +1,13 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_UI-001, TC-AUTH_UI-003, TC-AUTH_UI-004, TC-AUTH_UI-013, TC-AUTH_LOGIN-001, TC-AUTH_LOGIN-007
+// 登录表单UI和功能单元测试
+// 对应测试用例：
+// - TC-AUTH_UI-001: 登录页面布局-左右分栏
+// - TC-AUTH_UI-003: 输入框样式验证
+// - TC-AUTH_UI-004: 验证码区域样式验证
+// - TC-AUTH_UI-013: 登录页面邮箱字段标签应该显示为EMAIL
+// - TC-AUTH_LOGIN-001: 用户登录成功-邮箱登录
+// - TC-AUTH_LOGIN-007: 用户登录失败-缺少必填字段
 import { useAuthStore } from '@/stores/auth'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'

@@ -1,4 +1,13 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_CAPTCHA-001, TC-AUTH_CAPTCHA-002, TC-AUTH_CAPTCHA-003, TC-AUTH_CAPTCHA-004, TC-AUTH_UI-004, TC-AUTH_UI-007
+// 验证码组件单元测试
+// 对应测试用例：
+// - TC-AUTH_CAPTCHA-001: 验证码生成与存储
+// - TC-AUTH_CAPTCHA-002: 验证码验证功能
+// - TC-AUTH_CAPTCHA-003: 验证码过期机制
+// - TC-AUTH_CAPTCHA-004: 验证码API获取与刷新
+// - TC-AUTH_UI-004: 验证码区域样式验证
+// - TC-AUTH_UI-007: 验证码刷新按钮功能测试
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'

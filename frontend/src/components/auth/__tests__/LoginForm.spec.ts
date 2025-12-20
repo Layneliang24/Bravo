@@ -1,4 +1,13 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_LOGIN-001, TC-AUTH_LOGIN-003, TC-AUTH_LOGIN-004, TC-AUTH_LOGIN-007, TC-AUTH_PREVIEW-010, TC-AUTH_PREVIEW-011
+// 登录表单功能单元测试
+// 对应测试用例：
+// - TC-AUTH_LOGIN-001: 用户登录成功-邮箱登录
+// - TC-AUTH_LOGIN-003: 用户登录失败-密码错误
+// - TC-AUTH_LOGIN-004: 用户登录失败-验证码错误
+// - TC-AUTH_LOGIN-007: 用户登录失败-缺少必填字段
+// - TC-AUTH_PREVIEW-010: 登录预览-输入账号密码后即可显示头像
+// - TC-AUTH_PREVIEW-011: 头像预览应该不受验证码错误影响
 import { useAuthStore } from '@/stores/auth'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'

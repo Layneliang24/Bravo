@@ -1,4 +1,10 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_UI-001, TC-AUTH_UI-002, TC-AUTH_UI-005
+// 登录页面UI单元测试
+// 对应测试用例：
+// - TC-AUTH_UI-001: 登录页面布局-左右分栏
+// - TC-AUTH_UI-002: 登录页面颜色规范验证
+// - TC-AUTH_UI-005: 左侧品牌展示区内容验证
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'

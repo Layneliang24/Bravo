@@ -1,4 +1,14 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_REGISTER-001, TC-AUTH_REGISTER-002, TC-AUTH_REGISTER-003, TC-AUTH_REGISTER-004, TC-AUTH_REGISTER-005, TC-AUTH_REGISTER-009, TC-AUTH_REGISTER-010
+// 注册表单功能单元测试
+// 对应测试用例：
+// - TC-AUTH_REGISTER-001: 用户注册成功
+// - TC-AUTH_REGISTER-002: 用户注册失败-邮箱已存在
+// - TC-AUTH_REGISTER-003: 用户注册失败-密码强度不足
+// - TC-AUTH_REGISTER-004: 用户注册失败-密码确认不匹配
+// - TC-AUTH_REGISTER-005: 用户注册失败-验证码错误
+// - TC-AUTH_REGISTER-009: 注册时创建EmailVerification记录
+// - TC-AUTH_REGISTER-010: 注册时触发邮件发送任务
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
