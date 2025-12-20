@@ -1,19 +1,29 @@
 // REQ-ID: REQ-2025-003-user-login
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { useAuthStore } from '@/stores/auth'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRouter } from 'vue-router'
 import LoginForm from '../LoginForm.vue'
-import { useAuthStore } from '@/stores/auth'
+
+// Mock fetch API (LoginForm组件中的computed属性会调用fetch)
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: async () => ({}),
+})
 
 // Mock vue-router
+const mockRouterPush = vi.fn().mockResolvedValue(undefined)
+const mockRouter = { push: mockRouterPush }
+
 vi.mock('vue-router', () => ({
-  useRouter: vi.fn(),
+  useRouter: vi.fn(() => mockRouter),
 }))
 
 describe('LoginForm - Glassmorphism Design', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    vi.clearAllMocks()
   })
 
   it('应该正确渲染登录表单', () => {

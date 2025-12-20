@@ -11,7 +11,7 @@ describe('Router', () => {
 
   it('应该正确配置路由', () => {
     expect(router).toBeDefined()
-    expect(router.getRoutes()).toHaveLength(5) // Home, Login, Blog, BlogDetail, VerifyEmail
+    expect(router.getRoutes()).toHaveLength(8) // Home, Login, Blog, BlogDetail, Register, ForgotPassword, ResetPassword, VerifyEmail
   })
 
   it('应该有Home路由', () => {

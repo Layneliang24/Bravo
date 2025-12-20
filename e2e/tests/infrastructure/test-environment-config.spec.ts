@@ -3,7 +3,7 @@
 // 环境配置一致性测试
 // 目的：验证测试环境与开发环境的配置一致性（通过验证码API间接测试缓存配置）
 
-import { test, expect, APIRequestContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 const API_BASE_URL = process.env.TEST_API_BASE_URL || 'http://backend:8000';
 
