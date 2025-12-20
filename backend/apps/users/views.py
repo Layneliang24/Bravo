@@ -131,6 +131,15 @@ class CaptchaRefreshAPIView(BaseCaptchaView):
         # 如果提供了旧的captcha_id，删除旧的验证码（可选）
         old_captcha_id = request.data.get("captcha_id")
         if old_captcha_id:
+            # 记录删除操作，用于调试
+            import logging
+
+            logger = logging.getLogger(__name__)
+            old_answer = cache.get(f"captcha:{old_captcha_id}")
+            logger.info(
+                f"Refreshing captcha: deleting old captcha "
+                f"(old_captcha_id={old_captcha_id}, old_answer={old_answer})"
+            )
             cache.delete(f"captcha:{old_captcha_id}")
 
         # 生成并返回新的验证码
@@ -216,7 +225,9 @@ class RegisterAPIView(BaseCaptchaView):
                 ):
                     return Response(
                         {
-                            "error": password_error[0] if password_error else "密码不符合要求",
+                            "error": (
+                                password_error[0] if password_error else "密码不符合要求"
+                            ),
                             "code": "WEAK_PASSWORD",
                         },
                         status=status.HTTP_400_BAD_REQUEST,
@@ -381,7 +392,10 @@ class LoginAPIView(BaseCaptchaView):
                                 )
                                 # 返回账户锁定错误
                                 return Response(
-                                    {"error": "账户已被锁定，请稍后再试", "code": "ACCOUNT_LOCKED"},
+                                    {
+                                        "error": "账户已被锁定，请稍后再试",
+                                        "code": "ACCOUNT_LOCKED",
+                                    },
                                     status=status.HTTP_403_FORBIDDEN,
                                 )
                             else:
@@ -393,7 +407,10 @@ class LoginAPIView(BaseCaptchaView):
                                 )
 
                     return Response(
-                        {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"},
+                        {
+                            "error": "用户不存在或密码错误",
+                            "code": "INVALID_CREDENTIALS",
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -762,7 +779,10 @@ class VerifyEmailAPIView(APIView):
             # 检查是否已验证
             if verification.is_verified():
                 return Response(
-                    {"error": "该验证令牌已被使用（已验证）", "code": "TOKEN_ALREADY_VERIFIED"},
+                    {
+                        "error": "该验证令牌已被使用（已验证）",
+                        "code": "TOKEN_ALREADY_VERIFIED",
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -1008,7 +1028,10 @@ class PasswordResetAPIView(APIView):
                         for error in password_errors:
                             if "at least 8 characters" in str(error):
                                 return Response(
-                                    {"error": "密码长度至少为8位", "code": "WEAK_PASSWORD"},
+                                    {
+                                        "error": "密码长度至少为8位",
+                                        "code": "WEAK_PASSWORD",
+                                    },
                                     status=status.HTTP_400_BAD_REQUEST,
                                 )
                     elif (
@@ -1039,7 +1062,10 @@ class PasswordResetAPIView(APIView):
                         "密码" in str(e) and "不一致" in str(e) for e in mismatch_error
                     ):
                         return Response(
-                            {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"},
+                            {
+                                "error": "密码和确认密码不一致",
+                                "code": "PASSWORD_MISMATCH",
+                            },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
 

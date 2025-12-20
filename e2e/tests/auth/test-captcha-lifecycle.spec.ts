@@ -1,4 +1,5 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_CAPTCHA-001, TC-AUTH_CAPTCHA-002, TC-AUTH_CAPTCHA-003, TC-AUTH_CAPTCHA-004
 // 验证码生命周期测试
 // 目的：验证验证码的完整生命周期（生成→存储→验证→删除）
 

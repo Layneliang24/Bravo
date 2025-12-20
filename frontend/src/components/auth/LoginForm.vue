@@ -203,7 +203,7 @@
     <!-- 登录按钮 -->
     <button
       type="submit"
-      :disabled="isSubmitting || !isEmailValid || !isPasswordValid"
+      :disabled="buttonDisabled"
       class="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-semibold tracking-wide hover:from-orange-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
     >
       {{ isSubmitting ? '登录中...' : 'LOGIN' }}
@@ -262,23 +262,93 @@ const lastSuccessfulPreview = ref<{ email: string; password: string } | null>(
   null
 )
 
+// 验证码验证去重机制：同一验证码300ms内只验证一次
+let lastValidationCaptcha = ''
+let lastValidationTimestamp = 0
+const VALIDATION_DEBOUNCE_MS = 300
+
+// handleCaptchaUpdate去重机制：防止同一事件被多次处理
+let lastCaptchaUpdateKey = ''
+let lastCaptchaUpdateTimestamp = 0
+const CAPTCHA_UPDATE_DEBOUNCE_MS = 100
+
 // 实时验证状态
 const isEmailValid = computed(() => {
-  return formData.email && EMAIL_REGEX.test(formData.email) && !errors.email
+  const valid =
+    formData.email && EMAIL_REGEX.test(formData.email) && !errors.email
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:267',
+      message: 'isEmailValid computed',
+      data: { email: formData.email, valid, hasError: !!errors.email },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'D',
+    }),
+  }).catch(() => {})
+  // #endregion
+  return valid
 })
 
 const isPasswordValid = computed(() => {
-  return formData.password && formData.password.length >= 8 && !errors.password
+  const valid =
+    formData.password && formData.password.length >= 8 && !errors.password
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:271',
+      message: 'isPasswordValid computed',
+      data: {
+        passwordLength: formData.password?.length,
+        valid,
+        hasError: !!errors.password,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'D',
+    }),
+  }).catch(() => {})
+  // #endregion
+  return valid
 })
 
 const isCaptchaValid = computed(() => {
   // 只有当验证码输入完整、没有错误、且已经通过实时校验时才显示打勾
   // 注意：实时校验是异步的，所以这里只检查基本条件
-  return (
+  const valid =
     formData.captcha_answer &&
     formData.captcha_answer.length === 4 &&
     !errors.captcha_answer
-  )
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:277',
+      message: 'isCaptchaValid computed',
+      data: {
+        captchaAnswer: formData.captcha_answer,
+        captchaAnswerLength: formData.captcha_answer?.length,
+        captchaId: formData.captcha_id,
+        valid,
+        hasError: !!errors.captcha_answer,
+        errorMsg: errors.captcha_answer,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'A',
+    }),
+  }).catch(() => {})
+  // #endregion
+  return valid
 })
 
 // 验证码是否已通过校验（用于显示打勾图标）
@@ -288,6 +358,39 @@ const isCaptchaVerified = computed(() => {
     !errors.captcha_answer &&
     formData.captcha_answer.length === 4
   )
+})
+
+// 按钮禁用状态（综合所有验证条件）
+const buttonDisabled = computed(() => {
+  const disabled =
+    isSubmitting.value ||
+    !isEmailValid.value ||
+    !isPasswordValid.value ||
+    !isCaptchaValid.value ||
+    !formData.captcha_id
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:307',
+      message: 'buttonDisabled computed',
+      data: {
+        isSubmitting: isSubmitting.value,
+        isEmailValid: isEmailValid.value,
+        isPasswordValid: isPasswordValid.value,
+        isCaptchaValid: isCaptchaValid.value,
+        hasCaptchaId: !!formData.captcha_id,
+        disabled,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'A',
+    }),
+  }).catch(() => {})
+  // #endregion
+  return disabled
 })
 
 const emit = defineEmits<{
@@ -316,13 +419,14 @@ const handleEmailInput = () => {
     lastSuccessfulPreview.value = null
   }
   // 重要：如果当前有验证码错误或频率限制错误，不应该触发预览（避免429错误）
+  // 重要：如果正在验证验证码，不应该触发预览（避免重复调用API）
   const hasCaptchaRelatedError =
     errors.captcha_answer &&
     (errors.captcha_answer.includes('验证码错误') ||
       errors.captcha_answer.includes('频率限制') ||
       errors.captcha_answer.includes('请求过于频繁'))
 
-  if (!hasCaptchaRelatedError) {
+  if (!hasCaptchaRelatedError && !isValidatingCaptcha.value) {
     debouncedTriggerPreview()
   }
 }
@@ -354,9 +458,84 @@ const handleCaptchaUpdate = async (data: {
   captcha_id: string
   captcha_answer: string
 }) => {
+  // 去重检查：防止同一事件被多次处理（100ms内）
+  // 重要：必须在日志之前检查，避免重复处理
+  const updateKey = `${data.captcha_id}:${data.captcha_answer}`
+  const now = Date.now()
+  if (
+    updateKey &&
+    updateKey === lastCaptchaUpdateKey &&
+    now - lastCaptchaUpdateTimestamp < CAPTCHA_UPDATE_DEBOUNCE_MS
+  ) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:457',
+        message: 'handleCaptchaUpdate early return - duplicate event',
+        data: {
+          updateKey,
+          lastCaptchaUpdateKey,
+          timeSinceLastUpdate: now - lastCaptchaUpdateTimestamp,
+          willSkip: true,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'B',
+      }),
+    }).catch(() => {})
+    // #endregion
+    return
+  }
+
+  // 立即更新去重标记（在日志之前），防止重复调用
+  lastCaptchaUpdateKey = updateKey
+  lastCaptchaUpdateTimestamp = now
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:474',
+      message: 'handleCaptchaUpdate entry',
+      data: {
+        oldCaptchaId: formData.captcha_id,
+        newCaptchaId: data.captcha_id,
+        newCaptchaAnswer: data.captcha_answer,
+        newCaptchaAnswerLength: data.captcha_answer?.length,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'B',
+    }),
+  }).catch(() => {})
+  // #endregion
   // 只有当captcha_id真正改变时才更新
   const captchaIdChanged =
     data.captcha_id && data.captcha_id !== formData.captcha_id
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:381',
+      message: 'handleCaptchaUpdate captchaIdChanged',
+      data: {
+        captchaIdChanged,
+        oldCaptchaId: formData.captcha_id,
+        newCaptchaId: data.captcha_id,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'B',
+    }),
+  }).catch(() => {})
+  // #endregion
   if (captchaIdChanged) {
     formData.captcha_id = data.captcha_id
     // 重要：如果captcha_id改变（验证码刷新），且当前有验证码错误或频率限制错误，不应该触发预览
@@ -377,10 +556,16 @@ const handleCaptchaUpdate = async (data: {
 
   // 更新验证码答案
   const currentValue = data.captcha_answer.toUpperCase()
+  const oldCaptchaAnswer = formData.captcha_answer
   formData.captcha_answer = currentValue
 
   // 如果验证码刷新了（captcha_answer为空），清空之前的输入
   if (!data.captcha_answer) {
+    // 清除去重标记，允许刷新后重新验证
+    if (oldCaptchaAnswer !== currentValue) {
+      lastValidationCaptcha = ''
+      lastValidationTimestamp = 0
+    }
     formData.captcha_answer = ''
     // 验证码刷新时，保持错误提示可见，直到用户重新输入
     // 注意：刷新验证码后不应该触发预览API，因为验证码答案已清空
@@ -425,22 +610,113 @@ const handleCaptchaUpdate = async (data: {
       const hadRateLimitError =
         errors.captcha_answer?.includes('请求过于频繁') ||
         errors.captcha_answer?.includes('频率限制')
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:456',
+            message: 'captcha input 4 chars',
+            data: {
+              currentValue,
+              hadCaptchaError,
+              hadRateLimitError,
+              errorBefore: errors.captcha_answer,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
 
       // 用户重新输入验证码，清除之前的错误提示（允许重新验证）
       // 重要：只有在用户重新输入验证码时，才清除错误提示并允许重新验证
       // 这样可以避免在验证码错误后，刷新验证码时触发额外的API调用
+      // 重要：清除所有错误提示，包括429错误，允许用户重新验证
       errors.captcha_answer = ''
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:587',
+            message: 'clearing captcha error before validation',
+            data: {
+              hadError: hadCaptchaError || hadRateLimitError,
+              clearedError: true,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
 
       // 设置标志：正在验证验证码，防止在验证期间触发额外的预览API调用
       isValidatingCaptcha.value = true
 
       // 实时校验验证码（无论是正常输入还是测试用的错误验证码）
-      // 重要：validateCaptchaRealTime 内部有去重机制，同一验证码300ms内只验证一次
       // 重要：validateCaptchaRealTime 内部会调用 previewLogin API，所以这里不需要再次触发预览
+      // 重要：在验证期间，阻止其他预览API调用（通过isValidatingCaptcha标志）
       await validateCaptchaRealTime()
 
       // 清除标志：验证完成
       isValidatingCaptcha.value = false
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:598',
+            message: 'after validateCaptchaRealTime - validation complete',
+            data: {
+              errorAfter: errors.captcha_answer,
+              isValidatingCaptcha: isValidatingCaptcha.value,
+              captchaAnswer: formData.captcha_answer,
+              captchaAnswerLength: formData.captcha_answer?.length,
+              isCaptchaValid: isCaptchaValid.value,
+              buttonDisabled: buttonDisabled.value,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:475',
+            message: 'after validateCaptchaRealTime',
+            data: {
+              errorAfter: errors.captcha_answer,
+              isValidatingCaptcha: isValidatingCaptcha.value,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
 
       // 如果验证码正确（没有错误），触发预览（如果邮箱和密码已填写）
       // 但是：如果当前有验证码错误或频率限制错误，不应该触发预览（避免429错误）
@@ -460,6 +736,7 @@ const handleCaptchaUpdate = async (data: {
     } else if (currentValue.length < 4) {
       // 如果输入长度小于4，清除之前的验证标记（允许重新验证）
       // 这样当用户重新输入时，可以再次验证
+      // 注意：验证码长度改变，清除去重标记，允许重新验证
       lastValidationCaptcha = ''
       lastValidationTimestamp = 0
     }
@@ -513,14 +790,95 @@ const refreshCaptcha = async () => {
 
 // 验证码实时校验 - 使用预览API来验证验证码（因为预览API会验证验证码）
 const validateCaptchaRealTime = async () => {
+  // 去重检查：同一验证码300ms内只验证一次
+  // 重要：必须在函数入口处立即检查，避免重复调用
+  const currentCaptcha = `${formData.captcha_id}:${formData.captcha_answer}`
+  const now = Date.now()
+  if (
+    currentCaptcha &&
+    currentCaptcha === lastValidationCaptcha &&
+    now - lastValidationTimestamp < VALIDATION_DEBOUNCE_MS
+  ) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:791',
+        message: 'validateCaptchaRealTime early return - duplicate call',
+        data: {
+          currentCaptcha,
+          lastValidationCaptcha,
+          timeSinceLastValidation: now - lastValidationTimestamp,
+          willSkip: true,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {})
+    // #endregion
+    return
+  }
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'LoginForm.vue:548',
+      message: 'validateCaptchaRealTime entry',
+      data: {
+        captchaId: formData.captcha_id,
+        captchaAnswer: formData.captcha_answer,
+        captchaAnswerLength: formData.captcha_answer?.length,
+        email: formData.email,
+        password: formData.password,
+        lastValidationCaptcha,
+        timeSinceLastValidation: Date.now() - lastValidationTimestamp,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'C',
+    }),
+  }).catch(() => {})
+  // #endregion
+
   // 基本条件检查
   if (
     !formData.captcha_id ||
     !formData.captcha_answer ||
     formData.captcha_answer.length !== 4
   ) {
+    // 基本条件不满足，不更新去重标记（允许条件满足后重新验证）
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:559',
+        message: 'validateCaptchaRealTime early return - basic check failed',
+        data: {
+          hasCaptchaId: !!formData.captcha_id,
+          hasCaptchaAnswer: !!formData.captcha_answer,
+          captchaAnswerLength: formData.captcha_answer?.length,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'B',
+      }),
+    }).catch(() => {})
+    // #endregion
     return
   }
+
+  // 基本条件满足，立即更新去重标记（在API调用之前），防止重复调用
+  // 重要：必须在基本条件检查之后更新，这样只有满足条件的调用才会被去重
+  lastValidationCaptcha = currentCaptcha
+  lastValidationTimestamp = now
 
   // 重要：如果当前有验证码错误或频率限制错误，不应该再次调用API（避免429错误）
   // 用户需要先清除错误提示（通过重新输入验证码）才能再次验证
@@ -532,6 +890,21 @@ const validateCaptchaRealTime = async () => {
       errors.captcha_answer.includes('请求过于频繁'))
 
   if (hasError) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:573',
+        message: 'validateCaptchaRealTime early return - has error',
+        data: { errorMsg: errors.captcha_answer },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {})
+    // #endregion
     // 有错误时，不调用API，直接返回
     // 特别重要：429错误必须完全阻止后续API调用
     return
@@ -539,6 +912,21 @@ const validateCaptchaRealTime = async () => {
 
   // 额外检查：如果isPreviewRequesting为true，说明有预览请求正在进行，不应该重复调用
   if (isPreviewRequesting.value) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:583',
+        message: 'validateCaptchaRealTime early return - preview requesting',
+        data: { isPreviewRequesting: isPreviewRequesting.value },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {})
+    // #endregion
     return
   }
 
@@ -546,9 +934,33 @@ const validateCaptchaRealTime = async () => {
   // 预览API会验证验证码，如果验证码错误会返回INVALID_CAPTCHA错误（400状态码）
   // 如果验证码正确但密码错误，会返回valid: false（200状态码）
   // 注意：如果只输入验证码没有账号密码，无法验证（这是设计限制，因为验证码验证需要账号密码）
+  // 但是：即使没有账号密码，只要验证码输入了4位且没有错误，也应该允许按钮启用（基本验证通过）
+  // 因为PRD要求的是：验证码输入完整（4位）且没有错误，就可以启用按钮
+  // 重要：如果邮箱或密码为空，无法调用API验证，但基本条件（4位且无错误）已满足，应该允许按钮启用
   if (formData.email && formData.password) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:596',
+        message: 'validateCaptchaRealTime calling previewLogin API',
+        data: {
+          email: formData.email,
+          hasPassword: !!formData.password,
+          captchaId: formData.captcha_id,
+          captchaAnswer: formData.captcha_answer,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {})
+    // #endregion
     try {
       // 调用预览API，它会验证验证码
+      // 注意：去重标记已在函数入口处更新，这里不需要再次更新
       const result = await authStore.previewLogin({
         email: formData.email,
         password: formData.password,
@@ -558,11 +970,84 @@ const validateCaptchaRealTime = async () => {
 
       // 如果API调用成功（没有抛出错误），说明验证码是正确的
       // 无论valid是true还是false，只要没有抛出错误，就说明验证码验证通过了
-      // 验证码正确，清除错误提示
+      // 验证码正确，清除错误提示（包括429错误）
+      // 重要：必须清除所有错误，包括429错误，这样按钮才能启用
+      const hadErrorBefore = !!errors.captcha_answer
       errors.captcha_answer = ''
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:900',
+            message: 'validateCaptchaRealTime API success - captcha valid',
+            data: {
+              valid: result?.valid,
+              hasUser: !!result?.user,
+              hadErrorBefore,
+              clearedError: true,
+              captchaAnswer: formData.captcha_answer,
+              isCaptchaValid: isCaptchaValid.value,
+              buttonDisabled: buttonDisabled.value,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
     } catch (error: any) {
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:615',
+            message: 'validateCaptchaRealTime API error',
+            data: {
+              statusCode: error?.response?.status,
+              errorCode: error?.response?.data?.code,
+              errorMessage: error?.response?.data?.error,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
       // 如果抛出错误，检查是否是验证码错误
       const errorCode = error?.response?.data?.code || ''
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'LoginForm.vue:850',
+            message: 'validateCaptchaRealTime error handling',
+            data: {
+              errorCode,
+              statusCode: error?.response?.status,
+              errorMessage: error?.response?.data?.error,
+              willSetError: errorCode === 'INVALID_CAPTCHA',
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
       const errorMessage = error?.response?.data?.error || error?.message || ''
       const statusCode = error?.response?.status || 0
 
@@ -572,49 +1057,145 @@ const validateCaptchaRealTime = async () => {
         // 不清除头像，也不刷新验证码，但给用户提示
         // 重要：设置错误提示后，后续的预览API调用应该被阻止
         errors.captcha_answer = '请求过于频繁，请稍后再试'
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'LoginForm.vue:898',
+              message: 'validateCaptchaRealTime 429 error - rate limited',
+              data: {
+                statusCode: 429,
+                setError: '请求过于频繁，请稍后再试',
+                willBlockButton: true,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'C',
+            }),
+          }
+        ).catch(() => {})
+        // #endregion
         // 不清除验证码错误提示（如果有），但显示频率限制提示
         // 不刷新验证码，避免触发更多API调用
+        // 重要：429错误不应该刷新验证码，因为验证码可能是正确的，只是请求太频繁
         return
       }
 
       // 只有明确是验证码错误（INVALID_CAPTCHA）时，才显示验证码错误提示
+      // 重要：必须明确是验证码错误（400状态码 + INVALID_CAPTCHA错误码），才刷新验证码
+      // 其他错误（如网络错误、账号密码错误等）不应该刷新验证码
       if (
-        errorCode === 'INVALID_CAPTCHA' ||
-        errorMessage.includes('验证码错误')
+        statusCode === 400 &&
+        (errorCode === 'INVALID_CAPTCHA' || errorMessage.includes('验证码错误'))
       ) {
         // 验证码错误，设置错误提示
-        errors.captcha_answer = '验证码错误，已自动刷新'
+        // 重要：不要立即刷新验证码，因为用户可能输入的是正确的验证码
+        // 如果立即刷新，会删除旧验证码，导致用户无法再次验证
+        // 只有在用户手动刷新验证码时，才删除旧验证码
+        errors.captcha_answer = '验证码错误，请重新输入或刷新验证码'
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'LoginForm.vue:1095',
+              message:
+                'validateCaptchaRealTime INVALID_CAPTCHA error - NOT refreshing',
+              data: {
+                statusCode: 400,
+                errorCode,
+                errorMessage,
+                captchaId: formData.captcha_id,
+                captchaAnswer: formData.captcha_answer,
+                willRefresh: false,
+                reason: 'Do not auto-refresh to allow user to retry',
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'C',
+            }),
+          }
+        ).catch(() => {})
+        // #endregion
 
-        // 清空验证码输入
-        formData.captcha_answer = ''
-
-        // 刷新验证码图片，这会自动清空Captcha组件中的输入框
-        // 注意：刷新验证码后，handleCaptchaUpdate会被调用，captcha_answer为空时会return
-        // 重要：在刷新验证码之前，确保错误提示已设置，这样handleCaptchaUpdate可以检测到错误
-        // 这样即使captcha_id改变，也不会触发预览API（避免429错误）
-        // 重要：必须在刷新前设置错误提示，因为refreshCaptcha会触发handleCaptchaUpdate
-        // 而handleCaptchaUpdate会检查错误提示来决定是否触发预览API
-        const errorMessageBeforeRefresh = errors.captcha_answer // 保存错误提示
-        await refreshCaptcha()
-
-        // 刷新后继续保持错误提示可见，不要清除
-        // 错误提示会在用户开始重新输入时清除
-        // 确保错误提示仍然可见，即使有其他API调用
-        // 重要：必须在刷新后重新设置错误提示，因为refreshCaptcha会触发handleCaptchaUpdate
-        // 而handleCaptchaUpdate可能会检查错误提示来决定是否触发预览API
-        // 如果错误提示被清除了，重新设置
-        if (
-          !errors.captcha_answer ||
-          !errors.captcha_answer.includes('验证码错误')
-        ) {
-          errors.captcha_answer =
-            errorMessageBeforeRefresh || '验证码错误，已自动刷新'
-        }
+        // 不清空验证码输入，允许用户重新输入或手动刷新
+        // 不清除去重标记，允许用户重新验证
+        // 不自动刷新验证码，让用户手动刷新（如果用户认为验证码看不清）
       } else {
-        // 其他错误（网络错误等），不影响验证码校验
+        // 其他错误（网络错误、账号密码错误等），不影响验证码校验
         // 验证码可能是正确的，只是其他原因导致错误
         // 不清除验证码错误提示（如果有），也不设置新的错误
+        // 重要：不清除errors.captcha_answer，保持之前的状态
+        // 如果之前有429错误，保持429错误提示
+        // 如果之前没有错误，保持无错误状态
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'LoginForm.vue:950',
+              message:
+                'validateCaptchaRealTime other error - not captcha error',
+              data: {
+                statusCode,
+                errorCode,
+                errorMessage,
+                currentError: errors.captcha_answer,
+                willNotRefresh: true,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'C',
+            }),
+          }
+        ).catch(() => {})
+        // #endregion
       }
+    }
+  } else {
+    // 如果邮箱或密码为空，无法验证验证码，但基本条件（4位且无错误）已满足
+    // 根据PRD，只要验证码输入完整（4位）且没有错误，就可以启用按钮
+    // 所以这里不需要设置错误，保持errors.captcha_answer为空即可
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ee7fc425-3c65-463c-bae6-3f8112f51957', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'LoginForm.vue:960',
+        message: 'validateCaptchaRealTime - no email/password, cannot verify',
+        data: {
+          hasEmail: !!formData.email,
+          hasPassword: !!formData.password,
+          captchaAnswerLength: formData.captcha_answer?.length,
+          currentError: errors.captcha_answer,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {})
+    // #endregion
+    // 如果之前没有错误，确保errors.captcha_answer为空，允许按钮启用
+    // 如果之前有错误（比如验证码错误），保持错误提示
+    if (
+      errors.captcha_answer &&
+      !errors.captcha_answer.includes('验证码错误') &&
+      !errors.captcha_answer.includes('频率限制') &&
+      !errors.captcha_answer.includes('请求过于频繁')
+    ) {
+      // 如果不是验证码相关的错误，清除错误提示
+      errors.captcha_answer = ''
     }
   }
 }
@@ -638,6 +1219,12 @@ const triggerPreview = async () => {
 
   // 如果已有预览请求在进行，跳过本次请求（防止429错误）
   if (isPreviewRequesting.value) {
+    return
+  }
+
+  // 重要：如果正在验证验证码，不应该触发预览（避免重复调用API）
+  // validateCaptchaRealTime已经会调用预览API，这里不应该重复调用
+  if (isValidatingCaptcha.value) {
     return
   }
 
@@ -715,12 +1302,17 @@ const triggerPreview = async () => {
 }
 
 // 防抖处理的预览触发函数（避免频繁调用API）
-// 防抖时间设置为1000ms（1秒），确保不会触发频率限制（每分钟10次）
+// 防抖时间设置为3000ms（3秒），确保不会触发频率限制（每分钟10次）
+// 重要：validateCaptchaRealTime也会调用预览API，所以防抖时间要足够长
+// 重要：在验证码验证期间（isValidatingCaptcha为true），不应该触发预览API
 const debouncedTriggerPreview = debounce(
   (...args: Parameters<typeof triggerPreview>) => {
+    // 再次检查是否正在验证验证码（防抖期间可能已经开始验证）
+    if (!isValidatingCaptcha.value) {
     triggerPreview(...args)
+    }
   },
-  1000
+  3000
 )
 
 // 登录表单提交处理
@@ -751,7 +1343,14 @@ const handleSubmit = async () => {
     return
   }
 
-  if (isSubmitting.value || !isEmailValid || !isPasswordValid) {
+  // 使用与buttonDisabled相同的验证逻辑，确保一致性
+  if (
+    isSubmitting.value ||
+    !isEmailValid.value ||
+    !isPasswordValid.value ||
+    !isCaptchaValid.value ||
+    !formData.captcha_id
+  ) {
     return
   }
 

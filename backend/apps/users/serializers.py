@@ -184,7 +184,10 @@ class PreviewLoginSerializer(serializers.Serializer):
         captcha_answer = attrs.get("captcha_answer", "")
 
         # 如果提供了验证码答案，则验证；否则跳过验证码验证（用于预览功能）
-        if captcha_answer and not verify_captcha(captcha_id, captcha_answer):
+        # 注意：预览时使用consume=False，不删除验证码，保留给真正的登录使用
+        if captcha_answer and not verify_captcha(
+            captcha_id, captcha_answer, consume=False
+        ):
             raise serializers.ValidationError(
                 {"captcha_answer": "验证码错误"}, code="INVALID_CAPTCHA"
             )

@@ -136,16 +136,18 @@ def get_captcha_answer(captcha_id: str) -> str | None:
     return cache.get(key)
 
 
-def verify_captcha(captcha_id: str, answer: str) -> bool:
+def verify_captcha(captcha_id: str, answer: str, consume: bool = True) -> bool:
     """
     验证验证码答案是否正确
 
     参数:
         captcha_id: 验证码ID
         answer: 用户输入的验证码答案
+        consume: 是否消耗验证码（默认True）。设为False时验证成功后不删除验证码，
+                 适用于预览验证等场景
 
     返回:
-        bool: 验证是否成功（验证成功后会自动删除验证码，防止重复使用）
+        bool: 验证是否成功（如果consume=True，验证成功后会自动删除验证码，防止重复使用）
 
     注意:
         在测试环境下，支持万能验证码（TEST_CAPTCHA_BYPASS），用于E2E测试
@@ -179,20 +181,27 @@ def verify_captcha(captcha_id: str, answer: str) -> bool:
         # 验证码不存在或已过期
         logger.warning(
             f"Captcha verification failed: captcha not found or expired "
-            f"(captcha_id={captcha_id})"
+            f"(captcha_id={captcha_id}, provided_answer={answer})"
         )
         return False
 
     # 不区分大小写比较
-    if stored_answer.upper() == answer.upper():
-        # 验证成功后删除验证码（防止重复使用）
-        cache.delete(key)
-        logger.info(f"Captcha verification succeeded (captcha_id={captcha_id})")
+    stored_upper = stored_answer.upper()
+    provided_upper = answer.upper()
+    if stored_upper == provided_upper:
+        # 验证成功后删除验证码（防止重复使用），仅当consume=True时
+        if consume:
+            cache.delete(key)
+        logger.info(
+            f"Captcha verification succeeded (captcha_id={captcha_id}, "
+            f"stored={stored_answer}, provided={answer}, consume={consume})"
+        )
         return True
 
     logger.warning(
         f"Captcha verification failed: answer mismatch "
-        f"(captcha_id={captcha_id}, stored={stored_answer}, provided={answer})"
+        f"(captcha_id={captcha_id}, stored={stored_answer}, provided={answer}, "
+        f"stored_upper={stored_upper}, provided_upper={provided_upper})"
     )
     return False
 

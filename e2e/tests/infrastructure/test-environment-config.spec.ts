@@ -1,6 +1,7 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_CAPTCHA-001
 // 环境配置一致性测试
-// 目的：验证测试环境与开发环境的配置一致性
+// 目的：验证测试环境与开发环境的配置一致性（通过验证码API间接测试缓存配置）
 
 import { test, expect, APIRequestContext } from '@playwright/test';
 
