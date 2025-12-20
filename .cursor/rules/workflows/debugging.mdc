@@ -2,6 +2,7 @@
 description: Debug阶段的规则和调试方法论
 globs: **/*
 priority: 600
+# 注意：此规则通过意图路由加载，不需要alwaysApply
 ---
 # Debug阶段规则
 

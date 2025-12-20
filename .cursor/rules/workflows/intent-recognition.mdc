@@ -316,9 +316,9 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
    [应用规则：@.cursor/rules/quality/compliance.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/tools/pre-commit.mdc`
-   - `@.cursor/rules/principles/v4-traceability.mdc`
-   - `@.cursor/rules/quality/compliance.mdc`
+ - `@.cursor/rules/tools/pre-commit.mdc`
+ - `@.cursor/rules/principles/v4-traceability.mdc`
+ - `@.cursor/rules/quality/compliance.mdc`（合规检查警告主动修复）
 
 4. **提交前必须检查**：
    - **Task-ID检查**：必须从上下文或用户输入中获取Task-ID
@@ -709,5 +709,5 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
 ## 14. 参考规则
 
 - `@.cursor/rules/principles/v4-core.mdc`（核心原则，alwaysApply）
-- `@.cursor/rules/principles/v4-traceability.mdc`（追溯链规则，alwaysApply）
-- `@.cursor/rules/tools/pre-commit.mdc`（提交前检查，alwaysApply）
+- `@.cursor/rules/principles/v4-traceability.mdc`（追溯链规则，通过意图路由在提交时加载）
+- `@.cursor/rules/tools/pre-commit.mdc`（提交前检查，通过意图路由在提交时加载）

@@ -1,6 +1,6 @@
 ---
 description: 项目启动和初始化规则
-globs: **/*
+globs: README.md, package.json, docker-compose.yml, Makefile
 priority: 500
 ---
 

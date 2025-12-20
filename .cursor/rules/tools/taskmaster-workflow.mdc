@@ -216,8 +216,8 @@ priority: 800
 *以上为通用指引，可根据项目实际裁剪。*
 ---
 description: Guide for using Taskmaster to manage task-driven development workflows
-globs: **/*
-alwaysApply: true
+globs: .taskmaster/**/*.{json,md}
+priority: 800
 ---
 
 # Taskmaster Development Workflow

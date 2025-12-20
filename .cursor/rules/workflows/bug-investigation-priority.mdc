@@ -1,5 +1,7 @@
 ---
-alwaysApply: true
+description: Bug排查优先级规则
+globs: **/*
+priority: 600
 ---
 # Bug排查优先级规则
 

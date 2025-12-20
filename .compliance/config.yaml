@@ -75,3 +75,5 @@ exclude_paths:
   - ".husky/_/**"
   - "scripts-golden/**"
   - "tests-golden/**"
+  - "e2e/tests/_helpers/**" # 排除E2E测试helper文件
+  - "**/*-helper.ts" # 排除所有helper TypeScript文件
