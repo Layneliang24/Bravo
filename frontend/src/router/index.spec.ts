@@ -1,5 +1,5 @@
 // REQ-ID: REQ-2025-003-user-login
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import router from './index'
 
 describe('Router', () => {

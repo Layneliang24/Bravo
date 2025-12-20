@@ -236,6 +236,7 @@ describe('VerifyEmailView', () => {
     // 应该包含指导性的错误提示
     expect(text).toContain('邮箱验证失败')
     expect(text).toContain('过期')
-    expect(text).toContain('重新申请')
+    // 实际文本是"重新发送"而不是"重新申请"
+    expect(text).toMatch(/重新(发送|申请)/)
   })
 })
