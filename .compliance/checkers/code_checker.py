@@ -9,6 +9,11 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
 
 class CodeChecker:
     """代码文件检查器"""
@@ -121,6 +126,36 @@ class CodeChecker:
         if modification_validation.get("require_prd_approval_for_deletion", False):
             self._check_deletion_authorization(file_path)
 
+        # ⭐ 检查API契约一致性（如果规则要求）
+        if modification_validation.get("require_api_contract_consistency", False):
+            # 检查是否是后端API代码文件
+            if "backend/apps/" in file_path and (
+                "views.py" in file_path or "serializers.py" in file_path
+            ):
+                # 提取REQ-ID
+                content = file_content
+                if not content:
+                    try:
+                        path = Path(file_path)
+                        if path.exists():
+                            content = path.read_text(encoding="utf-8", errors="ignore")
+                    except Exception:
+                        pass
+
+                if content:
+                    lines = content.split("\n")[:20]
+                    req_id = None
+                    for line in lines:
+                        match = re.search(
+                            r"REQ-\d{4}-\d{3}(-[a-z0-9-]+)?", line, re.IGNORECASE
+                        )
+                        if match:
+                            req_id = match.group(0)
+                            break
+
+                    if req_id:
+                        self._check_api_contract_consistency(file_path, req_id)
+
         # 检查代码质量
         self._check_quality(file_path)
 
@@ -222,6 +257,8 @@ class CodeChecker:
 
             # ⭐ 阶段2：检查文件是否在PRD的implementation_files中
             self._check_file_in_prd_implementation_files(file_path, req_id)
+
+            # 注意：API契约一致性检查已移至modification_validation部分，避免重复检查
 
     def _check_test_link(self, file_path: str, file_from_git: bool = False):
         """检查测试文件是否存在"""
@@ -696,6 +733,119 @@ class CodeChecker:
         except Exception as e:
             self.warnings.append(f"无法读取PRD文件以验证文件关联: {e}")
 
+    def _check_api_contract_consistency(self, file_path: str, req_id: str):
+        """
+        ⭐ 阶段3：检查API契约一致性
+        当后端API代码（views.py/serializers.py）修改时，检查对应的API契约文件是否存在并提醒保持一致性
+
+        Args:
+            file_path: 代码文件路径
+            req_id: 需求ID
+        """
+        # 查找项目根目录
+        file_path_obj = Path(file_path)
+        project_root = None
+        for parent in [file_path_obj] + list(file_path_obj.parents):
+            if (parent / "docs" / "00_product" / "requirements").exists():
+                project_root = parent
+                break
+
+        if not project_root:
+            # 无法定位项目根目录，跳过检查
+            return
+
+        # 查找PRD文件
+        prd_path = (
+            project_root
+            / "docs"
+            / "00_product"
+            / "requirements"
+            / req_id
+            / f"{req_id}.md"
+        )
+
+        if not prd_path.exists():
+            # PRD文件不存在，跳过检查
+            return
+
+        try:
+            import yaml
+
+            # 读取PRD获取api_contract字段
+            prd_content = prd_path.read_text(encoding="utf-8")
+            parts = prd_content.split("---", 2)
+            if len(parts) < 3:
+                return  # PRD格式错误，跳过
+
+            metadata = yaml.safe_load(parts[1]) or {}
+            api_contract_path = metadata.get("api_contract")
+
+            if not api_contract_path:
+                # PRD中没有声明api_contract，给出建议
+                self.warnings.append(
+                    f"后端API代码文件 {file_path} 已修改，但PRD ({req_id}) 中未声明api_contract字段。"
+                    f"建议：在PRD中添加api_contract字段，指向对应的OpenAPI契约文件，以便验证API实现与契约的一致性。"
+                )
+                return
+
+            # 构建契约文件路径
+            contract_path = Path(str(api_contract_path))
+            if not contract_path.is_absolute():
+                contract_path = project_root / contract_path
+
+            # 检查契约文件是否存在
+            if not contract_path.exists():
+                # 尝试容器内路径
+                container_path = Path("/app") / contract_path.relative_to(project_root)
+                if container_path.exists():
+                    contract_path = container_path
+                else:
+                    self.warnings.append(
+                        f"后端API代码文件 {file_path} 已修改，"
+                        f"但PRD声明的API契约文件不存在: {api_contract_path}。"
+                        f"请确保契约文件存在，并在代码修改后同步更新契约文件以保持一致性。"
+                    )
+                    return
+
+            # 验证契约文件格式（基本验证）
+            try:
+                contract_content = contract_path.read_text(encoding="utf-8")
+                contract_spec = yaml.safe_load(contract_content)
+
+                # 检查OpenAPI版本
+                if "openapi" not in contract_spec:
+                    self.errors.append(
+                        f"API契约文件格式错误: {contract_path} 缺少openapi版本字段。"
+                        f"请确保契约文件符合OpenAPI 3.0规范。"
+                    )
+                    return
+
+                # 检查paths定义
+                if "paths" not in contract_spec or not contract_spec["paths"]:
+                    self.warnings.append(
+                        f"API契约文件 {contract_path} 缺少paths定义。" f"请确保契约文件定义了API路径。"
+                    )
+                    return
+
+                # ⚠️ 注意：完整的一致性验证（代码生成Schema vs 契约文件）需要在CI/CD中完成
+                # 这里只做基本的存在性和格式验证，提醒开发者需要保持一致性
+                self.warnings.append(
+                    f"⚠️ 后端API代码文件 {file_path} 已修改。"
+                    f"请确保代码实现与API契约文件 {contract_path} 保持一致。"
+                    f"建议：运行 'python manage.py spectacular "
+                    f"--file schema-from-code.json' 生成当前代码的OpenAPI Schema，"
+                    f"并与契约文件对比验证一致性。"
+                    f"完整的契约一致性验证将在CI/CD中自动执行。"
+                )
+
+            except yaml.YAMLError as e:
+                self.errors.append(f"API契约文件YAML解析错误: {contract_path} - {str(e)}")
+            except Exception as e:
+                self.warnings.append(f"无法读取API契约文件以验证一致性: {contract_path} - {str(e)}")
+
+        except Exception as e:
+            self.warnings.append(f"检查API契约一致性时出错: {str(e)}")
+
     def _check_req_id_in_tasks_json(self, file_path: str, req_id: str):
         """
         ⭐ 阶段2：检查REQ-ID是否在tasks.json中存在
@@ -708,9 +858,9 @@ class CodeChecker:
                 project_root = parent
                 break
 
-        if not project_root:
-            self.warnings.append("无法定位项目根目录，跳过tasks.json关联检查")
-            return
+            if not project_root:
+                self.warnings.append("无法定位项目根目录，跳过tasks.json关联检查")
+                return
 
         # 检查tasks.json
         tasks_json_path = project_root / ".taskmaster" / "tasks" / "tasks.json"
