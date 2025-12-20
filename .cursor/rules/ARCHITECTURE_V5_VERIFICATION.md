@@ -123,19 +123,20 @@
 
 ## 实际对话测试结果
 
-### 测试场景1: PRD相关意图 ✅
+> **注意**: 以下测试需要在实际对话中验证。当前验证文档只包含静态验证（文件检查、路径验证等）。
+
+### 测试场景1: PRD相关意图（待测试）
 
 **测试输入**: "生成PRD"
 
 **预期行为**:
-
 - [识别到PRD相关意图：生成PRD]
 - [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
 - [应用规则：@.cursor/rules/01-product/prd-standards.mdc]
 - [应用规则：@.cursor/rules/09-roles/prd-designer.mdc]
 - [切换到PRD设计专家角色]
 
-**实际结果**: ✅ 规则正确加载，路径引用正确
+**实际结果**: ⏳ 待实际对话测试验证
 
 ---
 
