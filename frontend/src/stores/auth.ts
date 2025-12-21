@@ -332,10 +332,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const refreshCaptcha = async (): Promise<Captcha> => {
+  const refreshCaptcha = async (oldCaptchaId?: string): Promise<Captcha> => {
     try {
-      const response = await getApiClient().get<CaptchaResponse>(
-        '/api/auth/captcha/refresh/'
+      // 使用POST方法，与后端API一致
+      const response = await getApiClient().post<CaptchaResponse>(
+        '/api/auth/captcha/refresh/',
+        oldCaptchaId ? { captcha_id: oldCaptchaId } : {}
       )
 
       const captchaData = parseCaptchaResponse(response.data)
