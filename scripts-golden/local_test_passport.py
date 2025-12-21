@@ -416,7 +416,10 @@ class LocalTestPassport:
                             f"⏰ {workflow} dryrun验证超时（{timeout_seconds}秒）",
                             level="WARNING",
                         )
-                        self.log("💡 复杂工作流dryrun可能超时，但--list验证已通过，语法正确", level="WARNING")
+                        self.log(
+                            "💡 复杂工作流dryrun可能超时，但--list验证已通过，语法正确",
+                            level="WARNING",
+                        )
                         continue  # 继续验证下一个工作流
 
                     # 检查是否是act工具的bug（panic）
@@ -512,19 +515,29 @@ class LocalTestPassport:
                             level="WARNING",
                         )
                     self.log("💡 但--list验证已通过，说明工作流语法正确", level="WARNING")
-                    self.log("💡 建议：在GitHub Actions中实际运行验证完整功能", level="WARNING")
+                    self.log(
+                        "💡 建议：在GitHub Actions中实际运行验证完整功能",
+                        level="WARNING",
+                    )
 
                 if dryrun_panics:
                     self.log(
-                        f"⚠️  有 {len(dryrun_panics)} 个工作流遇到act工具panic：", level="WARNING"
+                        f"⚠️  有 {len(dryrun_panics)} 个工作流遇到act工具panic：",
+                        level="WARNING",
                     )
                     for panic in dryrun_panics:
                         self.log(
                             f"  - {panic['workflow']} ({panic['event']}事件)",
                             level="WARNING",
                         )
-                    self.log("💡 这是act工具本身的bug，不影响工作流语法正确性", level="WARNING")
-                    self.log("💡 建议：升级act版本或使用GitHub Actions在线验证", level="WARNING")
+                    self.log(
+                        "💡 这是act工具本身的bug，不影响工作流语法正确性",
+                        level="WARNING",
+                    )
+                    self.log(
+                        "💡 建议：升级act版本或使用GitHub Actions在线验证",
+                        level="WARNING",
+                    )
 
                 if dryrun_failures:
                     error_msg = f"❌ 有 {len(dryrun_failures)} 个工作流深度验证失败："
@@ -560,7 +573,10 @@ class LocalTestPassport:
             error_msg = f"⏰ act验证超时（超过{timeout_seconds}秒）"
             self.log(error_msg, level="ERROR")
             self.log_detail("超时详情", str(e))
-            self.log("💡 复杂工作流（特别是包含workflow_call的工作流）可能需要更长时间解析", level="WARNING")
+            self.log(
+                "💡 复杂工作流（特别是包含workflow_call的工作流）可能需要更长时间解析",
+                level="WARNING",
+            )
             self.log(
                 "💡 复杂工作流已自动使用5分钟超时，但仍可能不够",
                 level="WARNING",
@@ -1176,9 +1192,7 @@ class LocalTestPassport:
                     "frontend",
                     "npm",
                     "run",
-                    "test:unit",
-                    "--",
-                    "--runInBand",
+                    "test:unit:fast",
                 ]
             )
             frontend_unit_cmds.append(
@@ -1191,9 +1205,7 @@ class LocalTestPassport:
                     "frontend",
                     "npm",
                     "run",
-                    "test",
-                    "--",
-                    "--runInBand",
+                    "test:ci",
                 ]
             )
         else:
@@ -1209,9 +1221,7 @@ class LocalTestPassport:
                     "frontend",
                     "npm",
                     "run",
-                    "test:unit",
-                    "--",
-                    "--runInBand",
+                    "test:unit:fast",
                 ]
             )
             frontend_unit_cmds.append(
@@ -1225,9 +1235,7 @@ class LocalTestPassport:
                     "frontend",
                     "npm",
                     "run",
-                    "test",
-                    "--",
-                    "--runInBand",
+                    "test:ci",
                 ]
             )
 
@@ -1559,11 +1567,13 @@ class LocalTestPassport:
 
                 if result_dev.returncode != 0:
                     self.log(
-                        f"⚠️  开发环境配置验证失败：{result_dev.stderr[:200]}", level="WARNING"
+                        f"⚠️  开发环境配置验证失败：{result_dev.stderr[:200]}",
+                        level="WARNING",
                     )
                 if result_test.returncode != 0:
                     self.log(
-                        f"⚠️  测试环境配置验证失败：{result_test.stderr[:200]}", level="WARNING"
+                        f"⚠️  测试环境配置验证失败：{result_test.stderr[:200]}",
+                        level="WARNING",
                     )
 
                 # 检查关键服务配置差异
@@ -1600,7 +1610,10 @@ class LocalTestPassport:
                         f"开发环境服务数: {len(dev_services)}, 测试环境服务数: {len(test_services)}"
                     )
             except Exception as e:
-                self.log(f"⚠️  配置差异检查异常：{type(e).__name__}: {str(e)}", level="WARNING")
+                self.log(
+                    f"⚠️  配置差异检查异常：{type(e).__name__}: {str(e)}",
+                    level="WARNING",
+                )
 
         # 3. 检查npm workspaces结构
         if (self.workspace / "package.json").exists():
@@ -1616,7 +1629,8 @@ class LocalTestPassport:
                     self.log_detail("npm workspaces结构检查通过")
                 else:
                     self.log(
-                        f"⚠️  npm workspaces检查失败：{result.stderr[:200]}", level="WARNING"
+                        f"⚠️  npm workspaces检查失败：{result.stderr[:200]}",
+                        level="WARNING",
                     )
             except Exception as e:
                 self.log(f"⚠️  npm workspaces检查异常：{type(e).__name__}", level="WARNING")
@@ -1637,7 +1651,8 @@ class LocalTestPassport:
                 env_file_status[description] = "不存在"
 
         self.log_detail(
-            "环境变量文件状态", "\n".join([f"  {k}: {v}" for k, v in env_file_status.items()])
+            "环境变量文件状态",
+            "\n".join([f"  {k}: {v}" for k, v in env_file_status.items()]),
         )
 
         self.log("✅ 环境差异检查完成")
