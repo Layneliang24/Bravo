@@ -1,0 +1,6 @@
+用例ID,用例名称,测试类型,优先级,关联REQ-ID,关联功能点,测试场景,前置条件,测试步骤,预期结果,备注
+TC-EXAMPLE_API-001,示例API返回Hello,INTEGRATION,P0,REQ-2025-001-example-demo,示例API,调用示例API返回固定message,服务启动,"1. 发送GET /api/example/ 2. 校验status与JSON",返回200且message为Hello from V4 Architecture,
+TC-EXAMPLE_API-002,示例API未注册返回404,INTEGRATION,P1,REQ-2025-001-example-demo,示例API,路由未注册时返回404,服务启动且未配置路由,"1. 发送GET /api/example/ 2. 校验status",返回404（或明确的错误响应）,
+TC-EXAMPLE_UI-001,示例组件显示API消息,E2E,P1,REQ-2025-001-example-demo,示例前端,页面加载后渲染API返回的message,前端可访问且后端可用,"1. 打开包含Example组件的页面 2. 等待请求完成 3. 校验页面文本",页面展示后端返回message,
+TC-EXAMPLE_UI-002,示例组件加载态,UNIT,P2,REQ-2025-001-example-demo,示例前端,请求未完成时显示loading,无,"1. 模拟pending请求 2. 校验loading展示",loading可见且样式正确,
+TC-EXAMPLE_TRACE-001,示例PRD追溯链校验,UNIT,P2,REQ-2025-001-example-demo,追溯链,PRD声明的test_files/implementation_files符合约定,无,"1. 检查PRD元数据字段存在 2. 校验路径格式",元数据字段存在且格式正确,

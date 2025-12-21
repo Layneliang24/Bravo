@@ -1,0 +1,114 @@
+---
+description: 目录守卫规则
+globs: ./**/*.{md,txt}, ./**/*test*.py, ./**/*_test.py
+priority: 900
+---
+
+# 目录守卫规则
+
+## 核心原则
+
+**禁止在根目录新增特定类型文件，必须按目录结构规范放置**
+
+## 根目录禁止新增文件类型
+
+**禁止的文件类型**:
+- `*.md` - Markdown文档
+- `*.txt` - 文本文件
+- `test_*.py` - Python测试文件
+- `*_test.py` - Python测试文件
+- `*.keep` - 占位文件
+- `*.example` - 示例文件
+
+**禁止原因**:
+- 保持根目录整洁
+- 便于文件管理和查找
+- 遵循项目目录结构规范
+
+## 文件放置规则
+
+### 文档类文件
+
+**产品文档**:
+- `docs/00_product/requirements/{REQ-ID}/` - PRD文档
+- `docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv` - 测试用例
+
+**指导文档**:
+- `docs/01_guideline/api-contracts/{REQ-ID}/` - API契约
+- `docs/01_guideline/` - 其他指导文档
+
+**架构文档**:
+- `docs/architecture/V4/` - V4架构文档
+
+**测试报告**:
+- `docs/00_product/requirements/{REQ-ID}/` - 测试报告（与PRD同目录）
+- `reports/` - 通用测试报告
+
+### 测试文件
+
+**后端测试**:
+- `backend/tests/unit/` - 单元测试
+- `backend/tests/integration/` - 集成测试
+- `backend/tests/regression/` - 回归测试
+- `backend/apps/{domain}/tests/` - 域特定测试
+
+**前端测试**:
+- `frontend/src/**/*.spec.ts` - 组件同级测试文件
+- `e2e/tests/` - E2E测试
+
+### 脚本文件
+
+**项目脚本**:
+- `scripts/` - 项目脚本
+- `ops/` - 运维脚本
+
+### CI/CD配置
+
+**CI/CD文件**:
+- `.github/workflows/` - GitHub Actions工作流
+- `docker/` - Docker配置文件
+
+## 允许的根目录文件
+
+**必须保留在根目录的文件**:
+- `README.md` - 项目主文档
+- `package.json` - Node.js配置
+- `docker-compose.yml` - Docker Compose配置
+- `Makefile` - Make命令
+- `.gitignore` - Git忽略配置
+- `.cursorrules` - Cursor全局规则
+
+## 违规处理
+
+**当检测到违规时，AI必须**:
+1. **拒绝创建文件**
+2. **提示正确的放置路径**
+3. **建议使用正确的目录结构**
+
+**提示格式**:
+```
+❌ 不能在根目录创建 {文件名}
+✅ 请将文件放置在: {正确路径}
+```
+
+## 示例
+
+### 禁止示例
+```
+❌ README_new.md (根目录)
+❌ test_utils.py (根目录)
+❌ temp_report.txt (根目录)
+❌ config.example (根目录)
+```
+
+### 正确示例
+```
+✅ docs/00_product/requirements/REQ-2025-003/README_new.md
+✅ backend/apps/blog/tests/test_utils.py
+✅ docs/00_product/requirements/REQ-2025-003/test-report.txt
+✅ config/config.example
+```
+
+## 参考文档
+
+- @.cursor/rules/00-core/v4-directory-structure.mdc - 目录结构规范

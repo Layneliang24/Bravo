@@ -1,0 +1,104 @@
+---
+description: 性能优化规则
+globs: backend/**/*.{py}, frontend/**/*.{ts,tsx,js,jsx,vue}
+priority: 500
+---
+
+# 性能优化规则
+
+## 优化原则
+
+1. **先测量，后优化**: 使用性能分析工具识别瓶颈
+2. **优化热点路径**: 优先优化执行频率高的代码路径
+3. **保持代码可读性**: 优化不能牺牲代码可读性
+4. **记录优化效果**: 记录优化前后的性能指标
+
+## 性能分析工具
+
+### 后端（Python）
+
+**性能分析**:
+```bash
+# 使用cProfile分析
+docker-compose exec backend python -m cProfile -o profile.stats manage.py <command>
+
+# 使用py-spy实时分析
+docker-compose exec backend py-spy record -o profile.svg -- python manage.py <command>
+
+# 使用memory_profiler分析内存
+docker-compose exec backend python -m memory_profiler script.py
+```
+
+**数据库查询分析**:
+```python
+# Django调试工具栏
+# 查看慢查询
+from django.db import connection
+print(connection.queries)
+```
+
+### 前端（TypeScript/Vue）
+
+**性能分析**:
+```bash
+# Chrome DevTools Performance
+# React DevTools Profiler
+# Vue DevTools Performance
+
+# Lighthouse性能测试
+npm run lighthouse
+```
+
+## 优化检查清单
+
+### 代码优化
+- [ ] 有基线指标和对比数据
+- [ ] 改动点有性能测试或基准
+- [ ] 未引入不必要的复杂度
+- [ ] 关键路径有监控指标
+
+### 数据库优化
+- [ ] 查询已使用索引
+- [ ] 避免N+1查询问题
+- [ ] 使用select_related/prefetch_related（Django）
+- [ ] 查询结果已分页
+
+### 前端优化
+- [ ] 组件已使用memo/useMemo优化
+- [ ] 图片已优化（压缩、懒加载）
+- [ ] 代码已代码分割（code splitting）
+- [ ] 资源已使用CDN
+
+### 缓存优化
+- [ ] 已使用适当的缓存策略
+- [ ] 缓存键设计合理
+- [ ] 缓存失效策略正确
+
+## 性能指标
+
+### 后端指标
+- **响应时间**: API响应时间 < 200ms（P95）
+- **吞吐量**: 每秒请求数（QPS）
+- **数据库查询时间**: 单次查询 < 50ms
+- **内存使用**: 避免内存泄漏
+
+### 前端指标
+- **首屏加载时间**: < 3秒
+- **交互响应时间**: < 100ms
+- **Lighthouse性能分数**: >= 90
+- **包大小**: 主包 < 200KB（gzip后）
+
+## 性能测试
+
+**必须执行**:
+```bash
+# 后端压力测试
+docker-compose exec backend pytest --benchmark
+
+# 前端性能测试
+cd frontend && npm run lighthouse
+```
+
+## 参考文档
+
+- @docs/architecture/V4/PERFORMANCE-GUIDELINES.md（如果存在）

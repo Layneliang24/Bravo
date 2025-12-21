@@ -55,7 +55,10 @@ class Task0Checker:
         code_files = self._filter_code_files(files)
         print(f"[Task0Checker DEBUG] 过滤后的代码文件: {code_files}", file=sys.stderr)
         if not code_files and not tasks_json_files:
-            print("[Task0Checker DEBUG] 没有代码文件或tasks.json，跳过检查", file=sys.stderr)
+            print(
+                "[Task0Checker DEBUG] 没有代码文件或tasks.json，跳过检查",
+                file=sys.stderr,
+            )
             return results
 
         # 提取所有相关的REQ-ID（只从代码文件中提取）
@@ -188,7 +191,10 @@ class Task0Checker:
             match = req_id_pattern.search(file)
             if match:
                 req_id = match.group(0)  # 保持原样，不转换大小写
-                print(f"[Task0Checker DEBUG] 从路径提取到REQ-ID: {req_id}", file=sys.stderr)
+                print(
+                    f"[Task0Checker DEBUG] 从路径提取到REQ-ID: {req_id}",
+                    file=sys.stderr,
+                )
                 req_ids.add(req_id)
                 continue
 
@@ -398,8 +404,13 @@ class Task0Checker:
             if status_check_result:
                 return status_check_result
 
-            # 检查必需字段
-            required_fields = ["test_files", "implementation_files"]
+            # 检查必需字段（V4.1增强：加入测试用例设计阶段元数据）
+            required_fields = [
+                "test_files",
+                "implementation_files",
+                "testcase_file",
+                "testcase_status",
+            ]
             missing_fields = []
 
             for field in required_fields:
@@ -419,15 +430,58 @@ class Task0Checker:
                         "PRD的YAML frontmatter必须包含：\n"
                         "- test_files: 测试文件列表\n"
                         "- implementation_files: 实现文件列表\n"
+                        "- testcase_file: 测试用例CSV文件路径\n"
+                        "- testcase_status: 测试用例评审状态\n"
                         "- api_contract: API契约文件路径（可选）\n\n"
                         "示例：\n"
                         "---\n"
                         "req_id: REQ-2025-001\n"
+                        "testcase_file: "
+                        "docs/00_product/requirements/REQ-2025-001/"
+                        "REQ-2025-001-test-cases.csv\n"
+                        "testcase_status:\n"
+                        "  reviewed: false\n"
                         "test_files:\n"
                         "  - backend/tests/unit/test_example.py\n"
                         "implementation_files:\n"
                         "  - backend/apps/example/views.py\n"
                         "---"
+                    ),
+                }
+
+            # V4.1：测试用例CSV存在性检查
+            testcase_file = metadata.get("testcase_file")
+            if testcase_file:
+                testcase_paths = [
+                    Path(str(testcase_file)),
+                    Path("/app") / str(testcase_file),
+                ]
+                if not any(p.exists() for p in testcase_paths):
+                    return {
+                        "level": "error",
+                        "message": "Task-0检查失败: 测试用例CSV文件不存在",
+                        "file": str(prd_path),
+                        "help": (
+                            f"PRD声明的 testcase_file 不存在：{testcase_file}\n"
+                            "请先创建CSV并完成评审流程（V4.1新增阶段）。"
+                        ),
+                    }
+
+            # V4.1：implementing/completed 必须评审通过
+            status = str(metadata.get("status", "")).lower()
+            tc_status = metadata.get("testcase_status") or {}
+            if (
+                status in ["implementing", "completed"]
+                and tc_status.get("reviewed") is not True
+            ):
+                return {
+                    "level": "error",
+                    "message": "Task-0检查失败: PRD处于implementing/completed但测试用例未评审通过",
+                    "file": str(prd_path),
+                    "help": (
+                        "当PRD状态为 implementing/completed 时，必须满足：\n"
+                        "  testcase_status.reviewed: true\n"
+                        "否则禁止进入实现阶段（TDD红色测试代码提交也会被门禁拦截）。"
                     ),
                 }
 
@@ -887,7 +941,7 @@ class Task0Checker:
         从tasks.json中查找与REQ-ID相关的任务
 
         Args:
-            tasks_data: tasks.json的数据
+            tasks_data: tasks.json的数据（标签化结构）
             req_id: 需求ID
 
         Returns:
@@ -895,7 +949,15 @@ class Task0Checker:
         """
         related_tasks = []
 
-        # 遍历所有tag
+        # ⭐ 优先：直接从对应REQ-ID的tag获取tasks（标签化结构）
+        if req_id in tasks_data:
+            req_tag_data = tasks_data.get(req_id, {})
+            if isinstance(req_tag_data, dict):
+                tasks = req_tag_data.get("tasks", [])
+                related_tasks.extend(tasks)
+                return related_tasks
+
+        # 后备方案：遍历所有tag，通过文本匹配查找（兼容旧结构）
         for tag_name, tag_data in tasks_data.items():
             if not isinstance(tag_data, dict):
                 continue

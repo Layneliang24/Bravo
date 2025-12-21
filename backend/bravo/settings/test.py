@@ -7,6 +7,10 @@ from pathlib import Path
 # 基础目录设置
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# 前端和后端域名配置（用于邮件链接等）
+FRONTEND_DOMAIN = os.environ.get("FRONTEND_DOMAIN", "http://localhost:3000")
+BACKEND_DOMAIN = os.environ.get("BACKEND_DOMAIN", "http://localhost:8000")
+
 # 测试环境特定设置
 DEBUG = True
 SECRET_KEY = "test-secret-key-for-testing-only"  # nosec
@@ -24,12 +28,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",  # CORS支持（浏览器访问需要）
+    "rest_framework",
+    "drf_spectacular",  # API文档生成
     "apps.users",
     "apps.common",
 ]
 
 # 中间件 - 简化版本
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # CORS必须在最前面
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -100,10 +108,13 @@ print(
     f"🔧 数据库配置: HOST={DATABASES['default']['HOST']}, PORT={DATABASES['default']['PORT']}, CI={os.environ.get('CI', 'False')}"
 )
 
-# 禁用缓存
+# Redis缓存配置（测试环境也需要真实的缓存来存储验证码）
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # 使用容器名称redis
+        "KEY_PREFIX": "bravo_test",
+        "TIMEOUT": 300,  # 默认5分钟
     }
 }
 
@@ -113,7 +124,20 @@ AUTH_PASSWORD_VALIDATORS: list = []
 # 自定义用户模型
 AUTH_USER_MODEL = "users.User"
 
-# 测试环境不需要CORS配置
+# CORS配置 - 浏览器访问需要（测试在容器内不经过浏览器，但实际部署时浏览器需要）
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 
 # 测试数据库配置 - 使用事务回滚，避免外键约束问题
@@ -134,8 +158,20 @@ DATABASES["default"].update(
 # 使用Django的迁移系统，确保表创建顺序正确
 # 不禁用迁移，让Django正确处理外键依赖关系
 
-# 测试邮件后端
-EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+# 邮件配置（支持通过环境变量覆盖）
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.locmem.EmailBackend",  # 默认使用内存后端（测试环境）
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", os.environ.get("EMAIL_USER", ""))
+EMAIL_HOST_PASSWORD = os.environ.get(
+    "EMAIL_HOST_PASSWORD", os.environ.get("EMAIL_PASSWORD", "")
+)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 
 # 静态文件设置
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
@@ -178,3 +214,26 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
 }
+
+# drf-spectacular (OpenAPI/Swagger) 配置
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Bravo API 文档 (测试环境)",
+    "DESCRIPTION": "Bravo项目API文档，基于OpenAPI 3.0规范",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+}
+
+# REST Framework配置（测试环境） - 添加schema类
+REST_FRAMEWORK.update(
+    {
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    }
+)
+
+# 验证码测试环境配置（E2E测试专用）
+# 万能验证码：在测试环境下，如果输入的验证码是此值，则直接通过验证
+# 这解决了E2E测试中验证码的随机性问题，避免"调试地狱"
+# 注意：验证码是4位的，所以万能验证码也必须是4位
+TEST_CAPTCHA_BYPASS = os.environ.get("TEST_CAPTCHA_BYPASS", "6666")

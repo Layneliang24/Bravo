@@ -93,6 +93,7 @@ class ComplianceEngine:
             "task0": "task0_checker.py",  # Task-0必须最先执行
             "prd": "prd_checker.py",
             "test": "test_checker.py",
+            "testcase": "testcase_checker.py",  # 测试用例CSV检查器
             "code": "code_checker.py",
             "commit": "commit_checker.py",
             "task": "task_checker.py",

@@ -1,5 +1,6 @@
 """本地开发环境设置模板"""
 
+import os
 from typing import Any
 
 from decouple import config
@@ -53,8 +54,19 @@ if DEBUG:
     SILKY_PYTHON_PROFILER = True
     SILKY_PYTHON_PROFILER_BINARY = True
 
-# 邮件配置
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# 邮件配置（支持通过环境变量覆盖）
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"  # 默认使用控制台后端（开发环境）
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", os.environ.get("EMAIL_USER", ""))
+EMAIL_HOST_PASSWORD = os.environ.get(
+    "EMAIL_HOST_PASSWORD", os.environ.get("EMAIL_PASSWORD", "")
+)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@bravo.com")
 
 # 静态文件配置
 STATICFILES_DIRS = [

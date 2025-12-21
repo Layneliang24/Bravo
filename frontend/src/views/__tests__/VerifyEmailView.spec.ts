@@ -1,8 +1,15 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_EMAIL-004, TC-AUTH_EMAIL-005, TC-AUTH_EMAIL-006, TC-AUTH_EMAIL-007
+// 邮箱验证视图单元测试
+// 对应测试用例：
+// - TC-AUTH_EMAIL-004: 验证邮箱链接成功
+// - TC-AUTH_EMAIL-005: 验证邮箱链接失败-无效token
+// - TC-AUTH_EMAIL-006: 验证邮箱链接失败-token过期
+// - TC-AUTH_EMAIL-007: E2E邮箱验证流程
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import VerifyEmailView from '../VerifyEmailView.vue'
 
 // Mock vue-router
@@ -236,6 +243,7 @@ describe('VerifyEmailView', () => {
     // 应该包含指导性的错误提示
     expect(text).toContain('邮箱验证失败')
     expect(text).toContain('过期')
-    expect(text).toContain('重新申请')
+    // 实际文本是"重新发送"而不是"重新申请"
+    expect(text).toMatch(/重新(发送|申请)/)
   })
 })

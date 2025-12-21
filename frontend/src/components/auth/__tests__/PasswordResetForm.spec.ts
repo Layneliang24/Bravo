@@ -1,10 +1,17 @@
 // REQ-ID: REQ-2025-003-user-login
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+// TESTCASE-IDS: TC-AUTH_RESET-001, TC-AUTH_RESET-002, TC-AUTH_RESET-007, TC-AUTH_RESET-008
+// 密码重置邮件发送表单功能单元测试
+// 对应测试用例：
+// - TC-AUTH_RESET-001: 发送密码重置邮件
+// - TC-AUTH_RESET-002: 发送密码重置邮件-需要验证码
+// - TC-AUTH_RESET-007: 发送密码重置邮件-邮箱不存在
+// - TC-AUTH_RESET-008: 发送密码重置邮件-验证码错误
+import { useAuthStore } from '@/stores/auth'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRouter } from 'vue-router'
 import PasswordResetForm from '../PasswordResetForm.vue'
-import { useAuthStore } from '@/stores/auth'
 
 // Mock vue-router
 vi.mock('vue-router', () => ({

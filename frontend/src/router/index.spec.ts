@@ -1,5 +1,9 @@
 // REQ-ID: REQ-2025-003-user-login
-import { describe, it, expect, beforeEach } from 'vitest'
+// TESTCASE-IDS: TC-AUTH_UI-001
+// 路由配置单元测试（基础设施测试）
+// 对应测试用例：
+// - TC-AUTH_UI-001: 登录页面布局-左右分栏（路由配置支持页面访问）
+import { beforeEach, describe, expect, it } from 'vitest'
 import router from './index'
 
 describe('Router', () => {
@@ -11,7 +15,7 @@ describe('Router', () => {
 
   it('应该正确配置路由', () => {
     expect(router).toBeDefined()
-    expect(router.getRoutes()).toHaveLength(5) // Home, Login, Blog, BlogDetail, VerifyEmail
+    expect(router.getRoutes()).toHaveLength(8) // Home, Login, Blog, BlogDetail, Register, ForgotPassword, ResetPassword, VerifyEmail
   })
 
   it('应该有Home路由', () => {

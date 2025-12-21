@@ -141,3 +141,4 @@ passport.ps1
 
 # 密码配置文件（包含敏感信息）
 .auth-config
+*.png

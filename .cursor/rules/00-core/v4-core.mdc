@@ -1,0 +1,168 @@
+---
+description: V4架构核心设计原则和约束
+globs: **/*
+alwaysApply: true
+priority: 1000
+---
+
+# V4架构核心设计原则
+
+## 核心信念
+
+**需求第一原则 (Requirement First)**: 所有开发活动必须从明确的需求出发，所有代码变更必须可追溯到原始需求。
+
+**代码即文档，规则即约束**:
+- 不要创建虚文档（说明文档、组织文档、最佳实践文档）
+- **禁止创建分析文档、总结文档、验证报告**（除非用户明确要求）
+- 能做的直接做（改善代码、完善规则、补充测试）
+- 不能做的规则拦截（合规检查器、pre-commit hook强制约束）
+- 代码结构、注释、类型提示就是最好的文档
+- `.cursor/rules/*.mdc` 规则文件就是设计约束
+
+**浏览器验证强制规则**:
+- 每次修复前端问题后，必须使用MCP工具验证浏览器环境
+- 不能只验证容器内测试，必须验证浏览器实际运行效果
+- 使用 `browser_navigate` + `browser_console_messages` 主动检查错误
+- 禁止等用户报告浏览器错误才修复
+
+## 六条铁律
+
+### 1. PRD先行 (PRD First)
+
+**规则**: 没有PRD，不能写代码
+
+**执行层**: Pre-commit Hook + Cursor规则
+
+**验证方式**:
+- Pre-commit检查：代码文件必须关联到PRD
+- 代码文件头部必须包含REQ-ID注释
+- PRD状态必须是`approved`或`implementing`
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md
+
+### 2. 测试用例设计先行 (Test-Case Design First)
+
+**规则**: 没有测试用例CSV，不能编写测试代码
+
+**执行层**: Cursor规则 + 人工评审
+
+**验证方式**:
+- 测试用例CSV文件必须存在于PRD目录
+- 测试用例必须通过评审
+- 测试代码必须与CSV用例一一对应
+
+**文件路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv`
+
+**参考文档**: @.cursor/rules/02-testing/test-case-standards.mdc
+
+### 3. 测试代码先行 (Test Code First)
+
+**规则**: 没有测试文件，不能提交代码
+
+**执行层**: Pre-commit Hook + TDD工作流
+
+**验证方式**:
+- Pre-commit检查：测试文件必须存在
+- 测试文件必须在指定目录（unit/integration/e2e/regression）
+- 测试覆盖率必须 >= 80%
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART4-TDD-TEST.md
+
+### 4. 任务先行 (Task First)
+
+**规则**: 没有Task-Master任务，不能开始实现
+
+**执行层**: Cursor规则 + Pre-commit
+
+**验证方式**:
+- Task-Master必须已解析PRD并生成任务
+- 任务状态必须明确（pending/in-progress/done）
+- 代码提交必须关联到Task-ID
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART2-TM-ADAPTER.md
+
+### 5. 修改PRD先行 (PRD Update First)
+
+**规则**: 删除/简化功能必须先修改PRD
+
+**执行层**: Pre-commit + Post-commit + 自动回滚
+
+**验证方式**:
+- 检测到功能删除时，检查PRD是否有相应修改
+- 无PRD授权的删除将被自动回滚
+- 必须使用[BUGFIX]标记才能删除功能
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART5-COMPLIANCE.md
+
+### 6. 不可绕过 (No Bypass)
+
+**规则**: 禁止`--no-verify`绕过检查
+
+**执行层**: Git wrapper + CI/CD
+
+**验证方式**:
+- Git wrapper拦截`--no-verify`参数
+- CI/CD重新验证所有规则
+- 违规提交将被拒绝
+
+## 追溯链要求
+
+**追溯链格式**: `REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment`
+
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#6-追溯链设计
+
+## 产品文档是唯一真源
+
+**核心原则**: PRD是需求的唯一真源，所有实现必须严格遵循PRD
+
+**约束**:
+- 代码实现必须与PRD描述一致
+- API接口必须与API契约一致
+- 数据库设计必须与TRD一致
+- 测试用例必须覆盖PRD中的所有场景
+
+**参考文档**:
+- @docs/architecture/V4/AI-WORKFLOW-V4-PART3-PRD-TRD.md
+- @docs/01_guideline/api-contracts/README.md
+
+## 契约驱动开发
+
+**核心原则**: 前后端通过API契约并行开发
+
+**详细规则**: 参考 @.cursor/rules/02-testing/contract-testing.mdc
+
+**参考文档**: @docs/01_guideline/api-contracts/README.md
+
+## 测试驱动开发 (TDD)
+
+**核心原则**: 严格遵循测试用例设计 + TDD三阶段循环
+
+**详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
+
+**参考文档**:
+- @.cursor/rules/02-testing/test-case-standards.mdc
+- @docs/architecture/V4/AI-WORKFLOW-V4-PART4-TDD-TEST.md
+
+## 五道防线保障
+
+```
+防线1: Pre-commit Hook (本地拦截)
+  ↓
+防线2: Commit-msg Hook (消息验证)
+  ↓
+防线3: Post-commit Hook (提交后审计)
+  ↓
+防线4: CI/CD Pipeline (云端验证)
+  ↓
+防线5: 自动回滚机制 (违规自动撤销)
+```
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART5-COMPLIANCE.md
+
+## 目录结构强制规范
+
+**详细规则**: 参考 @.cursor/rules/00-core/v4-directory-structure.mdc
+
+**参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#3-目录结构规范

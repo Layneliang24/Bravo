@@ -1,16 +1,29 @@
 // REQ-ID: REQ-2025-003-user-login
+import axios, { AxiosInstance } from 'axios'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import axios, { AxiosInstance } from 'axios'
 
 // API基础URL
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+// 判断是否在浏览器环境（Vite proxy可用）
+// 如果API_BASE_URL是Docker容器名（如http://backend:8000），在浏览器中无法解析
+// 应该使用相对路径，让Vite proxy处理
+const useRelativePath =
+  typeof window !== 'undefined' &&
+  (!API_BASE_URL ||
+    API_BASE_URL.includes('backend:') ||
+    API_BASE_URL.includes('localhost') ||
+    API_BASE_URL.includes('127.0.0.1'))
 
 // 创建axios实例（可以在测试中被mock）
 export const createApiClient = (): AxiosInstance => {
+  // 在浏览器环境中，使用相对路径让Vite proxy处理
+  // 在服务器端渲染（SSR）或测试环境中，使用绝对路径
+  const baseURL = useRelativePath ? '' : API_BASE_URL
+
   return axios.create({
-    baseURL: API_BASE_URL,
+    baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -343,10 +356,29 @@ export const useAuthStore = defineStore('auth', () => {
         credentials
       )
 
+      // 预览API始终返回200，即使密码错误也返回{valid: false}
       preview.value = response.data
       return response.data
     } catch (error: any) {
+      // 只有网络错误或验证码错误（400）或频率限制（429）才会进入catch
       preview.value = null
+
+      // 检查是否是验证码错误
+      if (
+        error?.response?.status === 400 &&
+        error?.response?.data?.code === 'INVALID_CAPTCHA'
+      ) {
+        // 验证码错误，抛出错误让调用方处理
+        throw error
+      }
+
+      // 检查是否是429错误（频率限制）
+      if (error?.response?.status === 429) {
+        // 429错误，抛出错误让调用方处理（保留原始error对象，包含response信息）
+        throw error
+      }
+
+      // 其他错误（网络错误等）
       handleApiError(error, '预验证失败，请检查输入信息')
     }
   }

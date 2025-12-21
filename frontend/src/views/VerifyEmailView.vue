@@ -30,9 +30,17 @@
       <h2 class="error-title">邮箱验证失败</h2>
       <p class="error-message">{{ errorMessage }}</p>
       <div class="error-actions">
+        <button
+          @click="handleResendVerification"
+          :disabled="isResending"
+          class="resend-button"
+          data-testid="resend-button"
+        >
+          {{ isResending ? '发送中...' : '重新发送' }}
+        </button>
         <button @click="handleGoToLogin" class="login-button">前往登录</button>
         <p class="resend-hint">
-          验证链接可能已过期或无效，请前往登录页面重新发送或重新申请验证邮件。
+          验证链接可能已过期或无效，您可以重新发送验证邮件或前往登录页面。
         </p>
       </div>
     </div>
@@ -57,9 +65,11 @@ const token = computed(() => {
 
 // 验证状态
 const isVerifying = ref(false)
+const isResending = ref(false)
 const verificationResult = ref<'success' | 'error' | null>(null)
 const successMessage = ref('')
 const errorMessage = ref('')
+const userEmail = ref<string | null>(null) // 从验证token中获取的邮箱
 
 // 执行邮箱验证
 const verifyEmail = async () => {
@@ -92,6 +102,10 @@ const verifyEmail = async () => {
     verificationResult.value = 'error'
     errorMessage.value =
       error?.message || '验证链接已过期或无效，请重新申请验证邮件'
+
+    // 尝试从错误响应中获取邮箱信息（如果后端返回）
+    // 注意：这里需要后端API支持，暂时先尝试从token获取
+    // 如果token有效但验证失败，可以尝试重新发送
   } finally {
     isVerifying.value = false
   }
@@ -100,6 +114,52 @@ const verifyEmail = async () => {
 // 跳转到登录页
 const handleGoToLogin = () => {
   router.push('/login')
+}
+
+// 重新发送验证邮件
+const handleResendVerification = async () => {
+  if (isResending.value) return
+
+  isResending.value = true
+  try {
+    // 方案1：如果用户已登录，使用authStore发送
+    const currentToken = authStore.token
+    if (currentToken && userEmail.value) {
+      await authStore.sendEmailVerification({ email: userEmail.value })
+      errorMessage.value = '验证邮件已重新发送，请查收您的邮箱'
+      return
+    }
+
+    // 方案2：如果未登录，尝试通过验证token重新发送
+    // 需要后端提供新的API端点：POST /api/auth/email/verify/resend/?token=xxx
+    if (token.value) {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/email/verify/resend/?token=${encodeURIComponent(token.value)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        errorMessage.value = data.message || '验证邮件已重新发送，请查收您的邮箱'
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || '重新发送失败')
+      }
+    } else {
+      throw new Error('无法重新发送：缺少验证令牌')
+    }
+  } catch (error: any) {
+    // 如果失败，提示用户前往登录或重新注册
+    errorMessage.value = error?.message || '重新发送失败，请先登录后再试，或返回注册页面重新注册'
+  } finally {
+    isResending.value = false
+  }
 }
 
 // 组件挂载时自动验证

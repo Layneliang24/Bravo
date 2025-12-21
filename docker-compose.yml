@@ -54,6 +54,14 @@ services:
       - DB_PORT=3306
       - REDIS_URL=redis://redis:6379/0
       - TZ=Asia/Shanghai # 设置北京时间
+      # QQ邮箱配置
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST=smtp.qq.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=2227208441@qq.com
+      - EMAIL_HOST_PASSWORD=fnrshjgvbntjdjfd
+      - DEFAULT_FROM_EMAIL=2227208441@qq.com
     volumes:
       - ./backend:/app
       - ./.compliance:/app/.compliance:ro # 只读挂载合规引擎（V4架构）
@@ -61,6 +69,8 @@ services:
       - ./docs:/app/docs:ro # 只读挂载docs目录（V4合规引擎需要访问PRD文件）
       - ./scripts:/app/project_scripts:ro # 只读挂载scripts目录（PRD状态验证器需要）
       - ./.taskmaster:/app/.taskmaster # 挂载taskmaster目录（metadata更新需要）
+      - ./e2e:/app/e2e:ro # 只读挂载e2e目录（反向检查需要读取e2e测试文件）
+      - ./frontend:/app/frontend:ro # 只读挂载frontend目录（反向检查需要读取frontend测试文件）
       - backend_logs:/app/logs
       - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
     depends_on:
@@ -78,7 +88,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      # 注意：浏览器在E2E容器中运行，E2E容器和backend容器在同一个Docker网络中
+      # 但浏览器代码在浏览器中执行，浏览器无法解析Docker容器名
+      # 解决方案：使用相对路径，通过前端代理，或者使用localhost:8000（端口映射）
+      # 但E2E测试中，浏览器访问http://frontend:3000，前端代码需要访问后端
+      # 最简单：前端使用相对路径/api，然后配置vite proxy
+      # 或者：使用http://backend:8000，但需要确保浏览器在Docker网络中（实际上不行）
+      # 临时方案：使用http://localhost:8000，但需要确保端口映射
+      - VITE_API_BASE_URL=http://backend:8000
       - TZ=Asia/Shanghai # 设置北京时间
     volumes:
       - ./frontend:/app
@@ -96,6 +113,17 @@ services:
       - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
       - REDIS_URL=redis://redis:6379/0
       - TZ=Asia/Shanghai # 设置北京时间
+      # QQ邮箱配置
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST=smtp.qq.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=2227208441@qq.com
+      - EMAIL_HOST_PASSWORD=fnrshjgvbntjdjfd
+      - DEFAULT_FROM_EMAIL=2227208441@qq.com
+      # 前端域名配置（用于邮件链接）
+      - FRONTEND_DOMAIN=http://localhost:3000
+      - BACKEND_DOMAIN=http://localhost:8000
     volumes:
       - ./backend:/app
       - /etc/localtime:/etc/localtime:ro # 挂载宿主机时区文件
@@ -115,6 +143,14 @@ services:
       - DJANGO_SETTINGS_MODULE=bravo.settings.local
       - DATABASE_URL=mysql://bravo_user:bravo_password@mysql:3306/bravo_test
       - REDIS_URL=redis://redis:6379/0
+      # QQ邮箱配置
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST=smtp.qq.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=2227208441@qq.com
+      - EMAIL_HOST_PASSWORD=fnrshjgvbntjdjfd
+      - DEFAULT_FROM_EMAIL=2227208441@qq.com
     volumes:
       - ./backend:/app
     depends_on:

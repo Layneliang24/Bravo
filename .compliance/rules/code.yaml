@@ -27,3 +27,4 @@ modification_validation:
   require_prd_approval_for_deletion: true
   require_test_update_for_api_change: true
   require_documentation_update: true
+  require_api_contract_consistency: true # ⭐ 新增：API契约一致性检查

@@ -46,10 +46,22 @@ file_rules_mapping:
     rules: [code]
   - pattern: "frontend/src/**/*.{vue,ts}"
     rules: [code]
+  - pattern: "frontend/src/**/__tests__/**/*.spec.ts"
+    rules: [test, code]
+  - pattern: "frontend/src/**/__tests__/**/*.spec.tsx"
+    rules: [test, code]
+  - pattern: "frontend/src/**/*.spec.ts"
+    rules: [test, code]
+  - pattern: "frontend/src/**/*.spec.tsx"
+    rules: [test, code]
   - pattern: ".taskmaster/tasks/**/*.json"
     rules: [task]
   - pattern: ".taskmaster/tasks/**/*.md"
     rules: [task]
+  - pattern: "docs/00_product/requirements/**/*-test-cases.csv"
+    rules: [testcase]
+  - pattern: "docs/00_product/requirements/**/*-testcases.csv"
+    rules: [testcase]
 
 # 排除路径（不检查）
 exclude_paths:
@@ -63,3 +75,5 @@ exclude_paths:
   - ".husky/_/**"
   - "scripts-golden/**"
   - "tests-golden/**"
+  - "e2e/tests/_helpers/**" # 排除E2E测试helper文件
+  - "**/*-helper.ts" # 排除所有helper TypeScript文件

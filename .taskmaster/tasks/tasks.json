@@ -10,7 +10,40 @@
   "REQ-2025-003-user-login": {
     "tasks": [
       {
-        "id": "1",
+        "id": 0,
+        "title": "Task-0: 自检与验证",
+        "description": "验证PRD元数据完整性、检查测试目录存在、验证API契约文件",
+        "details": "Task-0是强制性的自检任务，确保PRD完整性和项目准备就绪。包含3个子任务：1. 验证PRD元数据完整性（test_files、implementation_files、testcase_file等必需字段）2. 检查测试目录存在（backend/tests/unit/、backend/tests/integration/、e2e/tests/）3. 验证API契约文件（如果存在则验证OpenAPI格式）",
+        "testStrategy": "Task-0不需要代码测试，它是合规检查任务，通过合规引擎的task0_checker自动验证",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "验证PRD元数据完整性",
+            "description": "检查PRD frontmatter和必需字段（test_files、implementation_files、testcase_file、testcase_status）",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "检查测试目录存在",
+            "description": "确保所有必需的测试目录存在（backend/tests/unit/、backend/tests/integration/、e2e/tests/）",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 3,
+            "title": "验证API契约文件",
+            "description": "检查API契约文件是否存在且格式正确（OpenAPI 3.0格式，包含openapi和paths字段）",
+            "status": "done",
+            "dependencies": []
+          }
+        ]
+      },
+      {
+        "id": 1,
         "title": "后端：数据库模型扩展与迁移",
         "description": "根据PRD要求，扩展现有的User模型，并创建EmailVerification和PasswordReset模型，包含所有指定字段和索引。",
         "details": "1. **红（Red）**：编写测试用例，验证User模型新增字段、EmailVerification和PasswordReset模型的创建及其字段、索引是否符合预期，预期测试失败。2. **绿（Green）**：在`backend/apps/users/models.py`中扩展`User`模型，添加`is_email_verified`, `email_verified_at`, `last_login`, `failed_login_attempts`, `locked_until`, `avatar`, `display_name`字段。创建`EmailVerification`和`PasswordReset`模型，包含`id`, `user_id`, `email`, `token`, `expires_at`, `verified_at`/`used_at`, `created_at`字段。为`User`表的`email`, `username`, `is_email_verified`字段以及`EmailVerification`和`PasswordReset`表的`token`字段添加唯一索引。运行`makemigrations`和`migrate`。3. **重构（Refactor）**：优化模型定义，确保字段类型和约束正确。",
@@ -78,7 +111,7 @@
         "updatedAt": "2025-12-07T05:35:24.211Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "后端：验证码生成与API实现",
         "description": "实现图形验证码的生成、Redis存储、过期管理以及获取和刷新验证码的API接口。",
         "details": "1. **红（Red）**：编写测试用例，验证验证码生成逻辑、Redis存储、过期机制以及API响应格式，预期测试失败。2. **绿（Green）**：在`backend/apps/users/utils.py`中实现验证码生成逻辑，使用Pillow生成4位数字+字母混合验证码，添加干扰线和噪点，Base64编码图片。在Redis中存储验证码答案，Key格式为`captcha:{session_id}`，设置5分钟过期。在`backend/apps/users/views.py`中创建`GET /api/auth/captcha/`接口用于获取验证码（返回`captcha_id`, `captcha_image`, `expires_in`）和`POST /api/auth/captcha/refresh/`接口用于刷新验证码。3. **重构（Refactor）**：优化验证码生成算法和Redis操作。",
@@ -146,7 +179,7 @@
         "updatedAt": "2025-12-07T06:04:57.555Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "后端：用户注册API实现",
         "description": "实现用户注册API (`POST /api/auth/register/`)，包括邮箱注册、密码强度验证、动态验证码验证和注册成功后JWT Token生成。",
         "details": "1. **红（Red）**：编写测试用例，覆盖注册成功、邮箱已存在、密码不符合强度、验证码错误等场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/serializers.py`中创建注册序列化器，包含邮箱、密码、确认密码、验证码ID和答案字段。在`backend/apps/users/views.py`中实现`POST /api/auth/register/`视图，验证邮箱唯一性，使用Django内置PBKDF2哈希密码，验证密码强度（最少8位，包含字母和数字），验证动态验证码。注册成功后，生成JWT Access Token和Refresh Token，并返回用户基本信息。3. **重构（Refactor）**：优化序列化器和视图逻辑，确保错误处理清晰。",
@@ -214,7 +247,7 @@
         "updatedAt": "2025-12-07T07:14:22.985Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "后端：用户登录API实现",
         "description": "实现用户登录API (`POST /api/auth/login/`)，包括邮箱/用户名+密码登录、动态验证码验证、登录失败次数限制和账户锁定机制。",
         "details": "1. **红（Red）**：编写测试用例，覆盖登录成功、密码错误、验证码错误、账户锁定、未激活邮箱等场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/serializers.py`中创建登录序列化器。在`backend/apps/users/views.py`中实现`POST /api/auth/login/`视图，验证邮箱/用户名和密码，验证动态验证码。实现登录失败次数跟踪（`failed_login_attempts`字段），当失败次数达到5次时，锁定账户10分钟（更新`locked_until`字段）。成功登录后重置失败次数，生成JWT Access Token和Refresh Token。3. **重构（Refactor）**：优化登录逻辑和错误响应，确保安全性和用户体验。",
@@ -282,7 +315,7 @@
         "updatedAt": "2025-12-07T07:44:15.161Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "后端：JWT Token管理API实现",
         "description": "实现JWT Token的刷新 (`POST /api/auth/token/refresh/`) 和登出 (`POST /api/auth/logout/`) 功能。",
         "details": "1. **红（Red）**：编写测试用例，验证Token刷新成功、使用过期Refresh Token刷新失败、登出成功等场景，预期测试失败。2. **绿（Green）：**集成`djangorestframework-simplejwt`。在`backend/apps/users/views.py`中实现`POST /api/auth/token/refresh/`视图，接收Refresh Token并返回新的Access Token。实现`POST /api/auth/logout/`视图，使当前Access Token失效。3. **重构（Refactor）**：优化Token处理逻辑，确保安全和效率。",
@@ -350,7 +383,7 @@
         "updatedAt": "2025-12-08T16:38:18.333Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "后端：邮箱验证API与异步邮件发送",
         "description": "实现发送邮箱验证邮件 (`POST /api/auth/email/verify/send/`) 和验证邮箱 (`GET /api/auth/email/verify/{token}/`) 的API接口，并集成Celery进行异步邮件发送。",
         "details": "1. **红（Red）**：编写测试用例，验证发送邮件API的触发、验证链接的生成、邮箱验证成功和失败（如token过期、无效）的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/email/verify/send/`视图，生成唯一的验证Token，存储到`EmailVerification`表，并使用Celery异步发送包含验证链接的邮件。实现`GET /api/auth/email/verify/{token}/`视图，验证Token的有效性和过期时间，更新用户`is_email_verified`状态，并标记`EmailVerification`记录为已验证。3. **重构（Refactor）**：优化邮件模板、Celery任务定义和错误处理。",
@@ -418,7 +451,7 @@
         "updatedAt": "2025-12-07T10:03:29.590Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "后端：密码找回API与异步邮件发送",
         "description": "实现发送密码重置邮件 (`POST /api/auth/password/reset/send/`) 和重置密码 (`POST /api/auth/password/reset/`) 的API接口，并集成Celery进行异步邮件发送。",
         "details": "1. **红（Red）**：编写测试用例，验证发送重置邮件API的触发、重置链接的生成、密码重置成功和失败（如token过期、无效）的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/password/reset/send/`视图，验证邮箱是否存在，生成唯一的重置Token，存储到`PasswordReset`表，并使用Celery异步发送包含重置链接的邮件，该接口需验证码保护。实现`POST /api/auth/password/reset/`视图，验证Token的有效性和未使用状态，更新用户密码，并标记`PasswordReset`记录为已使用。3. **重构（Refactor）**：优化邮件模板、Celery任务定义和错误处理。",
@@ -486,7 +519,7 @@
         "updatedAt": "2025-12-07T15:23:14.761Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "后端：登录预验证API与频率限制",
         "description": "实现登录预验证API (`POST /api/auth/preview/`)，用于在不实际登录的情况下验证账号密码并返回用户头像信息，并实施频率限制。",
         "details": "1. **红（Red）**：编写测试用例，验证正确账号密码返回头像信息、错误账号密码返回`valid: false`、无头像用户返回默认头像信息、以及频率限制生效的场景，预期测试失败。2. **绿（Green）**：在`backend/apps/users/views.py`中实现`POST /api/auth/preview/`视图。该接口需验证码保护。验证邮箱和密码是否匹配，但不执行实际登录。如果匹配，返回`valid: true`以及用户的`display_name`、`avatar_url`（或`null`）、`default_avatar`（布尔值）、`avatar_letter`（首字母）。如果用户没有设置头像，则根据`display_name`或`username`的首字母生成`avatar_letter`。无论成功失败，均返回200状态码，通过`valid`字段区分。在`backend/apps/users/throttling.py`中实现自定义频率限制，限制同一IP每分钟最多10次请求。3. **重构（Refactor）**：优化预验证逻辑和响应结构，确保安全性和性能。",
@@ -554,7 +587,7 @@
         "updatedAt": "2025-12-07T08:17:38.130Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "前端：基础UI组件开发 (FloatingInput, DefaultAvatar)",
         "description": "开发可复用的悬浮式输入框组件 (`FloatingInput.vue`) 和默认头像组件 (`DefaultAvatar.vue`)。",
         "details": "1. **红（Red）**：编写组件测试，验证`FloatingInput`的标签上浮动画、错误状态显示、图标支持。验证`DefaultAvatar`在有/无`avatar_url`时显示正确头像或首字母。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`FloatingInput.vue`，实现输入时标签上浮动画、错误状态显示、图标支持。创建`DefaultAvatar.vue`，根据传入的`avatar_url`显示真实头像，若无则根据`avatar_letter`显示首字母生成的默认头像。使用Tailwind CSS / 自定义CSS进行样式设计。3. **重构（Refactor）**：优化组件的props、事件和样式，确保可复用性和性能。",
@@ -622,7 +655,7 @@
         "updatedAt": "2025-12-07T09:19:06.846Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "前端：认证相关UI组件开发 (Captcha, PasswordStrength)",
         "description": "开发验证码组件 (`Captcha.vue`) 和密码强度指示器组件 (`PasswordStrength.vue`)。",
         "details": "1. **红（Red）**：编写组件测试，验证`Captcha`组件的图片显示、刷新功能、输入框交互。验证`PasswordStrength`组件的实时强度检测和视觉反馈。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`Captcha.vue`，显示验证码图片、刷新按钮和输入框，支持加载状态。创建`PasswordStrength.vue`，实现实时密码强度检测（例如，根据长度、包含字符类型），提供视觉反馈（颜色条）和强度提示文字。3. **重构（Refactor）**：优化组件的逻辑和样式，确保用户体验。",
@@ -690,7 +723,7 @@
         "updatedAt": "2025-12-08T11:20:16.640Z"
       },
       {
-        "id": "11",
+        "id": 11,
         "title": "前端：Pinia Auth Store核心实现",
         "description": "在Pinia中实现`auth` store，定义认证相关的状态和核心动作，包括登录、注册、登出、Token刷新、验证码获取和刷新。",
         "details": "1. **红（Red）**：编写store测试，验证`auth` store的状态初始化、`login`、`register`、`logout`、`refreshToken`、`fetchCaptcha`、`refreshCaptcha`等action的调用和状态更新。预期测试失败。2. **绿（Green）**：在`frontend/src/stores/auth.ts`中定义`AuthState`接口，包含`user`, `token`, `refreshToken`, `isAuthenticated`, `captcha`等状态。定义`AuthActions`接口，实现`login`, `register`, `logout`, `refreshToken`, `fetchCaptcha`, `refreshCaptcha`等异步action，使用Axios调用后端API。处理Token的存储（例如localStorage或sessionStorage）和`isAuthenticated`状态的更新。3. **重构（Refactor）**：优化store的模块化和错误处理，确保状态管理清晰。",
@@ -758,7 +791,7 @@
         "updatedAt": "2025-12-08T12:45:06.406Z"
       },
       {
-        "id": "12",
+        "id": 12,
         "title": "前端：登录表单开发与集成",
         "description": "开发`LoginForm.vue`，集成`FloatingInput`和`Captcha`组件，并与`auth` store的登录动作进行集成。",
         "details": "1. **红（Red）**：编写组件测试，验证`LoginForm`的渲染、表单验证、提交逻辑、错误提示和验证码刷新。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`LoginForm.vue`。使用`FloatingInput`组件处理邮箱和密码输入，使用`Captcha`组件处理验证码。集成VeeValidate进行表单验证。通过Pinia `auth` store调用`login` action。处理登录失败时的错误提示和验证码刷新。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
@@ -826,7 +859,7 @@
         "updatedAt": "2025-12-08T13:08:40.990Z"
       },
       {
-        "id": "13",
+        "id": 13,
         "title": "前端：注册表单开发与集成",
         "description": "开发`RegisterForm.vue`，集成`FloatingInput`、`Captcha`和`PasswordStrength`组件，并与`auth` store的注册动作进行集成。",
         "details": "1. **红（Red）**：编写组件测试，验证`RegisterForm`的渲染、表单验证、密码强度显示、提交逻辑、错误提示和验证码刷新。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`RegisterForm.vue`。使用`FloatingInput`处理邮箱、密码和确认密码输入，使用`Captcha`组件处理验证码，集成`PasswordStrength`组件显示密码强度。通过Pinia `auth` store调用`register` action。处理注册失败时的错误提示和验证码刷新。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
@@ -894,7 +927,7 @@
         "updatedAt": "2025-12-08T13:21:10.846Z"
       },
       {
-        "id": "14",
+        "id": 14,
         "title": "前端：密码找回表单开发与集成",
         "description": "开发密码找回相关表单，包括发送重置邮件表单和重置密码表单，并与`auth` store的相应动作进行集成。",
         "details": "1. **红（Red）**：编写组件测试，验证发送重置邮件表单的提交、错误提示。验证重置密码表单的提交、密码强度、错误提示。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`PasswordResetForm.vue`用于发送重置邮件，集成`FloatingInput`和`Captcha`，通过`auth` store调用`sendPasswordReset` action。创建单独的重置密码页面/组件，接收URL中的token，集成`FloatingInput`和`PasswordStrength`，通过`auth` store调用`resetPassword` action。3. **重构（Refactor）**：优化表单的交互逻辑和错误处理。",
@@ -960,7 +993,7 @@
         "updatedAt": "2025-12-08T15:23:05.758Z"
       },
       {
-        "id": "15",
+        "id": 15,
         "title": "前端：用户预览组件开发与登录表单集成",
         "description": "开发`UserPreview.vue`组件，并在`auth` store中实现登录预验证动作，将其集成到`LoginForm.vue`中。",
         "details": "1. **红（Red）**：编写组件测试，验证`UserPreview`在不同状态（加载中、有效、无效、无头像）下的显示。编写store测试，验证`previewLogin` action的调用和`preview`状态的更新。编写集成测试，验证`LoginForm`中预验证的触发和`UserPreview`的显示。预期测试失败。2. **绿（Green）**：在`frontend/src/components/auth/`目录下创建`UserPreview.vue`，显示圆形头像（真实头像或首字母默认头像）、用户显示名称，支持加载中状态和淡入动画。在`frontend/src/stores/auth.ts`的`AuthState`中添加`preview`状态，实现`previewLogin` action，调用后端`/api/auth/preview/`接口，并更新`preview`状态。在`LoginForm.vue`中，监听密码输入框的失焦事件或停止输入500ms后触发`previewLogin` action，并将`UserPreview.vue`集成到表单上方。3. **重构（Refactor）**：优化组件的动画效果和与store的交互逻辑。",
@@ -1028,7 +1061,7 @@
         "updatedAt": "2025-12-08T13:41:20.500Z"
       },
       {
-        "id": "16",
+        "id": 16,
         "title": "前端：邮箱验证流程实现",
         "description": "实现前端邮箱验证流程，包括发送验证邮件的UI触发和验证链接的处理。",
         "details": "1. **红（Red）**：编写E2E测试，验证用户注册后收到验证邮件，点击链接后页面跳转并显示验证结果。预期测试失败。2. **绿（Green）**：在`auth` store中实现`sendEmailVerification`和`verifyEmail` action。在注册成功后，提示用户查收验证邮件，并提供重新发送验证邮件的UI入口。实现一个专门的路由/页面来处理邮箱验证链接（例如`/verify-email?token=...`），在该页面中调用`verifyEmail` action并显示验证结果。3. **重构（Refactor）**：优化用户提示和页面跳转逻辑。",
@@ -1095,7 +1128,7 @@
         "updatedAt": "2025-12-08T15:57:13.069Z"
       },
       {
-        "id": "17",
+        "id": 17,
         "title": "前端：UI/UX增强与响应式设计",
         "description": "根据PRD的UI设计规范，对所有认证相关页面和组件进行美化，实现品牌配色方案、悬浮式输入框动画和响应式布局。",
         "details": "1. **红（Red）**：进行视觉验收，验证配色方案、动画效果和响应式布局是否符合设计稿和PRD要求。预期不完全符合。2. **绿（Green）**：应用PRD中指定的品牌配色方案（深蓝、金色、渐变背景等）。使用CSS transform和transition为`FloatingInput`实现标签上浮动画。调整`LoginView.vue`的布局，实现桌面端的左右分栏和移动端的单列全屏布局，设置断点（768px, 1024px, 1440px）。为`UserPreview`等组件添加淡入动画效果。3. **重构（Refactor）**：优化CSS结构，确保样式一致性和可维护性。",
@@ -1163,7 +1196,7 @@
         "updatedAt": "2025-12-08T16:25:50.647Z"
       },
       {
-        "id": "18",
+        "id": 18,
         "title": "整体测试与代码重构优化",
         "description": "执行所有后端单元测试、集成测试和前端组件测试、E2E测试，确保代码覆盖率达到80%以上，并进行全面的代码重构和优化。",
         "details": "1. **红（Red）**：运行所有测试，检查是否有失败的测试用例或代码覆盖率未达标。2. **绿（Green）**：修复所有测试失败的问题，确保所有单元测试、集成测试和E2E测试通过。使用代码覆盖率工具（如Coverage.py for Django, Vitest for Vue）检查并提升代码覆盖率至80%以上。对后端API、序列化器、模型和前端组件、store进行代码审查和重构，消除冗余代码，提高可读性和性能。3. **重构（Refactor）**：持续优化代码结构，确保遵循最佳实践，提高系统的可维护性和扩展性。",
@@ -1247,14 +1280,28 @@
           }
         ],
         "updatedAt": "2025-12-08T16:53:25.005Z"
+      },
+      {
+        "id": 19,
+        "title": "根据Figma设计规范重新实现登录页面UI",
+        "description": "根据PRD中新增的Figma设计规范，重新实现登录页面的用户界面，包括颜色、布局、输入框、验证码区域、品牌展示区和字体，确保所有视觉元素与设计稿严格一致。",
+        "details": "1. **分析Figma设计稿**：仔细研究PRD中“Figma设计规范（权威标准）”章节，理解所有颜色、尺寸、布局、字体和组件样式。\\n2. **更新全局样式**：调整或新增CSS变量，以反映新的主色调（橙色、绿色、蓝色）和字体规范（Arial，主标题20px，副标题16px，标签14px）。\\n3. **重构登录页面布局**：将主容器尺寸设置为1152px×721px。实现左右分栏布局：左侧品牌区宽度460px，右侧表单区宽度690px。确保布局在不同屏幕尺寸下仍能保持响应式（可能需要调整Task 17中已有的响应式逻辑）。\\n4. **实现左侧品牌展示区**：包含“Learning Hub”标题、欢迎文字。放置中央圆形插图（需获取或创建相应SVG/图片资源）。实现三个功能卡片（根据Figma设计稿的样式和内容）。\\n5. **更新输入框样式**：将所有登录相关输入框（如用户名、密码）的高度设置为60px，圆角14px。边框颜色设置为rgba(249,115,22,0.15)，背景颜色设置为rgba(255,255,255,0.6)。确保`FloatingInput`组件适配新的样式规范。\\n6. **调整验证码区域**：验证码显示框尺寸调整为160px×64px。验证码输入框尺寸调整为402px×64px。\\n7. **精确实现**：对所有UI元素进行像素级调整，确保颜色代码、尺寸、间距、字体大小和行高与Figma设计规范完全匹配。\\n8. **代码审查**：确保CSS代码结构清晰，遵循BEM或其他CSS方法论，易于维护。\n<info added on 2025-12-13T06:43:03.709Z>\n9. **E2E测试代码编写（TDD红色阶段）**：\n   - 已完成E2E测试代码编写，创建了 `e2e/tests/auth/test-ui-design.spec.ts` 测试文件。\n   - 实现了6个E2E测试用例：\n     - TC-AUTH_UI-001: 登录页面布局-左右分栏验证（左侧460px品牌区+右侧690px表单区）\n     - TC-AUTH_UI-002: 登录页面颜色规范验证（主卡片背景、输入框边框、文字颜色）\n     - TC-AUTH_UI-003: 输入框样式验证（高度60px、圆角14px、图标位置和尺寸）\n     - TC-AUTH_UI-004: 验证码区域样式验证（显示框160px×64px、输入框402px×64px、文字30px粗体）\n     - TC-AUTH_UI-005: 左侧品牌展示区内容验证（Learning Hub标题、欢迎文字、中央插图、三个功能卡片）\n     - TC-AUTH_UI-006: 响应式布局-移动端适配（<768px时单列布局）\n   - **测试实现细节**：\n     - 使用Playwright页面对象模式（LoginUIPage类）。\n     - 验证精确的尺寸（允许±2px误差以应对浏览器渲染差异）。\n     - 验证颜色值（rgba格式，支持rgb/rgba转换）。\n     - 验证字体大小和样式（font-size、font-weight）。\n     - 验证响应式布局（移动端单列、无水平滚动）。\n   - **预期状态**：这些测试预期会失败（TDD红色阶段），因为UI还没有按照Figma设计规范实现。\n   - **TypeScript语法检查**：✅ 通过（无语法错误）。\n   - **下一步**：实现UI按照Figma设计规范，使测试通过（TDD绿色阶段）。\n</info added on 2025-12-13T06:43:03.709Z>\n<info added on 2025-12-13T06:51:48.236Z>\n10. **UI实现（TDD绿色阶段）**：\n   - 已完成UI实现，使之前编写的E2E测试预期通过。\n   - **完成内容**：\n     1. **更新CSS变量**（brand-colors.css）：\n        - 添加Figma设计规范的所有CSS变量。\n        - 主色调：橙色（#f97316, #ff6900, #ff8904）、绿色（#22c55e）、蓝色（rgba(81, 162, 255, 1)）。\n        - 文字颜色、背景颜色、边框颜色、尺寸、字体、间距等所有规范。\n     2. **重构Login.vue**：\n        - 实现1152px×721px主容器（AuthCard）。\n        - 左右分栏布局：左侧460px品牌区，右侧690px表单区。\n        - 添加顶部渐变条和装饰效果。\n        - 响应式布局支持（移动端单列）。\n     3. **创建BrandSection.vue**（左侧品牌展示区）：\n        - Logo区域：Learning Hub标题、Grow Every Day副标题。\n        - 欢迎文字：Welcome to your personal learning space...\n        - 中央插图：256px×256px圆形装饰，包含渐变方块和圆点。\n        - 三个功能卡片：English Learning、Coding Practice、Career Growth。\n     4. **更新LoginForm.vue**：\n        - 使用FloatingInput组件替代原生input。\n        - 更新表单标题：Welcome Back + Continue your learning journey。\n        - 更新注册链接：Don't have an account? Sign up now →。\n        - 使用新的样式规范。\n     5. **更新FloatingInput.vue**：\n        - 输入框高度：60px。\n        - 圆角：14px。\n        - 边框：2px solid rgba(249,115,22,0.15)。\n        - 背景：rgba(255,255,255,0.6)。\n        - 图标：20px×20px，左侧16px位置。\n        - 内阴影效果。\n     6. **更新Captcha.vue**：\n        - 验证码显示框：160px×64px。\n        - 验证码输入框：402.406px×64px。\n        - 验证码背景：橙色到黄色渐变。\n        - 刷新按钮：24px×24px。\n   - **实现细节**：\n     - 所有颜色值精确匹配Figma设计规范。\n     - 所有尺寸精确匹配Figma设计规范（允许±2px误差）。\n     - 字体：Arial，主标题20px，副标题16px，标签14px。\n     - 间距：严格按照Figma规范。\n   - **下一步**：运行E2E测试验证所有测试用例通过（TC-AUTH_UI-001到006）。\n</info added on 2025-12-13T06:51:48.236Z>",
+        "testStrategy": "1. **E2E测试**：运行E2E测试套件中的TC-AUTH_UI-001到TC-AUTH_UI-006，确保登录、注册等核心认证流程的功能性不受影响。\\n2. **视觉对比验证**：将实现后的登录页面与Figma设计稿进行并排视觉对比，使用屏幕截图工具或浏览器开发者工具进行像素级检查。\\n3. **设计规范符合性检查**：**颜色**：使用颜色拾取工具验证所有UI元素的颜色代码（主色调、背景、边框、文本等）是否与Figma规范完全一致。**尺寸**：使用浏览器开发者工具检查主容器、分栏、输入框、验证码区域、品牌区元素等所有关键组件的宽度、高度、内边距和外边距是否与Figma规范完全一致。**布局**：验证左右分栏布局、元素对齐、间距是否符合设计稿。**字体**：检查字体家族（Arial）、字号（20px, 16px, 14px）、字重和行高是否与Figma规范一致。\\n4. **响应式测试**：在不同分辨率的设备或浏览器窗口下测试页面，确保布局在各种屏幕尺寸下仍能保持良好体验，并符合响应式设计原则（如果Figma有提供响应式规范）。",
+        "status": "in-progress",
+        "dependencies": ["15", "17"],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2025-12-13T06:42:17.889Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-08T16:53:25.006Z",
-      "taskCount": 18,
+      "lastModified": "2025-12-13T06:42:17.892Z",
+      "taskCount": 19,
       "completedCount": 18,
-      "tags": ["REQ-2025-003-user-login"]
+      "tags": ["REQ-2025-003-user-login"],
+      "created": "2025-12-13T06:42:58.950Z",
+      "description": "Tasks for REQ-2025-003-user-login context"
     }
   },
   "REQ-2025-001": {

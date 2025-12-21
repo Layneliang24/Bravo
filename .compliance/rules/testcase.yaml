@@ -1,0 +1,99 @@
+name: testcase
+description: 测试用例设计文件合规规则
+version: "1.0"
+
+# 测试用例文件命名规范
+naming:
+  pattern: "{REQ-ID}-test-cases.csv"
+  example: "REQ-2025-003-user-login-test-cases.csv"
+
+# 测试用例文件位置
+location:
+  path: "docs/00_product/requirements/{REQ-ID}/"
+  example: "docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv"
+
+# 必填字段
+required_fields:
+  - 用例ID
+  - 用例名称
+  - 测试类型
+  - 优先级
+  - 关联REQ-ID
+  - 关联功能点
+  - 测试场景
+  - 前置条件
+  - 测试步骤
+  - 预期结果
+
+# 可选字段
+optional_fields:
+  - 测试数据
+  - 边界条件
+  - 异常场景
+  - UI验证点
+  - 性能要求
+  - 可访问性
+  - HTTP方法
+  - API路径
+  - 请求头
+  - 请求体
+  - 预期状态码
+  - 预期响应
+  - 备注
+
+# 有效值定义
+valid_values:
+  测试类型:
+    - UNIT
+    - INTEGRATION
+    - E2E
+    - REGRESSION
+  优先级:
+    - P0 # 阻塞性，核心功能
+    - P1 # 高优先级，重要功能
+    - P2 # 中优先级，辅助功能
+    - P3 # 低优先级，锦上添花
+
+# 用例ID格式
+testcase_id_pattern: "^TC-[A-Z]+-\\d{3}$"
+testcase_id_example: "TC-AUTH-001"
+
+# REQ-ID格式
+req_id_pattern: "^REQ-\\d{4}-\\d{3}(-[a-z0-9-]+)?$"
+req_id_example: "REQ-2025-003-user-login"
+
+# 最低用例数量要求
+min_testcases:
+  total: 5
+  p0: 1
+  p1: 2
+
+# 评审要求
+review:
+  required: true
+  reviewers_min: 1
+  checklist:
+    - 所有PRD功能点都有对应测试用例
+    - 所有用户故事场景都有覆盖
+    - 边界条件和异常场景都有考虑
+    - UI交互都有验证点
+    - P0用例覆盖核心功能
+    - 优先级分配合理
+    - 每个用例都关联REQ-ID
+    - 测试步骤清晰可执行
+    - 预期结果可验证
+
+# PRD元数据更新要求
+prd_metadata:
+  required_fields:
+    - testcase_file
+    - testcase_status
+  testcase_status_fields:
+    - total_cases
+    - p0_cases
+    - p1_cases
+    - p2_cases
+    - p3_cases
+    - reviewed
+    - reviewed_by
+    - reviewed_at

@@ -1,18 +1,27 @@
 <!-- REQ-ID: REQ-2025-003-user-login -->
 <template>
   <!-- 注册成功后的邮箱验证提示界面 -->
-  <div v-if="isRegistered" class="email-verification-prompt">
+  <div v-if="isRegistered" class="email-verification-prompt register-success">
     <div class="verification-icon">📧</div>
     <h2 class="verification-title">注册成功！</h2>
-    <p class="verification-message">
+    <p
+      class="verification-message success-message"
+      data-testid="success-message"
+    >
       我们已向您的邮箱 <strong>{{ registeredEmail }}</strong> 发送了验证邮件。
     </p>
-      <p class="verification-instruction">
+    <p class="verification-instruction">
       请查收您的邮箱（包括垃圾邮件文件夹），点击验证链接以完成邮箱验证。验证链接将在24小时内有效。
     </p>
-    <div v-if="verificationMessage" :class="['verification-feedback', verificationMessageType]">
-      {{ verificationMessage }}
-    </div>
+    <transition name="fade">
+      <div
+        v-if="verificationMessage"
+        :class="['verification-feedback', verificationMessageType]"
+        key="verification-feedback"
+      >
+        {{ verificationMessage }}
+      </div>
+    </transition>
     <div class="verification-actions">
       <button
         type="button"
@@ -22,11 +31,7 @@
       >
         {{ isResending ? '发送中...' : '重新发送验证邮件' }}
       </button>
-      <button
-        type="button"
-        @click="handleGoToHome"
-        class="home-button"
-      >
+      <button type="button" @click="handleGoToHome" class="home-button">
         返回首页
       </button>
     </div>
@@ -56,16 +61,23 @@
       :error="errors.password_confirm"
       required
     />
-    <div v-if="errors.captcha_answer" class="error-message">
+    <!-- 验证码区域 - Captcha组件已包含输入框，不需要重复 -->
+    <div class="flex items-center gap-4 mt-4" style="min-height: 64px">
+      <Captcha
+        ref="captchaRef"
+        :disabled="isSubmitting"
+        @captcha-update="handleCaptchaUpdate"
+      />
+    </div>
+    <div v-if="errors.captcha_answer" class="error-message mt-2">
       {{ errors.captcha_answer }}
     </div>
-    <Captcha
-      ref="captchaRef"
-      :disabled="isSubmitting"
-      @captcha-update="handleCaptchaUpdate"
-    />
-    <button type="submit" :disabled="isSubmitting" class="submit-button">
-      {{ isSubmitting ? '注册中...' : '注册' }}
+    <button
+      type="submit"
+      :disabled="isSubmitting || !isFormValid"
+      class="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-semibold tracking-wide hover:from-orange-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+    >
+      {{ isSubmitting ? '注册中...' : '创建账户' }}
     </button>
   </form>
 </template>
@@ -74,12 +86,13 @@
 // REQ-ID: REQ-2025-003-user-login
 import { useAuthStore } from '@/stores/auth'
 import {
-    validateCaptcha,
-    validateEmail,
-    validatePassword,
-    validatePasswordConfirm,
+  EMAIL_REGEX,
+  validateCaptcha,
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirm,
 } from '@/utils/validation'
-import { reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Captcha from './Captcha.vue'
 import FloatingInput from './FloatingInput.vue'
@@ -107,6 +120,20 @@ const captchaRef = ref<InstanceType<typeof Captcha> | null>(null)
 const router = useRouter()
 const authStore = useAuthStore()
 
+// 表单验证状态
+const isFormValid = computed(() => {
+  return (
+    formData.email &&
+    EMAIL_REGEX.test(formData.email) &&
+    formData.password &&
+    formData.password.length >= 8 &&
+    formData.password_confirm &&
+    formData.password === formData.password_confirm &&
+    formData.captcha_id &&
+    formData.captcha_answer
+  )
+})
+
 // 邮箱验证相关状态
 const isRegistered = ref(false)
 const registeredEmail = ref('')
@@ -118,10 +145,35 @@ const handleCaptchaUpdate = (data: {
   captcha_id: string
   captcha_answer: string
 }) => {
+  // 更新captcha_id（刷新验证码时会触发）
   formData.captcha_id = data.captcha_id
-  formData.captcha_answer = data.captcha_answer
-  errors.captcha_answer = ''
+  // 更新captcha_answer（Captcha组件内部输入框的值）
+  formData.captcha_answer = data.captcha_answer || ''
+  // 如果验证码刷新了，清空之前的错误
+  if (!data.captcha_answer) {
+    errors.captcha_answer = ''
+  } else if (data.captcha_answer.length === 4) {
+    // 如果输入了4位，自动验证
+    const captchaError = validateCaptcha(
+      formData.captcha_id,
+      formData.captcha_answer
+    )
+    if (captchaError) {
+      errors.captcha_answer = captchaError
+    } else {
+      errors.captcha_answer = ''
+    }
+  }
 }
+
+// 验证码是否有效
+const isCaptchaValid = computed(() => {
+  return (
+    formData.captcha_answer &&
+    formData.captcha_answer.length === 4 &&
+    !errors.captcha_answer
+  )
+})
 
 // 清除所有错误
 const clearErrors = () => {
@@ -156,15 +208,22 @@ const validateForm = (): boolean => {
 
 // 刷新验证码
 const refreshCaptcha = async () => {
-  if (captchaRef.value && typeof captchaRef.value.refreshCaptcha === 'function') {
+  if (
+    captchaRef.value &&
+    typeof captchaRef.value.refreshCaptcha === 'function'
+  ) {
     await captchaRef.value.refreshCaptcha()
   }
 }
 
 // 处理注册成功
 const handleRegisterSuccess = async (email: string) => {
-  isRegistered.value = true
   registeredEmail.value = email
+  // 使用nextTick确保DOM更新顺序，避免在卸载时出现DOM不一致
+  await nextTick()
+  isRegistered.value = true
+  // 再次等待确保DOM切换完成
+  await nextTick()
   // 不清空表单，保留邮箱信息用于重发验证邮件
 }
 
@@ -172,7 +231,22 @@ const handleRegisterSuccess = async (email: string) => {
 const handleRegisterError = async (error: any) => {
   const errorMessage = error?.message || '注册失败，请稍后重试'
   errors.captcha_answer = errorMessage
-  await refreshCaptcha()
+  // 如果是验证码错误，自动刷新验证码
+  if (
+    errorMessage.includes('验证码') ||
+    errorMessage.includes('captcha') ||
+    errorMessage.includes('验证码错误')
+  ) {
+    // 先清空验证码输入，避免用户继续使用错误的验证码
+    formData.captcha_answer = ''
+    // 然后刷新验证码
+    await refreshCaptcha()
+    // 确保captcha_id也更新了
+    if (captchaRef.value) {
+      // 等待一下确保刷新完成
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
 }
 
 const handleSubmit = async () => {
@@ -192,6 +266,8 @@ const handleSubmit = async () => {
     })
 
     await handleRegisterSuccess(formData.email)
+    // 确保DOM切换完全完成
+    await nextTick()
   } catch (error: any) {
     await handleRegisterError(error)
   } finally {
@@ -207,6 +283,10 @@ const handleResendVerification = async () => {
 
   isResending.value = true
   verificationMessage.value = ''
+  // 等待DOM更新完成（清空verificationMessage会移除v-if元素）
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 100))
+  await nextTick()
 
   try {
     const response = await authStore.sendEmailVerification({
@@ -216,6 +296,12 @@ const handleResendVerification = async () => {
     if (response && response.message) {
       verificationMessage.value = response.message
       verificationMessageType.value = 'success'
+      // 等待DOM更新完成（设置verificationMessage会添加v-if元素）
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await nextTick()
     }
   } catch (error: any) {
     const errorMessage =
@@ -223,8 +309,18 @@ const handleResendVerification = async () => {
       '发送验证邮件失败，请稍后重试。如果问题持续存在，请联系客服支持。'
     verificationMessage.value = errorMessage
     verificationMessageType.value = 'error'
+    // 等待DOM更新完成（设置verificationMessage会添加v-if元素）
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
   } finally {
     isResending.value = false
+    // 最后等待一次确保所有DOM更新完成
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
   }
 }
 
@@ -232,6 +328,27 @@ const handleResendVerification = async () => {
 const handleGoToHome = () => {
   router.push('/')
 }
+
+// 组件卸载前，确保所有异步操作和DOM更新完成
+onBeforeUnmount(async () => {
+  // 先清空verificationMessage，避免在卸载时还有DOM更新
+  if (verificationMessage.value) {
+    verificationMessage.value = ''
+    // 等待DOM更新完成（v-if="verificationMessage"会移除DOM元素）
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
+  }
+
+  // 等待所有异步操作完成
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 50))
+  await nextTick()
+
+  // 确保所有状态更新完成
+  isSubmitting.value = false
+  isResending.value = false
+})
 </script>
 
 <style scoped>
@@ -239,6 +356,10 @@ const handleGoToHome = () => {
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: auto;
 }
 
 .submit-button {

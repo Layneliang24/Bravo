@@ -2,6 +2,7 @@
 """
 Task-Master适配层
 将Task-Master生成的tasks.json转换为三层目录结构
+适配标签化结构，自动生成Task-0
 """
 
 import json
@@ -13,13 +14,13 @@ from typing import Dict
 
 
 class TaskMasterAdapter:
-    """Task-Master适配器"""
+    """Task-Master适配器（适配标签化结构）"""
 
     def __init__(self, req_id: str):
         self.req_id = req_id
         self.root_dir = Path.cwd()
-        self.taskmaster_dir = self.root_dir / ".taskmaster" / "tasks" / req_id
-        self.tasks_json_path = self.taskmaster_dir / "tasks.json"
+        # ⭐ 适配标签化结构：tasks.json在根目录，不是每个REQ-ID一个
+        self.tasks_json_path = self.root_dir / ".taskmaster" / "tasks" / "tasks.json"
         self.prd_path = (
             self.root_dir
             / "docs"
@@ -30,90 +31,129 @@ class TaskMasterAdapter:
         )
 
     def convert(self):
-        """主入口：转换Task-Master输出为三层结构"""
-        print(f"🚀 开始转换 {self.req_id}")
+        """主入口：生成Task-0并插入到tasks.json"""
+        # 修复Windows编码问题
+        if sys.platform == "win32":
+            import io
+
+            sys.stdout = io.TextIOWrapper(
+                sys.stdout.buffer, encoding="utf-8", errors="replace"
+            )
+            sys.stderr = io.TextIOWrapper(
+                sys.stderr.buffer, encoding="utf-8", errors="replace"
+            )
+
+        print(f"[Adapter] 开始为 {self.req_id} 生成Task-0")  # noqa: F541
 
         # 1. 检查tasks.json是否存在
         if not self.tasks_json_path.exists():
-            print(f"❌ tasks.json不存在: {self.tasks_json_path}")
+            print(f"[Adapter] 错误: tasks.json不存在: {self.tasks_json_path}")
             sys.exit(1)
 
-        # 2. 读取原始tasks.json
+        # 2. 读取tasks.json（标签化结构）
         with open(self.tasks_json_path, "r", encoding="utf-8") as f:
-            original_tasks = json.load(f)
+            all_tasks_data = json.load(f)
 
-        # 3. 生成Task-0自检任务
+        # 3. 检查REQ-ID是否存在于tasks.json中
+        if self.req_id not in all_tasks_data:
+            print(f"[Adapter] 错误: REQ-ID {self.req_id} 不在tasks.json中")
+            sys.exit(1)
+
+        req_tag_data = all_tasks_data[self.req_id]
+        if not isinstance(req_tag_data, dict):
+            print(f"[Adapter] 错误: REQ-ID {self.req_id} 的数据格式不正确")
+            sys.exit(1)
+
+        original_tasks = req_tag_data.get("tasks", [])
+
+        # 4. 检查Task-0是否已存在
+        has_task_0 = any(task.get("id") == 0 for task in original_tasks)
+        if has_task_0:
+            print("[Adapter] 警告: Task-0已存在，跳过生成")
+            return
+
+        # 5. 生成Task-0自检任务
         task_0 = self._generate_task_0()
+        print(f"[Adapter] 已生成Task-0: {task_0['title']}")
 
-        # 4. 为每个任务生成增强版本
-        enhanced_tasks = [task_0]
-        for task in original_tasks.get("tasks", []):
-            enhanced_task = self._enhance_task(task)
-            enhanced_tasks.append(enhanced_task)
+        # 6. 将Task-0插入到tasks列表的第一位
+        enhanced_tasks = [task_0] + original_tasks
+        req_tag_data["tasks"] = enhanced_tasks
 
-        # 5. 更新tasks.json（增强版）
-        enhanced_json = {
-            "req_id": self.req_id,
-            "project": "Bravo",
-            "prd_path": str(self.prd_path.relative_to(self.root_dir)),
-            "created_at": original_tasks.get("created_at", datetime.now().isoformat()),
-            "updated_at": datetime.now().isoformat(),
-            "tasks": enhanced_tasks,
-        }
+        # 7. 更新metadata
+        if "metadata" not in req_tag_data:
+            req_tag_data["metadata"] = {}
+        req_tag_data["metadata"]["updated_at"] = datetime.now().isoformat()
+        req_tag_data["metadata"]["taskCount"] = len(enhanced_tasks)
 
+        # 8. 写回tasks.json
         with open(self.tasks_json_path, "w", encoding="utf-8") as f:
-            json.dump(enhanced_json, f, indent=2, ensure_ascii=False)
+            json.dump(all_tasks_data, f, indent=2, ensure_ascii=False)
 
-        # 6. 创建目录和Markdown文件
-        for task in enhanced_tasks:
-            self._create_task_directory(task)
-            self._create_task_md(task)
-            for subtask in task.get("subtasks", []):
-                self._create_subtask_md(task, subtask)
-
-        print("✅ 转换完成！")
-        print(f"📁 任务目录: {self.taskmaster_dir}")
+        print(f"[Adapter] Task-0已成功添加到 {self.req_id} 的tasks列表")
+        print(f"[Adapter] 当前任务总数: {len(enhanced_tasks)}")
 
     def _generate_task_0(self) -> Dict:
-        """生成Task-0自检任务"""
+        """
+        生成Task-0自检任务
+
+        ⭐ Task-0的检查任务是固定的，包含3个子任务：
+        1. 验证PRD元数据完整性
+        2. 检查测试目录存在
+        3. 验证API契约文件
+
+        这与task0_checker.py中的检查逻辑对应。
+        """
         return {
             "id": 0,
-            "title": "Self-check and validation",
-            "description": (
-                "Validate PRD metadata, check test directories, "
-                "and verify API contract"
+            "title": "Task-0: 自检与验证",
+            "description": "验证PRD元数据完整性、检查测试目录存在、验证API契约文件",
+            "details": (
+                "Task-0是强制性的自检任务，确保PRD完整性和项目准备就绪。\n"
+                "包含3个子任务：\n"
+                "1. 验证PRD元数据完整性"
+                "（test_files、implementation_files、testcase_file等必需字段）\n"
+                "2. 检查测试目录存在"
+                "（backend/tests/unit/、backend/tests/integration/、e2e/tests/）\n"
+                "3. 验证API契约文件（如果存在则验证OpenAPI格式）"
+            ),
+            "testStrategy": (
+                "Task-0不需要代码测试，它是合规检查任务，通过合规引擎的task0_checker自动验证。\n"
+                "当代码文件提交时，task0_checker会自动执行这3个检查。"
             ),
             "status": "pending",
             "priority": "high",
-            "directory": "task-0-self-check",
             "dependencies": [],
             "subtasks": [
                 {
                     "id": 1,
-                    "title": "Validate PRD metadata",
-                    "description": "Check PRD frontmatter and required fields",
+                    "title": "验证PRD元数据完整性",
+                    "description": (
+                        "检查PRD frontmatter和必需字段"
+                        "（test_files、implementation_files、"
+                        "testcase_file、testcase_status）"
+                    ),
                     "status": "pending",
-                    "file": "subtask-1-validate-prd-metadata.md",
-                    "test_files": [],
-                    "implementation_files": [],
+                    "dependencies": [],
                 },
                 {
                     "id": 2,
-                    "title": "Check test directories",
-                    "description": "Ensure all required test directories exist",
+                    "title": "检查测试目录存在",
+                    "description": (
+                        "确保所有必需的测试目录存在"
+                        "（backend/tests/unit/、backend/tests/integration/、e2e/tests/）"
+                    ),
                     "status": "pending",
-                    "file": "subtask-2-check-test-directories.md",
-                    "test_files": [],
-                    "implementation_files": [],
+                    "dependencies": [],
                 },
                 {
                     "id": 3,
-                    "title": "Verify API contract",
-                    "description": "Check if API contract file exists and is valid",
+                    "title": "验证API契约文件",
+                    "description": (
+                        "检查API契约文件是否存在且格式正确" "（OpenAPI 3.0格式，包含openapi和paths字段）"
+                    ),
                     "status": "pending",
-                    "file": "subtask-3-verify-api-contract.md",
-                    "test_files": [],
-                    "implementation_files": [],
+                    "dependencies": [],
                 },
             ],
         }
@@ -396,7 +436,7 @@ def main():
     """命令行入口"""
     if len(sys.argv) < 2:
         print("用法: python scripts/task-master/adapter.py <REQ-ID>")
-        print("示例: python scripts/task-master/adapter.py REQ-2025-001-user-login")
+        print("示例: python scripts/task-master/adapter.py REQ-2025-003-user-login")
         sys.exit(1)
 
     req_id = sys.argv[1]
@@ -405,7 +445,7 @@ def main():
         adapter = TaskMasterAdapter(req_id)
         adapter.convert()
     except Exception as e:
-        print(f"❌ 转换失败: {e}", file=sys.stderr)
+        print(f"[Adapter] 错误: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()

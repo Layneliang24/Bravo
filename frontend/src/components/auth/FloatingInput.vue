@@ -113,10 +113,10 @@ const handleFocus = (event: FocusEvent) => {
 </script>
 
 <style scoped>
+/* Figma设计规范 - 输入框样式 */
 .floating-input-wrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 1rem;
 }
 
 .input-container {
@@ -125,40 +125,53 @@ const handleFocus = (event: FocusEvent) => {
 }
 
 .input-container.has-icon {
-  padding-left: 2.5rem;
+  padding-left: 48px;
 }
 
 .input-icon {
   position: absolute;
-  left: 0.75rem;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1rem;
-  color: #6b7280;
-  z-index: 1;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
 }
 
 input {
   width: 100%;
-  padding: 1rem 0.75rem;
-  padding-top: 1.5rem;
-  border: 1px solid var(--input-border);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
+  height: var(--input-height);
+  padding: 0 16px 0 48px;
+  border: 2px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+  font-family: var(--font-family);
+  font-size: var(--font-size-subtitle);
+  font-weight: 400;
   outline: none;
-  transition: border-color 0.2s ease;
-  background-color: var(--input-background);
-  color: var(--input-text);
+  transition: all 0.3s ease;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-inset-input);
+}
+
+input::placeholder {
+  color: var(--text-placeholder);
+  font-size: var(--font-size-subtitle);
 }
 
 input:focus {
-  border-color: var(--input-border-focus);
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  border-color: var(--color-primary-orange);
+  box-shadow: var(--shadow-inset-input),
+    0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 input:focus-visible {
-  outline: 2px solid var(--input-border-focus);
+  outline: 2px solid var(--color-primary-orange);
   outline-offset: 2px;
 }
 
@@ -167,45 +180,47 @@ input.error {
 }
 
 input:disabled {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.4);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .floating-label {
   position: absolute;
-  left: 0.75rem;
+  left: 48px;
   top: 50%;
   transform: translateY(-50%) scale(1);
-  font-size: 1rem;
-  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-subtitle);
+  color: var(--text-placeholder);
   pointer-events: none;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     color 0.2s ease,
     top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: var(--input-background);
-  padding: 0 0.25rem;
+  background-color: var(--bg-input);
+  padding: 0 4px;
   z-index: 1;
 }
 
-.input-container.has-icon .floating-label {
-  left: 2.5rem;
+.input-container:not(.has-icon) .floating-label {
+  left: 16px;
 }
 
 .floating-label-active {
-  top: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--color-primary-dark-blue);
-  transform: translateY(0) scale(0.9);
+  top: 0;
+  font-size: 12px;
+  color: var(--text-label);
+  transform: translateY(-50%) scale(0.9);
+  background-color: var(--bg-input);
 }
 
 input:focus + .floating-label {
-  color: var(--color-primary-dark-blue);
+  color: var(--color-primary-orange);
 }
 
 input:focus + .floating-label:not(.floating-label-active) {
-  color: var(--color-primary-gold);
+  color: var(--color-primary-orange);
 }
 
 input.error + .floating-label {
@@ -213,9 +228,11 @@ input.error + .floating-label {
 }
 
 .error-message {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
+  margin-top: 4px;
+  font-size: 14px;
   color: var(--color-error);
   line-height: 1.25rem;
+  font-family: var(--font-family);
+  font-weight: 400;
 }
 </style>

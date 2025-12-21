@@ -1,0 +1,30 @@
+---
+description: V4目录结构强制规范
+globs: **/*
+priority: 900
+---
+
+# 目录结构强制规范
+
+## PRD路径
+
+**路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}.md`
+
+## 测试用例CSV路径
+
+**路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv`
+
+## API契约路径
+
+**路径**: `docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
+
+## 测试文件路径
+
+- **单元测试**: `backend/tests/unit/test_{module}.py`
+- **集成测试**: `backend/tests/integration/test_{feature}.py`
+- **E2E测试**: `e2e/tests/{feature}.spec.ts`
+- **回归测试**: `backend/tests/regression/test_{bug_id}.py`, `e2e/tests/regression/test-{bug_id}.spec.ts`
+
+## 参考文档
+
+@docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#3-目录结构规范

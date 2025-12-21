@@ -31,12 +31,12 @@ PRD_FILE="$1"
 shift  # 移除第一个参数，剩下的都是task-master参数
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Task-Master Parse-PRD（带PRD状态验证）${NC}"
+echo -e "${BLUE}  Task-Master Parse-PRD（带PRD状态验证 + 自动生成Task-0）${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
 echo ""
 
 # 步骤1：验证PRD文件是否存在
-echo -e "${YELLOW}📁 [步骤1/4] 检查PRD文件...${NC}"
+echo -e "${YELLOW}📁 [步骤1/6] 检查PRD文件...${NC}"
 if [ ! -f "$PRD_FILE" ]; then
     echo -e "${RED}❌ PRD文件不存在: $PRD_FILE${NC}"
     exit 1
@@ -45,7 +45,7 @@ echo -e "${GREEN}✅ PRD文件存在${NC}"
 echo ""
 
 # 步骤2：验证PRD状态
-echo -e "${YELLOW}🔍 [步骤2/4] 验证PRD状态...${NC}"
+echo -e "${YELLOW}🔍 [步骤2/6] 验证PRD状态...${NC}"
 cd "$PROJECT_ROOT"
 
 # 在Docker容器内执行验证器（避免宿主机Python环境问题）
@@ -80,7 +80,7 @@ echo -e "${GREEN}✅ PRD状态验证通过${NC}"
 echo ""
 
 # 步骤3：调用真实的task-master parse-prd
-echo -e "${YELLOW}🚀 [步骤3/4] 执行task-master parse-prd...${NC}"
+echo -e "${YELLOW}🚀 [步骤3/6] 执行task-master parse-prd...${NC}"
 echo -e "${BLUE}📋 命令: task-master parse-prd --input=\"$PRD_FILE\" $@${NC}"
 echo ""
 
@@ -99,7 +99,7 @@ echo -e "${GREEN}✅ parse-prd执行成功${NC}"
 echo ""
 
 # 步骤4：记录PRD路径到tasks.json的metadata
-echo -e "${YELLOW}📝 [步骤4/5] 记录PRD路径到tasks.json metadata...${NC}"
+echo -e "${YELLOW}📝 [步骤4/6] 记录PRD路径到tasks.json metadata...${NC}"
 
 # 提取tag参数（如果有）
 TAG_ARG=""
@@ -132,9 +132,81 @@ else
     echo -e "${YELLOW}⚠️  metadata更新失败（非阻塞）${NC}"
 fi
 
-# 步骤5：自动更新PRD状态为implementing
+# 步骤5：自动生成Task-0
 echo ""
-echo -e "${YELLOW}🔄 [步骤5/5] 更新PRD状态...${NC}"
+echo -e "${YELLOW}🎯 [步骤5/6] 自动生成Task-0...${NC}"
+
+# 使用步骤4中提取的TAG_ARG作为REQ-ID（如果存在且不是master）
+REQ_ID=""
+if [ -n "$TAG_ARG" ] && [ "$TAG_ARG" != "master" ]; then
+    REQ_ID="$TAG_ARG"
+fi
+
+# 如果没有从TAG_ARG获取，尝试从PRD文件路径提取
+if [ -z "$REQ_ID" ]; then
+    if [[ "$PRD_FILE" =~ REQ-[0-9]{4}-[0-9]{3}-[a-z0-9-]+ ]]; then
+        REQ_ID="${BASH_REMATCH[0]}"
+    fi
+fi
+
+# 如果仍然没有，尝试从tasks.json查找最新更新的tag
+if [ -z "$REQ_ID" ]; then
+    TASKS_JSON="$PROJECT_ROOT/.taskmaster/tasks/tasks.json"
+    if [ -f "$TASKS_JSON" ]; then
+        REQ_ID=$(python3 -c "
+import json
+try:
+    with open('$TASKS_JSON', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    latest_tag = None
+    latest_time = None
+    for tag, tag_data in data.items():
+        if tag == 'master':
+            continue
+        if isinstance(tag_data, dict) and 'metadata' in tag_data:
+            updated = tag_data['metadata'].get('updated_at', '')
+            if updated and (latest_time is None or updated > latest_time):
+                latest_time = updated
+                latest_tag = tag
+    if latest_tag:
+        print(latest_tag)
+except Exception:
+    pass
+" 2>/dev/null)
+    fi
+fi
+
+# 如果找到REQ-ID，自动生成Task-0
+if [ -n "$REQ_ID" ]; then
+    echo -e "${BLUE}📋 检测到REQ-ID: $REQ_ID${NC}"
+
+    # 在宿主机执行adapter.py（因为需要修改tasks.json文件）
+    cd "$PROJECT_ROOT"
+    ADAPTER_OUTPUT=$(python3 scripts/task-master/adapter.py "$REQ_ID" 2>&1)
+    ADAPTER_EXIT_CODE=$?
+
+    # 过滤掉"警告: Task-0已存在"的消息（这是正常情况）
+    if echo "$ADAPTER_OUTPUT" | grep -qv "警告: Task-0已存在"; then
+        echo "$ADAPTER_OUTPUT" | grep -v "警告: Task-0已存在"
+    fi
+
+    if [ $ADAPTER_EXIT_CODE -eq 0 ]; then
+        # 检查是否是因为Task-0已存在而跳过
+        if echo "$ADAPTER_OUTPUT" | grep -q "警告: Task-0已存在"; then
+            echo -e "${YELLOW}⚠️  Task-0已存在，跳过生成${NC}"
+        else
+            echo -e "${GREEN}✅ Task-0已自动生成${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Task-0生成失败（非阻塞）${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  无法自动检测REQ-ID，请手动运行: ${GREEN}python scripts/task-master/adapter.py <REQ-ID>${NC}"
+fi
+
+# 步骤6：自动更新PRD状态为implementing
+echo ""
+echo -e "${YELLOW}🔄 [步骤6/6] 更新PRD状态...${NC}"
 docker-compose exec -T backend sh -c \
     "cd /app && python project_scripts/task-master/prd_status_validator.py $CONTAINER_PRD_PATH --update-status" \
     2>&1 | grep -v "WARNING:.*docker-compose" || true
@@ -156,8 +228,9 @@ echo -e "   .taskmaster/tasks/tasks.json"
 echo ""
 echo -e "${BLUE}📝 下一步操作:${NC}"
 echo -e "   1. 查看任务列表: ${GREEN}task-master list${NC}"
-echo -e "   2. 查看具体任务: ${GREEN}task-master show <task-id>${NC}"
-echo -e "   3. 开始开发: 按任务顺序实施"
+echo -e "   2. 查看Task-0: ${GREEN}task-master show 0${NC}"
+echo -e "   3. 展开任务: ${GREEN}task-master expand --all --research${NC}"
+echo -e "   4. 开始开发: 按任务顺序实施"
 echo ""
 
 exit 0

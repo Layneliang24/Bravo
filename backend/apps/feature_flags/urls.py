@@ -8,5 +8,5 @@ from . import views
 app_name = "feature_flags"  # pylint: disable=invalid-name
 
 urlpatterns = [
-    path("status/", views.feature_flags_status, name="status"),
+    path("status/", views.FeatureFlagsStatusView.as_view(), name="status"),
 ]

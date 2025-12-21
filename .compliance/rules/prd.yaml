@@ -10,6 +10,9 @@ required_metadata_fields:
   - test_files
   - implementation_files
   - api_contract
+  # V4.1: 测试用例设计与评审（元数据必须声明）
+  - testcase_file
+  - testcase_status
   - deletable
 
 # 元数据验证规则
@@ -41,6 +44,12 @@ metadata_validation:
   api_contract:
     type: string
     required: false
+  testcase_file:
+    type: string
+    required: true
+  testcase_status:
+    type: dict
+    required: true
   deletable:
     type: boolean
     required: true

@@ -26,6 +26,23 @@ const router = createRouter({
       component: (): Promise<Component> => import('../views/BlogDetail.vue'),
     },
     {
+      path: '/register',
+      name: 'Register',
+      component: (): Promise<Component> => import('../views/Register.vue'),
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: (): Promise<Component> =>
+        import('../views/ForgotPasswordView.vue'),
+    },
+    {
+      path: '/reset-password',
+      name: 'ResetPassword',
+      component: (): Promise<Component> =>
+        import('../views/ResetPasswordView.vue'),
+    },
+    {
       path: '/verify-email',
       name: 'VerifyEmail',
       component: (): Promise<Component> =>

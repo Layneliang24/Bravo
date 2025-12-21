@@ -1,4 +1,12 @@
 // REQ-ID: REQ-2025-003-user-login
+// TESTCASE-IDS: TC-AUTH_LOGIN-001, TC-AUTH_LOGIN-008, TC-AUTH_REGISTER-001, TC-AUTH_TOKEN-001, TC-AUTH_TOKEN-004
+// 认证状态管理Store单元测试
+// 对应测试用例：
+// - TC-AUTH_LOGIN-001: 用户登录成功-邮箱登录（Store状态管理）
+// - TC-AUTH_LOGIN-008: 用户登录成功-生成JWT Token（Token存储）
+// - TC-AUTH_REGISTER-001: 用户注册成功（Store状态管理）
+// - TC-AUTH_TOKEN-001: 刷新Token成功（Token管理）
+// - TC-AUTH_TOKEN-004: 用户登出成功（状态清理）
 import { AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

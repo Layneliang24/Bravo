@@ -7,10 +7,19 @@ from datetime import timedelta
 
 from apps.users.models import EmailVerification, PasswordReset
 from apps.users.serializers import (
+    CaptchaRefreshRequestSerializer,
+    CaptchaResponseSerializer,
+    ErrorResponseSerializer,
+    LoginResponseSerializer,
+    MessageResponseSerializer,
     PasswordResetSerializer,
     PreviewLoginSerializer,
+    PreviewResponseSerializer,
+    RegisterResponseSerializer,
     SendEmailVerificationSerializer,
     SendPasswordResetSerializer,
+    TokenRefreshRequestSerializer,
+    TokenRefreshResponseSerializer,
     UserLoginSerializer,
     UserRegisterSerializer,
 )
@@ -24,6 +33,7 @@ from apps.users.utils import (
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -103,6 +113,14 @@ class BaseCaptchaView(APIView):
 class CaptchaAPIView(BaseCaptchaView):
     """获取验证码API视图"""
 
+    @extend_schema(
+        summary="获取验证码",
+        description="获取图形验证码，返回验证码ID和Base64编码的图片",
+        responses={
+            200: CaptchaResponseSerializer,
+        },
+        tags=["验证码"],
+    )
     def get(self, request):
         """
         获取验证码
@@ -116,6 +134,15 @@ class CaptchaAPIView(BaseCaptchaView):
 class CaptchaRefreshAPIView(BaseCaptchaView):
     """刷新验证码API视图"""
 
+    @extend_schema(
+        summary="刷新验证码",
+        description="刷新验证码，可选择性删除旧验证码",
+        request=CaptchaRefreshRequestSerializer,
+        responses={
+            200: CaptchaResponseSerializer,
+        },
+        tags=["验证码"],
+    )
     def post(self, request):
         """
         刷新验证码
@@ -131,16 +158,131 @@ class CaptchaRefreshAPIView(BaseCaptchaView):
         # 如果提供了旧的captcha_id，删除旧的验证码（可选）
         old_captcha_id = request.data.get("captcha_id")
         if old_captcha_id:
+            # 记录删除操作，用于调试
+            import logging
+
+            logger = logging.getLogger(__name__)
+            old_answer = cache.get(f"captcha:{old_captcha_id}")
+            logger.info(
+                f"Refreshing captcha: deleting old captcha "
+                f"(old_captcha_id={old_captcha_id}, old_answer={old_answer})"
+            )
             cache.delete(f"captcha:{old_captcha_id}")
 
         # 生成并返回新的验证码
         return self._create_captcha_response()
 
 
+class CaptchaAnswerAPIView(BaseCaptchaView):
+    """获取验证码答案API视图（仅测试环境）"""
+
+    def get(self, request, captcha_id):
+        """
+        获取验证码答案（仅测试环境）
+
+        参数:
+            captcha_id: 验证码ID
+
+        返回:
+            Response: 包含answer的JSON响应（仅测试环境）
+        """
+        # 仅允许测试环境访问
+        if not request.META.get("HTTP_X_TEST_ENVIRONMENT") == "true":
+            return Response({"error": "此API仅用于测试环境"}, status=status.HTTP_403_FORBIDDEN)
+
+        # 从Redis获取验证码答案
+        from apps.users.utils import get_captcha_answer
+
+        answer = get_captcha_answer(captcha_id)
+        if answer is None:
+            return Response({"error": "验证码不存在或已过期"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"answer": answer}, status=status.HTTP_200_OK)
+
+
 class RegisterAPIView(BaseCaptchaView):
     """用户注册API视图"""
 
     permission_classes = []  # 允许匿名访问
+
+    @extend_schema(
+        summary="用户注册",
+        description="用户注册接口，需要提供邮箱、密码和验证码",
+        request=UserRegisterSerializer,
+        responses={
+            201: RegisterResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+        tags=["认证"],
+    )
+    def post(self, request):
+        """
+        用户注册
+
+        请求体:
+            {
+                "email": "user@example.com",
+                "password": "SecurePass123",
+                "password_confirm": "SecurePass123",
+                "captcha_id": "uuid",
+                "captcha_answer": "A3B7"
+            }
+
+        返回:
+            Response: 包含user信息、token、refresh_token和message的JSON响应
+        """
+        serializer = UserRegisterSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            # 尝试格式化错误响应
+            formatted_response = self._format_error_response(serializer.errors)
+            if formatted_response:
+                return formatted_response
+
+            # 如果无法格式化，直接返回原始错误
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 创建用户
+        user = serializer.save()
+
+        # 生成邮箱验证token
+        import secrets
+
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timedelta(hours=24)
+
+        # 创建EmailVerification记录
+        EmailVerification.objects.create(
+            user=user,
+            email=user.email,
+            token=token,
+            expires_at=expires_at,
+        )
+
+        # 调用Celery任务发送验证邮件
+        send_email_verification.delay(
+            user_id=user.id,
+            email=user.email,
+            token=token,
+        )
+
+        # 生成JWT Token
+        access_token, refresh_token = self._generate_tokens(user)
+
+        # 返回响应
+        return Response(
+            {
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email,
+                    "is_email_verified": user.is_email_verified,
+                },
+                "token": access_token,
+                "refresh_token": refresh_token,
+                "message": "注册成功，请查收验证邮件",
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     def _format_error_response(self, errors):
         """
@@ -189,7 +331,9 @@ class RegisterAPIView(BaseCaptchaView):
                 ):
                     return Response(
                         {
-                            "error": password_error[0] if password_error else "密码不符合要求",
+                            "error": (
+                                password_error[0] if password_error else "密码不符合要求"
+                            ),
                             "code": "WEAK_PASSWORD",
                         },
                         status=status.HTTP_400_BAD_REQUEST,
@@ -214,60 +358,23 @@ class RegisterAPIView(BaseCaptchaView):
 
         return None
 
-    def post(self, request):
-        """
-        用户注册
-
-        请求体:
-            {
-                "email": "user@example.com",
-                "password": "SecurePass123",
-                "password_confirm": "SecurePass123",
-                "captcha_id": "uuid",
-                "captcha_answer": "A3B7"
-            }
-
-        返回:
-            Response: 包含user信息、token、refresh_token和message的JSON响应
-        """
-        serializer = UserRegisterSerializer(data=request.data)
-
-        if not serializer.is_valid():
-            # 尝试格式化错误响应
-            formatted_response = self._format_error_response(serializer.errors)
-            if formatted_response:
-                return formatted_response
-
-            # 如果无法格式化，直接返回原始错误
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # 创建用户
-        user = serializer.save()
-
-        # 生成JWT Token
-        access_token, refresh_token = self._generate_tokens(user)
-
-        # 返回响应
-        return Response(
-            {
-                "user": {
-                    "id": str(user.id),
-                    "email": user.email,
-                    "is_email_verified": user.is_email_verified,
-                },
-                "token": access_token,
-                "refresh_token": refresh_token,
-                "message": "注册成功，请查收验证邮件",
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
 
 class LoginAPIView(BaseCaptchaView):
     """用户登录API视图"""
 
     permission_classes = []  # 允许匿名访问
 
+    @extend_schema(
+        summary="用户登录",
+        description="用户登录接口，需要提供邮箱/用户名、密码和验证码",
+        request=UserLoginSerializer,
+        responses={
+            200: LoginResponseSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+        },
+        tags=["认证"],
+    )
     def post(self, request):
         """
         用户登录
@@ -333,7 +440,10 @@ class LoginAPIView(BaseCaptchaView):
                                 )
                                 # 返回账户锁定错误
                                 return Response(
-                                    {"error": "账户已被锁定，请稍后再试", "code": "ACCOUNT_LOCKED"},
+                                    {
+                                        "error": "账户已被锁定，请稍后再试",
+                                        "code": "ACCOUNT_LOCKED",
+                                    },
                                     status=status.HTTP_403_FORBIDDEN,
                                 )
                             else:
@@ -345,7 +455,10 @@ class LoginAPIView(BaseCaptchaView):
                                 )
 
                     return Response(
-                        {"error": "用户不存在或密码错误", "code": "INVALID_CREDENTIALS"},
+                        {
+                            "error": "用户不存在或密码错误",
+                            "code": "INVALID_CREDENTIALS",
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -451,21 +564,17 @@ class PreviewAPIView(BaseCaptchaView):
                 "avatar_letter": self._get_avatar_letter(user),
             }
 
+    @extend_schema(
+        summary="登录预验证（获取用户头像）",
+        description="登录前预验证接口，用于获取用户头像等信息，始终返回200状态码",
+        request=PreviewLoginSerializer,
+        responses={
+            200: PreviewResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+        tags=["认证"],
+    )
     def post(self, request):
-        """
-        登录预验证（获取用户头像）
-
-        请求体:
-            {
-                "email": "user@example.com" 或 "username",
-                "password": "SecurePass123",
-                "captcha_id": "uuid",
-                "captcha_answer": "A3B7"
-            }
-
-        返回:
-            Response: 包含valid和user信息的JSON响应（始终返回200状态码）
-        """
         serializer = PreviewLoginSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -506,6 +615,16 @@ class TokenRefreshAPIView(APIView):
 
     permission_classes = []  # 允许匿名访问（只需要refresh token）
 
+    @extend_schema(
+        summary="刷新JWT Token",
+        description="使用refresh token获取新的access token",
+        request=TokenRefreshRequestSerializer,
+        responses={
+            200: TokenRefreshResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+        tags=["认证"],
+    )
     def post(self, request):
         """
         刷新JWT Token
@@ -552,6 +671,15 @@ class LogoutAPIView(APIView):
 
     permission_classes = [IsAuthenticated]  # 需要认证
 
+    @extend_schema(
+        summary="用户登出",
+        description="用户登出接口，需要提供JWT Token",
+        responses={
+            200: MessageResponseSerializer,
+            401: ErrorResponseSerializer,
+        },
+        tags=["认证"],
+    )
     def post(self, request):
         """
         用户登出
@@ -601,6 +729,17 @@ class SendEmailVerificationAPIView(APIView):
 
     permission_classes = [IsAuthenticated]  # 需要认证
 
+    @extend_schema(
+        summary="发送邮箱验证邮件",
+        description="发送邮箱验证邮件，需要提供JWT Token和邮箱地址",
+        request=SendEmailVerificationSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=["邮箱验证"],
+    )
     def post(self, request):
         """
         发送邮箱验证邮件
@@ -684,6 +823,16 @@ class VerifyEmailAPIView(APIView):
 
     permission_classes = []  # 允许匿名访问（通过token验证）
 
+    @extend_schema(
+        summary="验证邮箱",
+        description="通过token验证邮箱",
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=["邮箱验证"],
+    )
     def get(self, request, token):
         """
         验证邮箱
@@ -714,7 +863,10 @@ class VerifyEmailAPIView(APIView):
             # 检查是否已验证
             if verification.is_verified():
                 return Response(
-                    {"error": "该验证令牌已被使用（已验证）", "code": "TOKEN_ALREADY_VERIFIED"},
+                    {
+                        "error": "该验证令牌已被使用（已验证）",
+                        "code": "TOKEN_ALREADY_VERIFIED",
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -749,11 +901,113 @@ class VerifyEmailAPIView(APIView):
             )
 
 
+class ResendEmailVerificationAPIView(APIView):
+    """通过验证token重新发送邮箱验证邮件API视图"""
+
+    permission_classes = []  # 允许匿名访问（通过token验证）
+
+    @extend_schema(
+        summary="重新发送邮箱验证邮件",
+        description="通过验证token重新发送邮箱验证邮件",
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=["邮箱验证"],
+    )
+    def post(self, request):
+        """
+        通过验证token重新发送邮箱验证邮件
+
+        查询参数:
+            token: 验证令牌（从URL获取）
+
+        返回:
+            Response: 包含成功消息的JSON响应
+        """
+        try:
+            # 从查询参数获取token
+            token = request.query_params.get("token")
+            if not token:
+                return Response(
+                    {"error": "缺少验证令牌", "code": "MISSING_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 查找验证记录
+            try:
+                verification = EmailVerification.objects.get(token=token)
+            except EmailVerification.DoesNotExist:
+                return Response(
+                    {"error": "无效的验证令牌", "code": "INVALID_TOKEN"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 检查是否已验证（已验证的不能重新发送）
+            if verification.is_verified():
+                return Response(
+                    {"error": "该邮箱已验证，无需重新发送", "code": "ALREADY_VERIFIED"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 生成新的验证token
+            new_token = secrets.token_urlsafe(32)
+
+            # 设置过期时间（24小时）
+            expires_at = timezone.now() + timedelta(hours=24)
+
+            # 更新验证记录
+            verification.token = new_token
+            verification.expires_at = expires_at
+            verification.verified_at = None  # 重置验证状态
+            verification.save()
+
+            # 调用Celery任务发送邮件
+            send_email_verification.delay(
+                user_id=verification.user.id,
+                email=verification.email,
+                token=new_token,
+            )
+
+            return Response(
+                {"message": "验证邮件已重新发送，请查收您的邮箱"},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            # 捕获所有未预期的异常
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"重新发送邮箱验证邮件时发生错误: "
+                f"token={request.query_params.get('token')}, error={str(e)}",
+                exc_info=True,
+            )
+
+            return Response(
+                {"error": "重新发送验证邮件失败，请稍后重试", "code": "RESEND_FAILED"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class SendPasswordResetAPIView(BaseCaptchaView):
     """发送密码重置邮件API视图"""
 
     permission_classes = []  # 允许匿名访问
 
+    @extend_schema(
+        summary="发送密码重置邮件",
+        description="发送密码重置邮件，需要提供邮箱和验证码",
+        request=SendPasswordResetSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=["密码重置"],
+    )
     def post(self, request):
         """
         发送密码重置邮件
@@ -851,6 +1105,17 @@ class PasswordResetAPIView(APIView):
 
     permission_classes = []  # 允许匿名访问（通过token验证）
 
+    @extend_schema(
+        summary="重置密码",
+        description="通过重置token重置密码",
+        request=PasswordResetSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=["密码重置"],
+    )
     def post(self, request):
         """
         重置密码
@@ -879,7 +1144,10 @@ class PasswordResetAPIView(APIView):
                         for error in password_errors:
                             if "at least 8 characters" in str(error):
                                 return Response(
-                                    {"error": "密码长度至少为8位", "code": "WEAK_PASSWORD"},
+                                    {
+                                        "error": "密码长度至少为8位",
+                                        "code": "WEAK_PASSWORD",
+                                    },
                                     status=status.HTTP_400_BAD_REQUEST,
                                 )
                     elif (
@@ -910,7 +1178,10 @@ class PasswordResetAPIView(APIView):
                         "密码" in str(e) and "不一致" in str(e) for e in mismatch_error
                     ):
                         return Response(
-                            {"error": "密码和确认密码不一致", "code": "PASSWORD_MISMATCH"},
+                            {
+                                "error": "密码和确认密码不一致",
+                                "code": "PASSWORD_MISMATCH",
+                            },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
 
