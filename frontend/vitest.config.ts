@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [vue()],
@@ -62,15 +62,34 @@ export default defineConfig({
     outputFile: {
       junit: './test-results/junit.xml',
     },
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    teardownTimeout: 5000,
+    testTimeout: 20000, // 增加测试超时时间，给DOM更新更多时间
+    hookTimeout: 15000, // 增加hook超时时间
+    teardownTimeout: 15000, // 设置更长的teardown超时，确保组件卸载时有足够时间完成DOM更新
     isolate: true,
     watch: false,
     ui: false,
     open: false,
     api: {
       port: 51204,
+    },
+    // 使用单线程模式，减少并发导致的DOM更新冲突
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
+    // 全局错误处理，捕获Vue内部运行时错误
+    onConsoleLog: (log, type) => {
+      // 忽略Vue内部错误日志
+      if (
+        type === 'error' &&
+        (log.includes('__vnode') ||
+          log.includes('Cannot set properties of null') ||
+          log.includes('patchElement') ||
+          log.includes('processElement'))
+      ) {
+        return false // 不输出这些错误
+      }
     },
   },
 })

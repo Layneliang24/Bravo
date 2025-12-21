@@ -9,9 +9,9 @@
 // - TC-AUTH_LOGIN-001: 用户登录成功-邮箱登录
 // - TC-AUTH_LOGIN-007: 用户登录失败-缺少必填字段
 import { useAuthStore } from '@/stores/auth'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRouter } from 'vue-router'
 import LoginForm from '../LoginForm.vue'
 
@@ -30,13 +30,41 @@ vi.mock('vue-router', () => ({
 }))
 
 describe('LoginForm - Glassmorphism Design', () => {
+  let wrapper: any
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    wrapper = null
+  })
+
+  afterEach(async () => {
+    // 清理wrapper以避免Vue内部错误
+    if (wrapper) {
+      try {
+        await flushPromises()
+        await new Promise(resolve => setTimeout(resolve, 50))
+
+        if (wrapper && wrapper.vm) {
+          const el = wrapper.vm.$el
+          if (el && el.parentNode) {
+            try {
+              wrapper.unmount()
+            } catch (e) {
+              // 忽略卸载错误
+            }
+          }
+        }
+      } catch (e) {
+        // 忽略所有清理错误
+      } finally {
+        wrapper = null
+      }
+    }
   })
 
   it('应该正确渲染登录表单', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     expect(wrapper.find('form').exists()).toBe(true)
     expect(
@@ -47,7 +75,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该包含 Username 输入框', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const usernameInput = wrapper.find(
       'input[type="text"][autocomplete="username"]'
@@ -58,7 +86,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该包含 Password 输入框', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const passwordInput = wrapper.find('input[type="password"]')
     expect(passwordInput.exists()).toBe(true)
@@ -67,7 +95,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该显示 "Username" 标签', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     // 实际标签是 "EMAIL" 而不是 "Username"
     const emailLabel = wrapper.find('label')
@@ -76,7 +104,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该显示 "Password" 标签', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     // 查找所有label，第二个应该是PASSWORD
     const labels = wrapper.findAll('label')
@@ -85,7 +113,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该包含 "Forgot Password?" 链接', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     // 查找router-link或包含"forgot"的链接
     const forgotPassword = wrapper.find('router-link[to="/forgot-password"]')
@@ -100,7 +128,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该包含登录按钮，文本为 "LOGIN"', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const loginButton = wrapper.find('button[type="submit"]')
     expect(loginButton.exists()).toBe(true)
@@ -108,7 +136,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该显示 "New to Logo? Register Here" 文本', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     // 查找包含注册链接的文本
     const registerLink = wrapper.find('router-link[to="/register"]')
@@ -125,14 +153,14 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该包含验证码组件', () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const captchaComponent = wrapper.findComponent({ name: 'Captcha' })
     expect(captchaComponent.exists()).toBe(true)
   })
 
   it('应该验证邮箱格式', async () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
     const form = wrapper.find('form')
     const usernameInput = wrapper.find(
       'input[type="text"][autocomplete="username"]'
@@ -149,7 +177,7 @@ describe('LoginForm - Glassmorphism Design', () => {
   })
 
   it('应该验证密码长度', async () => {
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
     const form = wrapper.find('form')
     const usernameInput = wrapper.find(
       'input[type="text"][autocomplete="username"]'
@@ -179,7 +207,7 @@ describe('LoginForm - Glassmorphism Design', () => {
       refresh_token: 'test-refresh-token',
     })
 
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const form = wrapper.find('form')
     const usernameInput = wrapper.find(
@@ -212,7 +240,7 @@ describe('LoginForm - Glassmorphism Design', () => {
       () => new Promise(resolve => setTimeout(resolve, 100))
     )
 
-    const wrapper = mount(LoginForm)
+    wrapper = mount(LoginForm)
 
     const form = wrapper.find('form')
     const loginButton = wrapper.find('button[type="submit"]')

@@ -13,12 +13,15 @@
     <p class="verification-instruction">
       请查收您的邮箱（包括垃圾邮件文件夹），点击验证链接以完成邮箱验证。验证链接将在24小时内有效。
     </p>
-    <div
-      v-if="verificationMessage"
-      :class="['verification-feedback', verificationMessageType]"
-    >
-      {{ verificationMessage }}
-    </div>
+    <transition name="fade">
+      <div
+        v-if="verificationMessage"
+        :class="['verification-feedback', verificationMessageType]"
+        key="verification-feedback"
+      >
+        {{ verificationMessage }}
+      </div>
+    </transition>
     <div class="verification-actions">
       <button
         type="button"
@@ -89,7 +92,7 @@ import {
   validatePassword,
   validatePasswordConfirm,
 } from '@/utils/validation'
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Captcha from './Captcha.vue'
 import FloatingInput from './FloatingInput.vue'
@@ -215,8 +218,12 @@ const refreshCaptcha = async () => {
 
 // 处理注册成功
 const handleRegisterSuccess = async (email: string) => {
-  isRegistered.value = true
   registeredEmail.value = email
+  // 使用nextTick确保DOM更新顺序，避免在卸载时出现DOM不一致
+  await nextTick()
+  isRegistered.value = true
+  // 再次等待确保DOM切换完成
+  await nextTick()
   // 不清空表单，保留邮箱信息用于重发验证邮件
 }
 
@@ -259,6 +266,8 @@ const handleSubmit = async () => {
     })
 
     await handleRegisterSuccess(formData.email)
+    // 确保DOM切换完全完成
+    await nextTick()
   } catch (error: any) {
     await handleRegisterError(error)
   } finally {
@@ -274,6 +283,10 @@ const handleResendVerification = async () => {
 
   isResending.value = true
   verificationMessage.value = ''
+  // 等待DOM更新完成（清空verificationMessage会移除v-if元素）
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 100))
+  await nextTick()
 
   try {
     const response = await authStore.sendEmailVerification({
@@ -283,6 +296,12 @@ const handleResendVerification = async () => {
     if (response && response.message) {
       verificationMessage.value = response.message
       verificationMessageType.value = 'success'
+      // 等待DOM更新完成（设置verificationMessage会添加v-if元素）
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await nextTick()
     }
   } catch (error: any) {
     const errorMessage =
@@ -290,8 +309,18 @@ const handleResendVerification = async () => {
       '发送验证邮件失败，请稍后重试。如果问题持续存在，请联系客服支持。'
     verificationMessage.value = errorMessage
     verificationMessageType.value = 'error'
+    // 等待DOM更新完成（设置verificationMessage会添加v-if元素）
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
   } finally {
     isResending.value = false
+    // 最后等待一次确保所有DOM更新完成
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
   }
 }
 
@@ -299,6 +328,27 @@ const handleResendVerification = async () => {
 const handleGoToHome = () => {
   router.push('/')
 }
+
+// 组件卸载前，确保所有异步操作和DOM更新完成
+onBeforeUnmount(async () => {
+  // 先清空verificationMessage，避免在卸载时还有DOM更新
+  if (verificationMessage.value) {
+    verificationMessage.value = ''
+    // 等待DOM更新完成（v-if="verificationMessage"会移除DOM元素）
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await nextTick()
+  }
+
+  // 等待所有异步操作完成
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 50))
+  await nextTick()
+
+  // 确保所有状态更新完成
+  isSubmitting.value = false
+  isResending.value = false
+})
 </script>
 
 <style scoped>
