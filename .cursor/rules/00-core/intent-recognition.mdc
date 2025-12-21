@@ -73,429 +73,117 @@ priority: 980
 
 ---
 
-## 1. PRD相关意图 → PRD设计/精化规则
+## 1. PRD相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "PRD"、"需求文档"、"分析PRD"、"检查PRD"、"生成PRD"、"创建PRD"、"写PRD"、"设计PRD"、"精化需求"、"product requirements"
 
-**中文关键词**：
-- "生成PRD"、"创建PRD"、"写PRD"、"设计PRD"
-- "分析PRD"、"检查PRD"、"验证PRD"、"审查PRD"、"评估PRD"
-- "PRD完整性"、"PRD是否完整"、"PRD检查"、"PRD分析"
-- "帮我写这个REQ的PRD"、"把这个需求写成PRD"
-- "精化需求"、"把这个草稿变成正式PRD"
-- "PRD"、"需求文档"、"产品需求"
+**应用规则**:
+- @.cursor/rules/01-product/prd-standards.mdc
+- @.cursor/rules/01-product/prd-refinement.mdc（如果是精化需求）
+- @.cursor/rules/09-roles/prd-designer.mdc
+- @.cursor/rules/09-roles/architect.mdc
 
-**英文关键词**：
-- "create PRD"、"generate PRD"、"write PRD"、"design PRD"
-- "analyze PRD"、"check PRD"、"verify PRD"、"review PRD"、"evaluate PRD"
-- "PRD completeness"、"PRD analysis"、"PRD check"
-- "product requirements"、"requirements document"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入PRD设计阶段**
-2. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/01-product/prd-standards.mdc`
-   - `@.cursor/rules/01-product/prd-refinement.mdc`（如果是从raw文本/草稿开始）
-   - `@.cursor/rules/09-roles/prd-designer.mdc`
-   - `@.cursor/rules/09-roles/architect.mdc`
-
-3. **即使PRD文件还没打开，也要遵守规则**：
-   - 必须有完整的frontmatter（req_id, title, status, priority, type）
-   - 必须包含test_files、implementation_files、api_contract字段
-   - 必须符合V4追溯链要求
-   - 必须创建OpenAPI契约文档
-
-### AI行为强制要求
-
-**当识别到PRD相关意图时，必须按以下格式响应**：
-
-```
-[识别到PRD相关意图：{用户的具体请求}]
-[应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-[应用规则：@.cursor/rules/01-product/prd-standards.mdc]
-[应用规则：@.cursor/rules/09-roles/prd-designer.mdc]
-[应用规则：@.cursor/rules/09-roles/architect.mdc]
-[切换到PRD设计专家角色]
-[开始执行：{具体操作}]
-```
-
-### AI行为示例
-
-**示例1：生成PRD**
-```
-用户: 生成PRD
-AI: [识别到PRD相关意图：生成PRD]
-    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-    [应用规则：@.cursor/rules/01-product/prd-standards.mdc]
-    [应用规则：@.cursor/rules/09-roles/prd-designer.mdc]
-    [切换到PRD设计专家角色]
-    [开始生成PRD，严格遵守规则，即使文件还没打开]
-```
-
-**示例2：分析PRD完整性**
-```
-用户: 分析登录的PRD是否完整
-AI: [识别到PRD相关意图：分析登录的PRD是否完整]
-    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-    [应用规则：@.cursor/rules/01-product/prd-standards.mdc]
-    [应用规则：@.cursor/rules/09-roles/prd-designer.mdc]
-    [切换到PRD设计专家角色]
-    [开始分析PRD完整性，严格遵守规则]
-```
+**切换到角色**: PRD设计专家 + 架构专家
 
 ---
 
-## 2. 任务相关意图 → Task-Master任务规则
+## 2. 任务相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "生成任务"、"Task-Master"、"parse-prd"、"创建任务"、"拆分任务"、"task-master"、"generate tasks"
 
-**中文关键词**：
-- "生成任务"、"解析PRD生成任务"、"帮我用Task-Master拆任务"
-- "parse-prd"、"task-master parse-prd"
-- "创建任务"、"拆分任务"
+**应用规则**:
+- @.cursor/rules/03-taskmaster/task-generation.mdc
+- @.cursor/rules/03-taskmaster/taskmaster-workflow.mdc
+- @.cursor/rules/03-taskmaster/taskmaster-cli.mdc
 
-**英文关键词**：
-- "generate tasks"、"parse PRD"、"create tasks"
-- "task-master"、"break down tasks"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入任务生成阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到任务相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/03-taskmaster/task-generation.mdc]
-   [应用规则：@.cursor/rules/03-taskmaster/taskmaster-cli.mdc]
-   [应用规则：@.cursor/rules/03-taskmaster/taskmaster-workflow.mdc]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/03-taskmaster/task-generation.mdc`
-   - `@.cursor/rules/03-taskmaster/taskmaster-cli.mdc`
-   - `@.cursor/rules/03-taskmaster/taskmaster-workflow.mdc`
-
-4. **即使tasks.json还没打开，也要遵守规则**：
-   - 必须包含Task-0自检任务
-   - 必须遵循TDD流程（测试→实现→重构）
-   - 必须关联到PRD（REQ-ID）
-   - 必须使用Docker命令
+**切换到角色**: 任务管理专家
 
 ---
 
-## 3. 开发/实现相关意图 → 开发/任务执行规则
+## 3. 开发/实现相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "实现"、"开发"、"编码"、"写代码"、"实现功能"、"implement"、"develop"、"write code"、"开始做Task-X"
 
-**中文关键词**：
-- "实现这个需求"、"写后端/前端代码"、"帮我改这个接口/组件"
-- "开始做Task-X"、"完成登录接口实现"
-- "开发"、"编码"、"实现功能"
+**应用规则**:
+- @.cursor/rules/04-development/development-workflow.mdc
+- @.cursor/rules/04-development/task-execution.mdc
+- @.cursor/rules/09-roles/developer.mdc
 
-**英文关键词**：
-- "implement"、"develop"、"write code"
-- "start task"、"complete task"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入任务执行+开发阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到开发/实现相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/04-development/task-execution.mdc]
-   [应用规则：@.cursor/rules/04-development/development-workflow.mdc]
-   [应用规则：@.cursor/rules/09-roles/developer.mdc]
-   [切换到开发专家角色]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/04-development/task-execution.mdc`
-   - `@.cursor/rules/04-development/development-workflow.mdc`
-   - `@.cursor/rules/09-roles/developer.mdc`
-
-4. **即使代码文件还没打开，也要遵守规则**：
-   - 必须先查看Task-Master任务详情
-   - 必须先查看PRD文档
-   - 必须先查看API契约
-   - 必须遵循TDD流程（红→绿→重构）
-   - 必须使用Docker命令
+**切换到角色**: 开发专家
 
 ---
 
-## 4. 测试相关意图 → 测试/E2E规则
+## 4. 测试相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "测试"、"测试用例"、"单元测试"、"E2E"、"写测试"、"加E2E"、"test"、"unit test"、"integration test"、"E2E test"、"测试架构"
 
-**中文关键词**：
-- "写测试"、"加E2E"、"为这个REQ写测试"
-- "验证登录流程的E2E"、"补单测/集成测试"
-- "测试"、"单元测试"、"集成测试"、"E2E测试"
-- "测试用例"、"单元测试用例"、"集成测试用例"、"E2E测试用例"
-- "测试架构"、"测试体系"、"测试框架"（可能组合架构意图）
-- "检查测试"、"分析测试"、"评估测试"、"看看测试"、"审查测试"
-- "检查单元测试"、"分析单元测试"、"评估单元测试"、"看看单元测试"
-- "检查测试用例"、"分析测试用例"、"评估测试用例"、"看看测试用例"
-- "测试是否合理"、"测试用例是否合理"、"单元测试是否合理"
-- "测试用例问题"、"测试用例排查"（可能组合调试意图）
+**应用规则**:
+- @.cursor/rules/02-testing/test-types.mdc
+- @.cursor/rules/02-testing/test-case-standards.mdc
+- @.cursor/rules/02-testing/test-case-review.mdc
+- @.cursor/rules/02-testing/e2e-testing.mdc
+- @.cursor/rules/09-roles/tester.mdc
 
-**英文关键词**：
-- "write tests"、"add E2E"、"create tests"
-- "unit test"、"integration test"、"E2E test"
-- "test case"、"unit test case"、"integration test case"
-- "check test"、"analyze test"、"review test"、"evaluate test"
-- "check test case"、"analyze test case"、"review test case"
-- "is test reasonable"、"is test case reasonable"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入测试编写阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到测试相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/02-testing/test-types.mdc]
-   [应用规则：@.cursor/rules/02-testing/e2e-testing.mdc]
-   [应用规则：@.cursor/rules/02-testing/test-case-standards.mdc]（如果是设计测试用例）
-   [应用规则：@.cursor/rules/09-roles/tester.mdc]
-   [切换到测试专家角色]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/02-testing/test-types.mdc`
-   - `@.cursor/rules/02-testing/e2e-testing.mdc`
-   - `@.cursor/rules/02-testing/test-case-standards.mdc`（如果是设计测试用例）
-   - `@.cursor/rules/09-roles/tester.mdc`
-   - `@.cursor/rules/02-testing/test-types.mdc`
-
-4. **即使测试文件还没打开，也要遵守规则**：
-   - 必须先写测试（红色阶段）
-   - 测试文件必须有REQ-ID注释
-   - 测试文件必须在指定目录
-   - 测试覆盖率必须 >= 80%
-
-5. **遇到"调试地狱"场景时，必须主动质疑测试策略**（新增）：
-   - 验证码E2E测试失败 → 主动建议使用万能验证码或Mock接口
-   - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
-   - 连续失败3次以上 → 停止修代码，质疑基础假设
-   - 参考：`@.cursor/rules/02-testing/e2e-testing.mdc`（验证码测试最佳实践）
-   - 参考：`@.cursor/rules/05-debugging/debugging-methodology.mdc`（策略质疑机制）
+**切换到角色**: 测试专家
 
 ---
 
-## 5. 提交/推送相关意图 → 提交/追溯链规则
+## 5. 提交/推送相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "提交代码"、"推送代码"、"commit"、"push"、"生成提交信息"、"git commit"
 
-**中文关键词**：
-- "提交代码"、"推送代码"、"帮我git commit"
-- "生成提交信息"、"生成commit message"
-- "commit"、"push"、"提交"
+**应用规则**:
+- @.cursor/rules/06-cicd/pre-commit.mdc
+- @.cursor/rules/06-cicd/compliance.mdc
+- @.cursor/rules/00-core/v4-traceability.mdc
 
-**英文关键词**：
-- "commit code"、"push code"、"git commit"
-- "generate commit message"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入提交阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到提交/推送相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/06-cicd/pre-commit.mdc]
-   [应用规则：@.cursor/rules/00-core/v4-traceability.mdc]
-   [应用规则：@.cursor/rules/06-cicd/compliance.mdc]
-   ```
-3. **主动应用并严格遵守以下规则**：
- - `@.cursor/rules/06-cicd/pre-commit.mdc`
- - `@.cursor/rules/00-core/v4-traceability.mdc`
- - `@.cursor/rules/06-cicd/compliance.mdc`（合规检查警告主动修复）
-
-4. **提交前必须检查**：
-   - **Task-ID检查**：必须从上下文或用户输入中获取Task-ID
-   - **REQ-ID检查**：必须从代码文件中提取REQ-ID
-   - **提交消息格式**：`[REQ-ID] Task-X 描述`
-   - **如果缺少Task-ID或REQ-ID，必须询问用户，不能直接提交**
-
-### AI行为规范
-
-**当用户说"推送代码"、"提交代码"、"git commit"时**：
-
-1. **第一步**：检查Task-ID和REQ-ID
-2. **第二步**：如果缺少，询问用户（不能直接提交）
-3. **第三步**：确认提交消息格式正确
-4. **第四步**：执行提交命令
-
-**禁止行为**：
-- ❌ 不能在没有Task-ID的情况下直接提交
-- ❌ 不能忽略REQ-ID要求
-- ❌ 不能使用模糊的提交消息
+**切换到角色**: 无特定角色（执行提交流程）
 
 ---
 
-## 6. 调试相关意图 → 调试规则
+## 6. 调试相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "调试"、"排查"、"排查问题"、"修复bug"、"问题"、"难排查"、"debug"、"troubleshoot"、"fix bug"、"为什么报错"
 
-**中文关键词**：
-- "调试"、"排查"、"排查问题"、"修复bug"
-- "为什么报错"、"怎么解决这个问题"、"怎么这么难排查"
-- "问题"、"问题排查"、"难排查"、"排查困难"
-- "错误"、"报错"、"异常"、"bug"
-- "调试来调试去都找不到问题点"、"为什么这么难排查"、"为什么前端调试会这么困难"
-- "让AI定位一个e2e的失败测试用例"（可能触发策略质疑）
+**应用规则**:
+- @.cursor/rules/05-debugging/debugging-methodology.mdc
+- @.cursor/rules/05-debugging/troubleshooting-checklist.mdc
 
-**英文关键词**：
-- "debug"、"troubleshoot"、"fix bug"
-- "why error"、"how to solve"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入调试阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到调试相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/05-debugging/debugging-methodology.mdc]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/05-debugging/debugging-methodology.mdc`
-
-4. **调试流程**：
-   - 必须遵循3次失败规则
-   - 必须进行抽象层次检查
-   - 必须进行系统性问题搜索
-   - 必须进行环境差异检查
-
-5. **遇到"调试地狱"场景时，必须主动质疑测试策略**（新增）：
-   - 验证码E2E测试失败 → 立即停止修代码，主动建议使用万能验证码或Mock接口
-   - 涉及随机性/不确定性的测试 → 质疑测试策略，提出架构方案
-   - 连续失败3次以上 → 停止修代码，质疑基础假设
-   - 用户表达"调试来调试去都找不到问题点" → 触发策略质疑机制
-   - 参考：`@.cursor/rules/02-testing/e2e-testing.mdc`（验证码测试最佳实践）
-   - 参考：`@.cursor/rules/05-debugging/debugging-methodology.mdc`（策略质疑机制）
+**切换到角色**: 无特定角色（执行调试流程）
 
 ---
 
-## 7. API契约相关意图 → API契约设计规则
+## 7. API契约相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "API契约"、"OpenAPI"、"设计API"、"创建API契约"、"API contract"、"design API"
 
-**中文关键词**：
-- "设计API契约"、"创建API契约"、"写API契约"
-- "API契约"、"OpenAPI"、"API设计"、"契约文档"
-- "设计API"、"定义API"、"API接口设计"
+**应用规则**:
+- @.cursor/rules/02-testing/contract-testing.mdc
+- @.cursor/rules/09-roles/architect.mdc
 
-**英文关键词**：
-- "design API contract"、"create API contract"、"write API contract"
-- "API contract"、"OpenAPI"、"API design"、"contract document"
-- "design API"、"define API"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入API契约设计阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到API契约相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/02-testing/contract-testing.mdc]
-   [应用规则：@.cursor/rules/09-roles/architect.mdc]
-   [切换到架构专家角色]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/02-testing/contract-testing.mdc`
-   - `@.cursor/rules/09-roles/architect.mdc`
-
-4. **即使API契约文件还没打开，也要遵守规则**：
-   - 必须创建OpenAPI 3.0格式的契约文档
-   - 路径：`docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
-   - 必须包含所有端点的请求/响应Schema
-   - 必须符合OpenAPI 3.0规范
+**切换到角色**: 架构专家
 
 ---
 
-## 8. 文档维护相关意图 → 文档维护规则
+## 8. 文档维护相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "更新文档"、"写文档"、"文档维护"、"创建文档"、"documentation"、"update docs"
 
-**中文关键词**：
-- "更新文档"、"写文档"、"文档维护"、"创建文档"
-- "文档"、"文档更新"、"补充文档"
+**应用规则**:
+- @.cursor/rules/07-documentation/documentation-standards.mdc
 
-**英文关键词**：
-- "update documentation"、"write documentation"、"maintain documentation"
-- "documentation"、"update docs"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入文档维护阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到文档维护相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/07-documentation/documentation-standards.mdc]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/07-documentation/documentation-standards.mdc`
-
-4. **即使文档文件还没打开，也要遵守规则**：
-   - 禁止创建虚文档（说明文档、组织文档、最佳实践文档）
-   - 能做的直接做（改善代码、完善规则、补充测试）
-   - 不能做的规则拦截（合规检查器、pre-commit hook）
+**切换到角色**: 无特定角色（执行文档维护流程）
 
 ---
 
-## 9. 代码审查相关意图 → 代码审查规则
+## 9. 代码审查相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "代码审查"、"代码评审"、"审查代码"、"review"、"code review"
 
-**中文关键词**：
-- "代码审查"、"代码评审"、"审查代码"、"review代码"
-- "审查"、"评审"、"review"
+**应用规则**:
+- @.cursor/rules/1-quality/code-review.mdc
 
-**英文关键词**：
-- "code review"、"review code"、"code inspection"
-- "review"、"inspect"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入代码审查阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到代码审查相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/1-quality/code-review.mdc]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/1-quality/code-review.mdc`
-   - `@.cursor/rules/04-development/code-standards.mdc`
-   - `@.cursor/rules/1-quality/security.mdc`
-   - `@.cursor/rules/1-quality/performance.mdc`
-
-4. **审查检查清单**：
-   - 代码符合项目规范
-   - 测试覆盖率 >= 80%
-   - 所有测试通过
-   - 代码包含REQ-ID注释
-   - 代码关联到PRD
-   - API实现符合契约
+**切换到角色**: 无特定角色（执行代码审查流程）
 
 ---
 
@@ -533,42 +221,15 @@ AI: [识别到PRD相关意图：分析登录的PRD是否完整]
 
 ---
 
-## 11. 架构相关意图 → 架构设计规则
+## 11. 架构相关意图
 
-### 触发语义（关键词匹配）
+**触发关键词**: "架构"、"架构设计"、"架构分析"、"架构评估"、"architecture"、"architect"、"系统架构"、"测试架构"
 
-**中文关键词**：
-- "架构"、"架构设计"、"架构分析"、"架构评估"
-- "系统架构"、"测试架构"、"项目架构"
-- "分析架构"、"设计架构"、"优化架构"
-- "架构师"、"架构设计"、"架构规划"
+**应用规则**:
+- @.cursor/rules/09-roles/architect.mdc
+- @.cursor/rules/00-core/v4-core.mdc
 
-**英文关键词**：
-- "architecture"、"architect"、"architectural design"
-- "system architecture"、"test architecture"、"project architecture"
-- "analyze architecture"、"design architecture"
-
-### 应用规则
-
-当检测到上述意图时，AI必须：
-
-1. **视为进入架构设计/分析阶段**
-2. **必须明确告知规则引用**：
-   ```
-   [识别到架构相关意图：{用户的具体请求}]
-   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
-   [应用规则：@.cursor/rules/01-product/prd-standards.mdc]（架构设计相关）
-   [应用规则：@.cursor/rules/09-roles/architect.mdc]
-   [切换到架构专家角色]
-   ```
-3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/09-roles/architect.mdc`
-   - `@.cursor/rules/01-product/prd-standards.mdc`（如果涉及架构设计）
-
-4. **组合意图场景**：
-   - "分析测试架构" → 测试意图 + 架构意图 → 测试专家 + 架构专家
-   - "设计API架构" → API契约意图 + 架构意图 → 架构专家
-   - "项目架构分析" → 项目初始化意图 + 架构意图 → 架构专家
+**切换到角色**: 架构专家
 
 ---
 

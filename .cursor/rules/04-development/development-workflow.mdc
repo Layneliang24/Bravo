@@ -23,127 +23,29 @@ priority: 750
 
 ## TDD开发流程
 
-### 1. 查看测试文件
+**详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
 
-**必须执行**:
-```bash
-# 查看相关测试文件
-cat backend/tests/unit/test_*.py
-cat backend/tests/integration/test_*.py
-
-# 运行测试，确认失败（红色阶段）
-docker-compose exec backend pytest backend/tests/unit/test_*.py -v
-```
-
-### 2. 实现最少代码
-
-**原则**: 只写刚好通过测试的代码
-
-**步骤**:
-1. 查看测试失败的错误信息
-2. 实现最小功能使测试通过
-3. 不要添加测试未要求的功能
-4. 不要优化或重构（这是下一阶段）
-
-**示例**:
-```python
-# 测试要求：登录接口返回token
-# 最少实现：
-def login(request):
-    return Response({"token": "dummy-token"})  # 刚好通过测试
-```
-
-### 3. 运行测试验证
-
-**必须执行**:
-```bash
-# 运行相关测试
-docker-compose exec backend pytest backend/tests/unit/test_*.py -v
-
-# 确认所有测试通过
-```
-
-### 4. 重构代码
-
-**原则**: 在测试通过的基础上优化
-
-**步骤**:
-1. 提取重复逻辑
-2. 改善代码可读性
-3. 优化性能（如果需要）
-4. 运行测试，确保仍然通过
+**核心流程**: 红色阶段（编写失败测试） → 绿色阶段（最少代码通过） → 重构阶段（优化代码）
 
 ## Docker容器化开发
 
+**详细规则**: 参考 @.cursor/rules/00-core/v4-containerization.mdc
+
 **核心规则**: 所有开发、构建、测试必须在Docker容器中进行
-
-**命令格式**:
-```bash
-# 后端开发
-docker-compose exec backend python manage.py <command>
-docker-compose exec backend pytest
-docker-compose exec backend python manage.py makemigrations
-docker-compose exec backend python manage.py migrate
-
-# 前端开发
-docker-compose exec frontend npm run dev
-docker-compose exec frontend npm run build
-docker-compose exec frontend npm run test
-```
-
-**禁止操作**:
-- ❌ 不能在宿主机执行`python manage.py`
-- ❌ 不能在宿主机执行`npm run dev`
-- ❌ 不能安装本地Python虚拟环境
-- ❌ 不能安装本地MySQL/Redis
-
-**参考**: @.cursorrules (Docker开发项目部分)
 
 ## 代码文件REQ-ID注释
 
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
+
 **规则**: 所有代码文件必须包含REQ-ID注释
-
-**格式**:
-```python
-# backend/apps/users/views.py
-# REQ-ID: REQ-2025-003-user-login
-"""用户认证相关视图"""
-```
-
-```typescript
-// frontend/src/api/auth.ts
-// REQ-ID: REQ-2025-003-user-login
-import { ... } from '...'
-```
-
-```vue
-<!-- frontend/src/views/Login.vue -->
-<script setup lang="ts">
-// REQ-ID: REQ-2025-003-user-login
-import { ... } from '...'
-</script>
-```
 
 **验证**: Pre-commit会自动检查
 
 ## API实现必须遵循契约
 
+**详细规则**: 参考 @.cursor/rules/02-testing/contract-testing.mdc
+
 **规则**: API实现必须严格遵循OpenAPI契约
-
-**步骤**:
-1. 查看API契约: `docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
-2. 实现API端点，确保：
-   - 请求参数符合Schema
-   - 响应格式符合Schema
-   - 状态码符合契约定义
-   - 错误响应格式符合契约
-
-**验证**:
-- 使用`drf-spectacular`自动生成文档
-- 对比生成的文档与契约文档
-- 运行契约测试
-
-**参考**: @docs/01_guideline/api-contracts/README.md
 
 ## 代码质量要求
 

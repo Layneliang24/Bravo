@@ -6,21 +6,103 @@ priority: 600
 
 # 代码审查规则
 
-## 审查清单
+## 审查流程
 
-- [ ] 代码符合项目规范
+### 1. 审查前准备
+
+**必须检查**:
+- [ ] 代码已通过所有测试
+- [ ] 代码已通过lint检查
+- [ ] 代码已通过类型检查
+- [ ] 提交信息格式正确（包含REQ-ID和Task-ID）
+
+### 2. 功能审查
+
+**功能正确性**:
+- [ ] 实现符合PRD要求
+- [ ] 实现符合API契约
+- [ ] 边界情况已处理
+- [ ] 错误处理完善
+
+### 3. 代码质量审查
+
+**代码规范**:
+- [ ] 代码符合项目规范（参考 @.cursor/rules/04-development/code-standards.mdc）
+- [ ] 命名清晰、有意义
+- [ ] 函数/类职责单一
+- [ ] 代码可读性好
+- [ ] 无重复代码
+
+**测试质量**:
 - [ ] 测试覆盖率 >= 80%
 - [ ] 所有测试通过
-- [ ] 代码包含REQ-ID注释
+- [ ] 测试用例覆盖主要场景
+- [ ] 测试用例覆盖边界情况
+
+### 4. 追溯链审查
+
+**追溯链完整性**:
+- [ ] 代码包含REQ-ID注释（参考 @.cursor/rules/00-core/v4-traceability.mdc）
 - [ ] 代码关联到PRD
-- [ ] API实现符合契约
+- [ ] 提交消息包含REQ-ID和Task-ID
+- [ ] PRD元数据已更新（test_files、implementation_files）
+
+### 5. 架构审查
+
+**架构一致性**:
+- [ ] API实现符合契约（参考 @.cursor/rules/02-testing/contract-testing.mdc）
+- [ ] 数据库设计符合TRD
+- [ ] 遵循项目架构模式
+- [ ] 无架构违规
+
+### 6. 安全审查
+
+**安全检查**:
+- [ ] 无SQL注入风险
+- [ ] 无XSS风险
+- [ ] 无敏感信息泄露
+- [ ] 权限检查完善（参考 @.cursor/rules/1-quality/security.mdc）
+
+### 7. 性能审查
+
+**性能考虑**:
+- [ ] 无明显的性能问题
+- [ ] 数据库查询已优化
+- [ ] 无不必要的循环或递归
+- [ ] 关键路径有性能测试（参考 @.cursor/rules/1-quality/performance.mdc）
+
+## 审查记录
+
+**必须记录**:
+- 审查日期和时间
+- 审查人员
+- 发现的问题（严重程度：高/中/低）
+- 修复建议
+- 审查结论（通过/需要修改/拒绝）
+
+## 审查标准
+
+**通过标准**:
+- ✅ 所有检查项通过
+- ✅ 无高危安全问题
+- ✅ 测试覆盖率 >= 80%
+- ✅ 代码符合项目规范
+
+**需要修改**:
+- ⚠️ 有中低危问题
+- ⚠️ 测试覆盖率 < 80%
+- ⚠️ 有代码规范问题
+
+**拒绝标准**:
+- ❌ 有高危安全问题
+- ❌ 功能不符合PRD
+- ❌ API不符合契约
+- ❌ 缺少REQ-ID注释
 
 ## 相关规则
 
-**文档维护**: @.cursor/rules/07-documentation/documentation-standards.mdc
-
-**性能优化**: @.cursor/rules/1-quality/performance.mdc
-
-**安全规则**: @.cursor/rules/1-quality/security.mdc
-
-**代码质量**: @.cursor/rules/04-development/code-standards.mdc
+- @.cursor/rules/04-development/code-standards.mdc - 代码质量标准
+- @.cursor/rules/1-quality/security.mdc - 安全规则
+- @.cursor/rules/1-quality/performance.mdc - 性能优化规则
+- @.cursor/rules/00-core/v4-traceability.mdc - 追溯链规则
+- @.cursor/rules/02-testing/contract-testing.mdc - 契约测试规则

@@ -176,22 +176,26 @@ show_host_dependency_warning() {
     esac
     echo "   docker-compose exec $container_name $command_full"
     echo ""
-    echo "⚠️  紧急情况绕过（需要密码验证）："
-    echo "   export ALLOW_HOST_DEPENDENCY_INSTALL=true"
-    echo "   或在下方密码验证时输入主密码"
+    echo "⚠️  紧急情况需要密码验证（环境变量绕过已禁止）"
+    echo "   在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY | $violation_type | $command_full" >> "$LOG_FILE"
 
-    # 检查环境变量绕过
+    # 🚨 检测环境变量绕过尝试（禁止）
     if [[ "$ALLOW_HOST_DEPENDENCY_INSTALL" == "true" ]]; then
-        echo "🟡 检测到环境变量绕过，允许宿主机依赖安装"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_ENV | $command_full" >> "$LOG_FILE"
-        return 0
+        echo "🚨🚨🚨 检测到环境变量绕过尝试！🚨🚨🚨"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "❌ 环境变量绕过已被禁止：ALLOW_HOST_DEPENDENCY_INSTALL=true"
+        echo "📋 违规命令：$command_full"
+        echo ""
+        echo "⚠️  环境变量绕过已被移除，必须通过密码验证"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | HOST_DEPENDENCY_BYPASS_ENV_BLOCKED | $command_full" >> "$LOG_FILE"
+        # 继续执行密码验证，不允许环境变量绕过
     fi
 
-    # 使用密码验证
+    # 使用密码验证（唯一允许的绕过方式）
     echo ""
     echo "🔐 需要密码验证才能在宿主机安装依赖"
 
@@ -243,22 +247,26 @@ show_protected_branch_warning() {
     echo "🔧 快速创建feature分支："
     echo "   git checkout -b feature/quick-fix-$(date +%m%d-%H%M)"
     echo ""
-    echo "⚠️  紧急情况绕过（需要密码验证）："
-    echo "   export ALLOW_PROTECTED_BRANCH_OPERATIONS=true"
-    echo "   或在下方密码验证时输入主密码"
+    echo "⚠️  紧急情况需要密码验证（环境变量绕过已禁止）"
+    echo "   在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BRANCH | $($real_git branch --show-current 2>/dev/null || echo 'unknown') | $operation | $command_full" >> "$LOG_FILE"
 
-    # 检查环境变量绕过
+    # 🚨 检测环境变量绕过尝试（禁止）
     if [[ "$ALLOW_PROTECTED_BRANCH_OPERATIONS" == "true" ]]; then
-        echo "🟡 检测到环境变量绕过，允许继续操作"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_ENV | $operation | $command_full" >> "$LOG_FILE"
-        return 0
+        echo "🚨🚨🚨 检测到环境变量绕过尝试！🚨🚨🚨"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "❌ 环境变量绕过已被禁止：ALLOW_PROTECTED_BRANCH_OPERATIONS=true"
+        echo "📋 违规操作：$operation"
+        echo ""
+        echo "⚠️  环境变量绕过已被移除，必须通过密码验证"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | PROTECTED_BYPASS_ENV_BLOCKED | $operation | $command_full" >> "$LOG_FILE"
+        # 继续执行密码验证，不允许环境变量绕过
     fi
 
-    # 使用密码验证
+    # 使用密码验证（唯一允许的绕过方式）
     echo ""
     echo "🔐 需要密码验证才能在保护分支上操作"
 
@@ -420,25 +428,29 @@ show_skip_bypass_warning() {
     echo ""
     echo "🔧 如何正确禁用特定检查（示例）："
     echo "   # 临时禁用单个检查"
-    echo "   git commit -m '...' --no-verify  # 仅用于紧急情况"
+    echo "   git commit -m '...' --no-verify  # 仅用于紧急情况（需要密码验证）"
     echo "   # 或在.pre-commit-config.yaml中配置"
     echo ""
-    echo "⚠️  紧急绕过（需要密码验证）："
-    echo "   export ALLOW_QUALITY_BYPASS=true"
-    echo "   或在下方密码验证时输入主密码"
+    echo "⚠️  紧急绕过需要密码验证（环境变量绕过已禁止）"
+    echo "   在下方密码验证时输入主密码"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # 记录违规尝试
     echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_BLOCKED | $bypass_type | $command_full" >> "$LOG_FILE"
 
-    # 检查环境变量绕过
+    # 🚨 检测环境变量绕过尝试（禁止）
     if [[ "$ALLOW_QUALITY_BYPASS" == "true" ]]; then
-        echo "🟡 检测到环境变量绕过，允许操作"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_ENV | $command_full" >> "$LOG_FILE"
-        return 0
+        echo "🚨🚨🚨 检测到环境变量绕过尝试！🚨🚨🚨"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "❌ 环境变量绕过已被禁止：ALLOW_QUALITY_BYPASS=true"
+        echo "📋 违规命令：$command_full"
+        echo ""
+        echo "⚠️  环境变量绕过已被移除，必须通过密码验证"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') | QUALITY_BYPASS_ENV_BLOCKED | $command_full" >> "$LOG_FILE"
+        # 继续执行密码验证，不允许环境变量绕过
     fi
 
-    # 使用密码验证
+    # 使用密码验证（唯一允许的绕过方式）
     echo ""
     echo "🔐 需要密码验证才能绕过质量检查"
 

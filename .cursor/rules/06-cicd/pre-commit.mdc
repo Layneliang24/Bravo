@@ -35,6 +35,7 @@ Pre-commit hook执行四层检查：
 **常见警告及修复**:
 
 1. **REQ-ID缺失**:
+   - **详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
    - 添加REQ-ID注释到文件头部
    - Python: `# REQ-ID: REQ-YYYY-NNN-description`
    - TypeScript: `// REQ-ID: REQ-YYYY-NNN-description`

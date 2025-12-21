@@ -1,0 +1,129 @@
+---
+description: V4测试驱动开发(TDD)工作流规则
+globs: **/*
+priority: 950
+---
+
+# 测试驱动开发 (TDD)
+
+## 核心原则
+
+**严格遵循测试用例设计 + TDD三阶段循环**
+
+## 完整工作流
+
+```
+PRD (approved)
+  ↓
+Task生成 (Task-Master)
+  ↓
+测试用例设计 (CSV) ← 新增阶段
+  ↓
+测试用例评审 ← 新增阶段
+  ↓
+红色阶段（Red）: 根据CSV编写测试代码，运行失败
+  ↓
+绿色阶段（Green）: 编写最少代码使测试通过
+  ↓
+重构阶段（Refactor）: 重构代码提高质量
+  ↓
+循环
+```
+
+## 三阶段循环详解
+
+### 红色阶段 (Red)
+
+**目标**: 编写失败的测试用例
+
+**步骤**:
+1. 根据测试用例CSV编写测试代码
+2. 测试应该描述期望的行为
+3. 运行测试，确认失败（这是预期的）
+4. 提交测试文件（标记为WIP）
+
+**示例**:
+```python
+# backend/tests/unit/test_user_login.py
+# REQ-ID: REQ-2025-003-user-login
+
+def test_login_with_valid_credentials():
+    """测试使用有效凭证登录"""
+    # Arrange
+    user = User.objects.create_user(
+        email="user@example.com",
+        password="SecurePass123"
+    )
+
+    # Act
+    response = client.post("/api/auth/login/", {
+        "email": "user@example.com",
+        "password": "SecurePass123",
+        "captcha_id": "test-id",
+        "captcha_answer": "test"
+    })
+
+    # Assert
+    assert response.status_code == 200
+    assert "token" in response.json()
+    assert "refresh_token" in response.json()
+```
+
+**验证**: 运行测试，确认失败（因为功能尚未实现）
+
+### 绿色阶段 (Green)
+
+**目标**: 编写最少代码使测试通过
+
+**步骤**:
+1. 查看失败的测试错误信息
+2. 编写刚好能通过测试的代码
+3. 不要过度设计，只实现测试要求的功能
+4. 运行测试，确认通过
+
+**原则**:
+- 最少代码原则：只写刚好通过测试的代码
+- 不要添加测试未要求的功能
+- 不要优化或重构（这是下一阶段的工作）
+
+**示例**:
+```python
+# 测试要求：登录接口返回token
+# 最少实现：
+def login(request):
+    return Response({"token": "dummy-token"})  # 刚好通过测试
+```
+
+### 重构阶段 (Refactor)
+
+**目标**: 优化代码结构，保持测试通过
+
+**步骤**:
+1. 在测试通过的基础上优化代码
+2. 提取重复逻辑
+3. 改善代码可读性
+4. 运行测试，确保仍然通过
+
+**原则**:
+- 重构不能改变功能行为
+- 每次重构后必须运行测试
+- 如果测试失败，回退重构
+
+## 粒度与层级约定（Task-Master场景）
+
+- **最小闭环单位**: 子任务是TDD红→绿→重构的最小可交付单元，每个子任务都要自己跑完整闭环。不要把"红/绿/重构"拆到不同子任务或父任务之间。
+- **父任务职责**: 父任务像里程碑/容器，不承担拆分式红绿重构。仅在关键子任务完成后，必要时在父任务层补 1-2 个集成/E2E 测试，再走一遍红→绿→重构验证整体串联。
+- **节奏要求**: 保持短闭环，小步提交。完成子任务的闭环后再移动到下一个子任务；父任务完成的标志是核心子任务 + 必要的集成验证均通过。
+
+## 强制执行
+
+- **PRD阶段**：PRD必须包含功能点和验收标准
+- **测试用例阶段**：必须创建测试用例CSV并评审
+- **测试代码阶段**：根据CSV编写测试代码
+- **提交阶段**：Pre-commit检查测试文件
+- **CI阶段**：运行所有测试，强制覆盖率
+
+## 参考文档
+
+- @.cursor/rules/02-testing/test-case-standards.mdc - 测试用例设计规范
+- @docs/architecture/V4/AI-WORKFLOW-V4-PART4-TDD-TEST.md - TDD测试文档

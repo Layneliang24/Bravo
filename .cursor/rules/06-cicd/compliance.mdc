@@ -39,6 +39,7 @@ git commit -m "..."
 
 #### 步骤2：立即修复
 - **REQ-ID缺失**：
+  - **详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
   - Python文件：在文件头部添加 `# REQ-ID: REQ-YYYY-NNN-description`
   - TypeScript/JavaScript文件：在文件头部添加 `// REQ-ID: REQ-YYYY-NNN-description`
   - Vue文件：在`<script>`标签内第一行添加 `// REQ-ID: REQ-YYYY-NNN-description`

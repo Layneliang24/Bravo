@@ -35,7 +35,31 @@ api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-0
 
 **规则**: 所有代码文件必须包含REQ-ID注释
 
-**格式**: `# REQ-ID: REQ-YYYY-NNN-description`
+**格式**:
+
+**Python文件**:
+```python
+# -*- coding: utf-8 -*-
+# REQ-ID: REQ-2025-003-user-login
+"""文件描述"""
+```
+
+**TypeScript/JavaScript文件**:
+```typescript
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+```
+
+**Vue文件**:
+```vue
+<!-- Vue文件 -->
+<script setup lang="ts">
+// REQ-ID: REQ-2025-003-user-login
+import { ... } from '...'
+</script>
+```
+
+**位置**: 文件头部第一行或第二行（在编码声明之后）
 
 ### 3. 提交消息格式
 

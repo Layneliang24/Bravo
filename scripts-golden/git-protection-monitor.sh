@@ -342,18 +342,17 @@ educate_user() {
 ✅ 正确的开发流程:
 
 Git操作相关:
-• 如需临时禁用检查，使用环境变量:
-  export ALLOW_PROTECTED_BRANCH_OPERATIONS=true
+• 🚨 环境变量绕过已被禁止
+• 如需临时禁用检查，必须通过密码验证
 • 如需永久调整规则，修改配置文件:
-  scripts/git-guard.sh 中的检查逻辑
+  scripts-git-guard.sh 中的检查逻辑
 
 依赖管理相关:
 • 所有依赖操作必须在Docker容器内进行:
   docker-compose exec frontend npm install [package]
   docker-compose exec backend pip install [package]
-• 如需临时绕过依赖拦截:
-  export ALLOW_HOST_DEPENDENCY_INSTALL=true
-• 紧急确认码: DOCKER_NATIVE_BYPASS
+• 🚨 环境变量绕过已被禁止
+• 如需临时绕过依赖拦截，必须通过密码验证
 
 ⚠️  不要尝试绕过保护系统:
 • 不要修改 ~/.bashrc 中的alias

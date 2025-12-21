@@ -46,12 +46,13 @@ task-master parse-prd <prd-file> --tag <tag-name> --prompt "
 - 必须包含Task-0自检任务（验证PRD完整性、API契约、测试用例、数据库设计）
 
 ## 开发模式约束
+- **详细规则**: 参考 @.cursor/rules/00-core/v4-containerization.mdc
 - **纯Docker容器化开发**：所有开发、构建、测试必须在Docker容器中进行
 - **命令格式**：所有后端命令使用 \`docker-compose exec backend\`，前端命令使用 \`docker-compose exec frontend\`
 - **禁止**：不能在宿主机直接运行 \`pip install\`、\`npm install\`、\`python manage.py\` 等命令
-- **依赖管理**：依赖安装和更新应在容器内部执行
 
 ## TDD流程要求
+- **详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
 - **新增：测试用例设计阶段**：在编写代码前，必须先完成测试用例的设计与评审
   1. [设计]：根据PRD编写测试用例CSV (docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv)
   2. [评审]：评审测试用例，确保覆盖所有场景

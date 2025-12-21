@@ -116,20 +116,9 @@ ls e2e/tests/**/*.spec.ts
 
 **TDD流程**（功能开发任务）:
 
-1. **红色阶段**:
-   - 编写测试文件
-   - 运行测试，确认失败
-   - 提交测试文件（标记为WIP）
+**详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
 
-2. **绿色阶段**:
-   - 编写最少代码使测试通过
-   - 运行测试，确认通过
-   - 提交代码文件
-
-3. **重构阶段**:
-   - 优化代码结构
-   - 运行测试，确保仍然通过
-   - 提交重构代码
+**核心流程**: 红色阶段（编写失败测试） → 绿色阶段（最少代码通过） → 重构阶段（优化代码）
 
 **参考**: @.cursor/rules/02-testing/test-types.mdc
 
@@ -178,28 +167,9 @@ docker-compose exec frontend npm run <command>
 
 ## 代码文件REQ-ID注释
 
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
+
 **规则**: 所有代码文件必须包含REQ-ID注释
-
-**格式**:
-```python
-# Python文件
-# REQ-ID: REQ-2025-003-user-login
-"""文件描述"""
-```
-
-```typescript
-// TypeScript/JavaScript文件
-// REQ-ID: REQ-2025-003-user-login
-import { ... } from '...'
-```
-
-```vue
-<!-- Vue文件 -->
-<script setup lang="ts">
-// REQ-ID: REQ-2025-003-user-login
-import { ... } from '...'
-</script>
-```
 
 **验证**: Pre-commit会自动检查REQ-ID注释
 

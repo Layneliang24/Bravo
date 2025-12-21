@@ -107,12 +107,9 @@ priority: 1000
 
 ## 追溯链要求
 
-**追溯链格式**:
-```
-REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment
-```
+**追溯链格式**: `REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment`
 
-**追溯矩阵位置**: PRD元数据中的`test_files`、`implementation_files`、`commits`字段
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
 
 **参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#6-追溯链设计
 
@@ -134,11 +131,7 @@ REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment
 
 **核心原则**: 前后端通过API契约并行开发
 
-**工作流**:
-1. 架构师根据PRD设计API契约（OpenAPI 3.0）
-2. 前端基于契约创建Mock Server
-3. 后端按照契约实现API
-4. 契约测试验证前后端一致性
+**详细规则**: 参考 @.cursor/rules/02-testing/contract-testing.mdc
 
 **参考文档**: @docs/01_guideline/api-contracts/README.md
 
@@ -146,31 +139,7 @@ REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment
 
 **核心原则**: 严格遵循测试用例设计 + TDD三阶段循环
 
-**完整工作流**:
-```
-PRD (approved)
-  ↓
-Task生成 (Task-Master)
-  ↓
-测试用例设计 (CSV) ← 新增阶段
-  ↓
-测试用例评审 ← 新增阶段
-  ↓
-红色阶段（Red）: 根据CSV编写测试代码，运行失败
-  ↓
-绿色阶段（Green）: 编写最少代码使测试通过
-  ↓
-重构阶段（Refactor）: 重构代码提高质量
-  ↓
-循环
-```
-
-**强制执行**:
-- PRD阶段：PRD必须包含功能点和验收标准
-- 测试用例阶段：必须创建测试用例CSV并评审
-- 测试代码阶段：根据CSV编写测试代码
-- 提交阶段：Pre-commit检查测试文件
-- CI阶段：运行所有测试，强制覆盖率
+**详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
 
 **参考文档**:
 - @.cursor/rules/02-testing/test-case-standards.mdc
@@ -194,15 +163,6 @@ Task生成 (Task-Master)
 
 ## 目录结构强制规范
 
-**PRD路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}.md`
-
-**测试用例CSV路径**: `docs/00_product/requirements/{REQ-ID}/{REQ-ID}-test-cases.csv`
-
-**API契约路径**: `docs/01_guideline/api-contracts/{REQ-ID}/{REQ-ID}-api.yaml`
-
-**测试文件路径**:
-- 单元测试: `backend/tests/unit/test_{module}.py`
-- 集成测试: `backend/tests/integration/test_{feature}.py`
-- E2E测试: `e2e/tests/{feature}.spec.ts`
+**详细规则**: 参考 @.cursor/rules/00-core/v4-directory-structure.mdc
 
 **参考文档**: @docs/architecture/V4/AI-WORKFLOW-V4-PART1-ARCH.md#3-目录结构规范
