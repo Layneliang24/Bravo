@@ -166,16 +166,22 @@ const loadCaptcha = async (isRefresh = false) => {
         ? `${API_BASE_URL}/api/auth/captcha/refresh/`
         : `${API_BASE_URL}/api/auth/captcha/`
     const method = isRefresh ? 'POST' : 'GET'
-    const body =
-      isRefresh && captchaId.value
-        ? JSON.stringify({ captcha_id: captchaId.value })
-        : undefined
+    // 如果是刷新且没有captchaId，发送空对象；如果有captchaId，发送包含captcha_id的对象
+    const body = isRefresh
+      ? JSON.stringify(
+          captchaId.value ? { captcha_id: captchaId.value } : {}
+        )
+      : undefined
+
+    // 构建请求头：POST请求需要Content-Type，GET请求不需要
+    const headers: Record<string, string> = {}
+    if (method === 'POST') {
+      headers['Content-Type'] = 'application/json'
+    }
 
     const response = await fetch(url, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body,
     })
 

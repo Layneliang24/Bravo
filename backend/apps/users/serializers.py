@@ -371,4 +371,6 @@ class TokenRefreshResponseSerializer(serializers.Serializer):
 class CaptchaRefreshRequestSerializer(serializers.Serializer):
     """刷新验证码请求序列化器"""
 
-    captcha_id = serializers.CharField(required=False, help_text="旧的验证码ID（可选）")
+    captcha_id = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, help_text="旧的验证码ID（可选）"
+    )
