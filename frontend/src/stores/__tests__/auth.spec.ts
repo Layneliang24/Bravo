@@ -404,8 +404,8 @@ describe('Auth Store', () => {
 
       const store = useAuthStore()
       const mockClient = {
-        get: vi.fn().mockResolvedValueOnce(mockResponse),
-        post: vi.fn(),
+        get: vi.fn(),
+        post: vi.fn().mockResolvedValueOnce(mockResponse),
         put: vi.fn(),
         delete: vi.fn(),
         patch: vi.fn(),
@@ -418,6 +418,10 @@ describe('Auth Store', () => {
 
       await store.refreshCaptcha()
 
+      expect(mockClient.post).toHaveBeenCalledWith(
+        '/api/auth/captcha/refresh/',
+        {}
+      )
       expect(store.captcha).toEqual({
         id: 'new-captcha-id',
         image: 'data:image/png;base64,newImage...',
