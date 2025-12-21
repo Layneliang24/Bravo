@@ -155,8 +155,14 @@ class CaptchaRefreshAPIView(BaseCaptchaView):
         返回:
             Response: 包含新的captcha_id, captcha_image, expires_in的JSON响应
         """
+        # 验证请求数据（可选字段，允许空请求体）
+        serializer = CaptchaRefreshRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            # 如果验证失败，返回400错误
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         # 如果提供了旧的captcha_id，删除旧的验证码（可选）
-        old_captcha_id = request.data.get("captcha_id")
+        old_captcha_id = serializer.validated_data.get("captcha_id")
         if old_captcha_id:
             # 记录删除操作，用于调试
             import logging
