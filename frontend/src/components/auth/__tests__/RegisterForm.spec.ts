@@ -41,11 +41,24 @@ describe('RegisterForm', () => {
       try {
         // 等待所有异步操作完成
         await flushPromises()
-        await wrapper.vm.$nextTick()
-        await new Promise(resolve => setTimeout(resolve, 50))
-        wrapper.unmount()
+        await new Promise(resolve => setTimeout(resolve, 10))
+
+        // 检查wrapper和组件实例是否仍然有效
+        if (wrapper && wrapper.vm) {
+          // 检查DOM是否仍然存在
+          const el = wrapper.vm.$el
+          if (el && el.parentNode) {
+            // DOM仍然存在，安全卸载
+            try {
+              wrapper.unmount()
+            } catch (e) {
+              // 卸载时出错，可能是Vue内部错误，忽略
+            }
+          }
+          // 如果DOM已被移除，不需要调用unmount
+        }
       } catch (e) {
-        // 忽略卸载错误（Vue内部错误）
+        // 忽略所有清理错误
       } finally {
         wrapper = null
       }
