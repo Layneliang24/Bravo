@@ -1,0 +1,298 @@
+---
+description: 版本控制规则（Git提交、推送、分支管理、PR流程）
+globs: **/*
+priority: 900
+---
+
+# 版本控制规则
+
+## 核心原则
+
+**所有版本控制操作必须遵循V4架构的追溯链要求**：`REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment`
+
+## 提交规则
+
+### 提交前检查（Pre-commit Hook）
+
+**四层检查体系**：
+
+1. **依赖安全检查**：
+   - 检查是否有包管理命令正在运行
+   - 防止依赖安装冲突
+
+2. **本地测试通行证验证**：
+   - 验证本地测试是否通过
+   - **推送前必需完整通行证**（见推送规则）
+
+3. **代码质量检查**：
+   - 执行`scripts/code-quality-check.sh`
+   - 包括格式化、代码检查、类型检查等
+
+4. **V4合规引擎检查**：
+   - 执行`.compliance/runner.py`
+   - 检查PRD、测试文件、代码关联等
+
+**参考**: @.husky/pre-commit
+
+### 提交消息格式
+
+**格式**: `[REQ-ID] Task-X 描述`
+
+**示例**:
+- `[REQ-2025-003] Task-1 实现用户登录API`
+- `fix(cursor): 强化规则执行机制，确保规则优先级高于用户要求`
+- `refactor(cursor): 修复规则声明中的角色处理问题`
+
+**要求**:
+- 必须包含REQ-ID（如果关联到需求）
+- 必须包含Task-ID（如果关联到任务）
+- 使用conventional commits格式（可选但推荐）
+
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
+
+### 提交前检查清单
+
+- [ ] 代码已通过所有测试
+- [ ] 代码已通过lint检查
+- [ ] 代码已通过类型检查
+- [ ] 已检查pre-commit输出
+- [ ] 已修复所有合规警告
+- [ ] 已验证修复后无新警告
+- [ ] 提交信息包含REQ-ID（如果关联到需求）
+- [ ] 所有新文件都包含REQ-ID注释
+
+## 推送规则
+
+### 本地测试通行证（强制要求）
+
+**核心原则**: 推送前必须获得有效的本地测试通行证
+
+**验证机制**:
+- Pre-push hook自动检查通行证
+- 通行证有效期：1小时
+- 代码修改后通行证自动失效
+
+**获取通行证**:
+```bash
+# 运行完整测试生成通行证
+./test
+
+# 或使用便捷命令
+./test && ./safe-push
+```
+
+**检查通行证状态**:
+```bash
+./passport --check
+```
+
+**通行证验证内容**:
+1. 语法验证（act验证GitHub Actions工作流）
+2. 环境验证（Docker服务检查）
+3. 功能验证（核心测试执行）
+4. 差异验证（环境配置差异检查）
+
+**参考**: @.husky/pre-push, @scripts-golden/local_test_passport.py
+
+### Pre-push Hook检查
+
+**三层检查体系**：
+
+1. **本地测试通行证验证（必需）**：
+   - 验证通行证是否存在且有效
+   - 验证代码是否已通过本地测试
+   - **禁止绕过**：环境变量绕过已被禁止
+
+2. **防篡改依赖安全检查**：
+   - 检查依赖文件完整性
+   - 防止依赖被篡改
+
+3. **Git状态完整性检查**：
+   - 检查防篡改脚本完整性
+   - 验证Git状态
+
+**禁止行为**:
+- ❌ 不能使用环境变量绕过通行证检查
+- ❌ 不能手动创建通行证文件
+- ❌ 不能跳过本地测试直接推送
+
+**参考**: @.husky/pre-push
+
+## 分支管理规范
+
+### 分支保护策略
+
+**受保护的分支**:
+- `main`分支：只能通过PR从dev分支合并
+- `dev`分支：只能通过PR从feature分支合并
+
+**可push的分支**:
+- `feature/*`分支：开发者可以直接push，触发轻量级验证
+
+### 分支命名规范
+
+- **Feature分支**: `feature/功能描述` 或 `feature/REQ-ID-功能描述`
+- **Bug修复分支**: `bugfix/问题描述` 或 `bugfix/REQ-ID-问题描述`
+- **Hotfix分支**: `hotfix/紧急修复描述`
+
+### 开发流程
+
+```
+1. 开发者在feature分支开发
+   ↓ (push触发on-push-feature.yml)
+2. 创建PR从feature到dev
+   ↓ (PR触发branch-protection.yml)
+3. 合并PR到dev分支
+   ↓ (merge触发on-merge-dev.yml)
+4. 创建PR从dev到main
+   ↓ (PR触发branch-protection.yml)
+5. 合并PR到main分支
+   ↓ (merge触发on-merge-main.yml)
+6. 生产部署
+```
+
+**禁止行为**:
+- ❌ 不能直接推送到dev或main分支
+- ❌ 不能绕过PR流程
+- ❌ 不能使用force push
+
+**参考**: @.cursor/rules/06-cicd/ci-workflow.mdc
+
+## PR流程规则
+
+### PR创建要求
+
+**必须满足的条件**:
+1. 所有本地测试通过
+2. 所有pre-commit检查通过
+3. 代码已通过代码质量检查
+4. 提交消息格式正确
+5. 所有文件包含REQ-ID注释（如果关联到需求）
+
+### PR合并要求
+
+**分支保护规则要求**:
+1. 所有必需的状态检查通过
+2. 至少1个代码审查批准（dev分支）
+3. 至少2个代码审查批准（main分支）
+4. 分支必须与目标分支保持最新
+
+**禁止行为**:
+- ❌ 不能在有失败检查的情况下合并
+- ❌ 不能绕过分支保护规则
+- ❌ 不能使用admin权限绕过检查（AI必须拒绝）
+
+**参考**: @.cursor/rules/06-cicd/ci-workflow.mdc
+
+### PR监控流程
+
+**规则**: 当创建PR或合并到dev分支时，必须严格执行监控流程
+
+**流程**:
+1. **实时监控**: 每60秒检查一次GitHub Actions状态
+2. **立即响应**: 任何工作流失败必须立即创建修复方案
+3. **循环验证**: 修复后重新执行，直到所有工作流全部通过
+4. **多角度分析**: 持续失败时需从不同角度思考问题根源
+
+**工具使用**:
+```bash
+# 查看PR状态
+gh pr view <pr-number> --json state,mergeable,mergeStateStatus
+
+# 查看PR检查
+gh pr checks <pr-number>
+
+# 查看失败的workflow
+gh run list --workflow=pr-validation.yml --limit 1
+gh run view <run-id> --log-failed
+```
+
+## 追溯链要求
+
+**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
+
+**简要说明**:
+- 代码文件必须包含REQ-ID注释
+- 提交消息格式：`[REQ-ID] Task-X 描述`
+- 追溯链格式：`REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment`
+
+## 禁止事项
+
+### 绝对禁止
+
+- ❌ **不能使用`--no-verify`绕过检查**：这是v4-core.mdc第6条铁律，绝对禁止
+- ❌ **不能绕过本地通行证验证**：环境变量绕过已被禁止
+- ❌ **不能直接推送到受保护分支**：dev和main分支必须通过PR
+- ❌ **不能在有失败检查时合并PR**：必须等待所有检查通过
+- ❌ **不能忽略合规警告**：所有警告都必须主动修复
+
+### 禁止行为
+
+- ❌ 不能提交无法编译的代码
+- ❌ 不能提交未通过测试的代码
+- ❌ 不能提交包含警告的代码
+- ❌ 不能跳过pre-commit检查
+- ❌ 不能跳过pre-push检查
+
+## 工具使用
+
+### GitHub CLI (gh)
+
+**主动使用场景**:
+```bash
+# 查看PR状态
+gh pr view <pr-number>
+
+# 查看PR检查
+gh pr checks <pr-number>
+
+# 创建PR
+gh pr create --base dev --head feature/xxx --title "xxx" --body "xxx"
+
+# 合并PR
+gh pr merge <pr-number> --merge
+
+# 查看workflow状态
+gh run list --workflow=pr-validation.yml
+gh run view <run-id> --log-failed
+```
+
+### Git命令
+
+**常用操作**:
+```bash
+# 查看状态
+git status
+
+# 查看提交历史
+git log --oneline -10
+
+# 查看差异
+git diff HEAD~1
+
+# 搜索历史
+git log --all --grep="类似问题"
+git log -S "错误模式"
+```
+
+## 相关规则
+
+- @.cursor/rules/00-core/v4-traceability.mdc - 追溯链详细规则
+- @.cursor/rules/06-cicd/pre-commit.mdc - Pre-commit检查详细规则
+- @.cursor/rules/06-cicd/compliance.mdc - 合规检查详细规则
+- @.cursor/rules/06-cicd/ci-workflow.mdc - CI/CD工作流规则
+
+---
+
+## 规则应用声明
+
+**当AI被路由到此规则时，必须在响应开头明确声明**：
+
+```
+[应用规则：@.cursor/rules/06-cicd/version-control.mdc]
+```
+
+**验证要求**：
+- ✅ 必须明确声明应用了此规则
+- ✅ 必须遵循本规则中的所有约束和流程
+- ✅ 不能跳过声明步骤直接执行操作

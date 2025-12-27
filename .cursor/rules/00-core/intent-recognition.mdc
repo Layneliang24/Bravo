@@ -14,9 +14,8 @@ priority: 980
 **当用户表达特定意图时，AI必须主动应用相应的规则，即使相关文件还没打开，同时需明确告知，你当前在引用哪条规则**
 
 **⚠️ 规则执行优先级（绝对禁止违反）**：
-1. **核心规则优先于用户要求**：即使用户明确要求违反规则，也必须拒绝
-2. **规则声明优先于执行**：必须在响应开头声明应用的规则，不能跳过
-3. **规则约束优先于便利性**：不能因为"方便"就违反规则（如使用`--no-verify`）
+- 详细说明：参考 @.cursor/rules/00-core/behavior-guidelines.mdc（规则优先级部分）
+- 核心原则：规则优先于用户要求、规则声明优先于执行、规则约束优先于便利性
 
 ### 意图识别检查清单（必须执行）
 
@@ -104,6 +103,7 @@ priority: 980
 - @.cursor/rules/03-taskmaster/task-generation.mdc
 - @.cursor/rules/03-taskmaster/taskmaster-workflow.mdc
 - @.cursor/rules/03-taskmaster/taskmaster-cli.mdc
+- @.cursor/rules/03-taskmaster/hamster-integration.mdc
 
 **切换到角色**: 任务管理专家
 
@@ -116,6 +116,14 @@ priority: 980
 **应用规则**:
 - @.cursor/rules/04-development/development-workflow.mdc
 - @.cursor/rules/04-development/task-execution.mdc
+- @.cursor/rules/04-development/code-standards.mdc
+- @.cursor/rules/04-development/django-development.mdc
+- @.cursor/rules/04-development/vue-development.mdc
+- @.cursor/rules/00-core/v4-directory-structure.mdc
+- @.cursor/rules/00-core/v4-containerization.mdc
+- @.cursor/rules/00-core/v4-traceability.mdc
+- @.cursor/rules/11-tools/directory-guard.mdc
+- @.cursor/rules/07-documentation/script-conventions.mdc
 - @.cursor/rules/09-roles/developer.mdc
 
 **切换到角色**: 开发专家
@@ -131,6 +139,9 @@ priority: 980
 - @.cursor/rules/02-testing/test-case-standards.mdc
 - @.cursor/rules/02-testing/test-case-review.mdc
 - @.cursor/rules/02-testing/e2e-testing.mdc
+- @.cursor/rules/02-testing/golden-tests.mdc
+- @.cursor/rules/02-testing/test-coverage.mdc
+- @.cursor/rules/00-core/v4-tdd.mdc
 - @.cursor/rules/09-roles/tester.mdc
 
 **切换到角色**: 测试专家
@@ -142,8 +153,10 @@ priority: 980
 **触发关键词**: "提交代码"、"推送代码"、"commit"、"push"、"生成提交信息"、"git commit"
 
 **应用规则**:
+- @.cursor/rules/06-cicd/version-control.mdc
 - @.cursor/rules/06-cicd/pre-commit.mdc
 - @.cursor/rules/06-cicd/compliance.mdc
+- @.cursor/rules/06-cicd/ci-workflow.mdc
 - @.cursor/rules/00-core/v4-traceability.mdc
 
 **切换到角色**: 无特定角色（执行提交流程，不要求角色切换）
@@ -190,7 +203,7 @@ priority: 980
 **触发关键词**: "代码审查"、"代码评审"、"审查代码"、"review"、"code review"
 
 **应用规则**:
-- @.cursor/rules/1-quality/code-review.mdc
+- @.cursor/rules/10-quality/code-review.mdc
 
 **切换到角色**: 无特定角色（执行代码审查流程，不要求角色切换）
 
@@ -220,7 +233,7 @@ priority: 980
    [应用规则：@.cursor/rules/08-project/project-setup.mdc]
    ```
 3. **主动应用并严格遵守以下规则**：
-   - `@.cursor/rules/08-project/project-setup.mdc`
+   - @.cursor/rules/08-project/project-setup.mdc
 
 4. **初始化检查清单**：
    - 阅读项目架构文档
@@ -247,7 +260,7 @@ priority: 980
 **触发关键词**: "性能优化"、"优化性能"、"性能调优"、"性能提升"、"performance"、"optimize performance"、"性能瓶颈"
 
 **应用规则**:
-- @.cursor/rules/1-quality/performance.mdc
+- @.cursor/rules/10-quality/performance.mdc
 
 **切换到角色**: 无特定角色（执行性能优化流程，不要求角色切换）
 
@@ -258,13 +271,25 @@ priority: 980
 **触发关键词**: "安全检查"、"安全漏洞"、"安全审计"、"安全扫描"、"security"、"security audit"、"安全修复"
 
 **应用规则**:
-- @.cursor/rules/1-quality/security.mdc
+- @.cursor/rules/10-quality/security.mdc
 
 **切换到角色**: 无特定角色（执行安全检查流程，不要求角色切换）
 
 ---
 
-## 14. 意图识别逻辑
+## 14. 部署相关意图
+
+**触发关键词**: "部署"、"发布"、"deploy"、"release"、"发布到生产"、"部署到生产"
+
+**应用规则**:
+- @.cursor/rules/06-cicd/cd-workflow.mdc
+- @.cursor/rules/06-cicd/compliance.mdc
+
+**切换到角色**: 无特定角色（执行部署流程，不要求角色切换）
+
+---
+
+## 15. 意图识别逻辑
 
 ### 关键词匹配方式
 
@@ -344,16 +369,58 @@ priority: 980
 - 按原有规则处理
 - 应用单一意图的规则和角色
 
-### 意图识别失败
+### 意图识别失败降级机制
 
-如果无法识别用户意图：
-- 保持当前规则状态
-- 不强制应用任何规则
-- 但核心原则（alwaysApply）仍然生效
+**降级策略**（按优先级顺序）：
+
+1. **关键词模糊匹配**：
+   - 如果精确匹配失败，尝试模糊匹配（包含关键词）
+   - 例如："生成" → 可能匹配"生成PRD"或"生成任务"
+   - 如果匹配多个意图，询问用户确认
+
+2. **上下文推断**：
+   - 分析对话历史，推断可能的意图
+   - 如果用户之前提到PRD，后续的"生成"可能指"生成PRD"
+   - 如果用户之前提到任务，后续的"生成"可能指"生成任务"
+
+3. **文件类型匹配降级**：
+   - 如果意图识别失败，但用户打开了特定文件
+   - 使用文件类型匹配（globs）触发相应规则
+   - 例如：打开 `backend/apps/user/models.py` → 触发 `django-development.mdc`
+
+4. **通用规则应用**：
+   - 如果以上都失败，只应用核心原则（alwaysApply规则）
+   - 不强制应用任何工作流规则
+   - 保持当前规则状态
+
+**降级流程示例**：
+
+```
+用户输入："帮我写个函数"
+  ↓
+意图识别：无法精确匹配
+  ↓
+降级1：模糊匹配 → 匹配到"开发/实现相关意图"
+  ↓
+降级2：上下文推断 → 检查对话历史
+  ↓
+降级3：文件类型匹配 → 检查当前打开的文件
+  ↓
+降级4：通用规则 → 只应用核心原则
+```
+
+**AI响应格式**（意图识别失败时）：
+
+```
+[意图识别：无法精确匹配用户意图]
+[降级策略：使用模糊匹配/上下文推断/文件类型匹配]
+[应用规则：@.cursor/rules/00-core/v4-core.mdc（核心原则）]
+[提示：请明确您的意图，例如"生成PRD"、"实现功能"、"写测试"等]
+```
 
 ---
 
-## 15. 规则应用说明
+## 16. 规则应用说明
 
 ### 不替代file-based globs
 
@@ -376,7 +443,7 @@ priority: 980
 
 ---
 
-## 16. 参考规则
+## 17. 参考规则
 
 - `@.cursor/rules/00-core/v4-core.mdc`（核心原则，alwaysApply）
 - `@.cursor/rules/00-core/v4-traceability.mdc`（追溯链规则，通过意图路由在提交时加载）

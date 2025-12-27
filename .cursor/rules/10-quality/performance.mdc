@@ -110,7 +110,7 @@ cd frontend && npm run lighthouse
 **当AI被路由到此规则时，必须在响应开头明确声明**：
 
 ```
-[应用规则：@.cursor/rules/1-quality/performance.mdc]
+[应用规则：@.cursor/rules/10-quality/performance.mdc]
 ```
 
 **验证要求**：

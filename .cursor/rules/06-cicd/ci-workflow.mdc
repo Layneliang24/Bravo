@@ -41,11 +41,7 @@ priority: 650
 
 ## 分支管理规范
 
-- **严格分支保护**: dev和main分支禁止直接推送
-- **Feature分支开发**: 所有开发必须在feature分支进行
-- **PR合并流程**: feature → dev → main，每个环节都必须通过CI验证
-
-**参考**: @.cursorrules (分支管理规范部分)
+**详细规则**: 参考 @.cursor/rules/06-cicd/version-control.mdc（分支管理规范部分）
 
 ---
 

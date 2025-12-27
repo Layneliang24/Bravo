@@ -44,8 +44,8 @@
 ├── 07-documentation/ (2个) - 文档维护
 ├── 08-project/       (1个) - 项目启动
 ├── 09-roles/         (4个) - 角色规则
-├── 1-quality/        (3个) - 质量保障
-├── 10-tools/         (1个) - 工具规则
+├── 10-quality/       (3个) - 质量保障
+├── 11-tools/         (1个) - 工具规则
 ├── README.md         - 规则索引文档
 └── RULE_TEMPLATE.mdc - 规则模板
 ```
@@ -536,8 +536,6 @@
 
 ---
 
-### 1-quality/ 质量保障 (3个规则)
-
 #### 1. code-review.mdc
 
 - **优先级**: 500
@@ -576,7 +574,44 @@
 
 ---
 
-### 10-tools/ 工具规则 (1个规则)
+### 10-quality/ 质量保障 (3个规则)
+
+#### 1. code-review.mdc
+
+- **优先级**: 500
+- **AlwaysApply**: ❌ 否
+- **Globs**: `backend/**/*.py, frontend/**/*.{ts,tsx,js,jsx,vue}`
+- **触发意图**: 代码审查相关意图
+- **核心内容**:
+  - 代码审查规则
+  - 审查清单
+  - 审查标准
+
+#### 2. performance.mdc
+
+- **优先级**: 500
+- **AlwaysApply**: ❌ 否
+- **Globs**: `backend/**/*.{py}, frontend/**/*.{ts,tsx,js,jsx,vue}`
+- **触发意图**: 性能优化相关意图
+- **核心内容**:
+  - 性能优化规则
+  - 性能测试要求
+  - 性能优化最佳实践
+
+#### 3. security.mdc
+
+- **优先级**: 500
+- **AlwaysApply**: ❌ 否
+- **Globs**: `backend/**/*.py, frontend/**/*.{ts,tsx,js,jsx,vue}, .github/workflows/**/*.yml, ops/**/*.yml`
+- **触发意图**: 安全检查相关意图
+- **核心内容**:
+  - 安全规则
+  - 安全漏洞检查
+  - 安全最佳实践
+
+---
+
+### 11-tools/ 工具规则 (1个规则)
 
 #### 1. directory-guard.mdc
 
@@ -664,12 +699,12 @@
 | 03-taskmaster    | 4个      | 9.5%     |
 | 06-cicd          | 4个      | 9.5%     |
 | 09-roles         | 4个      | 9.5%     |
-| 1-quality        | 3个      | 7.1%     |
+| 10-quality       | 3个      | 7.1%     |
 | 01-product       | 2个      | 4.8%     |
 | 05-debugging     | 2个      | 4.8%     |
 | 07-documentation | 2个      | 4.8%     |
 | 08-project       | 1个      | 2.4%     |
-| 10-tools         | 1个      | 2.4%     |
+| 11-tools         | 1个      | 2.4%     |
 | **总计**         | **42个** | **100%** |
 
 ### 按类型统计

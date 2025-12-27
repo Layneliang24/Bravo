@@ -74,11 +74,16 @@
     │   ├── developer.mdc             # 开发专家
     │   ├── tester.mdc                # 测试专家
     │   └── prd-designer.mdc          # PRD设计专家
-    ├── 1-quality/                    # 质量保障
-    │   ├── code-review.mdc           # 代码审查
-    │   ├── performance.mdc           # 性能优化
-    │   └── security.mdc              # 安全规则
-    └── 10-tools/                     # 工具规则
+    ├── 09-roles/                     # 角色规则
+    │   ├── architect.mdc             # 架构专家
+    │   ├── developer.mdc            # 开发专家
+    │   ├── tester.mdc               # 测试专家
+    │   └── prd-designer.mdc         # PRD设计专家
+    ├── 10-quality/                   # 质量保障
+    │   ├── code-review.mdc          # 代码审查
+    │   ├── performance.mdc          # 性能优化
+    │   └── security.mdc             # 安全规则
+    └── 11-tools/                     # 工具规则
         └── directory-guard.mdc       # 目录守卫
 ```
 
@@ -96,7 +101,49 @@
 - **700**: `04-development/task-execution.mdc`
 - **650**: `06-cicd/ci-workflow.mdc`、`06-cicd/cd-workflow.mdc`
 - **600**: `05-debugging/debugging-methodology.mdc`
-- **500**: `1-quality/*`、`10-tools/*`（除pre-commit）
+- **500**: `10-quality/*`、`11-tools/*`（除pre-commit）
+
+### 优先级冲突处理
+
+**冲突场景**：
+
+- 多个规则具有相同的优先级
+- 多个规则同时匹配同一意图或文件
+
+**处理规则**：
+
+1. **相同优先级规则**：
+
+   - 按文件名字母顺序排序
+   - 核心原则层规则优先于工作流规则
+   - 角色规则优先于工作流规则
+
+2. **规则叠加**：
+
+   - 如果多个规则同时匹配，按优先级从高到低应用
+   - 高优先级规则的约束优先于低优先级规则
+   - 如果规则冲突，以最高优先级规则为准
+
+3. **冲突解决**：
+   - 如果规则之间存在冲突，AI必须明确说明冲突
+   - 优先应用核心原则（v4-core.mdc）的约束
+   - 如果无法解决，询问用户确认
+
+**示例**：
+
+```
+场景：用户说"实现功能并写测试"
+  ↓
+匹配规则：
+  - development-workflow.mdc (750)
+  - test-types.mdc (850)
+  ↓
+按优先级排序：850 → 750
+  ↓
+应用顺序：先应用test-types.mdc，再应用development-workflow.mdc
+  ↓
+角色切换：测试专家 + 开发专家
+```
 
 ## 📚 规则分类（按目录）
 
@@ -187,7 +234,7 @@
 | `tester.mdc`       | 测试专家角色    | 测试相关操作    |
 | `prd-designer.mdc` | PRD设计专家角色 | PRD设计相关操作 |
 
-### 1-quality/ 质量保障
+### 10-quality/ 质量保障
 
 | 规则文件          | 说明         | 触发条件 |
 | ----------------- | ------------ | -------- |
@@ -195,7 +242,7 @@
 | `performance.mdc` | 性能优化规则 | 性能优化 |
 | `security.mdc`    | 安全规则     | 安全检查 |
 
-### 10-tools/ 工具规则
+### 11-tools/ 工具规则
 
 | 规则文件              | 说明         | 触发条件 |
 | --------------------- | ------------ | -------- |
@@ -226,6 +273,21 @@ alwaysApply: true              # 是否总是应用（可选）
 priority: 900                  # 优先级（可选，默认500）
 ---
 ```
+
+### Globs配置策略
+
+**核心原则**：
+
+- **核心原则层**（alwaysApply规则）：使用 `**/*`，确保全局生效
+- **工作流规则**（按需加载）：
+  - **依赖特定文件类型**：精确限定（如 `backend/**/*.py`, `frontend/**/*.vue`）
+  - **流程性规则**（如提交、调试）：可以使用 `**/*`，因为不依赖特定文件类型
+
+**示例**：
+
+- ✅ `v4-core.mdc`: `globs: **/*`（核心原则，全局生效）
+- ✅ `django-development.mdc`: `globs: backend/apps/**/*.py`（依赖Python文件）
+- ✅ `pre-commit.mdc`: `globs: **/*`（流程性规则，提交时全局检查）
 
 ### 内容结构
 
@@ -270,6 +332,31 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
    - 通过 `globs` 匹配触发规则
    - 传统方式，仍然有效
 
+### 意图识别失败处理流程
+
+**降级策略**（按优先级顺序）：
+
+1. **关键词模糊匹配**：
+
+   - 如果精确匹配失败，尝试模糊匹配（包含关键词）
+   - 如果匹配多个意图，询问用户确认
+
+2. **上下文推断**：
+
+   - 分析对话历史，推断可能的意图
+   - 结合之前的对话内容判断
+
+3. **文件类型匹配降级**：
+
+   - 如果意图识别失败，但用户打开了特定文件
+   - 使用文件类型匹配（globs）触发相应规则
+
+4. **通用规则应用**：
+   - 如果以上都失败，只应用核心原则（alwaysApply规则）
+   - 不强制应用任何工作流规则
+
+**详细规则**: 参考 @.cursor/rules/00-core/intent-recognition.mdc（意图识别失败降级机制部分）
+
 ### 已注册的意图
 
 | 意图类型   | 关键词示例              | 应用规则                                       | 角色                   |
@@ -283,11 +370,11 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 | 调试问题   | "调试"、"排查问题"      | `05-debugging/debugging-methodology.mdc`       | 无特定角色             |
 | API契约    | "API契约"、"OpenAPI"    | `02-testing/contract-testing.mdc`              | 架构专家               |
 | 文档维护   | "更新文档"、"写文档"    | `07-documentation/documentation-standards.mdc` | 无特定角色             |
-| 代码审查   | "代码审查"、"review"    | `1-quality/code-review.mdc`                    | 无特定角色             |
+| 代码审查   | "代码审查"、"review"    | `10-quality/code-review.mdc`                   | 无特定角色             |
 | 项目初始化 | "项目初始化"、"setup"   | `08-project/project-setup.mdc`                 | 无特定角色             |
 | 架构分析   | "架构"、"架构设计"      | `09-roles/architect.mdc`                       | 架构专家               |
-| 性能优化   | "性能优化"、"优化性能"  | `1-quality/performance.mdc`                    | 无特定角色             |
-| 安全检查   | "安全检查"、"安全漏洞"  | `1-quality/security.mdc`                       | 无特定角色             |
+| 性能优化   | "性能优化"、"优化性能"  | `10-quality/performance.mdc`                   | 无特定角色             |
+| 安全检查   | "安全检查"、"安全漏洞"  | `10-quality/security.mdc`                      | 无特定角色             |
 
 **参考**: `@.cursor/rules/00-core/intent-recognition.mdc`
 
@@ -320,16 +407,16 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 → `06-cicd/cd-workflow.mdc`
 
 **我要审查代码**:
-→ `1-quality/code-review.mdc`
+→ `10-quality/code-review.mdc`
 
 **我要维护文档**:
 → `07-documentation/documentation-standards.mdc`
 
 **我要优化性能**:
-→ `1-quality/performance.mdc`
+→ `10-quality/performance.mdc`
 
 **我要安全检查**:
-→ `1-quality/security.mdc`
+→ `10-quality/security.mdc`
 
 ### 按技术栈查找规则
 
@@ -348,7 +435,7 @@ return fetch('/login', { body: JSON.stringify({e, p}) });
 
 1. **确定规则分类**：
 
-   - 根据工作流程阶段选择对应目录（00-core到10-tools）
+   - 根据工作流程阶段选择对应目录（00-core到11-tools）
    - 参考现有目录结构确定放置位置
 
 2. **使用模板创建规则**：

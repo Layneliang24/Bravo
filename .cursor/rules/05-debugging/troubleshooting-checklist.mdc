@@ -342,7 +342,7 @@ REQ-ID → Task-ID → Test-File → Code-File → Commit → Deployment
 
 - [V4核心原则](.cursor/rules/principles/v4-core.mdc) - PRD是需求的唯一真源
 - [测试用例设计规则](.cursor/rules/workflows/test-case-standards.mdc) - 测试用例设计流程
-- [代码审查规则](.cursor/rules/workflows/1-quality/code-review.mdc) - 代码审查清单
+- [代码审查规则](.cursor/rules/10-quality/code-review.mdc) - 代码审查清单
 - [调试规则](.cursor/rules/workflows/05-debugging/debugging-methodology.mdc) - 调试方法论
 
 ---
