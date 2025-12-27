@@ -106,3 +106,18 @@ priority: 600
 - @.cursor/rules/1-quality/performance.mdc - 性能优化规则
 - @.cursor/rules/00-core/v4-traceability.mdc - 追溯链规则
 - @.cursor/rules/02-testing/contract-testing.mdc - 契约测试规则
+
+---
+
+## 规则应用声明
+
+**当AI被路由到此规则时，必须在响应开头明确声明**：
+
+```
+[应用规则：@.cursor/rules/1-quality/code-review.mdc]
+```
+
+**验证要求**：
+- ✅ 必须明确声明应用了此规则
+- ✅ 必须遵循本规则中的所有约束和流程
+- ✅ 不能跳过声明步骤直接执行操作
