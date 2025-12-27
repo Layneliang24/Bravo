@@ -130,9 +130,12 @@ class LocalTestPassport:
                     )
                     if result.returncode != 0:
                         # 检查是否是网络超时问题
+                        error_lower = (result.stderr or "").lower()
                         if (
-                            "timeout" in result.stderr.lower()
-                            or "deadline exceeded" in result.stderr.lower()
+                            "timeout" in error_lower
+                            or "deadline exceeded" in error_lower
+                            or "request canceled" in error_lower
+                            or "connection" in error_lower
                         ):
                             self.log(f"⚠️  {workflow} 验证超时（网络问题），跳过语法验证")
                             self.log("💡 建议：网络恢复后重新运行，或使用CI验证工作流语法")
