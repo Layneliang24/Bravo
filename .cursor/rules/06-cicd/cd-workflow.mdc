@@ -43,3 +43,18 @@ priority: 550
 - 错误率超过阈值
 
 **参考**: @docs/architecture/V4/AI-WORKFLOW-V4-PART5-COMPLIANCE.md
+
+---
+
+## 规则应用声明
+
+**当AI被路由到此规则时，必须在响应开头明确声明**：
+
+```
+[应用规则：@.cursor/rules/06-cicd/cd-workflow.mdc]
+```
+
+**验证要求**：
+- ✅ 必须明确声明应用了此规则
+- ✅ 必须遵循本规则中的所有约束和流程
+- ✅ 不能跳过声明步骤直接执行操作

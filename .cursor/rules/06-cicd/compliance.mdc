@@ -211,3 +211,18 @@ fi
 - [V4合规引擎文档](.compliance/README.md)
 - [Task0检查器文档](.compliance/checkers/task0_checker.py)
 - [代码检查器文档](.compliance/checkers/code_checker.py)
+
+---
+
+## 规则应用声明
+
+**当AI被路由到此规则时，必须在响应开头明确声明**：
+
+```
+[应用规则：@.cursor/rules/06-cicd/compliance.mdc]
+```
+
+**验证要求**：
+- ✅ 必须明确声明应用了此规则
+- ✅ 必须遵循本规则中的所有约束和流程
+- ✅ 不能跳过声明步骤直接执行操作
