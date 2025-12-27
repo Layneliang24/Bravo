@@ -45,6 +45,9 @@ priority: 980
 ```
 [识别到{意图类型}意图：{用户的具体请求}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
+[路由到以下规则（需要阅读并声明）：
+   - @.cursor/rules/{规则1}.mdc
+   - @.cursor/rules/{规则2}.mdc]
 [开始执行：{具体操作}]
 ```
 
@@ -52,14 +55,20 @@ priority: 980
 ```
 [识别到组合意图：{意图1} + {意图2}]
    [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
+[路由到以下规则（需要阅读并声明）：
+   - @.cursor/rules/{意图1规则1}.mdc
+   - @.cursor/rules/{意图1规则2}.mdc
+   - @.cursor/rules/{意图2规则1}.mdc]
 [开始执行：{具体操作}]
 ```
 
 **重要说明**：
 - ✅ 意图识别层只负责识别意图和路由到对应规则
+- ✅ **必须列出所有被路由的规则文件**，提示AI需要阅读这些文件
 - ✅ 被路由到的规则文件会在其末尾要求AI声明是否遵循该规则
 - ✅ 这样可以验证AI是否真的阅读并遵循了被路由的规则，而不是只在intent-recognition中声明
 - ✅ 每个被路由的规则文件都会在末尾明确要求AI声明应用该规则
+- ✅ **AI必须阅读被路由的规则文件，并在响应中声明应用了这些规则**
 
 **禁止行为**：
 - ❌ 不能直接执行操作而不明确告知规则引用
@@ -132,7 +141,7 @@ priority: 980
 - @.cursor/rules/06-cicd/compliance.mdc
 - @.cursor/rules/00-core/v4-traceability.mdc
 
-**切换到角色**: 无特定角色（执行提交流程）
+**切换到角色**: 无特定角色（执行提交流程，不要求角色切换）
 
 ---
 
@@ -144,7 +153,7 @@ priority: 980
 - @.cursor/rules/05-debugging/debugging-methodology.mdc
 - @.cursor/rules/05-debugging/troubleshooting-checklist.mdc
 
-**切换到角色**: 无特定角色（执行调试流程）
+**切换到角色**: 无特定角色（执行调试流程，不要求角色切换）
 
 ---
 
@@ -167,7 +176,7 @@ priority: 980
 **应用规则**:
 - @.cursor/rules/07-documentation/documentation-standards.mdc
 
-**切换到角色**: 无特定角色（执行文档维护流程）
+**切换到角色**: 无特定角色（执行文档维护流程，不要求角色切换）
 
 ---
 
@@ -178,7 +187,7 @@ priority: 980
 **应用规则**:
 - @.cursor/rules/1-quality/code-review.mdc
 
-**切换到角色**: 无特定角色（执行代码审查流程）
+**切换到角色**: 无特定角色（执行代码审查流程，不要求角色切换）
 
 ---
 
@@ -235,7 +244,7 @@ priority: 980
 **应用规则**:
 - @.cursor/rules/1-quality/performance.mdc
 
-**切换到角色**: 无特定角色（执行性能优化流程）
+**切换到角色**: 无特定角色（执行性能优化流程，不要求角色切换）
 
 ---
 
@@ -246,7 +255,7 @@ priority: 980
 **应用规则**:
 - @.cursor/rules/1-quality/security.mdc
 
-**切换到角色**: 无特定角色（执行安全检查流程）
+**切换到角色**: 无特定角色（执行安全检查流程，不要求角色切换）
 
 ---
 
@@ -288,19 +297,41 @@ priority: 980
 当识别到组合意图时，AI必须：
 1. **识别所有匹配的意图**（不要只选一个）
 2. **按顺序应用所有意图的规则**
-3. **切换到所有相关角色**（可以同时应用多个角色）
-4. **明确告知所有应用的规则**
+3. **收集所有角色要求**：
+   - 检查每个被路由的规则是否有角色要求
+   - 如果有多个规则要求不同角色，切换到所有相关角色（如"测试专家 + 架构专家"）
+   - 如果有些规则有角色要求，有些没有，只切换到有要求的角色
+4. **明确告知所有应用的规则和角色**
 
 **示例响应格式**：
 ```
 [识别到组合意图：测试相关 + 架构相关]
-[应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
+   [应用规则：@.cursor/rules/00-core/intent-recognition.mdc]
+[路由到以下规则（需要阅读并声明）：
+   - @.cursor/rules/02-testing/test-types.mdc
+   - @.cursor/rules/09-roles/tester.mdc
+   - @.cursor/rules/09-roles/architect.mdc]
+
 [应用规则：@.cursor/rules/02-testing/test-types.mdc]
 [应用规则：@.cursor/rules/09-roles/tester.mdc]
 [应用规则：@.cursor/rules/09-roles/architect.mdc]
 [切换到测试专家 + 架构专家角色]
 [开始执行：分析测试架构，从测试和架构两个角度分析]
 ```
+
+**角色处理规则**：
+- ✅ **收集所有角色要求**：检查每个被路由的规则是否有角色要求
+- ✅ **合并相同角色**：如果多个规则要求同一角色，只声明一次（如多个测试规则都要求"测试专家"）
+- ✅ **组合不同角色**：如果多个规则要求不同角色，切换到所有相关角色（如"测试专家 + 架构专家"）
+- ✅ **忽略无角色规则**：如果规则没有角色要求，不要声明角色切换
+- ❌ **禁止静默处理**：必须明确说明切换到哪些角色，不能省略
+
+**说明**：
+- 第一段：意图识别层声明（只声明intent-recognition）
+- 第二段：列出被路由的规则（提示需要阅读）
+- 第三段：应用被路由的规则（从规则文件中读取的声明要求）
+- 第四段：角色切换（收集所有角色要求后合并声明）
+- 这样可以验证AI是否真正阅读了被路由的规则文件
 
 ### 单一意图处理
 
@@ -346,6 +377,7 @@ priority: 980
 - `@.cursor/rules/00-core/v4-traceability.mdc`（追溯链规则，通过意图路由在提交时加载）
 - `@.cursor/rules/06-cicd/pre-commit.mdc`（提交前检查，通过意图路由在提交时加载）
 
-**当前alwaysApply规则（仅2个）**：
+**当前alwaysApply规则（仅3个）**：
 - `v4-core.mdc` (priority: 1000) - 核心宪法，必须总是生效
+- `behavior-guidelines.mdc` (priority: 990) - 行为准则，必须总是生效
 - `intent-recognition.mdc` (priority: 980) - 路由层，必须总是生效

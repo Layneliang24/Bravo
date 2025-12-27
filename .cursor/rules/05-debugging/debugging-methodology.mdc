@@ -241,6 +241,8 @@ docker stats
 [应用规则：@.cursor/rules/05-debugging/debugging-methodology.mdc]
 ```
 
+**注意**：本规则不要求切换到特定角色，执行调试流程即可。
+
 **验证要求**：
 - ✅ 必须明确声明应用了此规则
 - ✅ 必须遵循本规则中的所有约束和流程
