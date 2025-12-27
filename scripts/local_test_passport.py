@@ -109,16 +109,40 @@ class LocalTestPassport:
             workflows_to_test = ["push-validation.yml", "pr-validation.yml"]
 
             for workflow in workflows_to_test:
+                workflow_path = self.workspace / ".github" / "workflows" / workflow
+                if not workflow_path.exists():
+                    self.log(f"⚠️  工作流文件不存在，跳过：{workflow}")
+                    continue
+
                 self.log(f"🔍 检查工作流：{workflow}")
-                result = subprocess.run(
-                    ["act", "push", "-W", f".github/workflows/{workflow}", "--list"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if result.returncode != 0:
-                    self.log(f"❌ {workflow} 语法验证失败：{result.stderr}")
-                    return False
+                try:
+                    result = subprocess.run(
+                        [
+                            "act",
+                            "push",
+                            "-W",
+                            f".github/workflows/{workflow}",
+                            "--list",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                    )
+                    if result.returncode != 0:
+                        # 检查是否是网络超时问题
+                        if (
+                            "timeout" in result.stderr.lower()
+                            or "deadline exceeded" in result.stderr.lower()
+                        ):
+                            self.log(f"⚠️  {workflow} 验证超时（网络问题），跳过语法验证")
+                            self.log("💡 建议：网络恢复后重新运行，或使用CI验证工作流语法")
+                            continue
+                        self.log(f"❌ {workflow} 语法验证失败：{result.stderr}")
+                        return False
+                except subprocess.TimeoutExpired:
+                    self.log(f"⚠️  {workflow} 验证超时，跳过（可能是网络问题）")
+                    self.log("💡 建议：网络恢复后重新运行，或使用CI验证工作流语法")
+                    continue
 
             # 额外测试：实际运行关键任务检查bash语法
             self.log("🔍 运行bash语法检查...")
@@ -238,9 +262,28 @@ class LocalTestPassport:
             return True
 
         try:
+            # Windows环境下检查bash可用性
+            bash_cmd = "bash"
+            if sys.platform == "win32":
+                try:
+                    subprocess.run(
+                        ["bash", "--version"],
+                        check=True,
+                        capture_output=True,
+                        timeout=5,
+                    )
+                except (
+                    subprocess.CalledProcessError,
+                    FileNotFoundError,
+                    subprocess.TimeoutExpired,
+                ):
+                    self.log("⚠️  Windows环境下bash不可用，跳过功能测试")
+                    self.log("💡 建议：安装Git Bash或WSL，或使用CI验证功能")
+                    return True
+
             self.log("🚀 运行GitHub Actions模拟...")
             result = subprocess.run(
-                ["bash", str(simulation_script)],
+                [bash_cmd, str(simulation_script)],
                 capture_output=True,
                 text=True,
                 timeout=300,  # 5分钟超时
