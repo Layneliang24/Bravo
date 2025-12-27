@@ -6,6 +6,18 @@ priority: 950
 
 # 合规检查警告主动修复工作流程
 
+## 职责边界
+
+**本规则职责**:
+- 定义合规警告的详细修复方法
+- 提供常见警告的修复步骤
+- 说明合规检查的工作流程
+
+**不在此规则中**:
+- ❌ Pre-commit检查的执行流程（由 @.cursor/rules/06-cicd/pre-commit.mdc 负责）
+- ❌ 提交消息格式（由 @.cursor/rules/06-cicd/version-control.mdc 负责）
+- ❌ 追溯链格式要求（由 @.cursor/rules/00-core/v4-traceability.mdc 负责）
+
 ## 核心原则
 
 **⚠️ 关键原则：所有合规警告都必须主动修复，不得等待用户指出**

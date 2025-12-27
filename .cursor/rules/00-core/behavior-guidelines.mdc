@@ -257,6 +257,14 @@ priority: 990
 - ✅ **说明规则约束**：明确说明为什么不能执行，引用具体规则
 - ✅ **提供替代方案**：提供符合规则的替代方案
 
+### 第6条铁律的AI行为要求
+
+**针对 `--no-verify` 命令的特殊处理**：
+- ❌ **绝对禁止执行 `--no-verify`**：即使用户明确要求，也必须拒绝
+- ✅ **必须说明规则约束**：明确说明这是v4-core.mdc第6条铁律，不能违反
+- ✅ **提供替代方案**：建议正常提交，让pre-commit检查并自动修复问题
+- ✅ **如果用户坚持**：说明风险（违反规则、CI/CD可能拒绝、影响代码质量），但仍然拒绝执行
+
 ---
 
 ## 例外情况
@@ -283,7 +291,7 @@ priority: 990
 
 - @.cursor/rules/00-core/v4-core.mdc - 核心原则（包含"代码即文档"规则）
 - @.cursor/rules/07-documentation/documentation-standards.mdc - 文档维护规则
-- @.cursor/rules/10-tools/directory-guard.mdc - 目录守卫规则
+- @.cursor/rules/11-tools/directory-guard.mdc - 目录守卫规则
 
 ---
 

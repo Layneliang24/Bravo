@@ -164,6 +164,169 @@ node --version && echo "vs package.json engines"
 - 考虑完全不同的问题根因
 - 不要忽视用户的质疑信号
 
+## 主动工具使用（强制要求）
+
+**核心原则**: AI必须主动、善于利用各种工具进行调试和排查，不要等用户要求才使用
+
+### MCP工具（浏览器验证）
+
+**强制要求**: 每次修复前端问题后，必须主动使用MCP工具验证浏览器环境
+
+**必须执行的检查**:
+1. **打开页面并检查控制台错误**:
+   ```typescript
+   // 1. 打开页面
+   browser_navigate("http://localhost:3000/your-page");
+
+   // 2. 主动检查控制台错误（关键！）
+   const consoleMessages = browser_console_messages();
+   // 查找: CORS错误、网络错误、JavaScript错误、资源加载失败
+
+   // 3. 检查网络请求
+   const networkRequests = browser_network_requests();
+   // 验证: API请求是否成功、状态码是否正确
+   ```
+
+2. **主动截图验证**:
+   ```typescript
+   // 如果发现问题，主动截图保存证据
+   browser_take_screenshot({ filename: "error-state.png" });
+   ```
+
+3. **主动交互测试**:
+   ```typescript
+   // 主动测试关键功能
+   browser_click({ element: "登录按钮", ref: "button.login" });
+   browser_type({ element: "用户名输入框", ref: "input.username", text: "test" });
+   ```
+
+**禁止行为**:
+- ❌ 不能等用户报告浏览器错误才修复
+- ❌ 不能只验证容器内测试，必须验证浏览器实际运行效果
+- ❌ 不能跳过MCP工具验证
+
+### Playwright工具（E2E测试和调试）
+
+**主动使用场景**:
+1. **E2E测试失败时**:
+   ```bash
+   # 主动运行playwright调试模式
+   cd e2e && npx playwright test --debug
+
+   # 主动查看测试报告
+   npx playwright show-report
+
+   # 主动查看trace文件
+   npx playwright show-trace trace.zip
+   ```
+
+2. **前端功能验证**:
+   ```bash
+   # 主动运行playwright UI模式进行交互式调试
+   npx playwright test --ui
+
+   # 主动生成测试代码
+   npx playwright codegen http://localhost:3000
+   ```
+
+3. **截图和视频分析**:
+   ```bash
+   # 主动查看失败测试的截图和视频
+   ls test-results/
+   # 分析截图和视频，找出问题根因
+   ```
+
+**主动行为要求**:
+- ✅ 测试失败时，主动运行playwright调试模式
+- ✅ 主动查看测试报告和trace文件
+- ✅ 主动分析截图和视频，找出问题根因
+
+### GitHub CLI工具（gh）
+
+**主动使用场景**:
+1. **CI/CD问题排查**:
+   ```bash
+   # 主动查看GitHub Actions运行状态
+   gh run list --limit 10
+
+   # 主动查看失败的workflow详情
+   gh run view <run-id> --log-failed
+
+   # 主动查看PR状态和检查
+   gh pr view <pr-number> --json state,statusCheckRollup
+   ```
+
+2. **PR管理**:
+   ```bash
+   # 主动检查PR合并状态
+   gh pr checks <pr-number>
+
+   # 主动查看PR的详细状态
+   gh pr view <pr-number> --json mergeable,mergeStateStatus
+   ```
+
+3. **问题追踪**:
+   ```bash
+   # 主动查看相关issue
+   gh issue list --label "bug"
+
+   # 主动查看commit历史
+   gh api repos/:owner/:repo/commits --jq '.[] | {sha: .sha, message: .commit.message}'
+   ```
+
+**主动行为要求**:
+- ✅ CI/CD失败时，主动使用gh查看workflow状态和日志
+- ✅ PR相关问题时，主动使用gh查看PR状态和检查
+- ✅ 需要GitHub信息时，主动使用gh而不是等用户提供
+
+### 其他工具包
+
+**Docker工具**:
+```bash
+# 主动检查容器状态
+docker-compose ps
+docker-compose logs backend
+docker-compose exec backend python manage.py shell
+
+# 主动检查容器资源使用
+docker stats
+```
+
+**Git工具**:
+```bash
+# 主动查看git状态和历史
+git status
+git log --oneline -10
+git diff HEAD~1
+
+# 主动搜索git历史
+git log --all --grep="类似问题"
+git log -S "错误模式"
+```
+
+**系统工具**:
+```bash
+# 主动检查进程和端口
+ps aux | grep python
+netstat -tulpn | grep 8000
+
+# 主动检查文件系统
+df -h
+du -sh *
+```
+
+### 工具使用原则
+
+**主动性原则**:
+- ✅ **主动使用工具**：不要等用户要求，发现问题立即使用工具排查
+- ✅ **工具优先**：能用工具解决的问题，不要猜测或假设
+- ✅ **多工具组合**：一个问题可能要用多个工具从不同角度验证
+
+**禁止行为**:
+- ❌ 不能等用户提供信息，应该主动使用工具获取
+- ❌ 不能只依赖用户描述，应该主动验证实际情况
+- ❌ 不能跳过工具验证，直接猜测问题原因
+
 ## Docker容器调试
 
 ### 查看容器日志
@@ -230,6 +393,9 @@ docker stats
 - ❌ 不能忽略用户反馈
 - ❌ 不能跳过环境差异检查
 - ❌ 不能"打地鼠式修复"（修复一个文件，遗漏其他）
+- ❌ **不能等用户要求才使用工具**：必须主动使用MCP、playwright、gh等工具
+- ❌ **不能跳过工具验证**：发现问题必须主动使用工具验证，不能猜测
+- ❌ **不能只依赖用户描述**：必须主动使用工具获取实际情况
 
 ---
 
