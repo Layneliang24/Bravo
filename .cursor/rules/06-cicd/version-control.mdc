@@ -156,6 +156,37 @@ priority: 900
 - ❌ 不能绕过PR流程
 - ❌ 不能使用force push
 
+### 分支清理规范
+
+**核心原则**: 合并到目标分支后，应及时清理feature分支，保持仓库整洁
+
+**清理时机**:
+- ✅ PR合并到dev分支后，立即清理feature分支
+- ✅ PR合并到main分支后，立即清理feature分支
+- ⚠️ 如果分支还需要继续开发，可以保留
+
+**清理步骤**:
+```bash
+# 1. 切换到目标分支（dev或main）
+git checkout dev
+git pull origin dev
+
+# 2. 删除本地feature分支
+git branch -d feature/your-feature
+
+# 3. 删除远程feature分支
+git push origin --delete feature/your-feature
+```
+
+**自动化清理**:
+- PR合并时可以设置自动删除分支（GitHub PR设置）
+- 建议在PR描述中说明是否需要保留分支
+
+**注意事项**:
+- ⚠️ 删除前确认分支已完全合并
+- ⚠️ 删除前确认没有未推送的提交
+- ⚠️ 如果分支被其他分支依赖，需要先处理依赖关系
+
 **参考**: @.cursor/rules/06-cicd/ci-workflow.mdc
 
 ## PR流程规则
@@ -235,6 +266,42 @@ gh run view <run-id> --log-failed
 - ❌ 不能跳过pre-push检查
 
 ## 工具使用
+
+### 便捷命令（推荐使用）
+
+**核心原则**: 必须使用项目提供的便捷命令，禁止直接调用底层脚本
+
+**可用命令**:
+```bash
+# 生成本地测试通行证（必需，推送前必须执行）
+./test              # 完整测试（5-10分钟）
+./test --quick      # 快速测试（1-2分钟，推荐日常使用）
+./test --check      # 检查通行证状态
+
+# 检查通行证状态
+./passport          # 检查通行证状态
+./passport --check  # 详细检查通行证
+
+# 安全推送（自动验证通行证）
+./safe-push         # 安全推送到当前分支的远程分支
+```
+
+**使用场景**:
+- ✅ **推送前**: 必须先运行 `./test` 或 `./test --quick` 生成通行证
+- ✅ **检查状态**: 使用 `./passport --check` 检查通行证是否有效
+- ✅ **安全推送**: 使用 `./safe-push` 进行推送（会自动验证通行证）
+
+**禁止行为**:
+- ❌ **禁止直接调用**: `python scripts/local_test_passport.py`（应使用 `./test`）
+- ❌ **禁止直接调用**: `python scripts-golden/local_test_passport.py`（应使用 `./test`）
+- ❌ **禁止绕过**: 不能跳过便捷命令直接调用底层脚本
+
+**技术说明**:
+- 便捷命令（`./test`, `./passport`, `./safe-push`）调用的是 `scripts-golden/` 目录下的黄金脚本
+- 工作副本（`scripts/` 目录）仅用于开发，不应直接调用
+- 黄金脚本受保护，修改需要手动授权
+
+**参考**: @scripts-golden/local_test_passport.py, @scripts-golden/git-guard.sh
 
 ### GitHub CLI (gh)
 
