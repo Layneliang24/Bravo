@@ -6,154 +6,43 @@ priority: 750
 
 # 开发阶段规则
 
-## 角色切换
+## 1. 核心职责
+- **驱动方式**: 依据测试文件实现功能（TDD：红 → 绿 → 重构）。
+- **契约守卫**: API 实现必须 100% 匹配 OpenAPI 契约（详见 @contract-testing.mdc）。
+- **追溯要求**: 所有新文件必须包含 REQ-ID 注释（格式见 @v4-traceability.mdc）。
 
-**当前角色**: 开发专家 (Developer)
+## 2. 环境与工具约束
+- **容器化执行**: 严禁宿主机操作。所有开发、构建、测试指令必须通过 `docker-compose exec` 运行（详见 @v4-containerization.mdc）。
+- **质量检查**: 提交前必须执行后端 (Black/Isort/Flake8/Mypy) 和前端 (Lint/Type-check) 检查。
 
-**你的职责**:
-1. 根据测试文件实现功能代码
-2. 遵循TDD流程（测试红 → 代码绿 → 重构）
-3. 确保代码符合项目规范
-4. 确保代码通过所有测试
+## 3. 渐进式开发原则
+- **利用已有成果**: 优先在现有模型和模式上扩展。
+- **一致性自核**:
+  - [ ] 是否复用了现有的 User/Base 模型？
+  - [ ] 目录结构和命名是否符合现有习惯？
+  - [ ] API 响应格式是否与项目已有接口统一？
 
-**你不应该**:
-- 跳过测试直接写代码
-- 实现测试未要求的功能
-- 忽略代码质量检查
+## 4. 浏览器环境验证 (强制性)
+> [!IMPORTANT]
+> 容器内测试通过不代表浏览器运行正常。修复前端问题后必须执行以下验证：
 
-## TDD开发流程
+- **验证步骤**:
+  1. 使用 `browser_navigate` 访问 `http://localhost:3000`。
+  2. 使用 `browser_console_messages` 检查是否有 `CORS` 或 `404/500` 错误。
+  3. 使用 `browser_network_requests` 确认 API 交互状态。
+- **关键差异**: 验证宿主机访问 API (localhost) 时的跨域配置。
 
-**详细规则**: 参考 @.cursor/rules/00-core/v4-tdd.mdc
-
-**核心流程**: 红色阶段（编写失败测试） → 绿色阶段（最少代码通过） → 重构阶段（优化代码）
-
-## Docker容器化开发
-
-**详细规则**: 参考 @.cursor/rules/00-core/v4-containerization.mdc
-
-**核心规则**: 所有开发、构建、测试必须在Docker容器中进行
-
-## 代码文件REQ-ID注释
-
-**详细规则**: 参考 @.cursor/rules/00-core/v4-traceability.mdc
-
-**规则**: 所有代码文件必须包含REQ-ID注释
-
-**验证**: Pre-commit会自动检查
-
-## API实现必须遵循契约
-
-**详细规则**: 参考 @.cursor/rules/02-testing/contract-testing.mdc
-
-**规则**: API实现必须严格遵循OpenAPI契约
-
-## 代码质量要求
-
-### 后端代码
-
-**检查命令**:
-```bash
-# 格式化
-docker-compose exec backend black .
-docker-compose exec backend isort .
-
-# 代码检查
-docker-compose exec backend flake8 .
-docker-compose exec backend pylint apps/
-
-# 类型检查
-docker-compose exec backend mypy apps/
-
-# 安全检查
-docker-compose exec backend bandit -r apps/
-```
-
-**参考**: @.cursor/rules/04-development/code-standards.mdc
-
-### 前端代码
-
-**检查命令**:
-```bash
-# 格式化
-cd frontend && npm run format
-
-# 代码检查
-cd frontend && npm run lint
-
-# 类型检查
-cd frontend && npm run type-check
-```
-
-## 利用已有项目成果
-
-**规则**: 在已有项目基础上扩展，而非重新创建
-
-**检查清单**:
-- [ ] 查看现有User模型，扩展而非重新创建
-- [ ] 查看现有项目结构，遵循相同模式
-- [ ] 查看现有测试模式，使用相同工具和风格
-- [ ] 查看现有API风格，保持一致
-
-**参考**: PRD中的"已有项目约束"部分
-
-## 浏览器环境验证（强制）
-
-**规则**: 每次修复前端问题后，必须使用MCP工具验证浏览器环境
-
-**必须执行的检查清单**:
-1. ✅ 使用 `mcp_cursor-browser-extension_browser_navigate` 打开页面
-2. ✅ 使用 `mcp_cursor-browser-extension_browser_console_messages` 检查控制台错误
-3. ✅ 验证API调用是否成功（检查网络请求）
-4. ✅ 验证CORS配置是否正确（浏览器环境与容器环境不同）
-
-**关键差异**:
-- **测试环境**: 容器内运行，使用 `http://backend:8000`（无CORS问题）
-- **浏览器环境**: 宿主机运行，使用 `http://localhost:8000`（需要CORS头）
-
-**禁止行为**:
-- ❌ 不能只验证容器内测试，忽略浏览器环境
-- ❌ 不能等用户报告浏览器错误才修复
-- ❌ 不能假设测试通过就等于浏览器正常
-
-**MCP工具使用示例**:
-```typescript
-// 1. 打开页面
-browser_navigate('http://localhost:3000/login')
-
-// 2. 检查控制台错误
-const consoleMessages = browser_console_messages()
-if (consoleMessages.some(msg => msg.type === 'error')) {
-  // 立即修复错误
-}
-
-// 3. 检查网络请求
-const networkRequests = browser_network_requests()
-// 验证API调用是否成功
-```
-
-## 禁止事项
-
-- ❌ 不能跳过TDD流程
-- ❌ 不能在没有测试的情况下提交代码
-- ❌ 不能实现测试未要求的功能
-- ❌ 不能忽略API契约
-- ❌ 不能提交没有REQ-ID注释的代码
-- ❌ 不能在宿主机直接执行开发命令
-- ❌ **不能跳过浏览器环境验证（必须使用MCP工具）**
+## 5. 原子禁令
+- ❌ 严禁跳过 TDD 流程编写业务代码。
+- ❌ 严禁在没有测试通行证的情况下提交。
+- ❌ 严禁实现 PRD/契约之外的“聪明功能”。
 
 ---
 
 ## 规则应用声明
-
-**当AI被路由到此规则时，必须在响应开头明确声明**：
+当AI被路由到此规则时，必须在响应开头明确声明：
 
 ```
 [应用规则：@.cursor/rules/04-development/development-workflow.mdc]
 [切换到开发专家角色]
 ```
-
-**验证要求**：
-- ✅ 必须明确声明应用了此规则
-- ✅ 必须遵循本规则中的所有约束和流程
-- ✅ 必须切换到开发专家角色
-- ✅ 不能跳过声明步骤直接执行操作

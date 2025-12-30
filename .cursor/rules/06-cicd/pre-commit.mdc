@@ -1,74 +1,31 @@
 ---
-description: Pre-commit检查详细规则
+description: Pre-commit检查流程自核清单
 globs: **/*
 priority: 950
 ---
 
-# Pre-commit检查规则
+# Pre-commit 检查规则
 
-> **注意**: 版本控制相关规则（提交、推送、分支管理）已统一到 @.cursor/rules/06-cicd/version-control.mdc
+## 1. 职责边界
+本规则作为提交前的 **最后一道关卡**，不重复描述细节，仅关注执行。
 
-## 职责边界
+## 2. 提交流程清单
+1. **添加文件**: `git add .`
+2. **执行提交**: `git commit -m "..."`
+3. **审计输出**:
+   - ⚠️ 若出现 **合规警告 (Compliance Warning)**：立即停止，详见 @compliance.mdc 修复。
+   - ❌ 若出现 **代码错误/Lint 失败**：修正后重新 add。
 
-**本规则职责**:
-- 定义pre-commit检查的四层体系
-- 说明检查的执行时机和流程
-- 引用相关规则处理检查结果
-
-**不在此规则中**:
-- ❌ 合规警告的详细修复方法（由 @.cursor/rules/06-cicd/compliance.mdc 负责）
-- ❌ 提交消息格式（由 @.cursor/rules/06-cicd/version-control.mdc 负责）
-- ❌ 分支管理规则（由 @.cursor/rules/06-cicd/version-control.mdc 负责）
-
-## 四层检查体系
-
-**详细规则**: 参考 @.cursor/rules/06-cicd/version-control.mdc（提交规则部分）
-
-**简要说明**:
-1. 依赖安全检查
-2. 本地测试通行证验证（推送前必需）
-3. 代码质量检查
-4. V4合规引擎检查
-
-**参考**: @.husky/pre-commit, @.cursor/rules/06-cicd/version-control.mdc
-
-## 合规警告处理
-
-**核心原则**: 所有合规警告都必须主动修复，不得等待用户指出
-
-**处理流程**:
-1. Pre-commit检查发现合规警告
-2. 立即停止提交流程
-3. 根据 @.cursor/rules/06-cicd/compliance.mdc 修复警告
-4. 修复后重新提交
-
-**详细修复方法**: 参考 @.cursor/rules/06-cicd/compliance.mdc（包含所有警告类型及修复步骤）
-
-## 提交前检查清单
-
-**详细清单**: 参考 @.cursor/rules/06-cicd/version-control.mdc（提交规则部分）
-
-## 禁止事项
-
-**详细禁止事项**: 参考 @.cursor/rules/06-cicd/version-control.mdc（禁止事项部分）
-
-**Pre-commit特有禁止**:
-- ❌ 不能忽略合规警告
-- ❌ 不能提交包含警告的代码
+## 3. 原子禁令
+- ❌ 严禁忽略任何合规检查抛出的警告。
+- ❌ 严禁在未运行本地测试的情况下执行 commit。
+- ❌ 严禁通过交互式暂存绕过关键文件的检查。
 
 ---
 
 ## 规则应用声明
-
-**当AI被路由到此规则时，必须在响应开头明确声明**：
+当AI被路由到此规则时，必须在响应开头明确声明：
 
 ```
 [应用规则：@.cursor/rules/06-cicd/pre-commit.mdc]
 ```
-
-**注意**：本规则不要求切换到特定角色，执行提交流程即可。
-
-**验证要求**：
-- ✅ 必须明确声明应用了此规则
-- ✅ 必须遵循本规则中的所有约束和流程
-- ✅ 不能跳过声明步骤直接执行操作

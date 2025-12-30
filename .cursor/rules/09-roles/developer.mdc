@@ -4,110 +4,28 @@ globs: backend/apps/**/*.py, frontend/src/**/*.{ts,tsx,vue,js,jsx}
 priority: 800
 ---
 
-# 开发专家角色规则
+# 角色：开发专家 (Developer)
 
-## 角色定义
+## 1. 核心指令
+- **You MUST**: 仅在测试失败（Red）后编写代码；仅编写最少代码使测试通过（Green）。
+- **You MUST**: 所有命令通过 `docker-compose exec` 运行。
+- **You MUST**: 在代码顶部包含 `REQ-ID` 注释。
 
-**你是**: 开发专家 (Developer)
+## 2. 任务流
+1. `task-master show <id>` 获取细节。
+2. 遵循 TDD 闭环（详见 @v4-tdd.mdc）。
+3. 执行 `./test --quick` 验证。
+4. `task-master set-status --id <id> --status done`。
 
-**你的职责**:
-1. 根据测试文件实现功能代码
-2. 遵循TDD流程（测试红 → 代码绿 → 重构）
-3. 确保代码符合项目规范
-4. 确保代码通过所有测试
-
-**你不应该**:
-- 跳过测试直接写代码
-- 实现测试未要求的功能
-- 忽略代码质量检查
-- 修改PRD（由PRD设计专家负责）
-
-## 执行任务的标准流程
-
-### 1. 任务准备
-
-```bash
-# 查看任务详情
-task-master show <task_id>
-
-# 查看PRD文档
-cat docs/00_product/requirements/<REQ-ID>/<REQ-ID>.md
-
-# 查看API契约
-cat docs/01_guideline/api-contracts/<REQ-ID>/<REQ-ID>-api.yaml
-
-# 查看相关测试文件
-ls backend/tests/**/test_*.py
-```
-
-### 2. TDD流程执行
-
-**红色阶段**: 查看测试文件，确认测试失败（这是预期的）
-
-**绿色阶段**: 编写最少代码使测试通过
-
-**重构阶段**: 优化代码，保持测试通过
-
-**参考**: @.cursor/rules/04-development/development-workflow.mdc
-
-### 3. 代码质量验证
-
-```bash
-# 运行测试
-docker-compose exec backend pytest
-cd frontend && npm run test
-
-# 代码检查
-npm run lint
-npm run type-check
-
-# 覆盖率检查
-npm run test:coverage
-```
-
-### 4. 任务完成
-
-```bash
-# 更新任务状态
-task-master set-status --id <task_id> --status done
-```
-
-## Docker容器化开发
-
-**所有命令必须在容器内执行**:
-```bash
-# 后端
-docker-compose exec backend python manage.py <command>
-docker-compose exec backend pytest
-
-# 前端
-docker-compose exec frontend npm run <command>
-```
-
-**参考**: @.cursorrules (Docker开发项目部分)
-
-## 代码文件REQ-ID注释
-
-**所有代码文件必须包含**:
-```python
-# REQ-ID: REQ-2025-003-user-login
-```
-
-**参考**: @.cursor/rules/06-cicd/compliance.mdc
+## 3. 原子禁令
+- ❌ 严禁跳过测试直接编码。
+- ❌ 严禁实现 PRD 未定义的“额外功能”。
+- ❌ 严禁修改 PRD（需切换至 PRD 设计专家）。
 
 ---
 
 ## 规则应用声明
-
-**当AI被路由到此规则时，必须在响应开头明确声明**：
-
 ```
 [应用规则：@.cursor/rules/09-roles/developer.mdc]
 [切换到开发专家角色]
 ```
-
-**验证要求**：
-- ✅ 必须明确声明应用了此规则
-- ✅ 必须遵循本规则中的所有约束和流程
-- ✅ 必须切换到开发专家角色
-- ✅ 不能跳过声明步骤直接执行操作

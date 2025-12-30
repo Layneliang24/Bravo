@@ -1,87 +1,36 @@
-# test-coverage.mdc
 ---
 description: 测试覆盖率规则
-globs: backend/tests/**/*.py, frontend/src/**/*.{spec.ts,spec.tsx,test.ts,test.tsx,test.js}, e2e/tests/**/*.spec.ts
+globs: backend/tests/**/*.py, frontend/src/**/*.spec.ts, e2e/tests/**/*.spec.ts
 priority: 500
 ---
 
 # 测试覆盖率规则
 
-## 覆盖率目标
+## 1. 核心红线 (Thresholds)
+- **后端 (Python)**: 总覆盖率 ≥ **85%** (单元测试单独 ≥ 90%)。
+- **前端 (Vue/TS)**: 总覆盖率 ≥ **80%**。
+- **E2E 测试**: 覆盖 100% 的 P0 业务场景。
 
-### 1. 整体覆盖率要求
-- **后端代码覆盖率**：≥ 85%
-- **前端代码覆盖率**：≥ 80%
-- **E2E 测试覆盖率**：≥ 70%
-
-### 2. 分类覆盖率要求
-- **单元测试**：≥ 90%
-- **集成测试**：≥ 75%
-- **API 测试**：≥ 85%
-- **组件测试**：≥ 80%
-
-## 测试策略
-
-### 1. 测试金字塔
-```
-    E2E Tests (10%)
-   /              \
-  /                \
- /                  \
-Integration Tests (20%)
-/                      \
-/                        \
-Unit Tests (70%)
-```
-
-### 2. 测试类型
-- **单元测试**：测试单个函数或方法
-- **集成测试**：测试模块间交互
-- **E2E 测试**：测试完整用户流程
-- **性能测试**：测试系统性能指标
-
-### 3. 测试工具
-- **后端**：pytest, factory_boy, coverage
-- **前端**：Vitest, Vue Test Utils
-- **E2E**：Playwright, Selenium
-- **性能**：Locust, k6
-
-## 覆盖率检查
-
-### 1. 本地检查
+## 2. 检查命令
 ```bash
-# 后端覆盖率
-cd backend
-pytest --cov=. --cov-report=html
+# 后端 (容器内执行)
+docker-compose exec backend pytest --cov=. --cov-report=term-missing
 
-# 前端覆盖率
-cd frontend
-npm run test:coverage
+# 前端 (子目录执行)
+cd frontend && npm run test:coverage
 ```
 
-### 2. CI/CD 检查
-- 每次 PR 必须通过覆盖率检查
-- 覆盖率下降需要说明原因
-- 新功能必须包含测试用例
-
-### 3. 覆盖率报告
-- 生成 HTML 报告
-- 集成到 CI/CD 流水线
-- 定期审查覆盖率趋势
+## 3. 合规要求
+- ❌ 严禁在覆盖率下降时提交 PR（除非有架构层面的特殊说明）。
+- ❌ 严禁使用 `nocov` 或类似标记恶意跳过核心逻辑。
+- ✅ 新功能必须包含对应测试，确保覆盖率不低于基准线。
 
 ---
 
 ## 规则应用声明
-
-**当AI被路由到此规则时，必须在响应开头明确声明**：
+当AI被路由到此规则时，必须在响应开头明确声明：
 
 ```
 [应用规则：@.cursor/rules/02-testing/test-coverage.mdc]
 [切换到测试专家角色]
 ```
-
-**验证要求**：
-- ✅ 必须明确声明应用了此规则
-- ✅ 必须遵循本规则中的所有约束和流程
-- ✅ 必须切换到测试专家角色
-- ✅ 不能跳过声明步骤直接执行操作
