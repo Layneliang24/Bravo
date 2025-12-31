@@ -5,14 +5,14 @@ status: approved
 priority: high
 type: feature
 created_at: 2025-12-03T10:00:00Z
-updated_at: 2025-12-31T10:59:00Z
+updated_at: 2025-12-31T03:10:00Z
 author: human
 refined_by: claude-opus-4
 testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
 testcase_status:
-  total_cases: 62
+  total_cases: 65
   p0_cases: 12
-  p1_cases: 39
+  p1_cases: 42
   p2_cases: 11
   p3_cases: 0
   reviewed: true
