@@ -5,7 +5,7 @@ status: approved
 priority: high
 type: feature
 created_at: 2025-12-03T10:00:00Z
-updated_at: 2025-12-31T11:00:00Z
+updated_at: 2025-12-31T10:59:00Z
 author: human
 refined_by: claude-opus-4
 testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
