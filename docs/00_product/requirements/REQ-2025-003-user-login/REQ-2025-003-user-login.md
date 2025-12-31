@@ -1,11 +1,10 @@
----
-req_id: REQ-2025-003-user-login
+---req_id: REQ-2025-003-user-login
 title: Bravo网站登录页面设计
 status: approved
 priority: high
 type: feature
-created_at: 2025-12-03T10:00:00Z
-updated_at: 2025-12-31T03:10:00Z
+created_at: 2025-12-03 10:00:00+00:00
+updated_at: 2025-12-31T03:45:00Z
 author: human
 refined_by: claude-opus-4
 testcase_file: docs/00_product/requirements/REQ-2025-003-user-login/REQ-2025-003-user-login-test-cases.csv
@@ -16,54 +15,55 @@ testcase_status:
   p2_cases: 11
   p3_cases: 0
   reviewed: true
-  reviewed_by: ["cursor-ai"]
-  reviewed_at: 2025-12-13T00:00:00Z
+  reviewed_by:
+  - cursor-ai
+  reviewed_at: 2025-12-13 00:00:00+00:00
 test_files:
-  - backend/tests/unit/test_auth_models.py
-  - backend/tests/unit/test_auth_preview.py
-  - backend/tests/unit/test_captcha.py
-  - backend/tests/integration/test_captcha_api.py
-  - backend/tests/integration/test_email_verification_api.py
-  - backend/tests/integration/test_login_api.py
-  - backend/tests/integration/test_password_reset.py
-  - backend/tests/integration/test_preview_throttling.py
-  - backend/tests/integration/test_register_api.py
-  - backend/tests/integration/test_token_api.py
-  - e2e/tests/auth/test-captcha-refresh.spec.ts
-  - e2e/tests/auth/test-captcha-realtime-validation.spec.ts
-  - e2e/tests/auth/test-email-verification.spec.ts
-  - e2e/tests/auth/test-login-preview.spec.ts
-  - e2e/tests/auth/test-password-reset.spec.ts
-  - e2e/tests/auth/test-preview-ui-details.spec.ts
-  - e2e/tests/auth/test-register-accessibility.spec.ts
-  - e2e/tests/auth/test-register-button.spec.ts
-  - e2e/tests/auth/test-ui-animations.spec.ts
-  - e2e/tests/auth/test-ui-design.spec.ts
-  - frontend/src/components/auth/__tests__/LoginForm.spec.ts
-  - frontend/src/components/auth/__tests__/LoginForm-glass.spec.ts
-  - frontend/src/components/auth/__tests__/RegisterForm.spec.ts
-  - frontend/src/components/auth/__tests__/Captcha.spec.ts
-  - frontend/src/views/__tests__/Login.spec.ts
-  - frontend/src/views/__tests__/Register.spec.ts
-  - frontend/src/views/__tests__/ForgotPassword.spec.ts
-  - frontend/src/views/__tests__/ResetPassword.spec.ts
-  - frontend/src/views/__tests__/VerifyEmailView.spec.ts
-  - frontend/src/router/index.spec.ts
+- backend/tests/unit/test_auth_models.py
+- backend/tests/unit/test_auth_preview.py
+- backend/tests/unit/test_captcha.py
+- backend/tests/integration/test_captcha_api.py
+- backend/tests/integration/test_email_verification_api.py
+- backend/tests/integration/test_login_api.py
+- backend/tests/integration/test_password_reset.py
+- backend/tests/integration/test_preview_throttling.py
+- backend/tests/integration/test_register_api.py
+- backend/tests/integration/test_token_api.py
+- e2e/tests/auth/test-captcha-refresh.spec.ts
+- e2e/tests/auth/test-captcha-realtime-validation.spec.ts
+- e2e/tests/auth/test-email-verification.spec.ts
+- e2e/tests/auth/test-login-preview.spec.ts
+- e2e/tests/auth/test-password-reset.spec.ts
+- e2e/tests/auth/test-preview-ui-details.spec.ts
+- e2e/tests/auth/test-register-accessibility.spec.ts
+- e2e/tests/auth/test-register-button.spec.ts
+- e2e/tests/auth/test-ui-animations.spec.ts
+- e2e/tests/auth/test-ui-design.spec.ts
+- frontend/src/components/auth/__tests__/LoginForm.spec.ts
+- frontend/src/components/auth/__tests__/LoginForm-glass.spec.ts
+- frontend/src/components/auth/__tests__/RegisterForm.spec.ts
+- frontend/src/components/auth/__tests__/Captcha.spec.ts
+- frontend/src/views/__tests__/Login.spec.ts
+- frontend/src/views/__tests__/Register.spec.ts
+- frontend/src/views/__tests__/ForgotPassword.spec.ts
+- frontend/src/views/__tests__/ResetPassword.spec.ts
+- frontend/src/views/__tests__/VerifyEmailView.spec.ts
+- frontend/src/router/index.spec.ts
 implementation_files:
-  - backend/apps/users/models.py
-  - backend/apps/users/views.py
-  - backend/apps/users/serializers.py
-  - backend/apps/users/utils.py
-  - backend/apps/users/throttling.py
-  - frontend/src/views/Login.vue
-  - frontend/src/components/auth/LoginForm.vue
-  - frontend/src/components/auth/RegisterForm.vue
-  - frontend/src/components/auth/PasswordResetForm.vue
-  - frontend/src/components/auth/Captcha.vue
-  - frontend/src/components/auth/UserPreview.vue
-  - frontend/src/components/auth/DefaultAvatar.vue
-  - frontend/src/stores/auth.ts
-  - frontend/src/api/auth.ts
+- backend/apps/users/models.py
+- backend/apps/users/views.py
+- backend/apps/users/serializers.py
+- backend/apps/users/utils.py
+- backend/apps/users/throttling.py
+- frontend/src/views/Login.vue
+- frontend/src/components/auth/LoginForm.vue
+- frontend/src/components/auth/RegisterForm.vue
+- frontend/src/components/auth/PasswordResetForm.vue
+- frontend/src/components/auth/Captcha.vue
+- frontend/src/components/auth/UserPreview.vue
+- frontend/src/components/auth/DefaultAvatar.vue
+- frontend/src/stores/auth.ts
+- frontend/src/api/auth.ts
 api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml
 figma_design: https://www.figma.com/design/n7oYkASiqv2vgBpix0X9mi/Login-register-V1.0?node-id=0-1
 deletable: false

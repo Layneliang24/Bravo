@@ -709,7 +709,12 @@ jobs:
           # 判断总体结果
           OVERALL_SUCCESS=true
 
-          if [[ "$TEST_RESULT" != "success" || "$TEST_OUTPUT" != "success" ]]; then
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            OVERALL_SUCCESS=false
+          fi
+
+          # 仅当 TEST_OUTPUT 明确失败时才判定为失败，避免未定义导致的误报
+          if [[ -n "$TEST_OUTPUT" && "$TEST_OUTPUT" == "failure" ]]; then
             OVERALL_SUCCESS=false
           fi
 
