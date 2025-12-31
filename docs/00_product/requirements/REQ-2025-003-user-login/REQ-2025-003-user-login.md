@@ -62,8 +62,7 @@ implementation_files:
 - frontend/src/components/auth/Captcha.vue
 - frontend/src/components/auth/UserPreview.vue
 - frontend/src/components/auth/DefaultAvatar.vue
-- frontend/src/stores/auth.ts
-- frontend/src/api/auth.ts
+  - frontend/src/stores/auth.ts
 api_contract: docs/01_guideline/api-contracts/REQ-2025-003-user-login/REQ-2025-003-user-login-api.yaml
 figma_design: https://www.figma.com/design/n7oYkASiqv2vgBpix0X9mi/Login-register-V1.0?node-id=0-1
 deletable: false
