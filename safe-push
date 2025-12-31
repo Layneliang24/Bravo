@@ -11,4 +11,4 @@ if [ ! -f "$GOLDEN_SCRIPT" ]; then
 fi
 
 echo "🚀 调用防篡改Git-Guard进行安全推送..."
-bash "$GOLDEN_SCRIPT" git push "$@"
+bash "$GOLDEN_SCRIPT" push "$@"
