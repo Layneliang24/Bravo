@@ -44,6 +44,9 @@ test_files:
   - frontend/src/components/auth/__tests__/RegisterForm.spec.ts
   - frontend/src/components/auth/__tests__/Captcha.spec.ts
   - frontend/src/views/__tests__/Login.spec.ts
+  - frontend/src/views/__tests__/Register.spec.ts
+  - frontend/src/views/__tests__/ForgotPassword.spec.ts
+  - frontend/src/views/__tests__/ResetPassword.spec.ts
   - frontend/src/views/__tests__/VerifyEmailView.spec.ts
   - frontend/src/router/index.spec.ts
 implementation_files:
