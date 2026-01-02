@@ -424,6 +424,8 @@ jobs:
           # 输出结果
           echo "total-coverage=$TOTAL_COV" >> $GITHUB_OUTPUT
 
+          if [[ "$TESTS_PASSED" == "true" ]]; then
+            echo "results=success" >> $GITHUB_OUTPUT
             echo "✅ **All required tests passed!**" >> $GITHUB_STEP_SUMMARY
             echo "🎯 Test level: ${{ inputs.test-level || 'medium' }}" >> $GITHUB_STEP_SUMMARY
             echo "📊 Coverage: ${TOTAL_COV}% (✅ meets 70% requirement)" >> $GITHUB_STEP_SUMMARY
