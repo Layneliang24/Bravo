@@ -7,7 +7,7 @@ priority: 980
 
 # 意图路由层 (Router)
 
-> **核心原则**：基于对话内容激活规则，不受当前打开文件限制。
+> **核心原则**：基于对话内容激活规则，不受当前打开文件限制，并基于实时会话内容动态加载规则。
 
 ## 1. 响应规范 (Mandatory)
 
@@ -29,6 +29,7 @@ priority: 980
 | **任务** | 生成任务, Task-Master, parse-prd | 03-taskmaster/task-generation.mdc, 03-taskmaster/hamster-integration.mdc | 任务专家 |
 | **开发** | 实现, 编码, Task-X, Django, Vue | 04-development/development-workflow.mdc, 00-core/v4-directory-structure.mdc | 开发专家 |
 | **测试** | 测试, unit test, E2E, TDD, 覆盖率 | 02-testing/test-types.mdc, 02-testing/test-case-standards.mdc, 00-core/v4-tdd.mdc | 测试专家 |
+| **测试用例评审** | 测试用例评审, 评审测试用例, test case review | 02-testing/test-case-review.mdc, 02-testing/test-case-standards.mdc | 测试专家 |
 | **提交/推送** | commit, push, 提交, safe-push | 06-cicd/version-control.mdc, 06-cicd/pre-commit.mdc, v4-traceability.mdc | (流程执行) |
 | **调试** | 调试, 排查, fix bug, 报错 | 05-debugging/debugging-methodology.mdc, troubleshooting-checklist.mdc | (流程执行) |
 | **API契约** | API契约, OpenAPI, 设计API | 02-testing/contract-testing.mdc, 09-roles/architect.mdc | 架构专家 |
