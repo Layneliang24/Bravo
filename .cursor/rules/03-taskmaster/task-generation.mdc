@@ -22,7 +22,21 @@ priority: 800
 - **依赖序向**: 数据库 → 后端 API → 前端 UI。
 - **容器化**: 任务描述中必须指明使用的 `docker-compose exec` 命令。
 
-## 4. 自动化建议
+## 4. 任务文件生成要求（强制）
+- **每个 task 必须生成对应的 md 文件**: 所有 task 必须生成对应的 Markdown 文件，格式为 `task_{id}_REQ-{REQ-ID}.md` 或 `task-{id}.md`。
+- **文件位置**: 文件应位于 `.taskmaster/tasks/{REQ-ID}/` 目录下。
+- **文件用途**: md 文件用于 AI 查看任务详情（无需解析 JSON），提供人类可读的任务描述，用于项目文档和任务追踪。
+- **合规检查**: 合规引擎会检查每个 task 是否有对应的 md 文件，缺失会导致合规检查失败。
+- **自动生成**: 使用 `scripts/task-master/adapter.py` 或 `task-master generate` 命令可自动生成这些文件。
+
+## 5. 任务存储结构
+- **统一存储**: 所有 task 共存在 `.taskmaster/tasks/tasks.json` 文件中。
+- **REQ-ID 区分**: 不同 PRD 生成的 task 以完整的 REQ-ID 作为 key 区分（如 `"REQ-2025-003-user-login"`）。
+- **Task-ID 命名**: 每个 REQ-ID 下的 tasks 数组中的 task id 都从 0 开始命名：
+  - Task-0: 强制性的自检任务（id: 0）
+  - 后续任务: 从 id: 1 开始递增
+
+## 6. 自动化建议
 - 优先使用 `bash scripts/task-master-parse-prd.sh`，该脚本会自动生成 Task-0 并更新 PRD 状态。
 
 ---
