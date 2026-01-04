@@ -24,7 +24,8 @@ priority: 850
   - [ ] 响应式布局下仅有 **单一组件实例** 激活。
   - [ ] 数据唯一性与传递链（如 `captcha_id`）完整。
   - [ ] 缓存配置（Redis/Dummy）符合环境预期。
-- **浏览器验证 (MCP)**: E2E 通过后必须使用 `browser_navigate` 验证 `localhost` 下的 CORS 与控制台错误 (详见 @debugging-methodology.mdc)。
+- **E2E 控制台错误监听（强制）**: 所有 E2E 测试必须使用 `ConsoleErrorListener` 捕获控制台错误和未处理的 Promise rejection，详见 @e2e-testing.mdc。
+- **浏览器验证 (MCP，额外验证)**: E2E 通过后建议使用 `browser_navigate` 验证 `localhost` 下的 CORS 与控制台错误 (详见 @debugging-methodology.mdc)，但这不能替代测试过程中的 `ConsoleErrorListener`。
 
 ## 4. TDD 节奏 (Task-Master 场景)
 - **子任务**: TDD（红→绿→重构）的最小闭环单元。

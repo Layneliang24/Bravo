@@ -21,6 +21,81 @@ priority: 520
 - 避免过长链式等待，优先显式等待关键状态
 - 截图/视频：仅在失败时保存，减少存储
 
+## 浏览器控制台错误监听（强制要求）
+
+> [!IMPORTANT]
+> **所有 E2E 测试必须使用 `ConsoleErrorListener` 来捕获和控制台错误和未处理的 Promise rejection**
+
+### 问题背景
+- Playwright 默认不会因控制台错误而失败测试
+- 测试只检查 UI 状态，不检查 JavaScript 错误
+- 运行时错误（如 `ReferenceError`）可能被 Promise catch 捕获，但测试应该验证是否有未处理的错误
+
+### 强制使用 ConsoleErrorListener
+
+**所有 E2E 测试必须遵循以下模式**：
+
+```typescript
+import { ConsoleErrorListener } from "../_helpers/console-error-listener";
+
+test.describe("功能测试", () => {
+  let errorListener: ConsoleErrorListener;
+
+  test.beforeEach(async ({ page }) => {
+    // ⚠️ 必须在页面加载前设置监听器
+    errorListener = new ConsoleErrorListener(page);
+    errorListener.startListening();
+
+    // ... 其他初始化代码（如 goto 页面）
+  });
+
+  test.afterEach(async () => {
+    // ⚠️ 必须在测试结束时验证是否有错误
+    errorListener.assertNoErrors();
+    await errorListener.assertNoUnhandledRejections();
+  });
+
+  test("具体测试用例", async ({ page }) => {
+    // ... 测试代码
+  });
+});
+```
+
+### ConsoleErrorListener 功能
+- **监听控制台错误**：捕获所有 `console.error` 输出
+- **监听页面错误**：捕获 `pageerror` 事件（包括未处理的异常）
+- **监听未处理的 Promise rejection**：捕获 `unhandledrejection` 事件
+- **智能过滤**：自动过滤第三方脚本噪音、浏览器警告、预期错误（如网络错误）
+- **测试失败机制**：在 `assertNoErrors()` 时如果有错误则测试失败
+
+### 错误过滤配置
+
+`ConsoleErrorListener` 支持智能过滤，可在构造函数中配置：
+
+```typescript
+const errorListener = new ConsoleErrorListener(page, {
+  ignoreNetworkErrors: true,      // 忽略网络错误（默认 true）
+  ignoreThirdPartyErrors: true,   // 忽略第三方脚本错误（默认 true）
+  customIgnorePatterns: [         // 自定义忽略模式
+    /Chrome extension/i,
+    /DevTools/i
+  ]
+});
+```
+
+### 验证要求
+
+**禁止行为**：
+- ❌ 禁止不使用 `ConsoleErrorListener` 编写 E2E 测试
+- ❌ 禁止在页面加载后设置监听器（必须在 `beforeEach` 中，页面 `goto` 之前）
+- ❌ 禁止在测试结束时跳过 `assertNoErrors()` 验证
+- ❌ 禁止忽略 `assertNoUnhandledRejections()` 验证
+
+**必须检查**：
+- ✅ 每个测试套件（`test.describe`）必须设置 `errorListener`
+- ✅ 监听器必须在页面加载前启动（`beforeEach` 中，`goto` 之前）
+- ✅ 测试结束时必须调用 `assertNoErrors()` 和 `assertNoUnhandledRejections()`
+
 ## 验证码测试最佳实践（关键）
 
 **核心原则**：验证码存在的意义是防止机器人，但E2E测试本身就是机器人在操作。这是设计上的互斥。

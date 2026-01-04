@@ -23,14 +23,22 @@ priority: 600
 3. **应用层**: `curl` 或 `pytest` 验证逻辑闭环。
 4. **差异层**: 对比 PR 与远程 CI 环境的配置一致性。
 
-## 4. 浏览器验证 (MCP 权威规范)
+## 4. 终端输出验证 (强制要求)
+> [!IMPORTANT]
+> 执行任何命令后必须执行：
+1. **完整输出审计**: 必须完整读取命令的所有输出（stdout 和 stderr），不能截取或忽略。
+2. **警告识别**: 识别输出中的警告（warning）、弃用（deprecation）、建议（suggestion）信息。
+3. **错误分析**: 即使 Exit Code 为 0，也必须分析输出中是否存在错误（error）、异常（exception）或失败（failure）信息。
+4. **输出判断**: 综合 Exit Code 和输出内容判断命令真实执行结果，禁止仅凭 Exit Code 判断成功与否。
+
+## 5. 浏览器验证 (MCP 权威规范)
 > [!IMPORTANT]
 > 修复前端问题后必须执行：
 1. **Console 审计**: `browser_console_messages` 严查 CORS/JS Error。
 2. **Network 追踪**: `browser_network_requests` 验证 API 路径与状态。
 3. **视觉取证**: `browser_take_screenshot` 保存错误状态截图。
 
-## 5. 自我质疑触发 (3次规则)
+## 6. 自我质疑触发 (3次规则)
 连续失败 3 次时必须自问：
 - □ 是否在错误的抽象层次修复？
 - □ 用户的质疑信号（如“为何还没修好”）是否指向了被忽视的根因？
