@@ -19,6 +19,59 @@ fi
 
 GOLDEN_SCRIPTS="$(cd "$(dirname "$0")/.." && pwd)/scripts-golden"
 
+# 🚨 第零层：保护分支检查（最高优先级，必须在通行证检查之前）
+# 读取pre-push hook的参数：remote_name remote_url
+remote_name="$1"
+remote_url="$2"
+
+# 获取当前分支名
+current_branch=$(git branch --show-current 2>/dev/null)
+
+# 检查是否尝试推送到保护分支
+if [ -n "$remote_name" ] && [ -n "$current_branch" ]; then
+    # 检查当前分支是否是保护分支
+    if [ "$current_branch" = "dev" ] || [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+        # 检查是否明确指定推送到保护分支（git push origin dev）
+        # pre-push hook的参数格式：remote_name remote_url
+        # 如果remote_name是origin且当前分支是保护分支，则拦截
+        if [ "$remote_name" = "origin" ] || [ -z "$remote_name" ]; then
+            echo "🚨🚨🚨 检测到严重违规：直接推送到${current_branch}分支 🚨🚨🚨"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ 绝对禁止的Git操作！"
+            echo "📋 基于30轮修复血泪教训，这会导致："
+            echo "   • npm workspaces依赖漂移"
+            echo "   • 代码质量检查被绕过"
+            echo "   • 架构违规问题扩散"
+            echo "   • 分支保护策略被绕过"
+            echo ""
+            echo "✅ 正确的解决方案："
+            echo "   1. 修复检查发现的问题"
+            echo "   2. 如果检查有误报，更新检查规则"
+            echo "   3. 使用PR流程合并到保护分支"
+            echo "   4. 紧急情况联系架构负责人"
+            echo ""
+            echo "🔗 详细文档："
+            echo "   • docs/architecture/ADR-001-npm-workspaces.md"
+            echo "   • docs/architecture/cursor-git-no-verify-fix.md"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+
+            # 调用加密验证系统（如果需要密码验证）
+            if [ -f "$GOLDEN_SCRIPTS/encrypted_auth_system.sh" ]; then
+                if ! bash "$GOLDEN_SCRIPTS/encrypted_auth_system.sh" --verify "git push origin $current_branch" "git push origin $current_branch"; then
+                    echo "❌ 密码验证失败"
+                    echo "🚫 操作被拒绝"
+                    exit 1
+                fi
+            else
+                echo "❌ 密码验证失败 - 操作被拒绝"
+                echo "💡 请修复问题后重新尝试"
+                exit 1
+            fi
+        fi
+    fi
+fi
+
 # 第一层：强制本地测试通行证验证
 if [ -f "$GOLDEN_SCRIPTS/local_test_passport.py" ]; then
     echo ""
