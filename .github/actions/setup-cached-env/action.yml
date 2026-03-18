@@ -29,9 +29,9 @@ runs:
           ~/.cache/pip
           backend/.venv
           ~/.cache/ms-playwright
-        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+        key: full-deps-v6-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
         restore-keys: |
-          full-deps-v5-${{ runner.os }}-
+          full-deps-v6-${{ runner.os }}-
 
     - name: Install Missing Dependencies
       shell: bash
@@ -125,4 +125,4 @@ runs:
           ~/.cache/pip
           backend/.venv
           ~/.cache/ms-playwright
-        key: full-deps-v5-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
+        key: full-deps-v6-${{ runner.os }}-${{ hashFiles('**/package-lock.json', 'backend/requirements/*.txt', 'e2e/package-lock.json') }}
