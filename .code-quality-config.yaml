@@ -101,7 +101,7 @@ repos:
     hooks:
       - id: comprehensive-check
         name: Comprehensive code quality check
-        entry: python scripts/code_change_tracker.py --validate-commit
+        entry: bash scripts/run_validate_commit.sh
         language: system
         pass_filenames: false
         always_run: true
@@ -160,7 +160,7 @@ repos:
 
       - id: validate-workflow-triggers
         name: Validate Workflow Triggers
-        entry: python scripts/validate-workflow-triggers.py
+        entry: bash scripts/run_python_in_project.sh scripts/validate-workflow-triggers.py
         language: system
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
@@ -168,7 +168,7 @@ repos:
 
       - id: validate-branch-protection
         name: Validate Branch Protection Rules
-        entry: python scripts/validate-branch-protection.py
+        entry: bash scripts/run_python_in_project.sh scripts/validate-branch-protection.py
         language: system
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false
@@ -247,7 +247,7 @@ repos:
       # 🛡️ NPM WORKSPACES 架构保护，防止依赖管理违规
       - id: npm-workspaces-guard
         name: NPM Workspaces Architecture Guard
-        entry: python scripts/check_npm_workspaces.py
+        entry: bash scripts/run_python_in_project.sh scripts/check_npm_workspaces.py
         language: system
         files: '\.(yml|yaml|py|js|json|sh|Makefile)$'
         pass_filenames: true
@@ -256,7 +256,7 @@ repos:
       # 🗂️ DELETABLE 文件元数据检查
       - id: file-metadata-check
         name: Deletable File Metadata Check
-        entry: python scripts/file_metadata_checker.py
+        entry: bash scripts/run_python_in_project.sh scripts/file_metadata_checker.py
         language: system
         pass_filenames: true
         description: "检查带deletable标识的文件是否包含必需的元数据注释"
@@ -264,7 +264,7 @@ repos:
       # 🐳 DOCKER-COMPOSE 文件数量限制
       - id: docker-compose-limit
         name: Docker Compose Files Limit Guard
-        entry: python scripts/check_docker_compose_limit.py
+        entry: bash scripts/run_python_in_project.sh scripts/check_docker_compose_limit.py
         language: system
         files: "^docker-compose.*\\.(yml|yaml)$"
         pass_filenames: false
@@ -274,7 +274,7 @@ repos:
       # 🔒 SCRIPTS-GOLDEN 核心保护脚本守护
       - id: scripts-golden-protection
         name: Scripts-Golden Protection Guard
-        entry: python scripts/protect_golden_scripts.py
+        entry: bash scripts/run_python_in_project.sh scripts/protect_golden_scripts.py
         language: system
         files: "^scripts-golden/.*$"
         pass_filenames: true
