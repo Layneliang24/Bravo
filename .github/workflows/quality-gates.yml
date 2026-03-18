@@ -199,6 +199,12 @@ jobs:
         run: |
           echo "🏗️ Building optimized version for audit..."
 
+          # 确保 PostCSS 能解析到 tailwindcss（workspace 构建时从根 node_modules 解析）
+          if [ ! -d "node_modules/tailwindcss" ]; then
+            echo "📦 tailwindcss missing at root, running npm ci..."
+            npm ci --prefer-offline --no-audit
+          fi
+
           # 构建生产版本
           npm run build:frontend
 
