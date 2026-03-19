@@ -70,32 +70,35 @@ export default defineConfig({
     },
   ],
 
-  // 测试服务器配置 - CI 环境优化
-  webServer: [
-    {
-      command: 'npm run dev -- --port 3001 --host 0.0.0.0',
-      cwd: '../frontend',
-      port: 3001,
-      reuseExistingServer: false, // CI环境不重用服务器
-      timeout: 300 * 1000, // 5分钟超时
-      env: {
-        NODE_ENV: 'test',
-        VITE_API_URL: 'http://localhost:8000',
-      },
-    },
-    {
-      command: 'python manage.py runserver 0.0.0.0:8000 --settings=bravo.settings.test',
-      cwd: '../backend',
-      port: 8000,
-      reuseExistingServer: false, // CI环境不重用服务器
-      timeout: 300 * 1000, // 5分钟超时
-      env: {
-        ENVIRONMENT: 'test',
-        DATABASE_URL: 'sqlite:///./test.db',
-        DJANGO_SETTINGS_MODULE: 'bravo.settings.test',
-      },
-    },
-  ],
+  // CI 在 docker-compose 中已启动 backend-test/frontend-test，这里禁用 Playwright 内置 webServer。
+  // 本地调试时保留 webServer，避免影响开发者单独运行 E2E。
+  webServer: process.env.CI
+    ? undefined
+    : [
+        {
+          command: 'npm run dev -- --port 3001 --host 0.0.0.0',
+          cwd: '../frontend',
+          port: 3001,
+          reuseExistingServer: false, // 本地不重用，避免端口污染
+          timeout: 300 * 1000, // 5分钟超时
+          env: {
+            NODE_ENV: 'test',
+            VITE_API_URL: 'http://localhost:8000',
+          },
+        },
+        {
+          command: 'python manage.py runserver 0.0.0.0:8000 --settings=bravo.settings.test',
+          cwd: '../backend',
+          port: 8000,
+          reuseExistingServer: false, // 本地不重用，避免端口污染
+          timeout: 300 * 1000, // 5分钟超时
+          env: {
+            ENVIRONMENT: 'test',
+            DATABASE_URL: 'sqlite:///./test.db',
+            DJANGO_SETTINGS_MODULE: 'bravo.settings.test',
+          },
+        },
+      ],
 
   // 测试匹配模式 - 只运行基础设施测试
   testMatch: ['**/health.spec.ts', '**/app.spec.ts'],
