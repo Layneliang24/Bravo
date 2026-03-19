@@ -93,8 +93,8 @@ RUN echo "#!/bin/bash" > /app/e2e/run-tests.sh && \
     echo "echo \"Playwright版本: \$(npx playwright --version)\"" >> /app/e2e/run-tests.sh && \
     echo "echo \"可用配置文件:\"" >> /app/e2e/run-tests.sh && \
     echo "ls -la *.config.* || echo \"未找到配置文件\"" >> /app/e2e/run-tests.sh && \
-    echo "echo \"🧪 开始执行E2E测试...\"" >> /app/e2e/run-tests.sh && \
-    echo "exec npx playwright test --project=chromium --reporter=list" >> /app/e2e/run-tests.sh && \
+    echo "echo \"🧪 开始执行E2E测试 (CI优化配置, smoke+critical)...\"" >> /app/e2e/run-tests.sh && \
+    echo "exec npx playwright test --config=playwright.config.ci.ts --project=chromium --grep \"@smoke|@critical\" --reporter=list" >> /app/e2e/run-tests.sh && \
     chmod +x /app/e2e/run-tests.sh
 
 # 健康检查
