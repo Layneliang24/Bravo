@@ -72,7 +72,7 @@ class PreviewThrottlingTests(TestCase):
             self.assertEqual(
                 response.status_code,
                 200,
-                f"第{i+1}次请求应该成功，但返回了{response.status_code}",
+                f"第{i + 1}次请求应该成功，但返回了{response.status_code}",
             )
 
     def test_preview_throttle_blocks_11th_request(self):

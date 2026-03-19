@@ -16,11 +16,11 @@ export default defineConfig({
     timeout: 10000,
   },
 
-  // 失败时重试次数
-  retries: process.env.CI ? 2 : 0,
+  // CI 下减少重试，避免在已知失败场景拖长总时长
+  retries: process.env.CI ? 1 : 0,
 
-  // 并行执行的worker数量
-  workers: process.env.CI ? 1 : undefined,
+  // CI 下适度并行，加速执行且避免资源争抢过重
+  workers: process.env.CI ? 2 : undefined,
 
   // 测试报告配置
   reporter: [
@@ -106,8 +106,8 @@ export default defineConfig({
   // 输出目录
   outputDir: 'test-results/',
 
-  // 最大失败数
-  maxFailures: process.env.CI ? 5 : undefined,
+  // 达到失败阈值后尽快停止，减少无效长时间运行
+  maxFailures: process.env.CI ? 3 : undefined,
 
   // 更新快照
   updateSnapshots: 'missing',
